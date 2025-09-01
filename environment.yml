@@ -1,0 +1,43 @@
+name: metahq
+channels:
+  - defaults
+  - conda-forge
+  - nodefaults
+dependencies:
+  - blas=1.0
+  - bzip2=1.0.8
+  - ca-certificates=2025.7.15
+  - expat=2.7.1
+  - libcxx=20.1.8
+  - libffi=3.4.4
+  - libgfortran=5.0.0
+  - libgfortran5=11.3.0
+  - libmpdec=4.0.0
+  - libopenblas=0.3.29
+  - llvm-openmp=20.1.8
+  - ncurses=6.5
+  - networkx=3.4.2
+  - numpy=2.2.4
+  - numpy-base=2.2.4
+  - openssl=3.0.17
+  - pip=25.2
+  - python=3.13.5
+  - python_abi=3.13
+  - readline=8.3
+  - setuptools=72.1.0
+  - sqlite=3.50.2
+  - tk=8.6.15
+  - tzdata=2025b
+  - wheel=0.45.1
+  - xz=5.6.4
+  - zlib=1.2.13
+  - pip:
+      - meta-hq-0.1.0
+      - dnspython==2.7.0
+      - iniconfig==2.1.0
+      - packaging==25.0
+      - pluggy==1.6.0
+      - polars==1.27.1
+      - pymongo==4.13.2
+      - pytest==8.3.5
+      - tqdm==4.67.1
