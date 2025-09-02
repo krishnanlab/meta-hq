@@ -14,11 +14,11 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
-from curations._index import Ids
+from curations.index import Ids
 from curations.base import BaseCuration
 from curations.labels import Labels
 from curations.propagator import Propagator
-from ontology import Graph
+from ontology.graph import Graph
 from util.alltypes import FilePath, IdArray, NpIdArray
 from util.helpers import flatten_list
 from util.io import load_txt
