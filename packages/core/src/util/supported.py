@@ -3,10 +3,13 @@ This script stores file path constants and functions to retrieve those paths.
 
 Author: Parker Hicks
 Date: 2025-04-15
+
+Last updated: 2025-09-01
 """
 
 from pathlib import Path
 
+# TODO: Need to account for user specified path in cli config
 ROOT: Path = Path(__file__).resolve().parents[3]
 
 ##### Databases #####
@@ -69,16 +72,23 @@ ECODES: list[str] = ["expert-curated", "semi-curated", "predicted", "any"]
 
 
 ##### Attributes ######
-ATTRIBUTES = {
-    "tissue": "id",
-    "disease": "id",
-    "sex": "value",
-    "age": "value",
-    "developmental stage": "value",
-    "organism": "value",
-}
+ATTRIBUTES = [
+    "tissue",
+    "disease",
+    "sex",
+    "age",
+    "developmental stage",
+    "organism",
+]
 
-ORGANISMS = ["homo sapiens", "mus musculus"]
+ORGANISMS = [
+    "homo sapiens",
+    "mus musculus",
+    "rattus norvegicus",
+    "danio rerio",
+    "caenorhabditis eligans",
+    "drosopila melanogaster",
+]
 
 
 def attributes(query: str) -> str:
@@ -153,7 +163,7 @@ def onto_relations(query: str, relatives: str) -> Path:
 def supported(entity: str) -> list[str]:
     _supported = {
         "ontologies": list(ONTO_FILES.keys()),
-        "attributes": list(ATTRIBUTES.keys()),
+        "attributes": ATTRIBUTES,
         "ecodes": ECODES,
         "databases": list(DATABASE_FILES.keys()),
         "relations": list(ONTO_FAMILY.keys()),
