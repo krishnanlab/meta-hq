@@ -95,7 +95,7 @@ class Annotations(BaseCuration):
     groups: list[str]
         Groups associated with each index of the annotations curation.
         Note that groups are not unique.
-    
+
     ids: pl.DataFrame
         The frame of all IDs within the annotations curation.
 
@@ -266,7 +266,7 @@ class Annotations(BaseCuration):
         # propagate
         labels = self._propagate_annotations(reference, terms_in_graph, propagate_to)
 
-        # handle controls 
+        # handle controls
         if self.controls and ctrl_ids is not None and not self.collapsed:
             print(f"Propagating {len(ctrl_ids)} controls.")
             ctrl_labels = self.propagate_controls(
@@ -280,7 +280,7 @@ class Annotations(BaseCuration):
         # combine IDs and labels
         combined_labels = pl.concat([self._ids.data, labels], how="horizontal")
         return Labels(combined_labels)
-    
+
     def to_numpy(self):
         """Returns the annotation data as a numpy array."""
         return self.data.to_numpy()
@@ -429,7 +429,7 @@ class Annotations(BaseCuration):
     def entities(self) -> list[str]:
         """Returns column names of the Annotations frame."""
         return self.data.columns
-    
+
     @property
     def groups(self) -> list[str]:
         """Returns the groups column of the Annotations curation."""
