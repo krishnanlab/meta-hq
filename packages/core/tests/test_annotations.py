@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch, MagicMock
 
 from curations.annotations import Annotations
 from curations.labels import Labels
-from curations._index import Ids
+from curations.index import Ids
 
 ["MONDO:0001657", "MONDO:0004790", "MONDO:0005147", "MONDO:0000000"]
 
@@ -334,7 +334,7 @@ class TestAnnotationsPropagateControls:
 class TestAnnotationsToLabels:
     """test to_labels conversion"""
     
-    def test_to_labels_basic(self, mock_ontologies, mock_propagator_class, 
+    def test_to_labels_base(self, mock_ontologies, mock_propagator_class, 
                             mock_graph_class, annotations_instance):
         """test basic to_labels conversion"""
         # setup mocks
