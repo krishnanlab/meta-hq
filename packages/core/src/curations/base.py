@@ -28,7 +28,7 @@ class BaseCuration(ABC):
         """Filters the data based on provided conditions."""
 
     @abstractmethod
-    def head(self *args, **kwargs) -> BaseCuration:
+    def head(self, *args, **kwargs) -> BaseCuration:
         """Wrapper for polars `head`."""
 
     @abstractmethod
