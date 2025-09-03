@@ -28,8 +28,18 @@ class BaseCuration(ABC):
         """Filters the data based on provided conditions."""
 
     @abstractmethod
+    def head(self *args, **kwargs) -> BaseCuration:
+        """Wrapper for polars `head`."""
+
+    @abstractmethod
     def select(self, *args, **kwargs) -> BaseCuration:
         """Selects specific columns from the data."""
+
+    @abstractmethod
+    def slice(
+        self, offset: int, length: int | None = None
+    ) -> BaseCuration:
+        """Slice both data and ids simultaneously using polars slice."""
 
     @abstractmethod
     def to_numpy(self) -> np.ndarray:
@@ -42,6 +52,21 @@ class BaseCuration(ABC):
 
     @property
     @abstractmethod
+    def groups(self) -> list[str]:
+        """Returns the groups column of the Annotations curation."""
+
+    @property
+    @abstractmethod
+    def ids(self) -> pl.DataFrame:
+        """Return the IDs dataframe."""
+
+    @property
+    @abstractmethod
+    def index(self) -> list:
+        """Return the index column as a list."""
+
+    @property
+    @abstractmethod
     def n_indices(self) -> int:
         """Returns the number of rows in the data."""
 
@@ -49,3 +74,8 @@ class BaseCuration(ABC):
     @abstractmethod
     def n_entities(self) -> int:
         """Returns the number of entity columns."""
+
+    @property
+    @abstractmethod
+    def unique_groups(self) -> list[str]:
+        """Returns unique groups."""

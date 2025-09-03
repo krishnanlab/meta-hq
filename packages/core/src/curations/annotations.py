@@ -4,7 +4,7 @@ Class for storing and mutating annotation collections.
 Author: Parker Hicks
 Date: 2025-04-14
 
-Last updated: 2025-09-01 by Parker Hicks
+Last updated: 2025-09-02 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -32,15 +32,15 @@ class Annotations(BaseCuration):
 
     Attributes
     ----------
-    data: (pl.DataFrame)
+    data: pl.DataFrame
         Polars DataFrame with columns `index`, `groups` and columns for each
         attribute entity for each index (e.g. male or female, tissues, diseases, etc).
 
-    disease: (bool)
+    disease: bool
         Indicates if the annotations are disease based. Used to account for control samples
         when converting annotations to labels.
 
-    index_col: (IdArray)
+    index_col: IdArray
         Name of the column of data that contains the index IDs.
 
     group_cols: tuple
@@ -411,7 +411,7 @@ class Annotations(BaseCuration):
         index_col: str,
         group_cols: tuple[str, str] = ("group", "platform"),
         **kwargs,
-    ):
+    ) -> Annotations:
         """Creates an Annotations object from a combined DataFrame."""
         id_columns = [index_col] + list(group_cols)
         ids_data = df.select(id_columns)
