@@ -45,6 +45,9 @@ class Labels(BaseCuration):
 
     Methods
     -------
+    drop()
+        Wrapper for polars `drop`.
+
     filter()
         Wrapper for polars `filter`.
 
@@ -97,6 +100,10 @@ class Labels(BaseCuration):
         self.collapsed = collapsed
         self.controls: bool = False
 
+    def drop(self, *args, **kwargs):
+        """Wrapper for polars drop."""
+        self.data = self.data.drop(*args, **kwargs)
+
     def filter(self, condition: pl.Expr) -> Annotations:
         """Filter both data and ids simultaneously using a mask."""
         mask = self.data.select(condition.arg_true()).to_numpy().reshape(-1)
@@ -118,9 +125,17 @@ class Labels(BaseCuration):
         """Wrapper for polars head function."""
         return repr(self.data.head(*args, **kwargs))
 
-    def select(self, *args, **kwargs) -> Labels:
-        """Wrapper for polars `select`."""
-        return Labels(self.data.select(*args, **kwargs))
+    def select(self, *args, **kwargs) -> Annotations:
+        """Select annotation columns while maintaining ids."""
+        selected_data = self.data.select(*args, **kwargs)
+
+        return self.__class__(
+            data=selected_data,
+            ids=self._ids.data,  # keep all ID data
+            index_col=self.index_col,
+            group_cols=self.group_cols,
+            collapsed=self.collapsed,
+        )
 
     def slice(self, offset: int, length: int | None = None) -> Labels:
         """Slice both data and ids simultaneously using polars slice."""
