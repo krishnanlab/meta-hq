@@ -272,14 +272,14 @@ class Annotations(BaseCuration):
             ctrl_labels = self.propagate_controls(
                 ctrl_ids, list(propagate_to), labels, group_col
             )
-            labels = pl.concat([self._ids.data, labels], how="horizontal").lazy()
+            labels = pl.concat([self._ids.data, labels], how="horizontal")
             return Labels.from_df(
-                labels.update(ctrl_labels, on=self.index_col, how="full")
+                labels.update(ctrl_labels, on=self.index_col, how="full"),
+                index_col=self.index_col,
             )
 
         # combine IDs and labels
-        combined_labels = pl.concat([self._ids.data, labels], how="horizontal")
-        return Labels(combined_labels)
+        return Labels(labels, self._ids.data, self.index_col, self.group_cols)
 
     def to_numpy(self) -> NpIntMatrix:
         """Returns the annotation data as a numpy array."""
