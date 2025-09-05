@@ -14,15 +14,15 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
-from curations.base import BaseCuration
-from curations.index import Ids
-from curations.labels import Labels
-from curations.propagator import Propagator
-from ontology.graph import Graph
-from util.alltypes import FilePath, IdArray, NpIdArray, NpIntMatrix
-from util.helpers import flatten_list
-from util.io import load_txt
-from util.supported import onto_relations, ontologies
+from metahq_core.curations.base import BaseCuration
+from metahq_core.curations.index import Ids
+from metahq_core.curations.labels import Labels
+from metahq_core.curations.propagator import Propagator
+from metahq_core.ontology.graph import Graph
+from metahq_core.util.alltypes import FilePath, IdArray, NpIdArray, NpIntMatrix
+from metahq_core.util.helpers import flatten_list
+from metahq_core.util.io import load_txt
+from metahq_core.util.supported import onto_relations, ontologies
 
 
 class Annotations(BaseCuration):

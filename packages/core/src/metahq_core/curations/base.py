@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import polars as pl
 
-    from util.alltypes import IdArray, NpIntMatrix
+    from metahq_core.util.alltypes import IdArray, NpIntMatrix
 
 
 class BaseCuration(ABC):

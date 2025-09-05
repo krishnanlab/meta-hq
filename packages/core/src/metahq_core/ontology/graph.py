@@ -12,8 +12,8 @@ import re
 import networkx as nx
 import numpy as np
 
-from ontology.base import Ontology
-from util.alltypes import IdArray
+from metahq_core.ontology.base import Ontology
+from metahq_core.util.alltypes import IdArray
 
 
 class Graph(Ontology):

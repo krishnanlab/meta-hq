@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import polars as pl
 
-from curations.base import BaseCuration
-from curations.index import Ids
-from util.alltypes import FilePath, NpIntMatrix
+from metahq_core.curations.base import BaseCuration
+from metahq_core.curations.index import Ids
+from metahq_core.util.alltypes import FilePath, NpIntMatrix
 
 
 # TODO: Add method to remove redundant terms

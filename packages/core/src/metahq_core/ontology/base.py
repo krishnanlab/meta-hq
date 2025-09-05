@@ -10,8 +10,8 @@ Last updated: 2025-09-01 by Parker Hicks
 import numpy as np
 import polars as pl
 
-from util.alltypes import FilePath
-from util.helpers import reverse_dict
+from metahq_core.util.alltypes import FilePath
+from metahq_core.util.helpers import reverse_dict
 
 
 class Ontology:

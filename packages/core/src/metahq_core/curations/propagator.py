@@ -10,9 +10,9 @@ Last updated: 2025-09-01 by Parker Hicks
 import numpy as np
 import polars as pl
 
-from util.alltypes import IdArray, IntMatrix, NpStringArray
-from util.io import load_txt
-from util.supported import onto_relations
+from metahq_core.util.alltypes import IdArray, IntMatrix, NpStringArray
+from metahq_core.util.io import load_txt
+from metahq_core.util.supported import onto_relations
 
 
 class Propagator:
@@ -171,4 +171,3 @@ class Propagator:
         self.anno = propagated["ancestors"]
         self.anno[neg_mask] = -1
         self.anno = np.where(self.anno > 1, 1, self.anno)
-
