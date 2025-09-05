@@ -12,12 +12,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 if TYPE_CHECKING:
     import polars as pl
 
-    from metahq.util.alltypes import IdArray
+    from util.alltypes import IdArray, NpIntMatrix
 
 
 class BaseCuration(ABC):
@@ -42,7 +40,7 @@ class BaseCuration(ABC):
         """Slice both data and ids simultaneously using polars slice."""
 
     @abstractmethod
-    def to_numpy(self) -> np.ndarray:
+    def to_numpy(self) -> NpIntMatrix:
         """Converts the data to a numpy array."""
 
     @property

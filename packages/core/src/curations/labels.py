@@ -14,6 +14,7 @@ import polars as pl
 from curations.base import BaseCuration
 from curations.index import Ids
 from util.alltypes import FilePath, IdArray
+from util.alltypes import FilePath, IdArray, NpIntMatrix
 
 
 # TODO: Add method to remove redundant terms
@@ -150,7 +151,7 @@ class Labels(BaseCuration):
             collapsed=self.collapsed,
         )
 
-    def to_numpy(self):
+    def to_numpy(self) -> NpIntMatrix:
         """Wrapper for polars `to_numpy`."""
         return self.data.to_numpy()
 

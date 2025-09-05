@@ -4,7 +4,7 @@ Class for storing and mutating annotation collections.
 Author: Parker Hicks
 Date: 2025-04-14
 
-Last updated: 2025-09-02 by Parker Hicks
+Last updated: 2025-09-05 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -14,12 +14,12 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
-from curations.index import Ids
 from curations.base import BaseCuration
+from curations.index import Ids
 from curations.labels import Labels
 from curations.propagator import Propagator
 from ontology.graph import Graph
-from util.alltypes import FilePath, IdArray, NpIdArray
+from util.alltypes import FilePath, IdArray, NpIdArray, NpIntMatrix
 from util.helpers import flatten_list
 from util.io import load_txt
 from util.supported import onto_relations, ontologies
@@ -281,7 +281,7 @@ class Annotations(BaseCuration):
         combined_labels = pl.concat([self._ids.data, labels], how="horizontal")
         return Labels(combined_labels)
 
-    def to_numpy(self):
+    def to_numpy(self) -> NpIntMatrix:
         """Returns the annotation data as a numpy array."""
         return self.data.to_numpy()
 

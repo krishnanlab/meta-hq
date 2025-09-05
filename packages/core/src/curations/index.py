@@ -4,7 +4,7 @@ Dataclass to store and operate on indices for tabular data.
 Author: Parker Hicks
 Date: 2025-08-13
 
-Last updated: 2025-08-13 by Parker Hicks
+Last updated: 2025-09-05 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import polars as pl
 class Ids:
     """
     Dataclass to store and operate on ID columns for tabular data.
+    Specifically made as an index for polars dataframes.
 
     Attributes
     ----------
@@ -23,6 +24,26 @@ class Ids:
         DataFrame containing ID columns (index, group, platform, etc.)
     index_col: str
         Name of the column that contains the primary index IDs
+
+    Methods
+    -------
+    filter_by_mask()
+        Filter rows of the frame by row indices.
+
+    lazy()
+        Wrapper for polars `lazy` conversion of a DataFrame to LazyFrame.
+
+    to_numpy()
+        Return IDs as numpy array.
+
+    from_df()
+        Create an Ids object from a polars DataFrame.
+
+    Properties
+    ----------
+    index: pl.Series
+        Returns the index column.
+
     """
 
     def __init__(self, data, index_col):
@@ -38,7 +59,7 @@ class Ids:
         )
         return Ids(filtered_data, self.index_col)
 
-    def lazy(self):
+    def lazy(self) -> pl.LazyFrame:
         """Returns the Ids as a polars LazyFrame."""
         return self.data.lazy()
 
@@ -52,7 +73,7 @@ class Ids:
         return cls(df, index_col)
 
     def __getitem__(self, idx):
-        """Slice the ids DataFrame with various indexing methods."""
+        """Slice the Ids frame with various indexing methods."""
         return Ids(self.data[idx], self.index_col)
 
     def __len__(self):
