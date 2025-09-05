@@ -13,8 +13,10 @@ from string import Template
 
 import yaml
 
+from metahq_core.util.io import checkdir
+
 HOME_DIR = Path.home()
-METAHQ_DIR = Path.home() / "meta-hq"
+METAHQ_DIR = checkdir(Path.home() / "metahq")
 CONFIG = METAHQ_DIR / "config.yaml"
 
 
