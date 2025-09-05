@@ -10,7 +10,7 @@ Last updated: 2025-09-01 by Parker Hicks
 import numpy as np
 import polars as pl
 
-from metahq_core.util.alltypes import IdArray, IntMatrix, NpStringArray
+from metahq_core.util.alltypes import IdArray, NpIntMatrix, NpStringArray
 from metahq_core.util.io import load_txt
 from metahq_core.util.supported import onto_relations
 
@@ -57,7 +57,7 @@ class Propagator:
         self.ontology: str = ontology
         self._from: IdArray = _from
         self._to: IdArray = _to
-        self.anno: IntMatrix = anno
+        self.anno: NpIntMatrix = anno
         self.family: dict[str, pl.DataFrame | NpStringArray] = {}
         self._relatives: list[str] = ["ancestors", "descendants"]
         self._load_family()
