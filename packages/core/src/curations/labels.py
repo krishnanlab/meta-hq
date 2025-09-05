@@ -4,7 +4,7 @@ Class for mutating and operating on sets of labels.
 Author: Parker Hicks
 Date: 2025-08-13
 
-Last updated: 2025-09-02 by Parker Hicks
+Last updated: 2025-09-05 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -13,8 +13,7 @@ import polars as pl
 
 from curations.base import BaseCuration
 from curations.index import Ids
-from util.alltypes import FilePath, IdArray
-from util.alltypes import FilePath, IdArray, NpIntMatrix
+from util.alltypes import FilePath, NpIntMatrix
 
 
 # TODO: Add method to remove redundant terms
@@ -86,6 +85,7 @@ class Labels(BaseCuration):
         Unique groups in the annotations curation.
 
     """
+
     def __init__(
         self,
         data: pl.DataFrame,
@@ -105,7 +105,7 @@ class Labels(BaseCuration):
         """Wrapper for polars drop."""
         self.data = self.data.drop(*args, **kwargs)
 
-    def filter(self, condition: pl.Expr) -> Annotations:
+    def filter(self, condition: pl.Expr) -> Labels:
         """Filter both data and ids simultaneously using a mask."""
         mask = self.data.select(condition.arg_true()).to_numpy().reshape(-1)
 
@@ -126,7 +126,7 @@ class Labels(BaseCuration):
         """Wrapper for polars head function."""
         return repr(self.data.head(*args, **kwargs))
 
-    def select(self, *args, **kwargs) -> Annotations:
+    def select(self, *args, **kwargs) -> Labels:
         """Select annotation columns while maintaining ids."""
         selected_data = self.data.select(*args, **kwargs)
 
@@ -179,7 +179,7 @@ class Labels(BaseCuration):
             group_cols=group_cols,
             **kwargs,
         )
-    
+
     @property
     def entities(self) -> list[str]:
         """Returns column names of the Annotations frame."""
@@ -217,4 +217,3 @@ class Labels(BaseCuration):
 
     def __repr__(self):
         return repr(self.data)
-
