@@ -101,21 +101,22 @@ class Config:
 
     def update_config(self):
         """Updated the meta-hq config file."""
-        config = self.load_config_str()
+        config = self.load_config()
 
         if self.data_dir == "default":
             self.data_dir = str(Path.home() / "metahq" / "data")
 
         new_vars = {
-            "VERSION": self.version,
-            "ZENODO_DOI": self.zenodo_doi,
-            "DATA_DIR": str(Path(self.data_dir).resolve()),
+            "version": self.version,
+            "zenodo_doi": self.zenodo_doi,
+            "data_dir": str(Path(self.data_dir).resolve()),
         }
 
-        template = Template(config)
-        updated = template.substitute(new_vars)
+        config = {
+            key: new_vars[key] if key in new_vars else config[key] for key in config
+        }
 
-        return yaml.safe_load(updated)
+        return config
 
     @property
     def path(self) -> str:
