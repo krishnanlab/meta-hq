@@ -4,16 +4,25 @@ This script stores file path constants and functions to retrieve those paths.
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2025-09-01
+Last updated: 2025-09-05
 """
 
 from pathlib import Path
 
+from metahq_core.util.io import load_yaml
+
 # TODO: Need to account for user specified path in cli config
-ROOT: Path = Path(__file__).resolve().parents[3]
+HOME = Path.home()
+METAHQ = HOME / "metahq"
+CONFIG_FILE = METAHQ / "config.yaml"
+CONFIG = load_yaml(CONFIG_FILE)
+DATA_DIR = Path(CONFIG["data_dir"])
+
+# Root dir of metahq package
+ROOT: Path = Path(__file__).resolve().parents[5]
 
 ##### Databases #####
-DATABASES: Path = ROOT / "data/annotations"
+DATABASES: Path = DATA_DIR / "annotations"
 GEO: Path = DATABASES / "geo.bson"
 SRA: Path = DATABASES / "sra.bson"
 ARCHS4: Path = DATABASES / "archs4.bson"
@@ -39,17 +48,13 @@ DATABASE_IDS: dict[str, list[str]] = {
 }
 
 ##### Ontology obo files #####
-ONTOLOGIES: Path
-MONDO: Path = ROOT / "data/ontology/mondo"
-UBERON: Path = ROOT / "data/ontology/uberon_ext"
-CL: Path = ROOT / "data/ontology/cl"
-BTO: Path = ROOT / "data/ontology/bto"
+ONTOLOGIES: Path = DATA_DIR / "ontology"
+MONDO: Path = ONTOLOGIES / "mondo"
+UBERON: Path = ONTOLOGIES / "uberon_ext"
 
 ONTO_FILES: dict[str, Path] = {
     "mondo": MONDO / "mondo.obo",
     "uberon": UBERON / "uberon_ext.obo",
-    "cl": CL / "cl.obo",
-    "bto": BTO / "bto.obo",
 }
 
 ONTO_FAMILY: dict[str, dict[str, Path]] = {
