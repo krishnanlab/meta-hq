@@ -10,7 +10,7 @@ Last updated: 2025-09-01 by Parker Hicks
 import polars as pl
 
 from curations.base import BaseCuration
-from util.alltypes import FilePath, IdArray
+from util.alltypes import FilePath, IdArray, NpIntMatrix
 
 
 # TODO: Add method to remove redundant terms
@@ -30,7 +30,7 @@ class Labels(BaseCuration):
         """Wrapper for polars `select`."""
         return Labels(self.data.select(*args, **kwargs))
 
-    def to_numpy(self):
+    def to_numpy(self) -> NpIntMatrix:
         """Wrapper for polars `to_numpy`."""
         return self.data.to_numpy()
 

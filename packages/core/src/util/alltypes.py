@@ -1,3 +1,9 @@
+"""
+Custom types for the metahq package
+
+Last updated: 2025-09-05 by Parker Hicks
+"""
+
 from collections.abc import KeysView
 from pathlib import Path
 from typing import Any
@@ -15,7 +21,7 @@ type IdArray = StringArray | IntArray
 # numpy specific types
 type NpStringArray = npt.NDArray[np.str_]
 type NpIntArray = npt.NDArray[np.int_]
-type IntMatrix = npt.NDArray[np.int_]
+type NpIntMatrix = npt.NDArray[np.int_]
 type NpIdArray = NpStringArray | NpIntArray
 
 # Gemma annotations
