@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
+import yaml
 from bson import BSON
 
 from metahq_core.util.alltypes import FilePath, StringArray
@@ -74,6 +75,15 @@ def load_txt_sections(file: FilePath, delimiter: str, encoding="utf-8") -> list[
         text = f.read()
 
     return re.split(delimiter, text.strip())
+
+
+def load_yaml(file: FilePath, encoding: str = "utf-8") -> dict[str, Any]:
+    """Load a yaml dictionary."""
+    with open(file, "r", encoding=encoding) as stream:
+        try:
+            return yaml.safe_load(stream)
+        except yaml.YAMLError as e:
+            sys.exit(str(e))
 
 
 def save_bson(data: dict, file: FilePath, **kwargs):
