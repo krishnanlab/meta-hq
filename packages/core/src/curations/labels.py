@@ -122,7 +122,7 @@ class Labels(BaseCuration):
             collapsed=self.collapsed,
         )
 
-    def head(self, *args, **kwargs):
+    def head(self, *args, **kwargs) -> str:
         """Wrapper for polars head function."""
         return repr(self.data.head(*args, **kwargs))
 

@@ -26,7 +26,7 @@ class BaseCuration(ABC):
         """Filters the data based on provided conditions."""
 
     @abstractmethod
-    def head(self, *args, **kwargs) -> BaseCuration:
+    def head(self, *args, **kwargs) -> str:
         """Wrapper for polars `head`."""
 
     @abstractmethod
@@ -34,9 +34,7 @@ class BaseCuration(ABC):
         """Selects specific columns from the data."""
 
     @abstractmethod
-    def slice(
-        self, offset: int, length: int | None = None
-    ) -> BaseCuration:
+    def slice(self, offset: int, length: int | None = None) -> BaseCuration:
         """Slice both data and ids simultaneously using polars slice."""
 
     @abstractmethod
