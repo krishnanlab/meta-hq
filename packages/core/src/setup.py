@@ -20,6 +20,11 @@ CONFIG = METAHQ_DIR / "config.yaml"
 
 # TODO: Remove test func
 class Config:
+    """
+    Class to store and assess and create the meta-hq configuration file.
+
+    """
+
     def __init__(
         self,
         version="0.1.0",
@@ -65,6 +70,7 @@ class Config:
             return f.read()
 
     def make_config(self) -> dict[str, str]:
+        """Creates the config dictionary"""
         return {
             "version": self.version,
             "zenodo_doi": self.zenodo_doi,
@@ -72,7 +78,26 @@ class Config:
             "logs": self.logs,
         }
 
-    def set_config(self):
+    def save_config(self, config: dict[str, str]):
+        """Saves a config file."""
+        with open(CONFIG, "w", encoding="utf-8") as stream:
+            try:
+                yaml.safe_dump(config, stream)
+            except yaml.YAMLError as e:
+                sys.exit(str(e))
+
+    def setup(self):
+        """Main setup function."""
+        self.check()
+        new = self.update_config()
+        self.save_config(new)
+
+    def set_default(self):
+        """Makes a default meta-hq config."""
+        print("making default")
+        self.save_config(self.make_config())
+
+    def update_config(self):
         """Updated the meta-hq config file."""
         config = self.load_config_str()
 
@@ -90,22 +115,7 @@ class Config:
 
         return yaml.safe_load(updated)
 
-    def set_default(self):
-        """Makes a default meta-hq config."""
-        print("making default")
-        with open(CONFIG, "w", encoding="utf-8") as stream:
-            try:
-                yaml.safe_dump(self.make_config(), stream)
-            except yaml.YAMLError as e:
-                sys.exit(str(e))
-
-
-def test():
-    config = Config()
-    config.check()
-    new = config.set_config()
-    print(new)
-
-
-if __name__ == "__main__":
-    test()
+    @property
+    def path(self) -> str:
+        """Returns /path/to/config.yaml"""
+        return str(CONFIG)
