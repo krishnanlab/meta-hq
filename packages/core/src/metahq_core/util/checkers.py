@@ -1,4 +1,4 @@
-from util.alltypes import DictKeys
+from metahq_core.util.alltypes import DictKeys
 
 
 def check_database(database: str, supported: DictKeys | list[str]):

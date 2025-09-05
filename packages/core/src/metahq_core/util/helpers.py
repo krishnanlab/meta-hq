@@ -2,7 +2,7 @@ import functools
 import operator
 from typing import Any
 
-from util.alltypes import StringArray
+from metahq_core.util.alltypes import StringArray
 
 
 def flatten_list(l: list[list[Any]]) -> list[Any]:
