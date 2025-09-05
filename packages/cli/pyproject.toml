@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metahq"
+version = "0.1.0"
+description = "The meta-hq CLI."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Parker Hicks", email = "parker.hicks@cuanschutz.edu"},
+]
+keywords = ["cli", "tool", "core"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Computational biologists",
+    "License :: BSD 3-Clause",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "networkx>=3.0", 
+    "numpy>=2.3.0",
+    "polars>=1.27.0",
+    "pymongo>=4.13.0",
+    "pyarrow>=10.0.0",
+    "tqdm>=4.60.0",   
+    "pydantic>=2.0.0",
+]
+
+[project.scripts]
+metahq = "metahq_cli.main:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov",
+    "black",
+    "isort",
+    "flake8",
+    "mypy",
+]
+test = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "pytest-benchmark",
+]
+
+[project.urls]
+Homepage = "https://github.com/krishnanlab/meta-hq"
+Repository = "https://github.com/krishnanlab/meta-hq"
+Issues = "https://github.com/krishnanlab/meta-hq/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
