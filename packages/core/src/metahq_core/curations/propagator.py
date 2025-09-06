@@ -19,7 +19,7 @@ from metahq_core.util.supported import onto_relations
 
 
 class MultiprocessPropagator:
-    """Class-based version that works well with multiprocessing"""
+    """Class-based version to allow multiprocessing within Propagator."""
 
     @staticmethod
     def _process_chunk_static(args):
