@@ -461,4 +461,4 @@ class Annotations(BaseCuration):
         return list(set(self.groups))
 
     def __repr__(self):
-        return repr(self.data)
+        return repr(self._ids.data.hstack(self.data))
