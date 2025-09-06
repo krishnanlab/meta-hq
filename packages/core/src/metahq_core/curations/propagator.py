@@ -7,12 +7,74 @@ Date: 2025-04-23
 Last updated: 2025-09-01 by Parker Hicks
 """
 
+import multiprocessing as mp
+
 import numpy as np
 import polars as pl
+from tqdm import tqdm
 
 from metahq_core.util.alltypes import IdArray, NpIntMatrix, NpStringArray
 from metahq_core.util.io import load_txt
 from metahq_core.util.supported import onto_relations
+
+
+class MultiprocessPropagator:
+    """Class-based version that works well with multiprocessing"""
+
+    @staticmethod
+    def _process_chunk_static(args):
+        """Static method worker function"""
+        chunk_idx, chunk, family_relative, relatives_key = args
+        result = np.einsum("ij,jk->ik", chunk, family_relative)
+        return chunk_idx, result, relatives_key
+
+    def multiprocess_propagate(
+        self,
+        anno,
+        split: list,
+        family: dict[str, np.ndarray],
+        relatives: list,
+        n_processes: int | None = None,
+    ):
+        """Multiprocessing propagation"""
+        if n_processes is None:
+            n_processes = mp.cpu_count()
+
+        final_shape = (
+            anno.shape[0],
+            family["ancestors"].shape[1],
+        )
+
+        propagated = {
+            "ancestors": np.empty(final_shape, dtype=np.int32),
+            "descendants": np.empty(final_shape, dtype=np.int32),
+        }
+
+        for _relatives in relatives:
+
+            args_list = [
+                (i, chunk, family[_relatives], _relatives)
+                for i, chunk in enumerate(split)
+            ]
+
+            with mp.Pool(processes=n_processes) as pool:
+                results = list(
+                    tqdm(
+                        pool.imap(self._process_chunk_static, args_list),
+                        total=len(args_list),
+                        desc=f"Propagating {_relatives} with {n_processes} processes",
+                    )
+                )
+
+            # Combine results
+            start = 0
+            for _, result, relatives_key in sorted(results, key=lambda x: x[0]):
+                nsamples = result.shape[0]
+                end = start + nsamples
+                propagated[relatives_key][start:end] = result
+                start = end
+
+        return propagated
 
 
 class Propagator:
@@ -61,6 +123,7 @@ class Propagator:
         self.family: dict[str, pl.DataFrame | NpStringArray] = {}
         self._relatives: list[str] = ["ancestors", "descendants"]
         self._load_family()
+        self.propagator = MultiprocessPropagator()
 
     def propagate(self) -> pl.DataFrame:
         """
@@ -129,7 +192,7 @@ class Propagator:
         Splits annotation matrix into chunks row-wise to reduce computational overhead
         for matrix multiplication. Each chunk will have at most 1000 entries.
         """
-        nchunks = self.anno.shape[0] // 1000
+        nchunks = self.anno.shape[0] // 500
         return np.array_split(self.anno.astype(np.float32), nchunks)
 
     def _vector_propagate(self):
@@ -146,25 +209,9 @@ class Propagator:
 
         """
         split = self._split_anno()
-        final_shape = (
-            self.anno.shape[0],
-            self.family["ancestors"].shape[1],
-        )  # ancestors and descendants have same shape
-
-        propagated = {
-            "ancestors": np.empty(final_shape, dtype=np.int32),
-            "descendants": np.empty(final_shape, dtype=np.int32),
-        }
-
-        for relatives in self._relatives:
-            start = 0
-            for chunk in split:
-                nsamples = chunk.shape[0]
-                end = start + nsamples
-                propagated[relatives][start:end] = np.einsum(
-                    "ij,jk->ik", chunk, self.family[relatives]
-                )
-                start = end
+        propagated = self.propagator.multiprocess_propagate(
+            self.anno, split, self.family, self._relatives
+        )
 
         neg_mask = (propagated["ancestors"] == 0) & (propagated["descendants"] == 0)
 
