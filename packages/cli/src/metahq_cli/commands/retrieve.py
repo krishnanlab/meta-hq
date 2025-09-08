@@ -36,9 +36,9 @@ def retrieve_commands():
 @click.option(
     "--filters", type=str, default="species=human,db=geo,ecode=expert-curated"
 )
-@click.option("--include_metadata", type=str, default="none")
+@click.option("--metadata", type=str)
 @click.option("--output", type=click.Path(), default="annotations.parquet")
-def retrieve_tissues(terms, propagate, fmt, include_metadata, filters, output):
+def retrieve_tissues(terms, propagate, fmt, metadata, filters, output):
     """Retrieval command for tissue ontology terms."""
     terms = parse_terms(terms, "uberon")
     filters = FilterParser.from_str(filters).filters
@@ -48,11 +48,13 @@ def retrieve_tissues(terms, propagate, fmt, include_metadata, filters, output):
         exc = click.ClickException("Unsupported filter argument")
         exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
 
-    query = Query(filters["db"], "tissue", filters["ecode"])
+    query = Query(filters["db"], "tissue", filters["ecode"], filters["species"])
     curation = query.annotations(fmt="wide")
 
     if propagate:
         curation = curation.to_labels(reference="uberon")
+
+    curation.save(output, fmt, metadata)
 
 
 @retrieve_commands.command("diseases")
