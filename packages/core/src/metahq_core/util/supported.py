@@ -95,6 +95,9 @@ ORGANISMS = [
     "drosopila melanogaster",
 ]
 
+# tmp fix. Need to find out why these are included in anno
+NA_ENTITIES = ["na", "", "NA"]  # annotations to not include
+
 
 def attributes(query: str) -> str:
     """Returns default keys to collect attribute values."""
@@ -174,5 +177,4 @@ def supported(entity: str) -> list[str]:
         "relations": list(ONTO_FAMILY.keys()),
         "organisms": list(ORGANISMS),
     }
-
     return _supported[entity]
