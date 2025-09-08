@@ -222,10 +222,11 @@ class UnParsedEntry:
 
     """
 
-    def __init__(self, _entry, _attribute, _ecodes):
+    def __init__(self, _entry, _attribute, _ecodes, _organism):
         self.entry: dict[str, dict[str, dict[str, str]]] = _entry
         self.attribute: str = _attribute
         self.ecodes: list[str] = _ecodes
+        self.organism: str = _organism
 
     def get_annotations(self) -> tuple[str, str]:
         """
@@ -256,9 +257,10 @@ class UnParsedEntry:
     def is_acceptable(self) -> bool:
         """Checks if an attribute annotation exists."""
         attr_exists = self.attribute in self.entry
+        is_correct_organism = self.entry["organism"] == self.organism
         is_populated = len(self.entry) > 0
 
-        return attr_exists and is_populated
+        return attr_exists and is_populated and is_correct_organism
 
     @staticmethod
     def get_id_value(source_anno):
@@ -335,11 +337,14 @@ class Query:
         database: str,
         attribute: str,
         ecode: str = "expert-curated",
+        species: str = "homo sapiens"
     ):
         self._database: str = database
-        self._annotations: dict[str, Any] = self._load_database(database)
         self.attribute: str = attributes(attribute)
         self.ecodes: list[str] = ecodes(ecode)
+        self.species: str = species
+
+        self._annotations: dict[str, Any] = self._load_database(database)
 
     def annotations(self, level: str = "index", anchor: str = "id", fmt: str = "wide"):
         """
@@ -465,7 +470,7 @@ class Query:
 
         """
         return UnParsedEntry(
-            self._annotations[entry], self.attribute, self.ecodes
+            self._annotations[entry], self.attribute, self.ecodes, self.organism
         ).get_annotations()
 
     def _load_database(self, query: str):
