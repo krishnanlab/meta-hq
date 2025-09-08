@@ -81,6 +81,11 @@ class Ids:
         return len(self.data)
 
     @property
+    def columns(self) -> list[str]:
+        """Returns columns of self.data."""
+        return self.data.columns
+
+    @property
     def index(self):
         """Get the index column as a Series."""
         return self.data[self.index_col]
