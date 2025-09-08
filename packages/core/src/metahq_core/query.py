@@ -14,7 +14,7 @@ import polars as pl
 
 from metahq_core.curations.annotations import Annotations
 from metahq_core.util.io import load_bson
-from metahq_core.util.supported import attributes, databases, ecodes
+from metahq_core.util.supported import NA_ENTITIES, attributes, databases, ecodes
 
 
 @dataclass
@@ -107,7 +107,7 @@ class LongAnnotations:
 
     def filter_na(self, col: str):
         """Removes entries in a column that are NA."""
-        self.annotations = self.annotations.filter(pl.col(col) != "NA")
+        self.annotations = self.annotations.filter(~pl.col(col).is_in(NA_ENTITIES))
 
     def stage_anchor(self, anchor: str):
         """Filters NA values from the anchor annotations column."""
