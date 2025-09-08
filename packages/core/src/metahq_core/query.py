@@ -222,11 +222,11 @@ class UnParsedEntry:
 
     """
 
-    def __init__(self, _entry, _attribute, _ecodes, _organism):
+    def __init__(self, _entry, _attribute, _ecodes, _species):
         self.entry: dict[str, dict[str, dict[str, str]]] = _entry
         self.attribute: str = _attribute
         self.ecodes: list[str] = _ecodes
-        self.organism: str = _organism
+        self.species: str = _species
 
     def get_annotations(self) -> tuple[str, str]:
         """
@@ -257,10 +257,10 @@ class UnParsedEntry:
     def is_acceptable(self) -> bool:
         """Checks if an attribute annotation exists."""
         attr_exists = self.attribute in self.entry
-        is_correct_organism = self.entry["organism"] == self.organism
+        is_correct_species = self.entry["organism"] == self.species
         is_populated = len(self.entry) > 0
 
-        return attr_exists and is_populated and is_correct_organism
+        return attr_exists and is_populated and is_correct_species
 
     @staticmethod
     def get_id_value(source_anno):
@@ -337,7 +337,7 @@ class Query:
         database: str,
         attribute: str,
         ecode: str = "expert-curated",
-        species: str = "homo sapiens"
+        species: str = "homo sapiens",
     ):
         self._database: str = database
         self.attribute: str = attributes(attribute)
@@ -399,9 +399,12 @@ class Query:
 
         if fmt == "wide":
             attr_anno_wide = attr_anno.pivot_wide(level, anchor)
+            na_cols = list(set(attr_anno_wide.columns) & set(NA_ENTITIES))
 
             return Annotations.from_df(
-                attr_anno_wide, index_col="index", group_cols=("group", "platform")
+                attr_anno_wide.drop(na_cols),
+                index_col="index",
+                group_cols=("group", "platform"),
             )
 
         raise ValueError(f"Expected fmt in [wide, long], got {fmt}.")
@@ -470,7 +473,7 @@ class Query:
 
         """
         return UnParsedEntry(
-            self._annotations[entry], self.attribute, self.ecodes, self.organism
+            self._annotations[entry], self.attribute, self.ecodes, self.species
         ).get_annotations()
 
     def _load_database(self, query: str):
