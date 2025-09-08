@@ -4,7 +4,7 @@ Class for storing and mutating annotation collections.
 Author: Parker Hicks
 Date: 2025-04-14
 
-Last updated: 2025-09-05 by Parker Hicks
+Last updated: 2025-09-08 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from metahq_core.curations.index import Ids
 from metahq_core.curations.labels import Labels
 from metahq_core.curations.propagator import Propagator
 from metahq_core.ontology.graph import Graph
-from metahq_core.util.alltypes import FilePath, IdArray, NpIdArray, NpIntMatrix
+from metahq_core.util.alltypes import FilePath, IdArray, NpIdArray
 from metahq_core.util.helpers import flatten_list
 from metahq_core.util.io import load_txt
 from metahq_core.util.supported import onto_relations, ontologies
@@ -228,6 +228,30 @@ class Annotations(BaseCuration):
 
         return pl.concat(ctrl_dfs).lazy()
 
+    def save(
+        self, outfile: FilePath, fmt: str = "parquet", metadata: str | None = None
+    ):
+        """
+        Save annotations curation to json. Keys are terms and values are
+        positively annotated indices.
+
+        Parameters
+        ----------
+        outfile: FilePath
+            Path to outfile.json.
+
+        metadata: bool
+            If True, will add index titles to each entry.
+
+        """
+        opt = {
+            "json": self.to_json,
+            "parquet": self.to_parquet,
+            "csv": self.to_csv,
+            "tsv": self.to_tsv,
+        }
+        opt[fmt](outfile, metadata)
+
     def to_labels(
         self,
         reference: str,
@@ -280,14 +304,6 @@ class Annotations(BaseCuration):
 
         # combine IDs and labels
         return Labels(labels, self._ids.data, self.index_col, self.group_cols)
-
-    def to_numpy(self) -> NpIntMatrix:
-        """Returns the annotation data as a numpy array."""
-        return self.data.to_numpy()
-
-    def to_parquet(self, file: FilePath, **kwargs):
-        """Save annotations to parquet file."""
-        self._ids.data.hstack(self.data).write_parquet(file, **kwargs)
 
     def select(self, *args, **kwargs) -> Annotations:
         """Select annotation columns while maintaining ids."""
@@ -427,8 +443,8 @@ class Annotations(BaseCuration):
 
     @property
     def entities(self) -> list[str]:
-        """Returns column names of the Annotations frame."""
-        return self.data.columns
+        """Returns term names of the Annotations frame."""
+        return list(set(self.data.columns) - set(self.ids.columns))
 
     @property
     def groups(self) -> list[str]:
