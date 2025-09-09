@@ -40,7 +40,8 @@ def retrieve_commands():
 @click.option("--output", type=click.Path(), default="annotations.parquet")
 def retrieve_tissues(terms, propagate, fmt, metadata, filters, output):
     """Retrieval command for tissue ontology terms."""
-    terms = parse_terms(terms, "uberon")
+    ontology = "uberon"
+    terms = parse_terms(terms, ontology)
     filters = FilterParser.from_str(filters).filters
 
     bad_filters = check_filters(filters)
@@ -52,7 +53,7 @@ def retrieve_tissues(terms, propagate, fmt, metadata, filters, output):
     curation = query.annotations(fmt="wide")
 
     if propagate:
-        curation = curation.to_labels(reference="uberon")
+        curation = curation.to_labels(reference=ontology)
 
     curation.save(output, fmt, metadata)
 
@@ -60,11 +61,30 @@ def retrieve_tissues(terms, propagate, fmt, metadata, filters, output):
 @retrieve_commands.command("diseases")
 @click.option("--terms", type=str, default="MONDO:0004994,")
 @click.option("--propagate", is_flag=True)
+@click.option("--fmt", type=str, default="parquet")
 @click.option(
     "--filters", type=str, default="species=human,db=geo,ecode=expert-curated"
 )
-def retrieve_diseases(terms, propagate, fmt, include_metadata, filters, output):
-    pass
+@click.option("--metadata", type=str)
+@click.option("--output", type=click.Path(), default="annotations.parquet")
+def retrieve_diseases(terms, propagate, fmt, metadata, filters, output):
+    """Retrieval command for disease ontology terms."""
+    ontology = "mondo"
+    terms = parse_terms(terms, ontology)
+    filters = FilterParser.from_str(filters).filters
+
+    bad_filters = check_filters(filters)
+    if len(bad_filters) > 0:
+        exc = click.ClickException("Unsupported filter argument")
+        exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
+
+    query = Query(filters["db"], "disease", filters["ecode"], filters["species"])
+    curation = query.annotations(fmt="wide")
+
+    if propagate:
+        curation = curation.to_labels(reference=ontology)
+
+    curation.save(output, fmt, metadata)
 
 
 @retrieve_commands.command("sex")
