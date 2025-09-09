@@ -8,6 +8,7 @@ Last updated: 2025-09-05 by Parker Hicks
 """
 
 import click
+import polars as pl
 from metahq_core.ontology.base import Ontology
 from metahq_core.query import Query
 from metahq_core.util.supported import ontologies
@@ -79,7 +80,11 @@ def retrieve_diseases(terms, propagate, fmt, metadata, filters, output):
         exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
 
     query = Query(filters["db"], "disease", filters["ecode"], filters["species"])
-    curation = query.annotations(fmt="wide")
+    curation = (
+        query.annotations(fmt="wide")
+        .select(terms)
+        .filter(pl.any_horizontal(pl.col(terms) == 1))
+    )
 
     if propagate:
         curation = curation.to_labels(reference=ontology)
