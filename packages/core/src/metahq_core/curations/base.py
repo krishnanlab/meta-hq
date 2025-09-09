@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import polars as pl
 
-    from metahq_core.util.alltypes import IdArray, NpIntMatrix
+    from metahq_core.util.alltypes import IdArray
 
 
 class BaseCuration(ABC):
@@ -36,10 +36,6 @@ class BaseCuration(ABC):
     @abstractmethod
     def slice(self, offset: int, length: int | None = None) -> BaseCuration:
         """Slice both data and ids simultaneously using polars slice."""
-
-    @abstractmethod
-    def to_numpy(self) -> NpIntMatrix:
-        """Converts the data to a numpy array."""
 
     @property
     @abstractmethod
