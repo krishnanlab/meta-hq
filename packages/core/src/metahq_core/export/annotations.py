@@ -90,9 +90,7 @@ class AnnotationsExporter(BaseExporter):
         _anno: dict[str, list[str] | dict[str, str]] = {}
 
         if isinstance(metadata, str):
-            _metadata = metadata.split(",")
-            if not anno.index_col in _metadata:
-                _metadata.append(anno.index_col)
+            _metadata = self._parse_metafields(anno.index_col, metadata)
 
             for col in anno.entities:
                 _anno.setdefault(col, {})
@@ -133,7 +131,14 @@ class AnnotationsExporter(BaseExporter):
             Metadata fields to include.
 
         """
-        anno.ids.hstack(anno.data).write_parquet(file, **kwargs)
+
+        if isinstance(metadata, str):
+            _metadata = self._parse_metafields(anno.index_col, metadata)
+
+        else:
+            _metadata = anno.index_col
+
+        anno.ids.select(_metadata).hstack(anno.data).write_parquet(file, **kwargs)
 
     def to_tsv(
         self, anno: Annotations, file: FilePath, metadata: str | None = None, **kwargs
@@ -150,3 +155,9 @@ class AnnotationsExporter(BaseExporter):
 
         """
         anno.ids.hstack(anno.data).write_csv(file, separator="\t", **kwargs)
+
+    def _parse_metafields(self, index_col, fields: str):
+        _metadata = fields.split(",")
+        if not index_col in _metadata:
+            _metadata.append(index_col)
+        return _metadata
