@@ -18,6 +18,7 @@ from metahq_core.curations.base import BaseCuration
 from metahq_core.curations.index import Ids
 from metahq_core.curations.labels import Labels
 from metahq_core.curations.propagator import Propagator
+from metahq_core.export.annotations import AnnotationsExporter
 from metahq_core.ontology.graph import Graph
 from metahq_core.util.alltypes import FilePath, IdArray, NpIdArray
 from metahq_core.util.helpers import flatten_list
@@ -229,7 +230,10 @@ class Annotations(BaseCuration):
         return pl.concat(ctrl_dfs).lazy()
 
     def save(
-        self, outfile: FilePath, fmt: str = "parquet", metadata: str | None = None
+        self,
+        outfile: FilePath,
+        fmt: Literal["json", "parquet", "csv", "tsv"],
+        metadata: str | None = None,
     ):
         """
         Save annotations curation to json. Keys are terms and values are
@@ -244,13 +248,7 @@ class Annotations(BaseCuration):
             If True, will add index titles to each entry.
 
         """
-        opt = {
-            "json": self.to_json,
-            "parquet": self.to_parquet,
-            "csv": self.to_csv,
-            "tsv": self.to_tsv,
-        }
-        opt[fmt](outfile, metadata)
+        AnnotationsExporter().save(self, fmt, outfile, metadata)
 
     def to_labels(
         self,
