@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
 
+    from metahq_core.curations.annotations import Annotations
     from metahq_core.util.alltypes import FilePath, NpIntMatrix
 
 
@@ -21,21 +22,29 @@ class BaseExporter(ABC):
     """Base abstract class for Exporter children."""
 
     @abstractmethod
-    def to_json(self, file: FilePath, metadata: str | None, *args, **kwargs):
+    def to_json(
+        self, anno: Annotations, file: FilePath, metadata: str | None, *args, **kwargs
+    ):
         """Saves curation as json."""
 
     @abstractmethod
-    def to_numpy(self) -> NpIntMatrix:
+    def to_numpy(self, anno: Annotations) -> NpIntMatrix:
         """Returns curations matrix as numpy array."""
 
     @abstractmethod
-    def to_parquet(self, file: FilePath, metadata: str | None, *args, **kwargs) -> str:
+    def to_parquet(
+        self, anno: Annotations, file: FilePath, metadata: str | None, **kwargs
+    ):
         """Saves curation to parquet."""
 
     @abstractmethod
-    def to_csv(self, file: FilePath, metadata: str | None, *args, **kwargs):
+    def to_csv(
+        self, anno: Annotations, file: FilePath, metadata: str | None, *args, **kwargs
+    ):
         """Saves curation to csv."""
 
     @abstractmethod
-    def to_tsv(self, file: FilePath, metadata: str | None, *args, **kwargs):
+    def to_tsv(
+        self, anno: Annotations, file: FilePath, metadata: str | None, *args, **kwargs
+    ):
         """Saves curation to tsv."""
