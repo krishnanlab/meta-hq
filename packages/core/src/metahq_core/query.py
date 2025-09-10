@@ -478,4 +478,5 @@ class Query:
 
     def _load_database(self, query: str):
         """Loads the annotations dictionary for the specified database."""
-        return load_bson(databases(query))
+        anno_map = {"geo": "geo", "sra": "sra", "archs4": "geo"}
+        return load_bson(databases(anno_map[query]))
