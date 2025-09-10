@@ -4,39 +4,53 @@ This script stores file path constants and functions to retrieve those paths.
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2025-09-05
+Last updated: 2025-09-10
 """
 
 from pathlib import Path
+from typing import Literal
 
 from metahq_core.util.io import load_yaml
-
-# TODO: Need to account for user specified path in cli config
-HOME = Path.home()
-METAHQ = HOME / "metahq"
-CONFIG_FILE = METAHQ / "config.yaml"
-CONFIG = load_yaml(CONFIG_FILE)
-DATA_DIR = Path(CONFIG["data_dir"])
 
 # Root dir of metahq package
 ROOT: Path = Path(__file__).resolve().parents[5]
 
-##### Databases #####
-DATABASES: Path = DATA_DIR / "annotations"
-GEO: Path = DATABASES / "geo.bson"
-SRA: Path = DATABASES / "sra.bson"
-ARCHS4: Path = DATABASES / "archs4.bson"
-SAMPLE_LASSO_MICRO: Path = DATABASES / "sampleLASSO_microarray.bson"
-SAMPLE_LASSO_RNASEQ: Path = DATABASES / "sampleLASSO_rnaseq.bson"
+# Root dir of config
+HOME = Path.home()
+METAHQ = HOME / "metahq"
+CONFIG_FILE = METAHQ / "config.yaml"
 
-# Arg map
-DATABASE_FILES: dict[str, Path] = {
-    "geo": GEO,
-    "sra": SRA,
-    "archs4": ARCHS4,
-    "sampleLASSO-microarray": SAMPLE_LASSO_MICRO,
-    "sampleLASSO-rnaseq": SAMPLE_LASSO_RNASEQ,
-}
+
+SUPPORTED_DATABASES: list[str] = ["geo", "sra"]
+SUPPORTED_ONTOLOGIES: list[str] = ["uberon", "mondo"]
+
+
+def get_config():
+    return load_yaml(CONFIG_FILE)
+
+
+def get_data_dir():
+    return Path(get_config()["data_dir"])
+
+
+def get_databases(db: str) -> Path:
+    _databases: Path = get_data_dir() / "annotations"
+    opt = {"geo": _databases / "geo.bson", "sra": _databases / "sra.bson"}
+
+    return opt[db]
+
+
+def get_metadata_path() -> Path:
+    return get_data_dir() / "metadata"
+
+
+def geo_metadata(level: Literal["sample", "series"]) -> Path:
+    _supported = ["sample", "series"]
+    if level in _supported:
+        return get_metadata_path() / f"metadata__level-{level}.parquet"
+    raise ValueError(f"Expected level in {_supported}, got {level}.")
+
+
 LEVEL_IDS: dict[str, list[str]] = {
     "index": ["GSM", "SRS", "SRR", "SRX"],
     "group": ["GSE", "SRX", "GDS", "SRP", "DRP"],
@@ -47,30 +61,51 @@ DATABASE_IDS: dict[str, list[str]] = {
     "sra": ["SRR", "SRS", "SRX", "SRP", "DRP"],
 }
 
+
 ##### Ontology obo files #####
-ONTOLOGIES: Path = DATA_DIR / "ontology"
-MONDO: Path = ONTOLOGIES / "mondo"
-UBERON: Path = ONTOLOGIES / "uberon_ext"
 
-ONTO_FILES: dict[str, Path] = {
-    "mondo": MONDO / "mondo.obo",
-    "uberon": UBERON / "uberon_ext.obo",
-}
 
-ONTO_FAMILY: dict[str, dict[str, Path]] = {
-    "mondo": {
-        "ancestors": MONDO / "ancestors.parquet",
-        "descendants": MONDO / "descendants.parquet",
-        "ids": MONDO / "id.txt",
-        "systems": MONDO / "systems.txt",
-    },
-    "uberon": {
-        "ancestors": UBERON / "ancestors.parquet",
-        "descendants": UBERON / "descendants.parquet",
-        "ids": UBERON / "id.txt",
-        "systems": UBERON / "systems.txt",
-    },
-}
+def get_ontology_dirs(onto: str) -> Path:
+    _ontologies: Path = get_data_dir() / "ontology"
+    opt = {
+        "mondo": _ontologies / "mondo",
+        "uberon": _ontologies / "uberon_ext",
+    }
+
+    return opt[onto]
+
+
+def get_ontology_files(onto: str) -> Path:
+    mondo = get_ontology_dirs("mondo")
+    uberon = get_ontology_dirs("uberon")
+    opt = {
+        "mondo": mondo / "mondo.obo",
+        "uberon": uberon / "uberon_ext.obo",
+    }
+
+    return opt[onto]
+
+
+def get_onto_families(onto: str) -> dict[str, Path]:
+    mondo = get_ontology_dirs("mondo")
+    uberon = get_ontology_dirs("uberon")
+    opt = {
+        "mondo": {
+            "ancestors": mondo / "ancestors.parquet",
+            "descendants": mondo / "descendants.parquet",
+            "ids": mondo / "id.txt",
+            "systems": mondo / "systems.txt",
+        },
+        "uberon": {
+            "ancestors": uberon / "ancestors.parquet",
+            "descendants": uberon / "descendants.parquet",
+            "ids": uberon / "id.txt",
+            "systems": uberon / "systems.txt",
+        },
+    }
+
+    return opt[onto]
+
 
 ##### Evidence codes #####
 ECODES: list[str] = ["expert-curated", "semi-curated", "predicted", "any"]
@@ -109,7 +144,7 @@ def attributes(query: str) -> str:
 def databases(query: str) -> Path:
     """Returns path to the file storing annotations for a queried database."""
     if query in supported("databases"):
-        return DATABASE_FILES[query]
+        return get_databases(query)
     raise ValueError(f"Expected database in {supported}, got {query}.")
 
 
@@ -155,26 +190,25 @@ def organisms(query: str) -> str:
 def ontologies(query: str) -> Path:
     """Returns the path to a queried ontology."""
     if query in supported("ontologies"):
-        return ONTO_FILES[query]
+        return get_ontology_files(query)
     raise ValueError(f"Expected ontology in {supported('ontologies')}, got {query}.")
 
 
 def onto_relations(query: str, relatives: str) -> Path:
     """Returns the path to a queried ontology."""
     if query in supported("relations"):
-        if relatives in ONTO_FAMILY[query].keys():
-            return ONTO_FAMILY[query][relatives]
+        if relatives in get_onto_families(query).keys():
+            return get_onto_families(query)[relatives]
         raise ValueError(f"Relatives for {query} do not exist.")
     raise ValueError(f"Expected ontology in {supported}, got {query}.")
 
 
 def supported(entity: str) -> list[str]:
     _supported = {
-        "ontologies": list(ONTO_FILES.keys()),
+        "ontologies": SUPPORTED_ONTOLOGIES,
         "attributes": ATTRIBUTES,
         "ecodes": ECODES,
-        "databases": list(DATABASE_FILES.keys()),
-        "relations": list(ONTO_FAMILY.keys()),
+        "databases": SUPPORTED_DATABASES,
         "organisms": list(ORGANISMS),
     }
     return _supported[entity]
