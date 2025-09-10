@@ -15,6 +15,7 @@ import polars as pl
 
 from metahq_core.export.base import BaseExporter
 from metahq_core.util.io import save_json
+from metahq_core.util.supported import geo_metadata
 
 if TYPE_CHECKING:
     from metahq_core.curations.annotations import Annotations
@@ -69,7 +70,7 @@ class AnnotationsExporter(BaseExporter):
             Metadata fields to include.
 
         """
-        anno.ids.hstack(anno.data).write_csv(file, **kwargs)
+        self._save_tabular("csv", anno, file, metadata, **kwargs)
 
     def to_json(self, anno: Annotations, file: FilePath, metadata: str | None = None):
         """
@@ -91,6 +92,10 @@ class AnnotationsExporter(BaseExporter):
 
         if isinstance(metadata, str):
             _metadata = self._parse_metafields(anno.index_col, metadata)
+
+            if "description" in _metadata:
+                descs = self._get_descriptions(anno)
+                stacked = stacked.join(descs, on=anno.index_col, how="left")
 
             for col in anno.entities:
                 _anno.setdefault(col, {})
@@ -124,21 +129,17 @@ class AnnotationsExporter(BaseExporter):
 
         Parameters
         ----------
-        outfile: FilePath
+        anno: Annotations
+            Annotations curation object to save.
+
+        file: FilePath
             Path to outfile.parquet.
 
-        metadata: str
+        metadata: str | None
             Metadata fields to include.
 
         """
-
-        if isinstance(metadata, str):
-            _metadata = self._parse_metafields(anno.index_col, metadata)
-
-        else:
-            _metadata = anno.index_col
-
-        anno.ids.select(_metadata).hstack(anno.data).write_parquet(file, **kwargs)
+        self._save_tabular("parquet", anno, file, metadata, **kwargs)
 
     def to_tsv(
         self, anno: Annotations, file: FilePath, metadata: str | None = None, **kwargs
@@ -154,10 +155,100 @@ class AnnotationsExporter(BaseExporter):
             Metadata fields to include.
 
         """
-        anno.ids.hstack(anno.data).write_csv(file, separator="\t", **kwargs)
+        self._save_tabular("tsv", anno, file, metadata, **kwargs)
 
-    def _parse_metafields(self, index_col, fields: str):
+    def _get_descriptions(self, anno: Annotations):
+        """Collect descriptions to add the final output."""
+        representative = anno.ids.row(0, named=True)[anno.index_col]
+        if representative.startswith("GSM"):
+            level = "sample"
+        elif representative.startswith("GSE"):
+            level = "series"
+        else:
+            raise RuntimeError(
+                "Congradulations! You broke the application. Please submit an issue."
+            )
+
+        return (
+            pl.scan_parquet(geo_metadata(level))
+            .select([level, "description"])
+            .filter(pl.col(level).is_in(anno.index))
+            .rename({level: anno.index_col})
+            .collect()
+        )
+
+    def _get_save_method(self, fmt: str):
+        """Returns appropriate saving method."""
+        opt = {
+            "parquet": self._save_parquet,
+            "csv": self._save_csv,
+            "tsv": self._save_tsv,
+        }
+        if fmt in opt:
+            return opt[fmt]
+
+        raise ValueError(f"Expected fmt in {list(opt.keys())}, got {fmt}.")
+
+    def _parse_metafields(self, index_col, fields: str) -> list[str]:
         _metadata = fields.split(",")
         if not index_col in _metadata:
             _metadata.append(index_col)
         return _metadata
+
+    def _save_table_with_description(
+        self, file: FilePath, anno: Annotations, metadata: list[str], fmt: str, **kwargs
+    ):
+        """
+        Fetches corresponding sample/study descriptions and saves the annotations
+        curation in tabular format (parquet, csv, tsv).
+        """
+
+        desc = self._get_descriptions(anno)
+        ids = [m for m in metadata if m != "description"]
+        reorder = metadata + anno.entities
+
+        save_method = self._get_save_method(fmt)
+        save_method(
+            (
+                anno.ids.select(ids)
+                .hstack(anno.data)  # stack IDs with annotations
+                .join(desc, on=anno.index_col, how="left")  # join with desc
+                .select(reorder)
+            ),
+            file,
+            **kwargs,
+        )
+
+    def _save_tabular(
+        self,
+        fmt: str,
+        anno: Annotations,
+        file: FilePath,
+        metadata: str | None = None,
+        **kwargs,
+    ):
+        if isinstance(metadata, str):
+            _metadata = self._parse_metafields(anno.index_col, metadata)
+
+        else:
+            _metadata = list(anno.index_col)
+
+        if "description" in _metadata:
+            self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
+
+        else:
+            self._get_save_method(fmt)(
+                anno.ids.select(_metadata).hstack(anno.data), file, **kwargs
+            )
+
+    def _save_parquet(self, df: pl.DataFrame, file: FilePath, **kwargs):
+        """Save polars DataFrame to parquet."""
+        df.write_parquet(file, **kwargs)
+
+    def _save_csv(self, df: pl.DataFrame, file: FilePath, **kwargs):
+        """Save polars DataFrame to csv/tsv."""
+        df.write_csv(file, **kwargs, separator=",")
+
+    def _save_tsv(self, df: pl.DataFrame, file: FilePath, **kwargs):
+        """Save polars DataFrame to csv/tsv."""
+        df.write_csv(file, **kwargs, separator="\t")
