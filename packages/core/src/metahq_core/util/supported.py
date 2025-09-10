@@ -21,7 +21,7 @@ METAHQ = HOME / "metahq"
 CONFIG_FILE = METAHQ / "config.yaml"
 
 
-SUPPORTED_DATABASES: list[str] = ["geo", "sra"]
+SUPPORTED_DATABASES: list[str] = ["geo", "sra", "archs4"]
 SUPPORTED_ONTOLOGIES: list[str] = ["uberon", "mondo"]
 
 
@@ -136,16 +136,18 @@ NA_ENTITIES = ["na", "", "NA"]  # annotations to not include
 
 def attributes(query: str) -> str:
     """Returns default keys to collect attribute values."""
-    if query in supported("attributes"):
+    _supported = supported("attributes")
+    if query in _supported:
         return query
-    raise ValueError(f"Expected attributes in {supported}, got {query}.")
+    raise ValueError(f"Expected attributes in {_supported}, got {query}.")
 
 
 def databases(query: str) -> Path:
     """Returns path to the file storing annotations for a queried database."""
-    if query in supported("databases"):
+    _supported = supported("databases")
+    if query in _supported:
         return get_databases(query)
-    raise ValueError(f"Expected database in {supported}, got {query}.")
+    raise ValueError(f"Expected database in {_supported}, got {query}.")
 
 
 def ecodes(query: list[str] | str) -> list[str]:
@@ -189,18 +191,20 @@ def organisms(query: str) -> str:
 
 def ontologies(query: str) -> Path:
     """Returns the path to a queried ontology."""
-    if query in supported("ontologies"):
+    _supported = supported("ontologies")
+    if query in _supported:
         return get_ontology_files(query)
-    raise ValueError(f"Expected ontology in {supported('ontologies')}, got {query}.")
+    raise ValueError(f"Expected ontology in {_supported}, got {query}.")
 
 
 def onto_relations(query: str, relatives: str) -> Path:
     """Returns the path to a queried ontology."""
-    if query in supported("relations"):
+    _supported = supported("relations")
+    if query in _supported:
         if relatives in get_onto_families(query).keys():
             return get_onto_families(query)[relatives]
         raise ValueError(f"Relatives for {query} do not exist.")
-    raise ValueError(f"Expected ontology in {supported}, got {query}.")
+    raise ValueError(f"Expected ontology in {_supported}, got {query}.")
 
 
 def supported(entity: str) -> list[str]:
