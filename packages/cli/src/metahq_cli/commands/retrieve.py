@@ -32,14 +32,14 @@ def retrieve_commands():
 
 @retrieve_commands.command("tissues")
 @click.option("--terms", type=str, default="UBERON:0000948,UBERON:0000955")
-@click.option("--propagate", is_flag=True)
-@click.option("--fmt", type=str, default="parquet")
+@click.option("--mode", type=click.Choice(["direct", "propagated", "labels"]))
 @click.option(
     "--filters", type=str, default="species=human,db=geo,ecode=expert-curated"
 )
-@click.option("--metadata", type=str)
 @click.option("--output", type=click.Path(), default="annotations.parquet")
-def retrieve_tissues(terms, propagate, fmt, metadata, filters, output):
+@click.option("--fmt", type=str, default="parquet")
+@click.option("--metadata", type=str)
+def retrieve_tissues(terms, mode, fmt, metadata, filters, output):
     """Retrieval command for tissue ontology terms."""
     ontology = "uberon"
     terms = parse_terms(terms, ontology)
@@ -51,16 +51,24 @@ def retrieve_tissues(terms, propagate, fmt, metadata, filters, output):
         exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
 
     query = Query(filters["db"], "tissue", filters["ecode"], filters["species"])
-    curation = query.annotations(fmt="wide")
 
-    if propagate:
-        curation = curation.to_labels(reference=ontology)
+    if mode == "direct":
+        curation = (
+            query.annotations(fmt="wide")
+            .select(terms)
+            .filter(pl.any_horizontal(pl.col(terms) == 1))
+        )
+    elif mode == "propagated":
+        curation = query.annotations(fmt="wide").to_labels(reference=ontology)
+
+    elif mode == "labels":
+        curation = query.annotations(fmt="wide").to_labels(reference=ontology)
 
     curation.save(output, fmt, metadata)
 
 
 @retrieve_commands.command("diseases")
-@click.option("--terms", type=str, default="MONDO:0004994,")
+@click.option("--terms", type=str, default="MONDO:0004994,MONDO:0018177")
 @click.option("--propagate", is_flag=True)
 @click.option("--fmt", type=str, default="parquet")
 @click.option(
