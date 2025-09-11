@@ -14,16 +14,14 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
+from metahq_core.curations.annnotation_converter import AnnotationsConverter
 from metahq_core.curations.base import BaseCuration
 from metahq_core.curations.index import Ids
 from metahq_core.curations.labels import Labels
-from metahq_core.curations.propagator import Propagator
 from metahq_core.export.annotations import AnnotationsExporter
 from metahq_core.ontology.graph import Graph
-from metahq_core.util.alltypes import FilePath, IdArray, NpIdArray
-from metahq_core.util.helpers import flatten_list
-from metahq_core.util.io import load_txt
-from metahq_core.util.supported import onto_relations, ontologies
+from metahq_core.util.alltypes import FilePath, IdArray
+from metahq_core.util.supported import ontologies
 
 
 class Annotations(BaseCuration):
@@ -177,58 +175,6 @@ class Annotations(BaseCuration):
         """Wrapper for polars head function."""
         return repr(self.data.head(*args, **kwargs))
 
-    def propagate_controls(
-        self,
-        ctrl_id: pl.DataFrame,
-        terms: IdArray,
-        labels: pl.DataFrame,
-        group_col: str,
-    ):
-        """
-        Propagates samples annotated as controls to diseases that other
-        samples within the same study are annotated to
-
-        Parameters
-        ----------
-        ctrl_id: pl.DataFrame
-           Index to group mapping for control samples.
-
-        terms: IdArray
-            All terms for which there are labels.
-
-        labels: pl.DataFrame
-            DataFrame with terms as columns, samples as rows, and -1, 0, +1
-            labels.
-
-        group_col: str
-            Name of the groups column in ctrl_id.
-
-        Returns
-        -------
-        A Labels object with propagated controls.
-
-        """
-        labels_mat = labels.to_numpy()
-        ctrl_dfs = []
-        for group in ctrl_id[group_col].unique():
-            _controls = ctrl_id.filter(pl.col(group_col) == group)[
-                self.index_col
-            ].to_list()
-            ctrl_anno = np.zeros((len(_controls), len(terms)), dtype=np.int32)
-
-            _anno = labels_mat[np.where(np.array(self.groups) == group)[0], :]
-            positive_annos = np.any(_anno == 1, axis=0)
-
-            ctrl_anno[:, positive_annos] = 2
-
-            ctrl_dfs.append(
-                ctrl_id.filter(pl.col("index").is_in(_controls))
-                .select("index")
-                .hstack(pl.DataFrame(ctrl_anno, schema=terms))
-            )
-
-        return pl.concat(ctrl_dfs).lazy()
-
     def save(
         self,
         outfile: FilePath,
@@ -252,8 +198,9 @@ class Annotations(BaseCuration):
 
     def to_labels(
         self,
+        terms: IdArray,
         reference: str,
-        to: Literal["system_descendants", "all"] = "all",
+        mode: Literal["propagated", "label"],
         ctrl_col: str = "MONDO:0000000",
         group_col: str = "group",
     ) -> Labels:
@@ -277,31 +224,8 @@ class Annotations(BaseCuration):
         A Labels curation object with propagated -1, 0, +1 labels.
 
         """
-        # extract controls if they exist
-        ctrl_ids = self._prepare_control_data(ctrl_col)
-
-        # get terms to propagate to
-        graph = Graph.from_obo(ontologies(reference), ontology=reference)
-        terms_in_graph = self._prepare_terms(graph)
-        propagate_to = self._prepare_targets(graph, reference, to)
-
-        # propagate
-        labels = self._propagate_annotations(reference, terms_in_graph, propagate_to)
-
-        # handle controls
-        if self.controls and ctrl_ids is not None and not self.collapsed:
-            print(f"Propagating {len(ctrl_ids)} controls.")
-            ctrl_labels = self.propagate_controls(
-                ctrl_ids, list(propagate_to), labels, group_col
-            )
-            labels = pl.concat([self._ids.data, labels], how="horizontal")
-            return Labels.from_df(
-                labels.update(ctrl_labels, on=self.index_col, how="full"),
-                index_col=self.index_col,
-            )
-
-        # combine IDs and labels
-        return Labels(labels, self._ids.data, self.index_col, self.group_cols)
+        converter = AnnotationsConverter(self)
+        converter.to_labels(mode, terms)
 
     def select(self, *args, **kwargs) -> Annotations:
         """Select annotation columns while maintaining ids."""
@@ -363,60 +287,6 @@ class Annotations(BaseCuration):
             .filter(pl.col(on).is_in(keep))
             .sort(on)
         )
-
-    def _get_union_terms(self, graph: Graph):
-        """Get intersection of graph nodes and current annotation columns."""
-        _, _, in_graph = np.intersect1d(graph.nodes, self.entities, return_indices=True)
-        return np.array(self.entities)[in_graph]
-
-    def _filter_to_system_descendants(self, graph: Graph, reference: str) -> NpIdArray:
-        """Filter terms to system descendants if requested."""
-        print(f"Propagating to {reference} system descendants.")
-        systems = load_txt(onto_relations(reference, "systems"))
-        _to = list(set(flatten_list(list(graph.descendants_from(systems).values()))))
-        _, _, in_systems = np.intersect1d(_to, self.entities, return_indices=True)
-        return np.array(self.entities)[in_systems]
-
-    def _prepare_control_data(self, ctrl_col: str):
-        """Extract control data and update main data."""
-        if ctrl_col not in self.entities:
-            return None
-
-        self.controls = True
-        # combine ids and data to filter controls
-        combined = pl.concat([self._ids.data, self.data], how="horizontal")
-        ctrl_ids = combined.filter(pl.col(ctrl_col) == 1).select(self._ids.data.columns)
-
-        # Remove control column from main data
-        self.data = self.data.drop(ctrl_col)
-
-        return ctrl_ids
-
-    def _prepare_terms(self, graph: Graph) -> NpIdArray:
-        """Prepare and validate terms for propagation."""
-        return self._get_union_terms(graph)
-
-    def _propagate_annotations(self, reference: str, _from: IdArray, _to: IdArray):
-        """Perform the actual annotation propagation."""
-        print(
-            f"Propagating {self.n_indices} annotations to {len(_from)} terms to {len(_to)} terms."
-        )
-        # select terms to propagate to
-        self.data = self.data.select(_from)
-
-        propagator = Propagator(reference, self.data.to_numpy(), _from, _to)
-        return propagator.propagate()
-
-    def _prepare_targets(self, graph: Graph, reference: str, to: str) -> list[str]:
-        """Returns system descendants or all terms in the graph to propagate to."""
-        if isinstance(to, str) and to == "system_descendants":
-            return self._filter_to_system_descendants(graph, reference)
-
-        if isinstance(to, str) and to == "all":
-            return graph.nodes
-
-        supported: list[str] = ["system_descendants", "all"]
-        raise ValueError(f"Expected to in {supported}, got {to}.")
 
     @classmethod
     def from_df(
