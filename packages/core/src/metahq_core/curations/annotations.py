@@ -11,17 +11,14 @@ from __future__ import annotations
 
 from typing import Literal
 
-import numpy as np
 import polars as pl
 
-from metahq_core.curations.annnotation_converter import AnnotationsConverter
+from metahq_core.curations.annotation_converter import AnnotationsConverter
 from metahq_core.curations.base import BaseCuration
 from metahq_core.curations.index import Ids
 from metahq_core.curations.labels import Labels
 from metahq_core.export.annotations import AnnotationsExporter
-from metahq_core.ontology.graph import Graph
 from metahq_core.util.alltypes import FilePath, IdArray
-from metahq_core.util.supported import ontologies
 
 
 class Annotations(BaseCuration):
@@ -117,7 +114,7 @@ class Annotations(BaseCuration):
         data: pl.DataFrame,
         ids: pl.DataFrame,
         index_col: str,
-        group_cols: tuple[str, ...] = ("group", "platform"),
+        group_cols: list[str] = ["group", "platform"],
         collapsed: bool = False,
     ):
         self.data = data
@@ -196,11 +193,20 @@ class Annotations(BaseCuration):
         """
         AnnotationsExporter().save(self, fmt, outfile, metadata)
 
-    def to_labels(
+    def sort_columns(self):
+        return self.__class__(
+            data=self.data.select(sorted(self.data.columns)),
+            ids=self.ids,
+            index_col=self.index_col,
+            group_cols=self.group_cols,
+            collapsed=self.collapsed,
+        )
+
+    def propagate(
         self,
         terms: IdArray,
         reference: str,
-        mode: Literal["propagated", "label"],
+        mode: Literal["annotations", "labels"],
         ctrl_col: str = "MONDO:0000000",
         group_col: str = "group",
     ) -> Labels:
@@ -224,8 +230,10 @@ class Annotations(BaseCuration):
         A Labels curation object with propagated -1, 0, +1 labels.
 
         """
-        converter = AnnotationsConverter(self)
-        converter.to_labels(mode, terms)
+        converter = AnnotationsConverter(self, mode)
+
+        if mode == "labels":
+            converter.to_labels(mode, to_terms=terms)
 
     def select(self, *args, **kwargs) -> Annotations:
         """Select annotation columns while maintaining ids."""
@@ -274,7 +282,7 @@ class Annotations(BaseCuration):
             "data": agg_anno,
             "ids": new_ids,
             "index_col": on,
-            "group_cols": tuple(new_groups),
+            "group_cols": new_groups,
             "collapsed": True,
         }
         return params
@@ -293,11 +301,11 @@ class Annotations(BaseCuration):
         cls,
         df: pl.DataFrame,
         index_col: str,
-        group_cols: tuple[str, str] = ("group", "platform"),
+        group_cols: list[str] = ["group", "platform"],
         **kwargs,
     ) -> Annotations:
         """Creates an Annotations object from a combined DataFrame."""
-        id_columns = [index_col] + list(group_cols)
+        id_columns = [index_col] + group_cols
         ids_data = df.select(id_columns)
         annotation_data = df.drop(id_columns)
 
