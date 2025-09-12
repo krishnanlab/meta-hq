@@ -346,7 +346,7 @@ class Query:
 
         self._annotations: dict[str, Any] = self._load_database(database)
 
-    def annotations(self, level: str = "index", anchor: str = "id", fmt: str = "wide"):
+    def annotations(self, level: str = "index", anchor: str = "id"):
         """
         Retrieve annotations from the databse annotations dictionary.
 
@@ -360,9 +360,6 @@ class Query:
             to ontology terms for tissue and disease attributes, M/F for the sex attribute, or
             predetermined age groups for the age attribute. Using `value` will return annotations
             with the free text names noted by the annotators.
-
-        fmt: str
-            Format of the annotations. Either `wide` or `long`.
 
         Returns
         -------
@@ -394,20 +391,14 @@ class Query:
         """
         attr_anno: LongAnnotations = self.compile_annotations()
 
-        if fmt == "long":
-            return attr_anno
+        attr_anno_wide = attr_anno.pivot_wide(level, anchor)
+        na_cols = list(set(attr_anno_wide.columns) & set(NA_ENTITIES))
 
-        if fmt == "wide":
-            attr_anno_wide = attr_anno.pivot_wide(level, anchor)
-            na_cols = list(set(attr_anno_wide.columns) & set(NA_ENTITIES))
-
-            return Annotations.from_df(
-                attr_anno_wide.drop(na_cols),
-                index_col="index",
-                group_cols=("group", "platform"),
-            )
-
-        raise ValueError(f"Expected fmt in [wide, long], got {fmt}.")
+        return Annotations.from_df(
+            attr_anno_wide.drop(na_cols),
+            index_col="index",
+            group_cols=("group", "platform"),
+        )
 
     def compile_annotations(self) -> LongAnnotations:
         """
