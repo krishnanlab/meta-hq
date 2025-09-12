@@ -4,15 +4,20 @@ Class for mutating and operating on sets of labels.
 Author: Parker Hicks
 Date: 2025-08-13
 
-Last updated: 2025-09-05 by Parker Hicks
+Last updated: 2025-09-12 by Parker Hicks
 """
 
 from __future__ import annotations
 
+import warnings
+from typing import Literal
+
+import numpy as np
 import polars as pl
 
 from metahq_core.curations.base import BaseCuration
 from metahq_core.curations.index import Ids
+from metahq_core.export.labels import LabelsExporter
 from metahq_core.util.alltypes import FilePath, NpIntMatrix
 
 
@@ -126,6 +131,27 @@ class Labels(BaseCuration):
         """Wrapper for polars head function."""
         return repr(self.data.head(*args, **kwargs))
 
+    def save(
+        self,
+        outfile: FilePath,
+        fmt: Literal["json", "parquet", "csv", "tsv"],
+        metadata: str | None = None,
+    ):
+        """
+        Save labels curation to json. Keys are terms and values are
+        positively annotated indices.
+
+        Parameters
+        ----------
+        outfile: FilePath
+            Path to outfile.json.
+
+        metadata: bool
+            If True, will add index titles to each entry.
+
+        """
+        LabelsExporter().save(self, fmt, outfile, metadata)
+
     def select(self, *args, **kwargs) -> Labels:
         """Select annotation columns while maintaining ids."""
         selected_data = self.data.select(*args, **kwargs)
@@ -151,20 +177,47 @@ class Labels(BaseCuration):
             collapsed=self.collapsed,
         )
 
+    def subset_index(self, subset: list[str] | np.ndarray) -> Labels:
+        """
+        Selects rows of the expression frame whose sample IDs are in a specified
+        subset. Note the returned order may not match.
+
+        Parameters
+        ----------
+        subset: list[str] | np.ndarray
+            Array-like of index IDs to select from the expression frame.
+
+        Returns
+        -------
+        A new LazyExp object with the subset of index IDs in the frame.
+
+        """
+        _, _, mask = np.intersect1d(
+            np.array(subset), np.array(self.index), return_indices=True
+        )
+
+        diff = abs(len(mask) != len(subset))
+        if diff != 0:
+            warnings.warn(f"{diff} indices not found in the frame.", RuntimeWarning)
+
+        return Labels(
+            self.data.with_row_index()
+            .filter(pl.col("index").is_in(mask))
+            .drop("index"),
+            self._ids.filter_by_mask(mask).data,
+            self.index_col,
+        )
+
     def to_numpy(self) -> NpIntMatrix:
         """Wrapper for polars `to_numpy`."""
-        return self.data.to_numpy()
-
-    def to_parquet(self, file: FilePath, **kwargs):
-        """Save annotations to parquet file."""
-        self._ids.data.hstack(self.data).write_parquet(file, **kwargs)
+        return LabelsExporter().to_numpy(self)
 
     @classmethod
     def from_df(
         cls,
         df: pl.DataFrame,
         index_col: str,
-        group_cols: tuple[str, str] = ("group", "platform"),
+        group_cols: tuple[str, ...] | list[str] = ("group", "platform"),
         **kwargs,
     ) -> Labels:
         """Creates a Labels object from a combined DataFrame."""
@@ -176,7 +229,7 @@ class Labels(BaseCuration):
             data=annotation_data,
             ids=ids_data,
             index_col=index_col,
-            group_cols=group_cols,
+            group_cols=tuple(group_cols),
             **kwargs,
         )
 
