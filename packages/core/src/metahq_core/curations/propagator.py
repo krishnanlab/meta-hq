@@ -1,10 +1,24 @@
 """
 Class for performing annotation propagation.
 
+Assigns labels to terms by propagating annotations through
+an ontology structure.
+
+Applies the dot product between an annotations matrix and familial adjacency
+matrices. Below is the computation:
+
+    (samples x reference_terms) @ (reference_terms, propagated_terms)
+        -> (samples x propagated_terms).
+
+This is done once for ancestors and once for descendants. Then for each sample,
+if a term is is not an ancestor or descendant of that sample, then the sample is
+given a negative label for that term.
+
+
 Author: Parker Hicks
 Date: 2025-04-23
 
-Last updated: 2025-09-01 by Parker Hicks
+Last updated: 2025-09-12 by Parker Hicks
 """
 
 import multiprocessing as mp
@@ -14,7 +28,7 @@ import numpy as np
 import polars as pl
 from tqdm import tqdm
 
-from metahq_core.util.alltypes import IdArray, NpIntMatrix, NpStringArray
+from metahq_core.util.alltypes import NpIntMatrix, NpStringArray
 from metahq_core.util.io import load_txt
 from metahq_core.util.supported import onto_relations
 
@@ -26,8 +40,8 @@ class MultiprocessPropagator:
     """Class-based version to allow multiprocessing within Propagator."""
 
     @staticmethod
-    def _process_chunk_static(args):
-        """Static method worker function"""
+    def _process_chunk(args):
+        """Static method worker function."""
         chunk_idx, chunk, family = args
         result = np.einsum("ij,jk->ik", chunk, family)
         return chunk_idx, result
@@ -56,9 +70,9 @@ class MultiprocessPropagator:
         with mp.Pool(processes=n_processes) as pool:
             results = list(
                 tqdm(
-                    pool.imap(self._process_chunk_static, args_list),
+                    pool.imap(self._process_chunk, args_list),
                     total=len(args_list),
-                    desc=f"Propagating {relatives} with {n_processes} processes",
+                    desc=f"Propagating {relatives} in {len(args_list)} batches",
                 )
             )
 
@@ -79,83 +93,96 @@ class Propagator:
 
     Attributes
     ----------
-    ontology: (str)
+    ontology: str
         The name of an ontology supported by MetaHQ.
 
-    anno: (Annotations)
-        A metahq.curations Annotations object with columns of ontology terms
+    anno: Annotations
+        A MetaHQ Annotations object with columns of ontology terms
         rows as samples, and each value is a 1 or 0 indicating if a sample is
         annotated to a particular term.
 
-    family: (dict[str, pl.DataFrame | IdArray])
+    to: list[str]
+        A list of ontology term IDs to propagate annotations up or down to.
+
+    family: dict[str, pl.DataFrame | list[str]]
         A pointer to the ancestry and descendants adjacency matrices and ids
         denoting their column ids.
 
-    _relatives: (list[str])
-        Private attribute simplifying family dictionary iterations.
-
     Methods
     -------
-    propagate()
-        Propagates the passed annotations to all available terms or a specified subset.
+    propagate_up()
+        Propagates annotations up to all terms in the annotations curation.
+        If an index is annotated to a descendant of a term in `to`, then it
+        is given an annotation of 1 to that term.
 
-    select()
-        Subsets the ancetors and descendants adjacency matrices given specified
-        subset of terms to propagate to.
-
-    _load_family()
-        Loads precomputed ancestor and descendants adjacency matrices.
-
-    _vector_propagate()
-        Performs a vectorized propagation of annotations.
+    propagate_down()
+        Propagates annotations down to all terms in the annotations curation.
+        If an index is annotated to an ancestor of a term in `to`, then it
+        is given an annotation of 1 to that term.
 
     """
 
     def __init__(self, ontology, anno, to_terms, relatives):
         self.ontology: str = ontology
         self.anno: Annotations = anno
-        self._to: list[str] = to_terms
+        self.to: list[str] = to_terms
 
         self.family: dict[str, NpIntMatrix | NpStringArray] = {}
         self._relatives: list[str] = relatives
         self._load_family()
 
-        self.propagator = MultiprocessPropagator()
+        self._propagator = MultiprocessPropagator()
 
-    def propagate(self) -> pl.DataFrame:
+    def propagate_down(self) -> tuple[NpIntMatrix, list[str], pl.DataFrame]:
+        """Propagates annotations down to the terms in self.to"""
+        return self._propagate_to_family("descendants")
+
+    def propagate_up(self) -> tuple[NpIntMatrix, list[str], pl.DataFrame]:
+        """Propagates annotations up to the terms in self.to"""
+        return self._propagate_to_family("ancestors")
+
+    def _load_anscestors(
+        self, lf: pl.LazyFrame, _from: list[str], all_terms: pl.Series
+    ) -> NpIntMatrix:
         """
-        Assigns labels to terms by propagating annotations through
-        an ontology structure.
+        Loads the relations matrix with a ancestor-forward orientation.
 
-        Parameters
-        ----------
-        to: (IdArray)
-            Array of terms to propagate to.
+        Returns
+        -------
+        Matrix of shape [_from, _to] where each value indicates if a particular
+        column is a ancestor of a particular row.
 
         """
-        self._vector_propagate()
-        labels_df = pl.DataFrame(
-            self.anno, schema=list(self.family["ids"]), orient="row"
+        return (
+            lf.select(_from)
+            .with_columns(all_terms)
+            .filter(pl.col("terms").is_in(self.to))
+            .drop("terms")
+            .collect()
+            .transpose()
+            .to_numpy()
         )
 
-        return labels_df
-
-    def select(self, terms: IdArray):
+    def _load_descendants(
+        self, lf: pl.LazyFrame, _from: list[str], all_terms: pl.Series
+    ) -> NpIntMatrix:
         """
-        Filters the columns of the ancestors and descendants
-        matrices for a specified subset.
+        Loads the relations matrix with a descendants-forward orientation.
 
-        Parameters
-        ----------
-        Terms: (IdArray)
-            Terms to propagate to.
+        Returns
+        -------
+        Matrix of shape [_from, _to] where each value indicates if a particular
+        column is a descendant of a particular row.
 
         """
-        new_terms = np.isin(self.family["ids"], terms)
-        for relatives in self._relatives:
-            self.family[relatives] = self.family[relatives][:, new_terms]
-
-        self.family["ids"] = self.family["ids"][new_terms]
+        return (
+            lf.select(self.to)
+            .with_columns(all_terms)
+            .filter(pl.col("terms").is_in(_from))
+            .drop("terms")
+            .collect()
+            .to_numpy()
+        )
 
     def _load_family(self):
         """
@@ -171,12 +198,12 @@ class Propagator:
             self.family[relatives] = self._load_relatives(relatives)
 
     def _load_family_ids(self) -> NpStringArray:
+        """Loads the term IDs of the relations DataFrame."""
         tmp = np.array(load_txt(onto_relations(self.ontology, "ids")))
-        return np.array([term for term in tmp if term in self._to])
+        return np.array([term for term in tmp if term in self.to])
 
-    def _load_relatives(
-        self, relatives: Literal["ancestors", "descendants"]
-    ) -> NpIntMatrix:
+    def _load_relatives(self, relatives: str) -> NpIntMatrix:
+        """Loads the relationships matrix between ontology terms."""
         lf = pl.scan_parquet(onto_relations(self.ontology, "relations"))
         all_terms = pl.Series("terms", lf.collect_schema().names())
 
@@ -187,33 +214,22 @@ class Propagator:
             "ancestors": self._load_anscestors,
             "descendants": self._load_descendants,
         }
+        if relatives in opt:
+            return opt[relatives](lf, _from, all_terms)
 
-        return opt[relatives](lf, _from, all_terms)
+        raise ValueError(f"Expected relatives in {list(opt.keys())}, got {relatives}.")
 
-    def _load_anscestors(
-        self, lf: pl.LazyFrame, _from: list[str], all_terms: pl.Series
-    ) -> NpIntMatrix:
-        return (
-            lf.select(_from)
-            .with_columns(all_terms)
-            .filter(pl.col("terms").is_in(self._to))
-            .drop("terms")
-            .collect()
-            .transpose()
-            .to_numpy()
+    def _propagate_to_family(
+        self, relatives: Literal["ancestors", "descendants"]
+    ) -> tuple[NpIntMatrix, list[str], pl.DataFrame]:
+        """Multiprocess propagate to ancestors or descendants."""
+        split = self._split_anno()
+        propagated = self._propagator.multiprocess_propagate(
+            self.anno.n_indices, split, self.family[relatives], relatives
         )
+        propagated = np.where(propagated >= 1, 1, propagated)
 
-    def _load_descendants(
-        self, lf: pl.LazyFrame, _from: list[str], all_terms: pl.Series
-    ) -> NpIntMatrix:
-        return (
-            lf.select(self._to)
-            .with_columns(all_terms)
-            .filter(pl.col("terms").is_in(_from))
-            .drop("terms")
-            .collect()
-            .to_numpy()
-        )
+        return propagated, list(self.family["ids"]), self.anno.ids
 
     def _split_anno(self) -> list:
         """
@@ -225,48 +241,68 @@ class Propagator:
             nchunks = 1
         return np.array_split(self.anno.data.to_numpy().astype(np.float32), nchunks)
 
-    def _vector_propagate(self):
-        """
-        Applies the dot product between an annotations matrix and familial adjacency
-        matrices. Below is the computation:
 
-            (samples x reference_terms) @ (reference_terms, propagated_terms)
-                -> (samples x propagated_terms).
+def _process_groups(args):
+    controls, groups, labels, label_ids, diseases, index_col, group_col = args
+    ctrl_dfs = []
+    for group in groups:
+        _controls = controls.filter(pl.col(group_col) == group)[index_col].to_list()
+        ctrl_anno = np.zeros((len(_controls), len(diseases)), dtype=np.int32)
 
-        This is done once for ancestors and once for descendants. Then for each sample,
-        if a term is is not an ancestor or descendant of that sample, then the sample is
-        given a negative label for that term.
+        _anno = labels[np.where(np.array(label_ids[group_col]) == group)[0], :]
+        positive_annos = np.any(_anno == 1, axis=0)
 
-        """
-        split = self._split_anno()
-        propagated = self.propagator.multiprocess_propagate(
-            self.anno, split, self.family, self._relatives
+        ctrl_anno[:, positive_annos] = 2
+
+        ctrl_dfs.append(
+            controls.filter(pl.col(index_col).is_in(_controls))
+            .select(index_col)
+            .hstack(pl.DataFrame(ctrl_anno, schema=diseases))
         )
 
-        neg_mask = (propagated["ancestors"] == 0) & (propagated["descendants"] == 0)
+    return pl.concat(ctrl_dfs)
 
-        self.anno = propagated["ancestors"]
-        self.anno[neg_mask] = -1
-        self.anno = np.where(self.anno >= 1, 1, self.anno)
 
-    def _propagate_up(self):
-        split = self._split_anno()
-        propagated = self.propagator.multiprocess_propagate(
-            self.anno.n_indices, split, self.family["ancestors"], "ancestors"
+def propagate_controls(
+    controls,
+    labels,
+    label_ids,
+    diseases,
+    index_col,
+    group_col,
+    n_processes: int | None = None,
+):
+    """
+    labels: Labels
+        Propagated labels with -1, 0, +1 labels to disease terms.
+
+    controls: pl.DataFrame
+        DataFrame of index and group IDs of indices annotated as controls
+        in the original annotations matrix. Note the index and group columns
+        must match those of the label IDs.
+    """
+    if n_processes is None:
+        n_processes = mp.cpu_count()
+
+    groups = controls[group_col].unique().to_list()
+    nchunks = len(groups) // 50
+    if nchunks == 0:
+        nchunks = 1
+
+    split = np.array_split(groups, nchunks)
+
+    args_list = [
+        (controls, _split, labels, label_ids, diseases, index_col, group_col)
+        for _split in split
+    ]
+
+    with mp.Pool(processes=n_processes) as pool:
+        results = list(
+            tqdm(
+                pool.imap(_process_groups, args_list),
+                total=len(args_list),
+                desc=f"Propagating controls in {len(args_list)} batches",
+            )
         )
-        propagated = np.where(propagated >= 1, 1, propagated)
 
-        propagated = pl.DataFrame(propagated, schema=list(self.family["ids"]))
-
-        return propagated, self.anno.ids
-
-    def _propagate_down(self):
-        split = self._split_anno()
-        propagated = self.propagator.multiprocess_propagate(
-            self.anno.n_indices, split, self.family["descendants"], "descendants"
-        )
-        propagated = np.where(propagated >= 1, 1, propagated)
-
-        propagated = pl.DataFrame(propagated, schema=list(self.family["ids"]))
-
-        return propagated, self.anno.ids
+    return pl.concat(results)

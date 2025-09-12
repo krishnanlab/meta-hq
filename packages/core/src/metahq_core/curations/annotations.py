@@ -18,7 +18,7 @@ from metahq_core.curations.base import BaseCuration
 from metahq_core.curations.index import Ids
 from metahq_core.curations.labels import Labels
 from metahq_core.export.annotations import AnnotationsExporter
-from metahq_core.util.alltypes import FilePath, IdArray
+from metahq_core.util.alltypes import FilePath
 
 
 class Annotations(BaseCuration):
@@ -114,7 +114,7 @@ class Annotations(BaseCuration):
         data: pl.DataFrame,
         ids: pl.DataFrame,
         index_col: str,
-        group_cols: list[str] = ["group", "platform"],
+        group_cols: tuple[str, ...] = ("group", "platform"),
         collapsed: bool = False,
     ):
         self.data = data
@@ -147,9 +147,15 @@ class Annotations(BaseCuration):
 
         return self.__class__(**params)
 
-    def drop(self, *args, **kwargs):
-        """Wrapper for polars drop."""
-        self.data = self.data.drop(*args, **kwargs)
+    def drop(self, *args, **kwargs) -> Annotations:
+        """Wrapper for polars drop. Drops any of the term columns."""
+        return self.__class__(
+            data=self.data.drop(*args, **kwargs),
+            ids=self.ids,
+            index_col=self.index_col,
+            group_cols=self.group_cols,
+            collapsed=self.collapsed,
+        )
 
     def filter(self, condition: pl.Expr) -> Annotations:
         """Filter both data and ids simultaneously using a mask."""
@@ -194,6 +200,7 @@ class Annotations(BaseCuration):
         AnnotationsExporter().save(self, fmt, outfile, metadata)
 
     def sort_columns(self):
+        """Sorts term columns."""
         return self.__class__(
             data=self.data.select(sorted(self.data.columns)),
             ids=self.ids,
@@ -204,10 +211,10 @@ class Annotations(BaseCuration):
 
     def propagate(
         self,
-        terms: IdArray,
-        reference: str,
-        mode: Literal["annotations", "labels"],
-        ctrl_col: str = "MONDO:0000000",
+        to_terms: list[str],
+        ontology: str,
+        mode: Literal[0, 1],
+        control_col: str = "MONDO:0000000",
         group_col: str = "group",
     ) -> Labels:
         """Convert annotations to propagated labels.
@@ -215,25 +222,49 @@ class Annotations(BaseCuration):
         Assigns propagated labels to terms given their annotations.
 
         Parameters
-        ----
-        reference: str
-            The name of an ontology to reference for annotation propagation.
-        terms: IdArray | str
+        ----------
+        to_terms: list[str]
             Array of terms to generate labels for, or "union"/"all".
-        to: Optional[str]
-            Target for propagation (e.g., "system_descendants").
-        ctrl_col: str
-            Column name for control samples.
+
+        ontology: str
+            The name of an ontology to reference for annotation propagation.
+
+        mode: Literal[0, 1]
+            Mode of propagation.
+
+            If mode is 0, this will propagate any positive annotations
+            from any descendants of the to_terms up to the to_terms.
+
+            If mode 1, this will convert annotations to -1, 0, +1 labels
+            where for a particular term, if an index is annotated to that term or
+            any of its descendants, it recieves a +1 label. If it is annotated to an
+            ancestor of that term, it receives a 0 (unsure) label. If it is not annotated
+            to an ancestor or a descendant of that term, it recieves a -1 label.
+            Any indices annotated to the control column are assigned a label of 2 for any
+            terms that other indices within the same group are positively labeled to.
+
+        control_col: str
+            Column name for control annotations.
+
+        group_col: str
+            Column name of the group IDs. Used to assign control labels.
 
         Returns
         -------
-        A Labels curation object with propagated -1, 0, +1 labels.
+        A Labels curation object with propagated -1, 0, +1 labels (and 2 if controls are present).
 
         """
-        converter = AnnotationsConverter(self, mode)
+        converter = AnnotationsConverter(
+            self, to_terms, ontology, control_col=control_col
+        )
 
-        if mode == "labels":
-            converter.to_labels(mode, to_terms=terms)
+        if mode == 0:
+            return converter.propagate_up()
+
+        if mode == 1:
+            return converter.to_labels(groups=group_col)
+
+        raise ValueError(f"Mode {mode} not available.")
 
     def select(self, *args, **kwargs) -> Annotations:
         """Select annotation columns while maintaining ids."""
@@ -301,11 +332,13 @@ class Annotations(BaseCuration):
         cls,
         df: pl.DataFrame,
         index_col: str,
-        group_cols: list[str] = ["group", "platform"],
+        group_cols: tuple[str, ...] | list[str] = ("group", "platform"),
         **kwargs,
     ) -> Annotations:
         """Creates an Annotations object from a combined DataFrame."""
-        id_columns = [index_col] + group_cols
+
+        group_cols = tuple(group_cols)
+        id_columns = [index_col] + list(group_cols)
         ids_data = df.select(id_columns)
         annotation_data = df.drop(id_columns)
 
