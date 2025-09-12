@@ -91,14 +91,12 @@ def get_onto_families(onto: str) -> dict[str, Path]:
     uberon = get_ontology_dirs("uberon")
     opt = {
         "mondo": {
-            "ancestors": mondo / "ancestors.parquet",
-            "descendants": mondo / "descendants.parquet",
+            "relations": mondo / "relations.parquet",
             "ids": mondo / "id.txt",
             "systems": mondo / "systems.txt",
         },
         "uberon": {
-            "ancestors": uberon / "ancestors.parquet",
-            "descendants": uberon / "descendants.parquet",
+            "relations": uberon / "relations.parquet",
             "ids": uberon / "id.txt",
             "systems": uberon / "systems.txt",
         },
@@ -213,6 +211,7 @@ def supported(entity: str) -> list[str]:
         "attributes": ATTRIBUTES,
         "ecodes": ECODES,
         "databases": SUPPORTED_DATABASES,
+        "relations": SUPPORTED_ONTOLOGIES,
         "organisms": list(ORGANISMS),
     }
     return _supported[entity]
