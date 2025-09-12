@@ -32,7 +32,7 @@ def retrieve_commands():
 
 @retrieve_commands.command("tissues")
 @click.option("--terms", type=str, default="UBERON:0000948,UBERON:0000955")
-@click.option("--mode", type=click.Choice(["direct", "propagated", "labels"]))
+@click.option("--mode", type=click.Choice(["direct", "propagate", "label"]))
 @click.option(
     "--filters", type=str, default="species=human,db=geo,ecode=expert-curated"
 )
@@ -50,33 +50,35 @@ def retrieve_tissues(terms, mode, fmt, metadata, filters, output):
         exc = click.ClickException("Unsupported filter argument")
         exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
 
-    query = Query(filters["db"], "tissue", filters["ecode"], filters["species"])
+    curation = Query(
+        filters["db"], "tissue", filters["ecode"], filters["species"]
+    ).annotations()
 
     if mode == "direct":
-        curation = (
-            query.annotations(fmt="wide")
-            .select(terms)
-            .filter(pl.any_horizontal(pl.col(terms) == 1))
-        )
-    elif mode == "propagated":
-        curation = query.annotations(fmt="wide").to_labels(reference=ontology)
+        curation = curation.select(terms).filter(pl.any_horizontal(pl.col(terms) == 1))
+    elif mode == "propagate":
+        curation = curation.propagate(terms, ontology, mode=0)
 
-    elif mode == "labels":
-        curation = query.annotations(fmt="wide").to_labels(reference=ontology)
+    elif mode == "label":
+        curation = curation.propagate(terms, ontology, mode=1)
+
+    else:
+        exc = click.ClickException("Unsupported mode argument")
+        exc.add_note(f"Expected mode in [direct, propagated, labels], got {mode}")
 
     curation.save(output, fmt, metadata)
 
 
 @retrieve_commands.command("diseases")
 @click.option("--terms", type=str, default="MONDO:0004994,MONDO:0018177")
-@click.option("--propagate", is_flag=True)
+@click.option("--mode", type=click.Choice(["direct", "propagate", "label"]))
 @click.option("--fmt", type=str, default="parquet")
 @click.option(
     "--filters", type=str, default="species=human,db=geo,ecode=expert-curated"
 )
 @click.option("--metadata", type=str)
 @click.option("--output", type=click.Path(), default="annotations.parquet")
-def retrieve_diseases(terms, propagate, fmt, metadata, filters, output):
+def retrieve_diseases(terms, mode, fmt, metadata, filters, output):
     """Retrieval command for disease ontology terms."""
     ontology = "mondo"
     terms = parse_terms(terms, ontology)
@@ -87,15 +89,21 @@ def retrieve_diseases(terms, propagate, fmt, metadata, filters, output):
         exc = click.ClickException("Unsupported filter argument")
         exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
 
-    query = Query(filters["db"], "disease", filters["ecode"], filters["species"])
-    curation = (
-        query.annotations(fmt="wide")
-        .select(terms)
-        .filter(pl.any_horizontal(pl.col(terms) == 1))
-    )
+    curation = Query(
+        filters["db"], "disease", filters["ecode"], filters["species"]
+    ).annotations()
 
-    if propagate:
-        curation = curation.to_labels(reference=ontology)
+    if mode == "direct":
+        curation = curation.select(terms).filter(pl.any_horizontal(pl.col(terms) == 1))
+    elif mode == "propagate":
+        curation = curation.propagate(terms, ontology, mode=0)
+
+    elif mode == "label":
+        curation = curation.propagate(terms, ontology, mode=1)
+
+    else:
+        exc = click.ClickException("Unsupported mode argument")
+        exc.add_note(f"Expected mode in [direct, propagated, labels], got {mode}")
 
     curation.save(output, fmt, metadata)
 
