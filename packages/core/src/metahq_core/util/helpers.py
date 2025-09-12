@@ -26,3 +26,11 @@ def reverse_dict(d: dict) -> dict:
 def subset_keys(dict_: dict[str, Any], subset: StringArray) -> dict[str, Any]:
     """Subset a dictionary by top level keys."""
     return {key: dict_[key] for key in subset if key in dict_}
+
+
+def merge_list_values(dict_: dict[str, list[str]]):
+    """Combine all lists that are values of a dictionary to a single list."""
+    merged = []
+    for value in dict_.values():
+        merged.extend(value)
+    return merged

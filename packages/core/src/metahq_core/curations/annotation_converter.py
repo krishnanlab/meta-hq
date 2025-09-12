@@ -17,7 +17,7 @@ import polars as pl
 from metahq_core.curations.labels import Labels
 from metahq_core.curations.propagator import Propagator
 from metahq_core.ontology.graph import Graph
-from metahq_core.util.helpers import flatten_list
+from metahq_core.util.helpers import flatten_list, merge_list_values
 from metahq_core.util.io import load_txt
 from metahq_core.util.supported import onto_relations, ontologies
 
@@ -30,26 +30,49 @@ class AnnotationsConverter:
     def __init__(
         self,
         anno,
-        _from,
-        _to,
-        reference,
+        mode,
+        ontology,
         control_col="MONDO:0000000",
         group_col="group",
     ):
         self.anno: Annotations = anno
-        self._from: IdArray = _from
-        self._to: IdArray = _to
-        self.reference: str = reference
+        self.mode: Literal["annotations", "labels"] = mode
         self.control_col: str = control_col
         self.group_col: str = group_col
+        self.ontology: str = ontology
 
-    def to_labels(self, mode: Literal["propagate", "label"], terms: IdArray):
-        """Convert annotations to propagated labels.
+        self.graph = Graph.from_obo(ontologies(ontology), ontology=ontology)
+
+    def propagate_up(self, to_terms: list[str]):
+        """
+        Propagate annotations up to selected terms.
+
+        """
+        self._setup_to_annotate(to_terms)
+
+        propagator = Propagator(
+            self.ontology, self.anno, to_terms, relatives=["ancestors"]
+        )
+        print(self.anno)
+
+        new, ids = propagator._propagate_up()
+        print(Labels(new, ids, "index"))
+
+        propagator = Propagator(
+            self.ontology, self.anno, to_terms, relatives=["descendants"]
+        )
+
+        new, ids = propagator._propagate_down()
+        print(Labels(new, ids, "index"))
+
+    def to_labels(self, to_terms: list[str]):
+        """
+        Convert annotations to propagated labels.
 
         Assigns propagated labels to terms given their annotations.
 
         Parameters
-        ----
+        ----------
         reference: str
             The name of an ontology to reference for annotation propagation.
         terms: IdArray | str
@@ -64,20 +87,18 @@ class AnnotationsConverter:
         A Labels curation object with propagated -1, 0, +1 labels.
 
         """
-        graph = Graph.from_obo(ontologies(self.reference), ontology=self.reference)
 
         # setup annotations given the selected mode
-        self._setup_mode(mode, terms, graph)
+        self._setup_to_label(to_terms)
 
         # extract controls if they exist
         ctrl_ids = self._prepare_control_data(self.control_col)
 
-        # get terms to propagate to
-        terms_in_graph = self._prepare_terms(graph)
-        propagate_to = self._prepare_targets(graph)
-
         # propagate
-        labels = self._propagate_annotations()
+
+        propagator = Propagator(
+            self.ontology, self.anno, to_terms, relatives=["descendants"]
+        )
 
         # handle controls
         if self.controls and ctrl_ids is not None and not self.anno.collapsed:
@@ -144,11 +165,9 @@ class AnnotationsConverter:
         print(
             f"Propagating {self.anno.n_indices} annotations to {len(_from)} terms to {len(_to)} terms."
         )
-        # select terms to propagate to
-        self.data = self.data.select(self._from)
 
         propagator = Propagator(
-            self.reference, self.data.to_numpy(), self._from, self._to
+            self.ontology, self.data.to_numpy(), self._from, self._to
         )
         return propagator.propagate()
 
@@ -204,25 +223,43 @@ class AnnotationsConverter:
 
         return pl.concat(ctrl_dfs).lazy()
 
-    def _setup_mode(
-        self, mode: Literal["propagate", "label"], _to: IdArray, graph: Graph
-    ):
+    def _get_graph_relations(self, terms: list[str], relatives: str) -> list[str]:
+        """Get all ancestors or descendants of a list of ontology terms."""
+        opt = {
+            "ancestors": self.graph.ancestors_from,
+            "descendants": self.graph.descendants_from,
+        }
+        relation_map = opt[relatives](terms)
+        return merge_list_values(relation_map)
+
+    def _setup_to_annotate(self, _to: list[str]):
         """
+        This will turn the annotations curation into a index x _from table
+        where _from are the users selected terms and all of their descendants.
+        This will also remove samples annotated to terms that have no relation
+        to the selected terms and their descendants.
 
-
-        If mode is set to "propagate", this will turn the annotations
-        curation into a index x _from table where _from are the users
-        selected terms and all of their descendants.
         """
-        if mode == "propagate":
-            descendants = []
-            _desc_map = graph.descendants_from(_to)
-            for terms in _desc_map.values():
-                descendants.extend(terms)
+        descendants = self._get_graph_relations(_to, "descendants")
 
-            _from = _to + descendants
+        _from = list(set(_to + descendants))
+        _from = [term for term in _from if term in self.anno.entities]
 
-            self.anno = self.anno.select(_from)
+        self.anno = self.anno.select(_from).filter(
+            pl.any_horizontal(pl.col(_from) == 1)
+        )
 
-        if mode == "label":
-            pass
+    def _setup_to_label(self, _to: list[str]):
+        """
+        Ancestors and descendants of the users selected terms are selected.
+        No samples are removed this is to identify if samples are ancestors
+        or descendants of the selected terms. If not, then they are assigned
+        a -1 label. If samples are annotated to ancestors of the selected terms,
+        they are assigned a 0 label.
+
+        """
+        descendants = self._get_graph_relations(_to, "descendants")
+        ancestors = self._get_graph_relations(_to, "ancestors")
+
+        _from = _to + descendants + ancestors
+        self.anno = self.anno.select(_from)

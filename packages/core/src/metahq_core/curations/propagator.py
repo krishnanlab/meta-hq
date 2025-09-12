@@ -8,6 +8,7 @@ Last updated: 2025-09-01 by Parker Hicks
 """
 
 import multiprocessing as mp
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import polars as pl
@@ -17,6 +18,9 @@ from metahq_core.util.alltypes import IdArray, NpIntMatrix, NpStringArray
 from metahq_core.util.io import load_txt
 from metahq_core.util.supported import onto_relations
 
+if TYPE_CHECKING:
+    from metahq_core.curations.annotations import Annotations
+
 
 class MultiprocessPropagator:
     """Class-based version to allow multiprocessing within Propagator."""
@@ -24,16 +28,16 @@ class MultiprocessPropagator:
     @staticmethod
     def _process_chunk_static(args):
         """Static method worker function"""
-        chunk_idx, chunk, family_relative, relatives_key = args
-        result = np.einsum("ij,jk->ik", chunk, family_relative)
-        return chunk_idx, result, relatives_key
+        chunk_idx, chunk, family = args
+        result = np.einsum("ij,jk->ik", chunk, family)
+        return chunk_idx, result
 
     def multiprocess_propagate(
         self,
-        anno,
+        n_indices,
         split: list,
-        family: dict[str, np.ndarray],
-        relatives: list,
+        family: NpIntMatrix,
+        relatives: Literal["ancestors", "descendants"],
         n_processes: int | None = None,
     ):
         """Multiprocessing propagation"""
@@ -41,38 +45,30 @@ class MultiprocessPropagator:
             n_processes = mp.cpu_count()
 
         final_shape = (
-            anno.shape[0],
-            family["ancestors"].shape[1],
+            n_indices,
+            family.shape[1],
         )
 
-        propagated = {
-            "ancestors": np.empty(final_shape, dtype=np.int32),
-            "descendants": np.empty(final_shape, dtype=np.int32),
-        }
+        propagated = np.empty(final_shape, dtype=np.int32)
 
-        for _relatives in relatives:
+        args_list = [(i, chunk, family) for i, chunk in enumerate(split)]
 
-            args_list = [
-                (i, chunk, family[_relatives], _relatives)
-                for i, chunk in enumerate(split)
-            ]
-
-            with mp.Pool(processes=n_processes) as pool:
-                results = list(
-                    tqdm(
-                        pool.imap(self._process_chunk_static, args_list),
-                        total=len(args_list),
-                        desc=f"Propagating {_relatives} with {n_processes} processes",
-                    )
+        with mp.Pool(processes=n_processes) as pool:
+            results = list(
+                tqdm(
+                    pool.imap(self._process_chunk_static, args_list),
+                    total=len(args_list),
+                    desc=f"Propagating {relatives} with {n_processes} processes",
                 )
+            )
 
-            # Combine results
-            start = 0
-            for _, result, relatives_key in sorted(results, key=lambda x: x[0]):
-                nsamples = result.shape[0]
-                end = start + nsamples
-                propagated[relatives_key][start:end] = result
-                start = end
+        # combine
+        start = 0
+        for _, result in sorted(results, key=lambda x: x[0]):
+            nsamples = result.shape[0]
+            end = start + nsamples
+            propagated[start:end] = result
+            start = end
 
         return propagated
 
@@ -115,14 +111,15 @@ class Propagator:
 
     """
 
-    def __init__(self, ontology, anno, _from, _to):
+    def __init__(self, ontology, anno, to_terms, relatives):
         self.ontology: str = ontology
-        self._from: IdArray = _from
-        self._to: IdArray = _to
-        self.anno: NpIntMatrix = anno
-        self.family: dict[str, pl.DataFrame | NpStringArray] = {}
-        self._relatives: list[str] = ["ancestors", "descendants"]
+        self.anno: Annotations = anno
+        self._to: list[str] = to_terms
+
+        self.family: dict[str, NpIntMatrix | NpStringArray] = {}
+        self._relatives: list[str] = relatives
         self._load_family()
+
         self.propagator = MultiprocessPropagator()
 
     def propagate(self) -> pl.DataFrame:
@@ -167,33 +164,66 @@ class Propagator:
         of term_m, then ancestors[n, m] will be 1 and ancestors[m, n] will be 0. This matrix is
         transposed when loading to get row-wise relational annotations and match dimensions with
         `self.anno`.
-
-        Parameters
-        ---------
-        reference: (IdArray)
-            Columns of self.anno to load in from the familial adjacency matrices.
-
         """
-        self.family["ids"] = np.array(load_txt(onto_relations(self.ontology, "ids")))
-        col_mask = np.isin(self.family["ids"], self._to)
-        self.family["ids"] = self.family["ids"][col_mask]
+        self.family["ids"] = self._load_family_ids()
 
-        for item in self._relatives:
-            self.family[item] = (
-                pl.read_parquet(
-                    onto_relations(self.ontology, item), columns=list(self._from)
-                )
-                .transpose()
-                .to_numpy()[:, col_mask]
-            )  # TODO: Look into if this is over complicated
+        for relatives in self._relatives:
+            self.family[relatives] = self._load_relatives(relatives)
+
+    def _load_family_ids(self) -> NpStringArray:
+        tmp = np.array(load_txt(onto_relations(self.ontology, "ids")))
+        return np.array([term for term in tmp if term in self._to])
+
+    def _load_relatives(
+        self, relatives: Literal["ancestors", "descendants"]
+    ) -> NpIntMatrix:
+        lf = pl.scan_parquet(onto_relations(self.ontology, "relations"))
+        all_terms = pl.Series("terms", lf.collect_schema().names())
+
+        self.anno = self.anno.sort_columns()
+        _from = self.anno.data.columns
+
+        opt = {
+            "ancestors": self._load_anscestors,
+            "descendants": self._load_descendants,
+        }
+
+        return opt[relatives](lf, _from, all_terms)
+
+    def _load_anscestors(
+        self, lf: pl.LazyFrame, _from: list[str], all_terms: pl.Series
+    ) -> NpIntMatrix:
+        return (
+            lf.select(_from)
+            .with_columns(all_terms)
+            .filter(pl.col("terms").is_in(self._to))
+            .drop("terms")
+            .collect()
+            .transpose()
+            .to_numpy()
+        )
+
+    def _load_descendants(
+        self, lf: pl.LazyFrame, _from: list[str], all_terms: pl.Series
+    ) -> NpIntMatrix:
+        return (
+            lf.select(self._to)
+            .with_columns(all_terms)
+            .filter(pl.col("terms").is_in(_from))
+            .drop("terms")
+            .collect()
+            .to_numpy()
+        )
 
     def _split_anno(self) -> list:
         """
         Splits annotation matrix into chunks row-wise to reduce computational overhead
         for matrix multiplication. Each chunk will have at most 1000 entries.
         """
-        nchunks = self.anno.shape[0] // 500
-        return np.array_split(self.anno.astype(np.float32), nchunks)
+        nchunks = self.anno.ids.height // 500
+        if nchunks == 0:
+            nchunks = 1
+        return np.array_split(self.anno.data.to_numpy().astype(np.float32), nchunks)
 
     def _vector_propagate(self):
         """
@@ -217,4 +247,26 @@ class Propagator:
 
         self.anno = propagated["ancestors"]
         self.anno[neg_mask] = -1
-        self.anno = np.where(self.anno > 1, 1, self.anno)
+        self.anno = np.where(self.anno >= 1, 1, self.anno)
+
+    def _propagate_up(self):
+        split = self._split_anno()
+        propagated = self.propagator.multiprocess_propagate(
+            self.anno.n_indices, split, self.family["ancestors"], "ancestors"
+        )
+        propagated = np.where(propagated >= 1, 1, propagated)
+
+        propagated = pl.DataFrame(propagated, schema=list(self.family["ids"]))
+
+        return propagated, self.anno.ids
+
+    def _propagate_down(self):
+        split = self._split_anno()
+        propagated = self.propagator.multiprocess_propagate(
+            self.anno.n_indices, split, self.family["descendants"], "descendants"
+        )
+        propagated = np.where(propagated >= 1, 1, propagated)
+
+        propagated = pl.DataFrame(propagated, schema=list(self.family["ids"]))
+
+        return propagated, self.anno.ids
