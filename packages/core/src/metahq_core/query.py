@@ -13,8 +13,18 @@ from typing import Any
 import polars as pl
 
 from metahq_core.curations.annotations import Annotations
+from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import NA_ENTITIES, attributes, databases, ecodes
+
+SPECIES_MAP = {
+    "human": "homo sapiens",
+    "mouse": "mus musculus",
+    "worm": "caenorhabditis elegans",
+    "fly": "drosophila melanogaster",
+    "zebrafish": "danio rerio",
+    "rat": "rattus norvegicus",
+}
 
 
 @dataclass
@@ -337,12 +347,12 @@ class Query:
         database: str,
         attribute: str,
         ecode: str = "expert-curated",
-        species: str = "homo sapiens",
+        species: str = "human",
     ):
         self._database: str = database
         self.attribute: str = attributes(attribute)
         self.ecodes: list[str] = ecodes(ecode)
-        self.species: str = species
+        self.species: str = self._load_species(species)
 
         self._annotations: dict[str, Any] = self._load_database(database)
 
@@ -471,3 +481,12 @@ class Query:
         """Loads the annotations dictionary for the specified database."""
         anno_map = {"geo": "geo", "sra": "sra", "archs4": "geo"}
         return load_bson(databases(anno_map[query]))
+
+    def _load_species(self, species: str) -> str:
+        if species in SPECIES_MAP:
+            return SPECIES_MAP[species]
+        if species in SPECIES_MAP.values():
+            return reverse_dict(SPECIES_MAP)[species]
+        raise ValueError(
+            f"Invalid species query: {species}. Run metahq supported species for available options."
+        )
