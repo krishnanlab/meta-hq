@@ -9,7 +9,7 @@ Last updated: 2025-09-12 by Parker Hicks
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import polars as pl
 
@@ -20,6 +20,9 @@ from metahq_core.util.supported import geo_metadata
 if TYPE_CHECKING:
     from metahq_core.curations.labels import Labels
     from metahq_core.util.alltypes import FilePath, NpIntMatrix
+
+
+LABEL_KEY = {"1": "positive", "-1": "negative", "2": "control"}
 
 
 class LabelsExporter(BaseExporter):
@@ -85,11 +88,23 @@ class LabelsExporter(BaseExporter):
             Metadata fields to include.
 
         """
-        # temp index
-        stacked = curation.data.hstack(curation.ids)
-        _labels: dict[str, list[str] | dict[str, str]] = {}
+        stacked = curation.data.hstack(curation.ids)  # anno with IDs
+        _labels = {
+            term: {"positive": [], "negative": [], "control": []}
+            for term in curation.entities
+        }
 
-        if isinstance(metadata, str):
+        if metadata is None:
+            # save with just index IDs
+            for row in stacked.iter_rows(named=True):
+                self._write_row(row, _labels, curation.index_col)
+
+        elif isinstance(metadata, str) & (metadata.strip().replace(",", "") == "index"):
+            # save with just index IDs
+            for row in stacked.iter_rows(named=True):
+                self._write_row(row, _labels, curation.index_col)
+
+        elif isinstance(metadata, str):
             _metadata = self._parse_metafields(curation.index_col, metadata)
 
             if "description" in _metadata:
@@ -98,21 +113,12 @@ class LabelsExporter(BaseExporter):
                     curation.index_col
                 )
 
-            for col in curation.entities:
-                _labels.setdefault(col, {})
-                subset = stacked.filter(pl.col(col) == 1)[_metadata]
-
-                for row in subset.iter_rows(named=True):
-                    idx = row[curation.index_col]
-                    _labels[col].setdefault(idx, {})
-                    for additional in [i for i in _metadata if i != curation.index_col]:
-                        _labels[col][idx][additional] = row[additional]
-
+            for row in stacked.iter_rows(named=True):
+                self._write_row_with_metadata(
+                    row, _labels, curation.index_col, _metadata
+                )
         else:
-            for col in curation.entities:
-                _labels[col] = stacked.filter(pl.col(col) == 1)[
-                    curation.index_col
-                ].to_list()
+            raise ValueError("Weird metadata arguments.")
 
         save_json(_labels, file)
 
@@ -211,17 +217,6 @@ class LabelsExporter(BaseExporter):
         ids = [m for m in metadata if m != "description"]
         reorder = metadata + labels.entities
 
-        print("SAVING WITH DESC")
-        print(
-            (
-                labels.ids.select(ids)
-                .hstack(labels.data)  # stack IDs with labels
-                .join(desc, on=labels.index_col, how="left")  # join with desc
-                .select(reorder)
-                .sort(labels.index_col)
-            ),
-        )
-
         save_method = self._get_save_method(fmt)
         save_method(
             (
@@ -255,13 +250,6 @@ class LabelsExporter(BaseExporter):
             )
 
         else:
-            print(labels.ids.select(_metadata).sort("index"))
-            print(labels.data)
-            print(labels.filter(pl.col("MONDO:0005267") == 1))
-            print(_metadata)
-            print(
-                labels.ids.select(_metadata).hstack(labels.data).sort(labels.index_col)
-            )
             self._get_save_method(fmt)(
                 labels.ids.select(_metadata).hstack(labels.data).sort(labels.index_col),
                 file,
@@ -279,3 +267,34 @@ class LabelsExporter(BaseExporter):
     def _save_tsv(self, df: pl.DataFrame, file: FilePath, **kwargs):
         """Save polars DataFrame to csv/tsv."""
         df.write_csv(file, **kwargs, separator="\t")
+
+    def _write_row(self, row: dict[str, str], labels: dict[str, dict], index_col: str):
+        """Write a row of an Annotations curation to a dictionary."""
+        idx = row[index_col]
+        for entity in labels:
+            label = str(row[entity])
+            if label in LABEL_KEY:
+                labels[entity][LABEL_KEY[label]].append(idx)
+
+    def _write_row_with_metadata(
+        self,
+        row: dict[str, str],
+        labels: dict[str, dict],
+        index_col: str,
+        metadata: list[str],
+    ):
+        """Write a row of an Annotations curation to a dictionary with metadata."""
+        idx = row[index_col]
+        for entity in labels:
+            label = str(row[entity])
+
+            if label not in LABEL_KEY:
+                continue
+
+            # add sample with metadata
+            cls = LABEL_KEY[label]
+            idx_metadata = {idx: {}}
+            for additional in [i for i in metadata if i != index_col]:
+                idx_metadata[idx][additional] = row[additional]
+
+            labels[entity][cls].append(idx_metadata)
