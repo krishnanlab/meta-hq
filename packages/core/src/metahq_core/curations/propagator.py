@@ -18,7 +18,7 @@ given a negative label for that term.
 Author: Parker Hicks
 Date: 2025-04-23
 
-Last updated: 2025-09-12 by Parker Hicks
+Last updated: 2025-09-15 by Parker Hicks
 """
 
 import multiprocessing as mp
@@ -37,11 +37,16 @@ if TYPE_CHECKING:
 
 
 class MultiprocessPropagator:
-    """Class-based version to allow multiprocessing within Propagator."""
+    """Exists to allow multiprocessing within the Propagator class."""
 
     @staticmethod
     def _process_chunk(args):
-        """Static method worker function."""
+        """
+        Worker function for matrix dot product between annotation chunk
+        and ontology relationship matrix.
+
+        This is the function split between workers.
+        """
         chunk_idx, chunk, family = args
         result = np.einsum("ij,jk->ik", chunk, family)
         return chunk_idx, result
