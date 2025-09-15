@@ -1,0 +1,124 @@
+"""
+Command to setup the metahq configuration.
+
+Author: Parker Hicks
+Date: 2025-09-05
+
+Last updated: 2025-09-05
+"""
+
+import sys
+from pathlib import Path
+from string import Template
+
+import yaml
+
+from metahq_core.util.io import checkdir
+
+HOME_DIR = Path.home()
+METAHQ_DIR = checkdir(Path.home() / "metahq")
+CONFIG = METAHQ_DIR / "config.yaml"
+
+
+# TODO: Remove test func
+class Config:
+    """
+    Class to store and assess and create the meta-hq configuration file.
+
+    """
+
+    def __init__(
+        self,
+        version="0.1.0",
+        zenodo_doi="xxxx1",
+        data_dir=str(HOME_DIR / "data"),
+        logs=str(HOME_DIR / ".logs" / "metahq.log"),
+    ):
+        self.version: str = version
+        self.zenodo_doi: str = zenodo_doi
+        self.data_dir: str = data_dir
+        self.logs: str = logs
+
+        self.ok_keys: list[str] = ["version", "zenodo_doi", "data_dir", "logs"]
+
+    def check(self):
+        """Checks if the meta-hq config exists. Initializes if not."""
+        if not CONFIG.exists():
+            self.set_default()
+
+        else:
+            # check existing
+            if not self.is_acceptable_config():
+                print("Incorrect configuration detected. Resetting with defaults.")
+                self.set_default()
+
+    def is_acceptable_config(self):
+        """Checks if config has correct structure."""
+        config = self.load_config()
+
+        return sorted(list(config.keys())) == sorted(self.ok_keys)
+
+    def load_config(self) -> dict[str, str]:
+        """Loads the meta-hq config file."""
+        with open(CONFIG, "r", encoding="utf-8") as stream:
+            try:
+                return yaml.safe_load(stream)
+            except yaml.YAMLError as e:
+                sys.exit(str(e))
+
+    def load_config_str(self) -> str:
+        """Loads the meta-hq config file."""
+        with open(CONFIG, "r", encoding="utf-8") as f:
+            return f.read()
+
+    def make_config(self) -> dict[str, str]:
+        """Creates the config dictionary"""
+        return {
+            "version": self.version,
+            "zenodo_doi": self.zenodo_doi,
+            "data_dir": self.data_dir,
+            "logs": self.logs,
+        }
+
+    def save_config(self, config: dict[str, str]):
+        """Saves a config file."""
+        with open(CONFIG, "w", encoding="utf-8") as stream:
+            try:
+                yaml.safe_dump(config, stream)
+            except yaml.YAMLError as e:
+                sys.exit(str(e))
+
+    def setup(self):
+        """Main setup function."""
+        self.check()
+        new = self.update_config()
+        self.save_config(new)
+
+    def set_default(self):
+        """Makes a default meta-hq config."""
+        print("making default")
+        self.save_config(self.make_config())
+
+    def update_config(self):
+        """Updated the meta-hq config file."""
+        config = self.load_config()
+
+        if self.data_dir == "default":
+            self.data_dir = str(Path.home() / "metahq" / "data")
+
+        new_vars = {
+            "version": self.version,
+            "zenodo_doi": self.zenodo_doi,
+            "data_dir": str(Path(self.data_dir).resolve()),
+        }
+
+        config = {
+            key: new_vars[key] if key in new_vars else config[key] for key in config
+        }
+
+        return config
+
+    @property
+    def path(self) -> str:
+        """Returns /path/to/config.yaml"""
+        return str(CONFIG)
