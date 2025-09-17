@@ -30,7 +30,8 @@ pip install -e packages/core packages/cli
 
 ## 3. Setup the metahq config
 
-This creates a config file in `~/metahq` that outlines where to pull data from for MetaHQ functionalities.
+This creates a config file in `~/metahq` that outlines where to pull data from for MetaHQ functionalities. 
+**NOTE**: there is no Zenodo DOI yet. Just use something random. 
 
 ```bash
 metahq setup --zenodo_doi xxx --data_dir ~/metahq/data
