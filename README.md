@@ -9,7 +9,7 @@ A platform for harmonizing and distributing community-curated high-quality metad
 MetaHQ will require users to download a data instance from Zenodo. The data used here are not yet uploaded to Zenodo
 and are instead included in `metahq.tar.gz`. Unzip this file and place the folder into your home directory.
 
-From `/path/to/metahq`:
+From `/path/to/metahq` run:
 
 ```bash
 tar -xvf metahq.tar.gz -C ~/metahq
@@ -25,8 +25,7 @@ conda activate metahq
 Install local dependencies for develpment:
 
 ```bash
-pip install -e packages/core
-pip install -e packages/cli
+pip install -e packages/core packages/cli
 ```
 
 ## 3. Setup the metahq config
@@ -40,6 +39,8 @@ metahq setup --zenodo_doi xxx --data_dir ~/metahq/data
 # Functionalities
 
 ## Term search
+
+Input a free text query (e.g. "heart attack") and return the most similar ontology term IDs (e.g., MONDO:0005068)
 
 ```bash
 metahq search [--query "heart attack"] [--type celltype,tissue,disease] \
