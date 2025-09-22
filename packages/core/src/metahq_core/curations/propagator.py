@@ -204,7 +204,11 @@ class Propagator:
 
     def _load_family_ids(self) -> NpStringArray:
         """Loads the term IDs of the relations DataFrame."""
-        tmp = np.array(load_txt(onto_relations(self.ontology, "ids")))
+        tmp = (
+            pl.scan_parquet(onto_relations(self.ontology, "relations"))
+            .collect_schema()
+            .names()
+        )
         return np.array([term for term in tmp if term in self.to])
 
     def _load_relatives(self, relatives: str) -> NpIntMatrix:
