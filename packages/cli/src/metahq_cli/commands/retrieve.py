@@ -32,6 +32,7 @@ def retrieve_commands():
 
 @retrieve_commands.command("tissues")
 @click.option("--terms", type=str, default="UBERON:0000948,UBERON:0000955")
+@click.option("--level", type=click.Choice(["sample", "series"]))
 @click.option("--mode", type=click.Choice(["direct", "propagate", "label"]))
 @click.option(
     "--filters", type=str, default="species=human,db=geo,ecode=expert-curated"
@@ -39,7 +40,7 @@ def retrieve_commands():
 @click.option("--output", type=click.Path(), default="annotations.parquet")
 @click.option("--fmt", type=str, default="parquet")
 @click.option("--metadata", type=str)
-def retrieve_tissues(terms, mode, fmt, metadata, filters, output):
+def retrieve_tissues(terms, level, mode, fmt, metadata, filters, output):
     """Retrieval command for tissue ontology terms."""
     ontology = "uberon"
     terms = parse_terms(terms, ontology)
@@ -71,6 +72,7 @@ def retrieve_tissues(terms, mode, fmt, metadata, filters, output):
 
 @retrieve_commands.command("diseases")
 @click.option("--terms", type=str, default="MONDO:0004994,MONDO:0018177")
+@click.option("--level", type=click.Choice(["sample", "series"]))
 @click.option("--mode", type=click.Choice(["direct", "propagate", "label"]))
 @click.option("--fmt", type=str, default="parquet")
 @click.option(
@@ -78,7 +80,7 @@ def retrieve_tissues(terms, mode, fmt, metadata, filters, output):
 )
 @click.option("--metadata", type=str)
 @click.option("--output", type=click.Path(), default="annotations.parquet")
-def retrieve_diseases(terms, mode, fmt, metadata, filters, output):
+def retrieve_diseases(terms, level, mode, fmt, metadata, filters, output):
     """Retrieval command for disease ontology terms."""
     ontology = "mondo"
     terms = parse_terms(terms, ontology)
@@ -90,7 +92,11 @@ def retrieve_diseases(terms, mode, fmt, metadata, filters, output):
         exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
 
     curation = Query(
-        filters["db"], "disease", filters["ecode"], filters["species"]
+        database=filters["db"],
+        attribute="disease",
+        level=level,
+        ecode=filters["ecode"],
+        species=filters["species"],
     ).annotations()
 
     if mode == "direct":

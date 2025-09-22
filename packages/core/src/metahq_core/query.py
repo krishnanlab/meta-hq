@@ -8,14 +8,14 @@ Last updated: 2025-09-05 by Parker Hicks
 """
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 
 import polars as pl
 
 from metahq_core.curations.annotations import Annotations
 from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
-from metahq_core.util.supported import NA_ENTITIES, attributes, databases, ecodes
+from metahq_core.util.supported import NA_ENTITIES, attributes, ecodes, get_annotations
 
 SPECIES_MAP = {
     "human": "homo sapiens",
@@ -27,52 +27,46 @@ SPECIES_MAP = {
 }
 
 
-@dataclass
 class AccessionIDs:
     """
-    Dataclass to store accession IDs for entries in the annotations dictionary.
+    Stores accession IDs for entries in the annotations dictionary.
     Exists to support modularity and readibility within the Query class.
     """
 
-    indices: list[str] = field(default_factory=list)
-    groups: list[str] = field(default_factory=list)
-    platforms: list[str] = field(default_factory=list)
+    def __init__(self, fields):
+        self.fields: tuple[str, ...] = fields
+        self.ids: dict[str, list] = {field: [] for field in fields}
 
-    def add(self, index: str, group: str, platform: str):
+    def add(self, new: dict[str, str]):
         """Add an entry. Args can be 'NA'."""
-        self.indices.append(index)
-        self.groups.append(group)
-        self.platforms.append(platform)
+        for key, value in new.items():
+            if key in self.fields:
+                self.ids[key].append(value)
 
     def to_polars(self) -> pl.DataFrame:
         """Converts object to a Polars DataFrame."""
-        return pl.DataFrame(
-            {"index": self.indices, "group": self.groups, "platform": self.platforms}
-        )
+        return pl.DataFrame(self.ids)
 
 
-@dataclass
 class ParsedEntries:
     """
     Dataclass to store parsed entries from the annotations dictionary.
     Exists to support modularity and readibility within the Query class.
     """
 
-    accessions: AccessionIDs = field(default_factory=lambda: AccessionIDs())
-    ids: list[str] = field(default_factory=list)
-    values: list[str] = field(default_factory=list)
+    def __init__(self, fields):
+        self.accessions = AccessionIDs(fields)
+        self.entries = {"id": [], "value": []}
 
-    def add(self, id_: str, value: str, accessions: tuple[str, str, str]):
+    def add(self, id_: str, value: str, accessions: dict[str, str]):
         """Adds an annotation with an ID, value, and accession IDs. Args can be 'NA'."""
-        self.ids.append(id_)
-        self.values.append(value)
-        self.accessions.add(*accessions)
+        self.entries["id"].append(id_)
+        self.entries["value"].append(value)
+        self.accessions.add(accessions)
 
     def to_polars(self) -> pl.DataFrame:
         """Converts object to a Polars DataFrame."""
-        return pl.DataFrame({"id": self.ids, "value": self.values}).hstack(
-            self.accessions.to_polars()
-        )
+        return pl.DataFrame(self.entries).hstack(self.accessions.to_polars())
 
 
 class LongAnnotations:
@@ -108,8 +102,9 @@ class LongAnnotations:
 
     """
 
-    def __init__(self, annotations):
+    def __init__(self, annotations, id_cols):
         self.annotations: pl.DataFrame = annotations
+        self.id_cols: list[str] = id_cols
 
     def column_intersection_with(self, cols: list[str]) -> list[str]:
         """Find intersection between cols and annotations columns."""
@@ -128,12 +123,12 @@ class LongAnnotations:
         Filters NA values from the specified ID level column. If level
         is 'group', then it will also remove annotations with index IDs.
         """
-        supported = ["index", "group"]
+        supported = ["sample", "series"]
         if not level in supported:
             raise ValueError(f"Expected level in {supported}, got {level}.")
 
         if level == "group":
-            self.annotations = self.annotations.filter(pl.col("index") == "NA").drop(
+            self.annotations = self.annotations.filter(pl.col("sample") == "NA").drop(
                 "index"
             )
 
@@ -168,7 +163,7 @@ class LongAnnotations:
         self.stage(level, anchor)
 
         # prepare accession IDs DataFrame
-        id_cols = self.column_intersection_with(["index", "group", "platform"])
+        id_cols = self.column_intersection_with(self.id_cols)
         ids = self.annotations.select(id_cols)
 
         # remove unused columns for pivoting
@@ -305,7 +300,7 @@ class Query:
 
     Attributes
     ----------
-    _database: str
+    database: str
         Database to query annotations.
 
     _annotations: dict
@@ -344,19 +339,21 @@ class Query:
 
     def __init__(
         self,
-        database: str,
-        attribute: str,
-        ecode: str = "expert-curated",
-        species: str = "human",
+        database,
+        attribute,
+        level="sample",
+        ecode="expert-curated",
+        species="human",
     ):
-        self._database: str = database
+        self.database: str = database
         self.attribute: str = attributes(attribute)
+        self.level: Literal["sample", "series"] = level
         self.ecodes: list[str] = ecodes(ecode)
         self.species: str = self._load_species(species)
 
-        self._annotations: dict[str, Any] = self._load_database(database)
+        self._annotations: dict[str, Any] = self._load_annotations()
 
-    def annotations(self, level: str = "index", anchor: str = "id"):
+    def annotations(self, anchor: str = "id"):
         """
         Retrieve annotations from the databse annotations dictionary.
 
@@ -399,18 +396,41 @@ class Query:
         └──────────┴───────────┴──────────┴────────────────┴───┴────────────────┘
 
         """
-        attr_anno: LongAnnotations = self.compile_annotations()
-
-        attr_anno_wide = attr_anno.pivot_wide(level, anchor)
-        na_cols = list(set(attr_anno_wide.columns) & set(NA_ENTITIES))
+        index, groups = self.assign_index_groups()
+        fields = [index] + list(groups)
+        attr_anno = self.compile_annotations(fields).pivot_wide(self.level, anchor)
+        na_cols = list(set(attr_anno.columns) & set(NA_ENTITIES))
 
         return Annotations.from_df(
-            attr_anno_wide.drop(na_cols),
-            index_col="index",
-            group_cols=("group", "platform"),
+            attr_anno.drop(na_cols),
+            index_col=index,
+            group_cols=groups,
         )
 
-    def compile_annotations(self) -> LongAnnotations:
+    def subset_by_database(self, anno: dict) -> dict:
+        if self.database == "archs4":
+            pass
+        elif self.database == "geo":
+            pass
+        elif self.database == "sra":
+            # anno = {
+            #    k: v for k, v in anno if any(field in v["accession_ids"] for field in _)
+            # }
+
+            pass
+
+        return anno
+
+    def assign_index_groups(self):
+        if self.level == "series":
+            return "series", tuple(["platform"])
+
+        if self.level == "sample":
+            return "sample", tuple(["series", "platform"])
+
+        raise ValueError(f"Expected level in [sample, study], got {self.level}.")
+
+    def compile_annotations(self, fields: list[str]) -> LongAnnotations:
         """
         Extract attribute annotations and accession IDs from the annotations dictionary.
 
@@ -420,7 +440,7 @@ class Query:
         attribute.
 
         """
-        parsed = ParsedEntries()
+        parsed = ParsedEntries(fields)
         for entry in self._annotations:
             accessions = self.get_accession_ids(entry)
             id_, value = self.get_valid_annotations(entry)
@@ -430,13 +450,13 @@ class Query:
 
         if parsed.height == 0:
             raise RuntimeError(
-                f"""Unable to identify with provided parameters: [DATABASE: {self._database},
+                f"""Unable to identify with provided parameters: [DATABASE: {self.database},
             ATTRIBUTE: {self.attribute}, ECODES: {self.ecodes}"""
             )
 
-        return LongAnnotations(parsed)
+        return LongAnnotations(parsed, fields)
 
-    def get_accession_ids(self, entry: str) -> tuple[str, str, str]:
+    def get_accession_ids(self, entry: str) -> dict[str, str]:
         """
         Updates an AccessionIDs object with index, group, and platform
         IDs from an annotations entry.
@@ -452,12 +472,16 @@ class Query:
         dictionary.
 
         """
-        accessions = {"sample": "NA", "series": "NA", "platform": "NA"}
+        if self.level == "sample":
+            accessions = {"sample": "NA", "series": "NA", "platform": "NA"}
+        else:
+            accessions = {"series": "NA", "platform": "NA"}
+
         for id_ in accessions:
             if id_ in self._annotations[entry]["accession_ids"]:
                 accessions[id_] = self._annotations[entry]["accession_ids"][id_]
 
-        return accessions["sample"], accessions["series"], accessions["platform"]
+        return accessions
 
     def get_valid_annotations(self, entry: str) -> tuple[str, str]:
         """
@@ -477,10 +501,11 @@ class Query:
             self._annotations[entry], self.attribute, self.ecodes, self.species
         ).get_annotations()
 
-    def _load_database(self, query: str):
+    def _load_annotations(self):
         """Loads the annotations dictionary for the specified database."""
-        anno_map = {"geo": "geo", "sra": "sra", "archs4": "geo"}
-        return load_bson(databases(anno_map[query]))
+        anno = load_bson(get_annotations(self.level))
+
+        return anno
 
     def _load_species(self, species: str) -> str:
         if species in SPECIES_MAP:
