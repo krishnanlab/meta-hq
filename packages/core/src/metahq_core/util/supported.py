@@ -33,11 +33,13 @@ def get_data_dir():
     return Path(get_config()["data_dir"])
 
 
-def get_databases(db: str) -> Path:
+def get_annotations(level: Literal["sample", "series"]) -> Path:
     _databases: Path = get_data_dir() / "annotations"
-    opt = {"geo": _databases / "geo.bson", "sra": _databases / "sra.bson"}
+    return _databases / f"combined__level-{level}.bson"
 
-    return opt[db]
+
+def get_archs4() -> Path:
+    return Path(get_config()["data_dir"] / "databases/archs4")
 
 
 def get_metadata_path() -> Path:
