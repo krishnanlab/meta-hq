@@ -215,7 +215,7 @@ class Annotations(BaseCuration):
         ontology: str,
         mode: Literal[0, 1],
         control_col: str = "MONDO:0000000",
-        group_col: str = "group",
+        group_col: str = "series",
     ) -> Labels:
         """Convert annotations to propagated labels.
 
