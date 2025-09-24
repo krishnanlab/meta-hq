@@ -1,3 +1,12 @@
+"""
+Checker functions for the MetaHQ CLI pipelines.
+
+Author: Parker Hicks
+Date: 2025-09
+
+Last updated: 2025-09-24 by Parker Hicks
+"""
+
 from metahq_cli.util.supported import REQUIRED_FILTERS
 
 
