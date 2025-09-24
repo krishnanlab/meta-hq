@@ -1,5 +1,10 @@
 """
 Test the quality of MetaHQ annotations.
+
+Author: Parker Hicks
+Date: 2025-09-23
+
+Last updated: 2025-09-24 by Parker Hicks
 """
 
 import pytest
