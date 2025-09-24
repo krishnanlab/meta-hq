@@ -78,7 +78,7 @@ class AnnotationsConverter:
         )
         new, cols, ids = propagator.propagate_up()
 
-        return Labels(pl.DataFrame(new, schema=cols), ids, "index")
+        return Labels(pl.DataFrame(new, schema=cols), ids, self.anno.index_col)
 
     def to_labels(self, groups: str = "group"):
         """
