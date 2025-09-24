@@ -137,7 +137,8 @@ class LabelsExporter(BaseExporter):
         }
 
         if (metadata is None) or (
-            isinstance(metadata, str) & (metadata.strip().replace(",", "") == "index")
+            isinstance(metadata, str)
+            & (metadata.strip().replace(",", "") == curation.index_col)
         ):
             # save with just index IDs
             stacked = curation.data.hstack(curation.ids)
