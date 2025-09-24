@@ -447,8 +447,8 @@ class Query:
 
         if parsed.height == 0:
             raise RuntimeError(
-                f"""Unable to identify with provided parameters: [DATABASE: {self.database},
-            ATTRIBUTE: {self.attribute}, ECODES: {self.ecodes}, TECHNOLOGY: {self.technology}"""
+                f"""Unable to identify with provided parameters: [ATTRIBUTE: {self.attribute},
+                SPECIES: {self.species}, ECODES: {self.ecodes}, TECHNOLOGY: {self.technology}]"""
             )
 
         return LongAnnotations(parsed, fields)
