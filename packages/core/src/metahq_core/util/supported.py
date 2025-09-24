@@ -22,7 +22,28 @@ CONFIG_FILE = METAHQ / "config.yaml"
 
 
 SUPPORTED_DATABASES: list[str] = ["geo", "sra", "archs4"]
+SUPPORTED_LEVELS: list[str] = ["sample", "series"]
 SUPPORTED_ONTOLOGIES: list[str] = ["uberon", "mondo"]
+SUPPORTED_SAMPLE_METADATA: list[str] = [
+    "sample",
+    "series",
+    "platform",
+    "description",
+    "srr",
+    "srx",
+    "srs",
+    "srp",
+]
+SUPPORTED_SERIES_METADATA: list[str] = [
+    "series",
+    "platform",
+    "description",
+    "srr",
+    "srx",
+    "srs",
+    "srp",
+]
+SUPPORTED_TECHNOLOGIES: list[str] = ["microarray", "rnaseq"]
 
 
 def get_config():
@@ -46,6 +67,11 @@ def get_metadata_path() -> Path:
     return get_data_dir() / "metadata"
 
 
+def get_technologies() -> Path:
+    metadata: Path = get_data_dir() / "metadata"
+    return metadata / "technologies.parquet"
+
+
 def geo_metadata(level: Literal["sample", "series"]) -> Path:
     _supported = ["sample", "series"]
     if level in _supported:
@@ -59,8 +85,8 @@ LEVEL_IDS: dict[str, list[str]] = {
     "platform": ["GPL"],
 }
 DATABASE_IDS: dict[str, list[str]] = {
-    "geo": ["GSM", "GSE", "GDS"],
-    "sra": ["SRR", "SRS", "SRX", "SRP", "DRP"],
+    "geo": ["gsm", "gse"],
+    "sra": ["srr", "srs", "srx", "srp"],
 }
 
 
@@ -178,8 +204,26 @@ def levels() -> list[str]:
     return list(LEVEL_IDS.keys())
 
 
-def database_ids() -> dict[str, list[str]]:
-    return DATABASE_IDS
+def technologies(query: str) -> str:
+    if query in SUPPORTED_TECHNOLOGIES:
+        return query
+    raise ValueError(f"Expected technology in {SUPPORTED_TECHNOLOGIES}, got {query}.")
+
+
+def database_ids(query: str) -> list[str]:
+    """Retrieve supported accession IDs for SRA or GEO."""
+    _supported = list(DATABASE_IDS.keys())
+    if query in _supported:
+        return DATABASE_IDS[query]
+    raise ValueError(f"Expected query in {_supported}, got {query}.")
+
+
+def metadata_fields(level: str) -> list[str]:
+    if level == "sample":
+        return SUPPORTED_SAMPLE_METADATA
+    if level == "series":
+        return SUPPORTED_SERIES_METADATA
+    raise ValueError(f"Expected level in [sample, series], got {level}.")
 
 
 def organisms(query: str) -> str:
@@ -212,8 +256,10 @@ def supported(entity: str) -> list[str]:
         "ontologies": SUPPORTED_ONTOLOGIES,
         "attributes": ATTRIBUTES,
         "ecodes": ECODES,
+        "levels": SUPPORTED_LEVELS,
         "databases": SUPPORTED_DATABASES,
         "relations": SUPPORTED_ONTOLOGIES,
-        "organisms": list(ORGANISMS),
+        "technologies": SUPPORTED_TECHNOLOGIES,
+        "species": list(ORGANISMS),
     }
     return _supported[entity]
