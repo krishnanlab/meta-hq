@@ -4,7 +4,7 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2025-09-08 by Parker Hicks
+Last updated: 2025-09-23 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -14,8 +14,13 @@ from typing import TYPE_CHECKING, Literal
 import polars as pl
 
 from metahq_core.export.base import BaseExporter
-from metahq_core.util.io import save_json
-from metahq_core.util.supported import geo_metadata
+from metahq_core.util.io import checkdir, load_bson, save_json
+from metahq_core.util.supported import (
+    database_ids,
+    geo_metadata,
+    get_annotations,
+    metadata_fields,
+)
 
 if TYPE_CHECKING:
     from metahq_core.curations.annotations import Annotations
@@ -24,6 +29,31 @@ if TYPE_CHECKING:
 
 class AnnotationsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
+
+    def get_sra(self, anno: Annotations, fields: list[str]) -> Annotations:
+        if anno.index_col == "sample":
+            _anno = load_bson(get_annotations("sample"))
+        elif anno.index_col == "series":
+            _anno = load_bson(get_annotations("series"))
+        else:
+            raise ValueError(
+                f"Expected index column name in [sample, series], got {anno.index_col}."
+            )
+
+        new_ids = {field: [] for field in fields}
+        new_ids[anno.index_col] = []
+        for idx in anno.index:
+            new_ids[anno.index_col].append(idx)
+
+            idx_accessions = _anno[idx]["accession_ids"]
+            for field in fields:
+                if field not in idx_accessions:
+                    new_ids[field].append("NA")
+                    continue
+
+                new_ids[field].append(idx_accessions[field])
+
+        return anno.add_ids(pl.DataFrame(new_ids))
 
     def save(
         self,
@@ -46,7 +76,7 @@ class AnnotationsExporter(BaseExporter):
         metadata: str
             Metadata fields to include.
         """
-
+        _ = checkdir(file, is_file=True)
         opt = {
             "json": self.to_json,
             "parquet": self.to_parquet,
@@ -87,11 +117,17 @@ class AnnotationsExporter(BaseExporter):
 
         """
         # temp index
-        stacked = anno.data.hstack(anno.ids)
         _anno: dict[str, list[str] | dict[str, str]] = {}
 
         if isinstance(metadata, str):
             _metadata = self._parse_metafields(anno.index_col, metadata)
+
+            if self._sra_in_metadata(_metadata):
+                anno = self.get_sra(
+                    anno, [field for field in _metadata if field in database_ids("sra")]
+                )
+
+            stacked = anno.data.hstack(anno.ids)
 
             if "description" in _metadata:
                 descs = self._get_descriptions(anno)
@@ -108,6 +144,7 @@ class AnnotationsExporter(BaseExporter):
                         _anno[col][idx][additional] = row[additional]
 
         else:
+            stacked = anno.data.hstack(anno.ids)
             for col in anno.entities:
                 _anno[col] = stacked.filter(pl.col(col) == 1)[anno.index_col].to_list()
 
@@ -190,7 +227,18 @@ class AnnotationsExporter(BaseExporter):
         raise ValueError(f"Expected fmt in {list(opt.keys())}, got {fmt}.")
 
     def _parse_metafields(self, index_col, fields: str) -> list[str]:
+        """Parse and check user-specified metadata fields."""
         _metadata = fields.split(",")
+
+        flagged = False
+        for field in _metadata:
+            if field not in metadata_fields(index_col):
+                flagged = True
+                print(f"Requested metadata: {field}, is not available. Skipping...")
+
+        if flagged:
+            print("Run metahq metadata to see available metadata fields.")
+
         if not index_col in _metadata:
             _metadata.append(index_col)
         return _metadata
@@ -231,7 +279,12 @@ class AnnotationsExporter(BaseExporter):
             _metadata = self._parse_metafields(anno.index_col, metadata)
 
         else:
-            _metadata = list(anno.index_col)
+            _metadata = [anno.index_col]
+
+        if self._sra_in_metadata(_metadata):
+            anno = self.get_sra(
+                anno, [field for field in _metadata if field in database_ids("sra")]
+            )
 
         if "description" in _metadata:
             self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
@@ -240,6 +293,10 @@ class AnnotationsExporter(BaseExporter):
             self._get_save_method(fmt)(
                 anno.ids.select(_metadata).hstack(anno.data), file, **kwargs
             )
+
+    def _sra_in_metadata(self, metadata: list[str]) -> bool:
+        """Checks if any SRA IDs are in requested metadata."""
+        return len(list(set(metadata) & set(database_ids("sra")))) > 0
 
     def _save_parquet(self, df: pl.DataFrame, file: FilePath, **kwargs):
         """Save polars DataFrame to parquet."""

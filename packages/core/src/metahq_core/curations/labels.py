@@ -106,6 +106,24 @@ class Labels(BaseCuration):
         self.collapsed = collapsed
         self.controls: bool = False
 
+    def add_ids(self, new: pl.DataFrame) -> Labels:
+        """
+        Append new group ID columns to the IDs of a Labels object. The new
+        IDs must have a matching index.
+        """
+        new_ids = new.join(
+            self.ids, on=self.index_col, how="inner", maintain_order="right"
+        )
+        new_groups = tuple([col for col in new_ids.columns if col != self.index_col])
+        assert new_ids.height == self.ids.height, "SRA IDs height mismatch."
+        assert (
+            new_ids[self.index_col].to_list() == self.index
+        ), "Index order does not match."
+
+        return self.__class__(
+            self.data, new_ids, index_col=self.index_col, group_cols=new_groups
+        )
+
     def drop(self, *args, **kwargs):
         """Wrapper for polars drop."""
         self.data = self.data.drop(*args, **kwargs)

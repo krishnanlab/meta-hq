@@ -4,18 +4,23 @@ Class for Labels export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2025-09-12 by Parker Hicks
+Last updated: 2025-09-23 by Parker Hicks
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 
 from metahq_core.export.base import BaseExporter
-from metahq_core.util.io import save_json
-from metahq_core.util.supported import geo_metadata
+from metahq_core.util.io import checkdir, load_bson, save_json
+from metahq_core.util.supported import (
+    database_ids,
+    geo_metadata,
+    get_annotations,
+    metadata_fields,
+)
 
 if TYPE_CHECKING:
     from metahq_core.curations.labels import Labels
@@ -27,6 +32,31 @@ LABEL_KEY = {"1": "positive", "-1": "negative", "2": "control"}
 
 class LabelsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
+
+    def get_sra(self, labels: Labels, fields: list[str]) -> Labels:
+        if labels.index_col == "sample":
+            _labels = load_bson(get_annotations("sample"))
+        elif labels.index_col == "series":
+            _labels = load_bson(get_annotations("series"))
+        else:
+            raise ValueError(
+                f"Expected index column name in [sample, series], got {labels.index_col}."
+            )
+
+        new_ids = {field: [] for field in fields}
+        new_ids[labels.index_col] = []
+        for idx in labels.index:
+            new_ids[labels.index_col].append(idx)
+
+            idx_accessions = _labels[idx]["accession_ids"]
+            for field in fields:
+                if field not in idx_accessions:
+                    new_ids[field].append("NA")
+                    continue
+
+                new_ids[field].append(idx_accessions[field])
+
+        return labels.add_ids(pl.DataFrame(new_ids))
 
     def save(
         self,
@@ -49,6 +79,7 @@ class LabelsExporter(BaseExporter):
         metadata: str
             Metadata fields to include.
         """
+        _ = checkdir(file, is_file=True)
         opt = {
             "json": self.to_json,
             "parquet": self.to_parquet,
@@ -88,24 +119,29 @@ class LabelsExporter(BaseExporter):
             Metadata fields to include.
 
         """
-        stacked = curation.data.hstack(curation.ids)  # anno with IDs
         _labels = {
             term: {"positive": [], "negative": [], "control": []}
             for term in curation.entities
         }
 
-        if metadata is None:
+        if (metadata is None) or (
+            isinstance(metadata, str) & (metadata.strip().replace(",", "") == "index")
+        ):
             # save with just index IDs
-            for row in stacked.iter_rows(named=True):
-                self._write_row(row, _labels, curation.index_col)
-
-        elif isinstance(metadata, str) & (metadata.strip().replace(",", "") == "index"):
-            # save with just index IDs
+            stacked = curation.data.hstack(curation.ids)
             for row in stacked.iter_rows(named=True):
                 self._write_row(row, _labels, curation.index_col)
 
         elif isinstance(metadata, str):
             _metadata = self._parse_metafields(curation.index_col, metadata)
+
+            if self._sra_in_metadata(_metadata):
+                curation = self.get_sra(
+                    curation,
+                    [field for field in _metadata if field in database_ids("sra")],
+                )
+
+            stacked = curation.data.hstack(curation.ids)
 
             if "description" in _metadata:
                 descs = self._get_descriptions(curation)
@@ -200,7 +236,18 @@ class LabelsExporter(BaseExporter):
         raise ValueError(f"Expected fmt in {list(opt.keys())}, got {fmt}.")
 
     def _parse_metafields(self, index_col, fields: str) -> list[str]:
+        """Parse and check user-specified metadata fields."""
         _metadata = fields.split(",")
+
+        flagged = False
+        for field in _metadata:
+            if field not in metadata_fields(index_col):
+                flagged = True
+                print(f"Requested metadata: {field}, is not available. Skipping...")
+
+        if flagged:
+            print("Run metahq metadata to see available metadata fields.")
+
         if not index_col in _metadata:
             _metadata.append(index_col)
         return _metadata
@@ -233,25 +280,31 @@ class LabelsExporter(BaseExporter):
     def _save_tabular(
         self,
         fmt: str,
-        labels: Labels,
+        curation: Labels,
         file: FilePath,
         metadata: str | None = None,
         **kwargs,
     ):
         if isinstance(metadata, str):
-            _metadata = self._parse_metafields(labels.index_col, metadata)
+            _metadata = self._parse_metafields(curation.index_col, metadata)
 
         else:
-            _metadata = list(labels.index_col)
+            _metadata = [curation.index_col]
 
+        if self._sra_in_metadata(_metadata):
+            curation = self.get_sra(
+                curation, [field for field in _metadata if field in database_ids("sra")]
+            )
         if "description" in _metadata:
             self._save_table_with_description(
-                file, labels, _metadata, fmt=fmt, **kwargs
+                file, curation, _metadata, fmt=fmt, **kwargs
             )
 
         else:
             self._get_save_method(fmt)(
-                labels.ids.select(_metadata).hstack(labels.data).sort(labels.index_col),
+                curation.ids.select(_metadata)
+                .hstack(curation.data)
+                .sort(curation.index_col),
                 file,
                 **kwargs,
             )
@@ -267,6 +320,10 @@ class LabelsExporter(BaseExporter):
     def _save_tsv(self, df: pl.DataFrame, file: FilePath, **kwargs):
         """Save polars DataFrame to csv/tsv."""
         df.write_csv(file, **kwargs, separator="\t")
+
+    def _sra_in_metadata(self, metadata: list[str]) -> bool:
+        """Checks if any SRA IDs are in requested metadata."""
+        return len(list(set(metadata) & set(database_ids("sra")))) > 0
 
     def _write_row(self, row: dict[str, str], labels: dict[str, dict], index_col: str):
         """Write a row of an Annotations curation to a dictionary."""
