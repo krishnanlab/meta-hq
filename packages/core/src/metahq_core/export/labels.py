@@ -34,14 +34,26 @@ class LabelsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
 
     def get_sra(self, labels: Labels, fields: list[str]) -> Labels:
-        if labels.index_col == "sample":
-            _labels = load_bson(get_annotations("sample"))
-        elif labels.index_col == "series":
-            _labels = load_bson(get_annotations("series"))
-        else:
-            raise ValueError(
-                f"Expected index column name in [sample, series], got {labels.index_col}."
-            )
+        """
+        Retrieve SRA IDs from the annotations if they exist.
+
+        Parameters
+        ----------
+        labels: Labels
+            A Labels curation containing samples and terms matching user-specified
+            filters.
+
+        fields: list[str]
+            SRA ID levels (i.e., srr, srx, srs, or srp)
+
+        Returns
+        -------
+        A new Annotations curation with merged SRA IDs.
+
+        """
+        _labels = self._load_annotations(
+            level=labels.index_col
+        )  # all MetaHQ annotations
 
         new_ids = {field: [] for field in fields}
         new_ids[labels.index_col] = []
@@ -234,6 +246,18 @@ class LabelsExporter(BaseExporter):
             return opt[fmt]
 
         raise ValueError(f"Expected fmt in {list(opt.keys())}, got {fmt}.")
+
+    def _load_annotations(self, level: str) -> dict:
+        """Load the annotations dictionary for a given level."""
+        if level == "sample":
+            return load_bson(get_annotations("sample"))
+
+        if level == "series":
+            return load_bson(get_annotations("series"))
+
+        raise ValueError(
+            f"Expected annotations level in [sample, series], got {level}."
+        )
 
     def _parse_metafields(self, index_col, fields: str) -> list[str]:
         """Parse and check user-specified metadata fields."""
