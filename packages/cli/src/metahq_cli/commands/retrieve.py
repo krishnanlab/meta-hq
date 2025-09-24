@@ -13,7 +13,7 @@ import click
 import polars as pl
 from metahq_core.ontology.base import Ontology
 from metahq_core.query import Query
-from metahq_core.util.supported import ontologies
+from metahq_core.util.supported import get_onto_families, ontologies
 
 from metahq_cli.util.checkers import check_filters
 from metahq_cli.util.helpers import FilterParser
@@ -22,9 +22,16 @@ from metahq_cli.util.supported import REQUIRED_FILTERS
 
 def parse_terms(terms: str, reference: str):
     onto = Ontology.from_obo(ontologies(reference), reference)
+    available = (
+        pl.scan_parquet(get_onto_families(reference)["relations"])
+        .collect_schema()
+        .names()
+    )
+
     if terms == "all":
-        return list(onto.class_dict.keys())
-    return terms.split(",")
+        return [term for term in list(onto.class_dict.keys()) if term in available]
+
+    return [term for term in terms.split(",") if term in available]
 
 
 def warning(message):
@@ -73,7 +80,23 @@ def retrieve_tissues(terms, level, mode, fmt, metadata, filters, output):
     ).annotations()
 
     if mode == "direct":
-        curation = curation.select(terms).filter(pl.any_horizontal(pl.col(terms) == 1))
+        terms_with_anno = [term for term in terms if term in curation.entities]
+        not_in_anno = [term for term in terms if not term in terms_with_anno]
+        if len(not_in_anno) == len(terms):
+            error(
+                "No direct annotations for any terms. Try propagating or different contitions."
+            )
+            click.echo("Exiting...")
+            sys.exit(1)
+
+        if len(terms_with_anno) != len(terms):
+            warning(
+                f"Warning: {not_in_anno} have no direct annotations. Try propagating or different conditions."
+            )
+
+        curation = curation.select(terms_with_anno).filter(
+            pl.any_horizontal(pl.col(terms_with_anno) == 1)
+        )
     elif mode == "propagate":
         curation = curation.propagate(terms, ontology, mode=0)
 
