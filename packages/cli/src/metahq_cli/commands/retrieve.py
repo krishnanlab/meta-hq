@@ -4,8 +4,10 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-09-05 by Parker Hicks
+Last updated: 2025-09-23 by Parker Hicks
 """
+
+import sys
 
 import click
 import polars as pl
@@ -15,7 +17,7 @@ from metahq_core.util.supported import ontologies
 
 from metahq_cli.util.checkers import check_filters
 from metahq_cli.util.helpers import FilterParser
-from metahq_cli.util.supported import FILTERS
+from metahq_cli.util.supported import REQUIRED_FILTERS
 
 
 def parse_terms(terms: str, reference: str):
@@ -23,6 +25,14 @@ def parse_terms(terms: str, reference: str):
     if terms == "all":
         return list(onto.class_dict.keys())
     return terms.split(",")
+
+
+def warning(message):
+    click.secho(f"WARNING: {message}", fg="yellow")
+
+
+def error(message):
+    click.secho(f"ERROR: {message}", fg="red")
 
 
 @click.group
@@ -35,7 +45,9 @@ def retrieve_commands():
 @click.option("--level", type=click.Choice(["sample", "series"]))
 @click.option("--mode", type=click.Choice(["direct", "propagate", "label"]))
 @click.option(
-    "--filters", type=str, default="species=human,db=geo,ecode=expert-curated"
+    "--filters",
+    type=str,
+    default="species=human,ecode=expert-curated,technology=microarray",
 )
 @click.option("--output", type=click.Path(), default="annotations.parquet")
 @click.option("--fmt", type=str, default="parquet")
@@ -49,10 +61,15 @@ def retrieve_tissues(terms, level, mode, fmt, metadata, filters, output):
     bad_filters = check_filters(filters)
     if len(bad_filters) > 0:
         exc = click.ClickException("Unsupported filter argument")
-        exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
+        exc.add_note(f"Expected filters in {REQUIRED_FILTERS}, got {bad_filters}.")
 
     curation = Query(
-        filters["db"], "tissue", filters["ecode"], filters["species"]
+        database="geo",
+        attribute="tissue",
+        level=level,
+        ecode=filters["ecode"],
+        species=filters["species"],
+        technology=filters["technology"],
     ).annotations()
 
     if mode == "direct":
@@ -76,7 +93,9 @@ def retrieve_tissues(terms, level, mode, fmt, metadata, filters, output):
 @click.option("--mode", type=click.Choice(["direct", "propagate", "label"]))
 @click.option("--fmt", type=str, default="parquet")
 @click.option(
-    "--filters", type=str, default="species=human,db=geo,ecode=expert-curated"
+    "--filters",
+    type=str,
+    default="species=human,ecode=expert-curated,technology=rnaseq",
 )
 @click.option("--metadata", type=str)
 @click.option("--output", type=click.Path(), default="annotations.parquet")
@@ -89,18 +108,35 @@ def retrieve_diseases(terms, level, mode, fmt, metadata, filters, output):
     bad_filters = check_filters(filters)
     if len(bad_filters) > 0:
         exc = click.ClickException("Unsupported filter argument")
-        exc.add_note(f"Expected filters in {FILTERS}, got {bad_filters}.")
+        exc.add_note(f"Expected filters in {REQUIRED_FILTERS}, got {bad_filters}.")
 
     curation = Query(
-        database=filters["db"],
+        database="geo",
         attribute="disease",
         level=level,
         ecode=filters["ecode"],
         species=filters["species"],
+        technology=filters["technology"],
     ).annotations()
 
     if mode == "direct":
-        curation = curation.select(terms).filter(pl.any_horizontal(pl.col(terms) == 1))
+        terms_with_anno = [term for term in terms if term in curation.entities]
+        not_in_anno = [term for term in terms if not term in terms_with_anno]
+        if len(not_in_anno) == len(terms):
+            error(
+                "No direct annotations for any terms. Try propagating or different contitions."
+            )
+            click.echo("Exiting...")
+            sys.exit(1)
+
+        if len(terms_with_anno) != len(terms):
+            warning(
+                f"Warning: {not_in_anno} have no direct annotations. Try propagating or different conditions."
+            )
+
+        curation = curation.select(terms_with_anno).filter(
+            pl.any_horizontal(pl.col(terms_with_anno) == 1)
+        )
     elif mode == "propagate":
         curation = curation.propagate(terms, ontology, mode=0)
 
