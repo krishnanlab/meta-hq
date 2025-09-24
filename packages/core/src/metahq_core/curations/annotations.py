@@ -234,7 +234,7 @@ class Annotations(BaseCuration):
         mode: Literal[0, 1],
         control_col: str = "MONDO:0000000",
         group_col: str = "series",
-    ) -> Labels:
+    ) -> Labels | Annotations:
         """Convert annotations to propagated labels.
 
         Assigns propagated labels to terms given their annotations.
@@ -277,7 +277,13 @@ class Annotations(BaseCuration):
         )
 
         if mode == 0:
-            return converter.propagate_up()
+            propagated, ids = converter.propagate_up()
+            return self.__class__(
+                data=propagated,
+                ids=ids,
+                index_col=self.index_col,
+                group_cols=self.group_cols,
+            )
 
         if mode == 1:
             return converter.to_labels(groups=group_col)
