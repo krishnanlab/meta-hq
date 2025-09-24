@@ -7,7 +7,6 @@ Date: 2025-03
 Last updated: 2025-09-05 by Parker Hicks
 """
 
-from dataclasses import dataclass, field
 from typing import Any, Literal
 
 import polars as pl
@@ -15,7 +14,14 @@ import polars as pl
 from metahq_core.curations.annotations import Annotations
 from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
-from metahq_core.util.supported import NA_ENTITIES, attributes, ecodes, get_annotations
+from metahq_core.util.supported import (
+    NA_ENTITIES,
+    attributes,
+    ecodes,
+    get_annotations,
+    get_technologies,
+    technologies,
+)
 
 SPECIES_MAP = {
     "human": "homo sapiens",
@@ -344,12 +350,14 @@ class Query:
         level="sample",
         ecode="expert-curated",
         species="human",
+        technology="rnaseq",
     ):
         self.database: str = database
         self.attribute: str = attributes(attribute)
         self.level: Literal["sample", "series"] = level
         self.ecodes: list[str] = ecodes(ecode)
         self.species: str = self._load_species(species)
+        self.technology: str = technologies(technology)
 
         self._annotations: dict[str, Any] = self._load_annotations()
 
@@ -407,20 +415,6 @@ class Query:
             group_cols=groups,
         )
 
-    def subset_by_database(self, anno: dict) -> dict:
-        if self.database == "archs4":
-            pass
-        elif self.database == "geo":
-            pass
-        elif self.database == "sra":
-            # anno = {
-            #    k: v for k, v in anno if any(field in v["accession_ids"] for field in _)
-            # }
-
-            pass
-
-        return anno
-
     def assign_index_groups(self):
         if self.level == "series":
             return "series", tuple(["platform"])
@@ -447,11 +441,14 @@ class Query:
             parsed.add(id_, value, accessions)
 
         parsed = parsed.to_polars()
+        parsed = parsed.filter(
+            pl.col("platform").is_in(self._load_platforms())
+        )  # filter platforms just once for speed
 
         if parsed.height == 0:
             raise RuntimeError(
                 f"""Unable to identify with provided parameters: [DATABASE: {self.database},
-            ATTRIBUTE: {self.attribute}, ECODES: {self.ecodes}"""
+            ATTRIBUTE: {self.attribute}, ECODES: {self.ecodes}, TECHNOLOGY: {self.technology}"""
             )
 
         return LongAnnotations(parsed, fields)
@@ -498,7 +495,10 @@ class Query:
 
         """
         return UnParsedEntry(
-            self._annotations[entry], self.attribute, self.ecodes, self.species
+            self._annotations[entry],
+            self.attribute,
+            self.ecodes,
+            self.species,
         ).get_annotations()
 
     def _load_annotations(self):
@@ -506,6 +506,14 @@ class Query:
         anno = load_bson(get_annotations(self.level))
 
         return anno
+
+    def _load_platforms(self) -> list[str]:
+        return (
+            pl.scan_parquet(get_technologies())
+            .filter(pl.col("technology") == self.technology)
+            .collect()["id"]
+            .to_list()
+        )
 
     def _load_species(self, species: str) -> str:
         if species in SPECIES_MAP:
