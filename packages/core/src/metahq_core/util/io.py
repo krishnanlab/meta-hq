@@ -11,10 +11,10 @@ from bson import BSON
 from metahq_core.util.alltypes import FilePath, StringArray
 
 
-def checkdir(path: FilePath, file: bool = False):
+def checkdir(path: FilePath, is_file: bool = False):
     if isinstance(path, str):
         path = Path(path)
-    if file:
+    if is_file:
         path = path.resolve().parents[0]
 
     if not path.exists():
