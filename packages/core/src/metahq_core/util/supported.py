@@ -64,14 +64,15 @@ ATTRIBUTES = [
     "organism",
 ]
 
-ORGANISMS = [
-    "homo sapiens",
-    "mus musculus",
-    "rattus norvegicus",
-    "danio rerio",
-    "caenorhabditis eligans",
-    "drosopila melanogaster",
-]
+
+SPECIES_MAP = {
+    "human": "homo sapiens",
+    "mouse": "mus musculus",
+    "worm": "caenorhabditis elegans",
+    "fly": "drosophila melanogaster",
+    "zebrafish": "danio rerio",
+    "rat": "rattus norvegicus",
+}
 
 # tmp fix. Need to find out why these are included in anno
 NA_ENTITIES = ["na", "", "NA"]  # annotations to not include
@@ -241,6 +242,6 @@ def supported(entity: str) -> list[str]:
         "levels": SUPPORTED_LEVELS,
         "relations": SUPPORTED_ONTOLOGIES,
         "technologies": SUPPORTED_TECHNOLOGIES,
-        "species": list(ORGANISMS),
+        "species": list(SPECIES_MAP.keys()),
     }
     return _supported[entity]

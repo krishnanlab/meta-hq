@@ -16,21 +16,13 @@ from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import (
     NA_ENTITIES,
+    SPECIES_MAP,
     attributes,
     ecodes,
     get_annotations,
     get_technologies,
     technologies,
 )
-
-SPECIES_MAP = {
-    "human": "homo sapiens",
-    "mouse": "mus musculus",
-    "worm": "caenorhabditis elegans",
-    "fly": "drosophila melanogaster",
-    "zebrafish": "danio rerio",
-    "rat": "rattus norvegicus",
-}
 
 
 class AccessionIDs:
