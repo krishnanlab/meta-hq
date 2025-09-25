@@ -4,7 +4,7 @@ This script stores file path constants and functions to retrieve those paths.
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2025-09-10
+Last updated: 2025-09-24 by Parker Hicks
 """
 
 from pathlib import Path
@@ -21,51 +21,100 @@ METAHQ = HOME / "metahq"
 CONFIG_FILE = METAHQ / "config.yaml"
 
 
-SUPPORTED_DATABASES: list[str] = ["geo", "sra", "archs4"]
+SUPPORTED_LEVELS: list[str] = ["sample", "series"]
 SUPPORTED_ONTOLOGIES: list[str] = ["uberon", "mondo"]
+SUPPORTED_SAMPLE_METADATA: list[str] = [
+    "sample",
+    "series",
+    "platform",
+    "description",
+    "srr",
+    "srx",
+    "srs",
+    "srp",
+]
+SUPPORTED_SERIES_METADATA: list[str] = [
+    "series",
+    "platform",
+    "description",
+    "srr",
+    "srx",
+    "srs",
+    "srp",
+]
+SUPPORTED_TECHNOLOGIES: list[str] = ["microarray", "rnaseq"]
+
+
+DATABASE_IDS: dict[str, list[str]] = {
+    "geo": ["gsm", "gse"],
+    "sra": ["srr", "srs", "srx", "srp"],
+}
+
+##### Evidence codes #####
+ECODES: list[str] = ["expert-curated", "semi-curated", "predicted", "any"]
+
+
+##### Attributes ######
+ATTRIBUTES = [
+    "tissue",
+    "disease",
+    "sex",
+    "age",
+    "developmental stage",
+    "organism",
+]
+
+
+SPECIES_MAP = {
+    "human": "homo sapiens",
+    "mouse": "mus musculus",
+    "worm": "caenorhabditis elegans",
+    "fly": "drosophila melanogaster",
+    "zebrafish": "danio rerio",
+    "rat": "rattus norvegicus",
+}
+
+# tmp fix. Need to find out why these are included in anno
+NA_ENTITIES = ["na", "", "NA"]  # annotations to not include
 
 
 def get_config():
+    """Loads the MetaHQ config file."""
     return load_yaml(CONFIG_FILE)
 
 
 def get_data_dir():
+    """Extracts the MetaHQ data directory from the config."""
     return Path(get_config()["data_dir"])
 
 
-def get_databases(db: str) -> Path:
+def get_annotations(level: Literal["sample", "series"]) -> Path:
+    """Returns the annotations database file for a given level."""
     _databases: Path = get_data_dir() / "annotations"
-    opt = {"geo": _databases / "geo.bson", "sra": _databases / "sra.bson"}
-
-    return opt[db]
+    return _databases / f"combined__level-{level}.bson"
 
 
 def get_metadata_path() -> Path:
+    """Returns the path to MetaHQ metadata."""
     return get_data_dir() / "metadata"
 
 
+def get_technologies() -> Path:
+    """Returns the file to technology relationships."""
+    metadata: Path = get_data_dir() / "metadata"
+    return metadata / "technologies.parquet"
+
+
 def geo_metadata(level: Literal["sample", "series"]) -> Path:
+    """Returns the MetaHQ metadata file for the specified level."""
     _supported = ["sample", "series"]
     if level in _supported:
         return get_metadata_path() / f"metadata__level-{level}.parquet"
     raise ValueError(f"Expected level in {_supported}, got {level}.")
 
 
-LEVEL_IDS: dict[str, list[str]] = {
-    "index": ["GSM", "SRS", "SRR", "SRX"],
-    "group": ["GSE", "SRX", "GDS", "SRP", "DRP"],
-    "platform": ["GPL"],
-}
-DATABASE_IDS: dict[str, list[str]] = {
-    "geo": ["GSM", "GSE", "GDS"],
-    "sra": ["SRR", "SRS", "SRX", "SRP", "DRP"],
-}
-
-
-##### Ontology obo files #####
-
-
 def get_ontology_dirs(onto: str) -> Path:
+    """Returns the path to the specified ontology directory."""
     _ontologies: Path = get_data_dir() / "ontology"
     opt = {
         "mondo": _ontologies / "mondo",
@@ -76,6 +125,7 @@ def get_ontology_dirs(onto: str) -> Path:
 
 
 def get_ontology_files(onto: str) -> Path:
+    """Returns the path to the specified ontology obo file."""
     mondo = get_ontology_dirs("mondo")
     uberon = get_ontology_dirs("uberon")
     opt = {
@@ -87,6 +137,7 @@ def get_ontology_files(onto: str) -> Path:
 
 
 def get_onto_families(onto: str) -> dict[str, Path]:
+    """Returns the path to files outlining ontology relationships."""
     mondo = get_ontology_dirs("mondo")
     uberon = get_ontology_dirs("uberon")
     opt = {
@@ -105,47 +156,12 @@ def get_onto_families(onto: str) -> dict[str, Path]:
     return opt[onto]
 
 
-##### Evidence codes #####
-ECODES: list[str] = ["expert-curated", "semi-curated", "predicted", "any"]
-
-
-##### Attributes ######
-ATTRIBUTES = [
-    "tissue",
-    "disease",
-    "sex",
-    "age",
-    "developmental stage",
-    "organism",
-]
-
-ORGANISMS = [
-    "homo sapiens",
-    "mus musculus",
-    "rattus norvegicus",
-    "danio rerio",
-    "caenorhabditis eligans",
-    "drosopila melanogaster",
-]
-
-# tmp fix. Need to find out why these are included in anno
-NA_ENTITIES = ["na", "", "NA"]  # annotations to not include
-
-
 def attributes(query: str) -> str:
     """Returns default keys to collect attribute values."""
     _supported = supported("attributes")
     if query in _supported:
         return query
     raise ValueError(f"Expected attributes in {_supported}, got {query}.")
-
-
-def databases(query: str) -> Path:
-    """Returns path to the file storing annotations for a queried database."""
-    _supported = supported("databases")
-    if query in _supported:
-        return get_databases(query)
-    raise ValueError(f"Expected database in {_supported}, got {query}.")
 
 
 def ecodes(query: list[str] | str) -> list[str]:
@@ -168,20 +184,33 @@ def ecodes(query: list[str] | str) -> list[str]:
     return query
 
 
-def level_ids(level: str) -> list[str]:
-    return LEVEL_IDS[level]
+def technologies(query: str) -> str:
+    """Returns supported technologies in MetaHQ."""
+    if query in SUPPORTED_TECHNOLOGIES:
+        return query
+    raise ValueError(f"Expected technology in {SUPPORTED_TECHNOLOGIES}, got {query}.")
 
 
-def levels() -> list[str]:
-    return list(LEVEL_IDS.keys())
+def database_ids(query: str) -> list[str]:
+    """Returns supported accession IDs for SRA or GEO."""
+    _supported = list(DATABASE_IDS.keys())
+    if query in _supported:
+        return DATABASE_IDS[query]
+    raise ValueError(f"Expected query in {_supported}, got {query}.")
 
 
-def database_ids() -> dict[str, list[str]]:
-    return DATABASE_IDS
+def metadata_fields(level: str) -> list[str]:
+    """Returns supported metadata fields for a specified level."""
+    if level == "sample":
+        return SUPPORTED_SAMPLE_METADATA
+    if level == "series":
+        return SUPPORTED_SERIES_METADATA
+    raise ValueError(f"Expected level in [sample, series], got {level}.")
 
 
-def organisms(query: str) -> str:
-    _supported = supported("organisms")
+def species(query: str) -> str:
+    """Checks if a species is supported by MetaHQ."""
+    _supported = supported("species")
     if query in _supported:
         return query
     raise ValueError(f"Expected organism in {_supported}, got {query}.")
@@ -210,8 +239,9 @@ def supported(entity: str) -> list[str]:
         "ontologies": SUPPORTED_ONTOLOGIES,
         "attributes": ATTRIBUTES,
         "ecodes": ECODES,
-        "databases": SUPPORTED_DATABASES,
+        "levels": SUPPORTED_LEVELS,
         "relations": SUPPORTED_ONTOLOGIES,
-        "organisms": list(ORGANISMS),
+        "technologies": SUPPORTED_TECHNOLOGIES,
+        "species": list(SPECIES_MAP.keys()),
     }
     return _supported[entity]

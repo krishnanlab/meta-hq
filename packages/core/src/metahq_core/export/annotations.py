@@ -4,7 +4,7 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2025-09-08 by Parker Hicks
+Last updated: 2025-09-24 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -14,16 +14,59 @@ from typing import TYPE_CHECKING, Literal
 import polars as pl
 
 from metahq_core.export.base import BaseExporter
-from metahq_core.util.io import save_json
-from metahq_core.util.supported import geo_metadata
+from metahq_core.util.io import checkdir, load_bson, save_json
+from metahq_core.util.supported import (
+    database_ids,
+    geo_metadata,
+    get_annotations,
+    metadata_fields,
+)
 
 if TYPE_CHECKING:
     from metahq_core.curations.annotations import Annotations
     from metahq_core.util.alltypes import FilePath, NpIntMatrix
 
 
+ANNOTATION_KEY = {"1": True, "0": False}
+
+
 class AnnotationsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
+
+    def get_sra(self, anno: Annotations, fields: list[str]) -> Annotations:
+        """
+        Retrieve SRA IDs from the annotations if they exist.
+
+        Parameters
+        ----------
+        anno: Annotations
+            An Annotations curation containing samples and terms matching user-specified
+            filters.
+
+        fields: list[str]
+            SRA ID levels (i.e., srr, srx, srs, or srp)
+
+        Returns
+        -------
+        A new Annotations curation with merged SRA IDs.
+
+        """
+        _anno = self._load_annotations(level=anno.index_col)  # all MetaHQ annotations
+
+        new_ids = {field: [] for field in fields}
+        new_ids[anno.index_col] = []
+        for idx in anno.index:
+            new_ids[anno.index_col].append(idx)
+
+            idx_accessions = _anno[idx]["accession_ids"]
+            for field in fields:
+                if field not in idx_accessions:
+                    new_ids[field].append("NA")
+                    continue
+
+                new_ids[field].append(idx_accessions[field])
+
+        return anno.add_ids(pl.DataFrame(new_ids))
 
     def save(
         self,
@@ -46,7 +89,7 @@ class AnnotationsExporter(BaseExporter):
         metadata: str
             Metadata fields to include.
         """
-
+        _ = checkdir(file, is_file=True)
         opt = {
             "json": self.to_json,
             "parquet": self.to_parquet,
@@ -86,32 +129,15 @@ class AnnotationsExporter(BaseExporter):
             Metadata fields to include.
 
         """
-        # temp index
-        stacked = anno.data.hstack(anno.ids)
-        _anno: dict[str, list[str] | dict[str, str]] = {}
 
-        if isinstance(metadata, str):
-            _metadata = self._parse_metafields(anno.index_col, metadata)
+        if self._only_index(metadata, anno.index_col):
+            self._save_json_only_index(anno, file)
 
-            if "description" in _metadata:
-                descs = self._get_descriptions(anno)
-                stacked = stacked.join(descs, on=anno.index_col, how="left")
-
-            for col in anno.entities:
-                _anno.setdefault(col, {})
-                subset = stacked.filter(pl.col(col) == 1)[_metadata]
-
-                for row in subset.iter_rows(named=True):
-                    idx = row[anno.index_col]
-                    _anno[col].setdefault(idx, {})
-                    for additional in [i for i in _metadata if i != anno.index_col]:
-                        _anno[col][idx][additional] = row[additional]
+        elif isinstance(metadata, str):
+            self._save_json_with_metadata(anno, file, metadata)
 
         else:
-            for col in anno.entities:
-                _anno[col] = stacked.filter(pl.col(col) == 1)[anno.index_col].to_list()
-
-        save_json(_anno, file)
+            raise ValueError("Weird metadata values.")
 
     def to_numpy(self, anno: Annotations) -> NpIntMatrix:
         """Returns the annotation data as a numpy array."""
@@ -189,8 +215,31 @@ class AnnotationsExporter(BaseExporter):
 
         raise ValueError(f"Expected fmt in {list(opt.keys())}, got {fmt}.")
 
+    def _load_annotations(self, level: str) -> dict:
+        """Load the annotations dictionary for a given level."""
+        if level == "sample":
+            return load_bson(get_annotations("sample"))
+
+        if level == "series":
+            return load_bson(get_annotations("series"))
+
+        raise ValueError(
+            f"Expected annotations level in [sample, series], got {level}."
+        )
+
     def _parse_metafields(self, index_col, fields: str) -> list[str]:
+        """Parse and check user-specified metadata fields."""
         _metadata = fields.split(",")
+
+        flagged = False
+        for field in _metadata:
+            if field not in metadata_fields(index_col):
+                flagged = True
+                print(f"Requested metadata: {field}, is not available. Skipping...")
+
+        if flagged:
+            print("Run metahq metadata to see available metadata fields.")
+
         if not index_col in _metadata:
             _metadata.append(index_col)
         return _metadata
@@ -231,7 +280,12 @@ class AnnotationsExporter(BaseExporter):
             _metadata = self._parse_metafields(anno.index_col, metadata)
 
         else:
-            _metadata = list(anno.index_col)
+            _metadata = [anno.index_col]
+
+        if self._sra_in_metadata(_metadata):
+            anno = self.get_sra(
+                anno, [field for field in _metadata if field in database_ids("sra")]
+            )
 
         if "description" in _metadata:
             self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
@@ -241,6 +295,16 @@ class AnnotationsExporter(BaseExporter):
                 anno.ids.select(_metadata).hstack(anno.data), file, **kwargs
             )
 
+    def _sra_in_metadata(self, metadata: list[str]) -> bool:
+        """Checks if any SRA IDs are in requested metadata."""
+        return len(list(set(metadata) & set(database_ids("sra")))) > 0
+
+    def _only_index(self, metadata: str | None, index: str):
+        """Check if no metadata passed or if only the index is passed."""
+        return (metadata is None) or (
+            isinstance(metadata, str) & (metadata.strip().replace(",", "") == index)
+        )
+
     def _save_parquet(self, df: pl.DataFrame, file: FilePath, **kwargs):
         """Save polars DataFrame to parquet."""
         df.write_parquet(file, **kwargs)
@@ -249,6 +313,72 @@ class AnnotationsExporter(BaseExporter):
         """Save polars DataFrame to csv/tsv."""
         df.write_csv(file, **kwargs, separator=",")
 
+    def _save_json_only_index(self, anno: Annotations, file: FilePath):
+        """Save annotations as JSON with only the index."""
+        _anno: dict[str, list[str]] = {}
+        stacked = anno.data.hstack(anno.ids)
+        for col in anno.entities:
+            _anno[col] = stacked.filter(pl.col(col) == 1)[anno.index_col].to_list()
+
+        save_json(_anno, file)
+
+    def _save_json_with_metadata(
+        self, anno: Annotations, file: FilePath, metadata: str
+    ):
+        """Save annotations as JSON with requested metadata."""
+        _anno: dict[str, dict[str, dict[str, str]]] = {
+            term: {} for term in anno.entities
+        }
+        _metadata = self._parse_metafields(anno.index_col, metadata)
+
+        if self._sra_in_metadata(_metadata):
+            anno = self.get_sra(
+                anno, [field for field in _metadata if field in database_ids("sra")]
+            )
+
+        stacked = anno.data.hstack(anno.ids)
+
+        if "description" in _metadata:
+            descs = self._get_descriptions(anno)
+            stacked = stacked.join(descs, on=anno.index_col, how="left").sort(
+                anno.index_col
+            )
+
+        for col in anno.entities:
+            _anno.setdefault(col, {})
+            subset = stacked.filter(pl.col(col) == 1)[_metadata]
+
+            for row in subset.iter_rows(named=True):
+                self._write_row_with_metadata(
+                    row, anno.index_col, _anno, col, _metadata
+                )
+
+        save_json(_anno, file)
+
     def _save_tsv(self, df: pl.DataFrame, file: FilePath, **kwargs):
         """Save polars DataFrame to csv/tsv."""
         df.write_csv(file, **kwargs, separator="\t")
+
+    def _write_row(
+        self, row: dict[str, str], anno: dict[str, list[str]], index_col: str
+    ):
+        """Write a row of an Annotations curation to a dictionary."""
+        idx = row[index_col]
+        for entity in anno:
+            _anno = str(row[entity])
+            if _anno in ANNOTATION_KEY:
+                anno[entity].append(idx)
+
+    def _write_row_with_metadata(
+        self,
+        row: dict[str, str],
+        index: str,
+        anno: dict[str, dict],
+        entity: str,
+        metadata: list[str],
+    ):
+        """Write a row of an Annotations curation to a dictionary with metadata."""
+        idx = row[index]
+        anno[entity].setdefault(idx, {})
+        for additional in [i for i in metadata if i != index]:
+            anno[entity][idx][additional] = row[additional]
