@@ -198,6 +198,6 @@ class Retriever:
     def _save_silent(self, curation):
         self._save(curation)
 
-    @spinner(desc="Saving", p_message="...", end_message="Done")
+    @spinner(desc="Saving...", p_message="...", end_message="Done")
     def _save_verbose(self, curation):
         self._save(curation)
