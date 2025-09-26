@@ -57,12 +57,27 @@ def make_curation_config(terms: str, mode: str, ontology: str):
         if mode != "direct":
             warning("Sex queries must be direct annotations.")
             print("Changing mode to direct...")
-        _terms = terms.split(",")
+
+        _terms = map_sex_to_id(terms.split(","))
 
     else:
         _terms = parse_onto_terms(terms, ontology)
 
     return CurationConfig(mode, _terms, ontology)
+
+
+def map_sex_to_id(terms: list[str]):
+    """Map male to M and female to F if passed."""
+    opt = {"male": "M", "female": "F"}
+
+    result = []
+    for term in terms:
+        if term in ["male", "female"]:
+            result.append(opt[term])
+        else:
+            result.append(term)
+
+    return result
 
 
 def report_bad_filters(filters):
