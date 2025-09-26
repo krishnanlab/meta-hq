@@ -7,6 +7,7 @@ Date: 2025-09
 Last updated: 2025-09-24 by Parker Hicks
 """
 
+from metahq_cli.util.messages import error
 from metahq_cli.util.supported import REQUIRED_FILTERS
 
 
@@ -34,5 +35,5 @@ class FilterParser:
                 not_in_filters.append(key)
 
         if len(not_in_filters) > 0:
-            raise RuntimeError(f"Missing required filters {not_in_filters}.")
+            error(f"Missing required filters {not_in_filters}.")
         return parser
