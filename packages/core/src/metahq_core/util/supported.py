@@ -4,7 +4,7 @@ This script stores file path constants and functions to retrieve those paths.
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2025-09-24 by Parker Hicks
+Last updated: 2025-09-26 by Parker Hicks
 """
 
 from pathlib import Path
@@ -43,6 +43,7 @@ SUPPORTED_SERIES_METADATA: list[str] = [
     "srp",
 ]
 SUPPORTED_TECHNOLOGIES: list[str] = ["microarray", "rnaseq"]
+SUPPORTED_MODES: list[str] = ["direct", "propagate", "label"]
 
 
 DATABASE_IDS: dict[str, list[str]] = {
