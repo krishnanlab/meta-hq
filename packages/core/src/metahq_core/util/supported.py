@@ -135,6 +135,9 @@ def get_ontology_files(onto: str) -> Path:
 
     return opt[onto]
 
+def get_ontology_search_db() -> Path:
+    """Returns the path to the ontology search database."""
+    return get_data_dir() / "ontology" / "ontology_search.duckdb"
 
 def get_onto_families(onto: str) -> dict[str, Path]:
     """Returns the path to files outlining ontology relationships."""
