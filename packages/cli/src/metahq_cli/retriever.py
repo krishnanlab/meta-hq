@@ -132,7 +132,6 @@ class Retriever:
 
         error(f"Expected mode in {SUPPORTED_MODES}, got {self.curation_config.mode}.")
 
-    @spinner(desc="Curating", p_message="...", end_message="Done")
     def _direct_annotations(self, curation: Annotations) -> Annotations:
         """Identify and return terms in the query that have annotations."""
 
@@ -142,6 +141,7 @@ class Retriever:
         not_in_anno = [
             term for term in self.curation_config.terms if not term in terms_with_anno
         ]
+
         if len(not_in_anno) == len(self.curation_config.terms):
             error(
                 "No direct annotations for any terms. Try propagating or different contitions."
