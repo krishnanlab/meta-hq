@@ -151,9 +151,33 @@ def retrieve_diseases(terms, level, mode, fmt, metadata, filters, output, quiet)
 
 @retrieve_commands.command("sex")
 @click.option("--terms", type=str, default="male,female")
-@click.option("--filters", type=str, default="species=human,ecode=expert-curated")
-def retrieve_sex(terms, fmt, include_metadata, filters, output):
-    pass
+@click.option("--level", type=click.Choice(["sample", "series"]))
+@click.option("--mode", type=click.Choice(["direct", "propagate", "label"]))
+@click.option("--fmt", type=str, default="parquet")
+@click.option(
+    "--filters",
+    type=str,
+    default="species=human,ecode=expert-curated,technology=rnaseq",
+)
+@click.option("--metadata", type=str, default="sample")
+@click.option("--output", type=click.Path(), default="annotations.parquet")
+@click.option("--quiet", is_flag=True, default=False)
+def retrieve_sex(terms, level, mode, fmt, metadata, filters, output, quiet):
+    """Retrieval command for sex annotations."""
+    verbose = set_verbosity(quiet)
+
+    # parse and check filters
+    filters = FilterParser.from_str(filters).filters
+    report_bad_filters(filters)
+
+    # make configs
+    query_config = make_query_config("geo", "sex", level, filters)
+    curation_config = make_curation_config(terms, mode, "sex")
+    output_config = OutputConfig(output, fmt, metadata)
+
+    # retrieve
+    retriever = Retriever(query_config, curation_config, output_config, verbose)
+    retriever.retrieve()
 
 
 @retrieve_commands.command("age")
