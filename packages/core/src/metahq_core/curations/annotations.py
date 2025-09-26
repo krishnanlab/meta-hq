@@ -234,6 +234,7 @@ class Annotations(BaseCuration):
         mode: Literal[0, 1],
         control_col: str = "MONDO:0000000",
         group_col: str = "series",
+        verbose: bool = False,
     ) -> Labels | Annotations:
         """Convert annotations to propagated labels.
 
@@ -273,7 +274,7 @@ class Annotations(BaseCuration):
 
         """
         converter = AnnotationsConverter(
-            self, to_terms, ontology, control_col=control_col
+            self, to_terms, ontology, control_col=control_col, verbose=verbose
         )
 
         if mode == 0:
