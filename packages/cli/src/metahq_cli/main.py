@@ -9,7 +9,7 @@ Last updated: 2025-09-05
 
 import click
 
-from metahq_cli.commands import retrieve_commands, setup
+from metahq_cli.commands import retrieve_commands, setup, search
 
 
 @click.group()
@@ -18,6 +18,7 @@ def main():
 
 
 main.add_command(setup)
+main.add_command(search)
 main.add_command(retrieve_commands, name="retrieve")
 
 if __name__ == "__main__":
