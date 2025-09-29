@@ -131,7 +131,7 @@ def search(query: str, db: Path=None, k: int=20, type: str=None, ontology: str=N
             # (we catch ValueError here as an indication that there weren't any
             # results, since we have no way of knowing if there are no results
             # until we try to convert to a DataFrame)
-            df = pl.from_arrow(con.execute(sql).arrow())
+            df = con.execute(sql).pl()
         except ValueError:
             raise NoResultsFound(f"No entities matched the filters: ontology={ontology}, type={type}")
         
