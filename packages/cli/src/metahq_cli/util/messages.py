@@ -18,6 +18,4 @@ def warning(message):
 
 def error(message):
     click.secho(f"ERROR: {message}", fg="red")
-
-    click.echo("Exiting...")
     sys.exit(1)
