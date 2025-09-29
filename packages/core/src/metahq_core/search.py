@@ -1,3 +1,33 @@
+"""
+Implements a search method that uses the ontology term database to search for
+entities whose name or synonyms match a query. The search method uses BM25+ and
+weighs names and synonyms in decreasing order of specificity: names are weighed
+most highly, followed by exact synonyms, then narrow, broad, and finally related
+synonyms.
+
+Currently this weighting is applied by repeating each name or synonym by its
+weight to construct a "weighted document" that is then indexed by BM25+.
+
+Regarding the choice of BM25+ over BM25Okapi: BM25Okapi has a known issue where
+very short documents (e.g. a single word) are heavily favored over longer
+documents, even if the longer documents are a better match for the query. BM25+
+addresses this by adding a delta parameter that reduces the impact of document
+length on the score.
+
+While 95% our documents are generally the same length, between 15 and 400
+characters, there are a small number of documents that are much longer. More
+importantly, when I tried BM25+, I found that it returned results that better
+matched the expected results (albiet not exactly) for the given test queries in
+the root README.
+
+More experimentation is required on the precise algorithm and parameters to use,
+but the current implementation is IMHO a reasonable starting point.
+
+Author: Faisal Alquaddoomi
+Date: 2025-09-25
+"""
+
+
 import os
 from pathlib import Path
 import re
