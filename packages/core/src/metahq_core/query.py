@@ -15,12 +15,12 @@ from metahq_core.curations.annotations import Annotations
 from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import (
-    NA_ENTITIES,
-    SPECIES_MAP,
     attributes,
     ecodes,
     get_annotations,
     get_technologies,
+    na_entities,
+    species_map,
     technologies,
 )
 
@@ -110,7 +110,7 @@ class LongAnnotations:
 
     def filter_na(self, col: str):
         """Removes entries in a column that are NA."""
-        self.annotations = self.annotations.filter(~pl.col(col).is_in(NA_ENTITIES))
+        self.annotations = self.annotations.filter(~pl.col(col).is_in(na_entities()))
 
     def stage_anchor(self, anchor: str):
         """Filters NA values from the anchor annotations column."""
@@ -399,7 +399,7 @@ class Query:
         index, groups = self.assign_index_groups()
         fields = [index] + list(groups)
         attr_anno = self.compile_annotations(fields).pivot_wide(self.level, anchor)
-        na_cols = list(set(attr_anno.columns) & set(NA_ENTITIES))
+        na_cols = list(set(attr_anno.columns) & set(na_entities()))
 
         return Annotations.from_df(
             attr_anno.drop(na_cols),
@@ -508,10 +508,11 @@ class Query:
         )
 
     def _load_species(self, species: str) -> str:
-        if species in SPECIES_MAP:
-            return SPECIES_MAP[species]
-        if species in SPECIES_MAP.values():
-            return reverse_dict(SPECIES_MAP)[species]
+        map_ = species_map()
+        if species in map_:
+            return map_[species]
+        if species in map_.values():
+            return reverse_dict(map_)[species]
         raise ValueError(
             f"Invalid species query: {species}. Run metahq supported species for available options."
         )
