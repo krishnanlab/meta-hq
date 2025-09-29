@@ -13,7 +13,8 @@ from metahq_core.util.supported import get_onto_families, ontologies
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig, Retriever
 from metahq_cli.util.checkers import (
-    check_filters,
+    check_filter,
+    check_filter_keys,
     check_format,
     check_metadata,
     check_mode,
@@ -62,6 +63,10 @@ def make_query_config(db: str, attribute: str, level: str, filters: dict[str, st
 
     Query parameters are checked in the metahq_core.query module.
     """
+    check_filter("ecodes", filters["ecode"])
+    check_filter("species", filters["species"])
+    check_filter("technologies", filters["technology"])
+
     return QueryConfig(
         database=db,
         attribute=attribute,
@@ -112,7 +117,7 @@ def map_sex_to_id(terms: list[str]):
 
 def report_bad_filters(filters):
     """Check filters and return improper filter parameters."""
-    bad_filters = check_filters(filters)
+    bad_filters = check_filter_keys(filters)
     if len(bad_filters) > 0:
         exc = click.ClickException("Unsupported filter argument")
         exc.add_note(f"Expected filters in {required_filters()}, got {bad_filters}.")

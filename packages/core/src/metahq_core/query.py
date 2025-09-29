@@ -15,8 +15,8 @@ from metahq_core.curations.annotations import Annotations
 from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import (
+    _ecodes,
     attributes,
-    ecodes,
     get_annotations,
     get_technologies,
     na_entities,
@@ -347,7 +347,7 @@ class Query:
         self.database: str = database
         self.attribute: str = attributes(attribute)
         self.level: Literal["sample", "series"] = level
-        self.ecodes: list[str] = ecodes(ecode)
+        self.ecodes: list[str] = self._load_ecode(ecode)
         self.species: str = self._load_species(species)
         self.technology: str = technologies(technology)
 
@@ -507,12 +507,28 @@ class Query:
             .to_list()
         )
 
+    def _load_ecode(self, ecode: str) -> list[str]:
+        map_ = _ecodes()
+
+        if ecode == "any":
+            __ecodes = list(map_.values()).copy()
+            __ecodes.remove("any")
+            return __ecodes
+
+        if ecode in map_:
+            return [map_[ecode]]
+        if ecode in map_.values():
+            return [ecode]
+        raise ValueError(
+            f"Invalid ecode query: {ecode}. Run metahq supported ecodes for available options."
+        )
+
     def _load_species(self, species: str) -> str:
         map_ = species_map()
         if species in map_:
             return map_[species]
         if species in map_.values():
-            return reverse_dict(map_)[species]
+            return species
         raise ValueError(
             f"Invalid species query: {species}. Run metahq supported species for available options."
         )

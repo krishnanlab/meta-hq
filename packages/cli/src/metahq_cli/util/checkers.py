@@ -20,7 +20,7 @@ from metahq_cli.util.messages import error
 from metahq_cli.util.supported import formats, required_filters
 
 
-def check_filters(filters: dict[str, str]):
+def check_filter_keys(filters: dict[str, str]):
     unaccaptable = []
     for f in filters:
         if f not in required_filters():
@@ -64,6 +64,13 @@ def check_mode(task: str, mode: str):
 
 def check_outfile(outfile: Path | str):
     _ = checkdir(outfile, is_file=True)
+
+
+def check_filter(_filter: str, query: str):
+    """Supports checking for ecode, technology, and species."""
+    _supported = supported(_filter)
+    if not query in _supported:
+        error(f"Expected {_filter} in {_supported}, got {query}.")
 
 
 def report_bad_entries(field: str, _supported: list[str], entries: list[str]):
