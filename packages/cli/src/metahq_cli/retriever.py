@@ -190,7 +190,7 @@ class Retriever:
         if self.verbose:
             if len(terms_with_anno) != len(self.curation_config.terms):
                 warning(
-                    f"Warning: {not_in_anno} have no annotations. Try propagating or use different conditions."
+                    f"{not_in_anno} have no annotations. Try propagating or use different conditions."
                 )
         return terms_with_anno
 
