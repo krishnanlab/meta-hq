@@ -40,6 +40,12 @@ from rank_bm25 import BM25Plus
 TABLE_DOCS = "ontology_search_docs"
 
 class NoResultsFound(Exception):
+    """
+    Raised when no results are found for a given query.
+    
+    Specifically, this is a re-raise of the duckdb ValueError that occurs
+    when a query that returns no results is converted to a polars DataFrame.
+    """
     pass
 
 # weights for building doc_text, which is used for BM25 indexing
