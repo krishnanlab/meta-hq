@@ -25,9 +25,7 @@ Example basic DuckDB queries (these require the duckdb CLI, see https://duckdb.o
 """
 
 import json
-import os
 from pathlib import Path
-from typing import Iterable
 
 import click
 import duckdb
