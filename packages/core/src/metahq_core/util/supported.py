@@ -26,9 +26,41 @@ CONFIG_FILE = METAHQ / "config.yaml"
 # =======================================================
 
 
+def _attributes() -> list[str]:
+    """Return supported attributes"""
+    return [
+        "tissue",
+        "disease",
+        "sex",
+    ]
+
+
+def _database_ids() -> dict[str, list[str]]:
+    """Returns available databse IDs."""
+    return {
+        "geo": ["gsm", "gse"],
+        "sra": ["srr", "srs", "srx", "srp"],
+    }
+
+
+def _ecodes() -> list[str]:
+    """Return supported evidence codes."""
+    return ["expert-curated", "semi-curated", "crowd-sourced", "any"]
+
+
 def _levels() -> list[str]:
     """Return supported annotation levels."""
     return ["sample", "series"]
+
+
+def _modes() -> list[str]:
+    return ["direct", "propagate", "label"]
+
+
+# tmp fix. Need to find out why these are included in anno
+def na_entities() -> list[str]:
+    """Return annotations not to include"""
+    return ["na", "", "NA"]
 
 
 def _ontologies() -> list[str]:
@@ -68,32 +100,6 @@ def _technologies() -> list[str]:
     return ["microarray", "rnaseq"]
 
 
-def _modes() -> list[str]:
-    return ["direct", "propagate", "label"]
-
-
-def _database_ids() -> dict[str, list[str]]:
-    """Returns available databse IDs."""
-    return {
-        "geo": ["gsm", "gse"],
-        "sra": ["srr", "srs", "srx", "srp"],
-    }
-
-
-def _ecodes() -> list[str]:
-    """Return supported evidence codes."""
-    return ["expert-curated", "semi-curated", "crowd-sourced", "any"]
-
-
-def _attributes() -> list[str]:
-    """Return supported attributes"""
-    return [
-        "tissue",
-        "disease",
-        "sex",
-    ]
-
-
 def species_map() -> dict[str, str]:
     """Return species common and scientific names."""
     return {
@@ -106,15 +112,15 @@ def species_map() -> dict[str, str]:
     }
 
 
-# tmp fix. Need to find out why these are included in anno
-def na_entities() -> list[str]:
-    """Return annotations not to include"""
-    return ["na", "", "NA"]
-
-
 # =======================================================
 # ==== hard-coded file paths
 # =======================================================
+
+
+def get_annotations(level: Literal["sample", "series"]) -> Path:
+    """Returns the annotations database file for a given level."""
+    _databases: Path = get_data_dir() / "annotations"
+    return _databases / f"combined__level-{level}.bson"
 
 
 def get_config():
@@ -127,23 +133,6 @@ def get_data_dir():
     return Path(get_config()["data_dir"])
 
 
-def get_annotations(level: Literal["sample", "series"]) -> Path:
-    """Returns the annotations database file for a given level."""
-    _databases: Path = get_data_dir() / "annotations"
-    return _databases / f"combined__level-{level}.bson"
-
-
-def get_metadata_path() -> Path:
-    """Returns the path to MetaHQ metadata."""
-    return get_data_dir() / "metadata"
-
-
-def get_technologies() -> Path:
-    """Returns the file to technology relationships."""
-    metadata: Path = get_data_dir() / "metadata"
-    return metadata / "technologies.parquet"
-
-
 def geo_metadata(level: Literal["sample", "series"]) -> Path:
     """Returns the MetaHQ metadata file for the specified level."""
     _supported = ["sample", "series"]
@@ -152,24 +141,17 @@ def geo_metadata(level: Literal["sample", "series"]) -> Path:
     raise ValueError(f"Expected level in {_supported}, got {level}.")
 
 
+def get_metadata_path() -> Path:
+    """Returns the path to MetaHQ metadata."""
+    return get_data_dir() / "metadata"
+
+
 def get_ontology_dirs(onto: str) -> Path:
     """Returns the path to the specified ontology directory."""
     _ontologies: Path = get_data_dir() / "ontology"
     opt = {
         "mondo": _ontologies / "mondo",
         "uberon": _ontologies / "uberon_ext",
-    }
-
-    return opt[onto]
-
-
-def get_ontology_files(onto: str) -> Path:
-    """Returns the path to the specified ontology obo file."""
-    mondo = get_ontology_dirs("mondo")
-    uberon = get_ontology_dirs("uberon")
-    opt = {
-        "mondo": mondo / "mondo.obo",
-        "uberon": uberon / "uberon_ext.obo",
     }
 
     return opt[onto]
@@ -195,6 +177,24 @@ def get_onto_families(onto: str) -> dict[str, Path]:
     return opt[onto]
 
 
+def get_ontology_files(onto: str) -> Path:
+    """Returns the path to the specified ontology obo file."""
+    mondo = get_ontology_dirs("mondo")
+    uberon = get_ontology_dirs("uberon")
+    opt = {
+        "mondo": mondo / "mondo.obo",
+        "uberon": uberon / "uberon_ext.obo",
+    }
+
+    return opt[onto]
+
+
+def get_technologies() -> Path:
+    """Returns the file to technology relationships."""
+    metadata: Path = get_data_dir() / "metadata"
+    return metadata / "technologies.parquet"
+
+
 # =======================================================
 # ==== check and return functions for supported items
 # =======================================================
@@ -206,6 +206,14 @@ def attributes(query: str) -> str:
     if query in _supported:
         return query
     raise ValueError(f"Expected attributes in {_supported}, got {query}.")
+
+
+def database_ids(query: str) -> list[str]:
+    """Returns supported accession IDs for SRA or GEO."""
+    _supported = list(_database_ids().keys())
+    if query in _supported:
+        return _database_ids()[query]
+    raise ValueError(f"Expected query in {_supported}, got {query}.")
 
 
 def ecodes(query: list[str] | str) -> list[str]:
@@ -228,21 +236,6 @@ def ecodes(query: list[str] | str) -> list[str]:
     return query
 
 
-def technologies(query: str) -> str:
-    """Returns supported technologies in MetaHQ."""
-    if query in _technologies():
-        return query
-    raise ValueError(f"Expected technology in {_technologies()}, got {query}.")
-
-
-def database_ids(query: str) -> list[str]:
-    """Returns supported accession IDs for SRA or GEO."""
-    _supported = list(_database_ids().keys())
-    if query in _supported:
-        return _database_ids()[query]
-    raise ValueError(f"Expected query in {_supported}, got {query}.")
-
-
 def metadata_fields(level: str) -> list[str]:
     """Returns supported metadata fields for a specified level."""
     if level == "sample":
@@ -250,14 +243,6 @@ def metadata_fields(level: str) -> list[str]:
     if level == "series":
         return _series_metadata()
     raise ValueError(f"Expected level in [sample, series], got {level}.")
-
-
-def species(query: str) -> str:
-    """Checks if a species is supported by MetaHQ."""
-    _supported = supported("species")
-    if query in _supported:
-        return query
-    raise ValueError(f"Expected organism in {_supported}, got {query}.")
 
 
 def ontologies(query: str) -> Path:
@@ -276,6 +261,21 @@ def onto_relations(query: str, relatives: str) -> Path:
             return get_onto_families(query)[relatives]
         raise ValueError(f"Relatives for {query} do not exist.")
     raise ValueError(f"Expected ontology in {_supported}, got {query}.")
+
+
+def species(query: str) -> str:
+    """Checks if a species is supported by MetaHQ."""
+    _supported = supported("species")
+    if query in _supported:
+        return query
+    raise ValueError(f"Expected organism in {_supported}, got {query}.")
+
+
+def technologies(query: str) -> str:
+    """Returns supported technologies in MetaHQ."""
+    if query in _technologies():
+        return query
+    raise ValueError(f"Expected technology in {_technologies()}, got {query}.")
 
 
 # =======================================================
