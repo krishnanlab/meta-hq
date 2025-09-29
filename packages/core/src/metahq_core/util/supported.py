@@ -43,9 +43,14 @@ def _database_ids() -> dict[str, list[str]]:
     }
 
 
-def _ecodes() -> list[str]:
+def _ecodes() -> dict[str, str]:
     """Return supported evidence codes."""
-    return ["expert-curated", "semi-curated", "crowd-sourced", "any"]
+    return {
+        "expert": "expert-curated",
+        "semi": "semi-curated",
+        "crowd": "crowd-sourced",
+        "any": "any",
+    }
 
 
 def _levels() -> list[str]:
@@ -214,13 +219,16 @@ def database_ids(query: str) -> list[str]:
 
 def ecodes(query: list[str] | str) -> list[str]:
     """Checks if query is in the supported evidence codes."""
+    available = []
+    available.extend(list(_ecodes().keys()))
+    available.extend(list(_ecodes().values()))
 
     def check_ecode(_ecode: str):
-        if not _ecode in _ecodes():
-            raise ValueError(f"Expected ecode in {_ecodes()}, got {_ecode}.")
+        if not _ecode in available:
+            raise ValueError(f"Expected ecode in {available}, got {_ecode}.")
 
     if query == "any":
-        __ecodes = _ecodes().copy()
+        __ecodes = list(_ecodes().values()).copy()
         __ecodes.remove("any")
         return __ecodes
 
@@ -283,7 +291,7 @@ def _supported() -> dict[str, list[str]]:
     """Returns mapping between all supported entities and their items."""
     return {
         "attributes": _attributes(),
-        "ecodes": _ecodes(),
+        "ecodes": list(_ecodes().keys()),
         "levels": _levels(),
         "modes": _modes(),
         "ontologies": _ontologies(),
