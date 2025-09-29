@@ -50,7 +50,7 @@ def search(query, db, type, ontology, max_results, scores, extended, scopes, ver
                     for s in result['synonyms']
                 ])
                 print(f"    synonyms: {syns}")
-
+            # add newline at end of output
             print("")
 
     except NoResultsFound as e:
