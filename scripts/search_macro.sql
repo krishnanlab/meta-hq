@@ -1,4 +1,4 @@
--- INSTALL fts; LOAD fts; -- if not already loaded
+INSTALL fts; LOAD fts; -- if not already loaded
 
 CREATE OR REPLACE MACRO ont_search(
   -- core arguments
