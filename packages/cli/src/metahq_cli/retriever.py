@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Literal
 import polars as pl
 from metahq_core.query import Query
 from metahq_core.util.progress import spinner
-from metahq_core.util.supported import SUPPORTED_MODES
+from metahq_core.util.supported import supported
 
 from metahq_cli.util.messages import error, warning
 
@@ -130,7 +130,9 @@ class Retriever:
         if self.curation_config.mode == "label":
             return self._propagate_annotations(curation, mode=1)
 
-        error(f"Expected mode in {SUPPORTED_MODES}, got {self.curation_config.mode}.")
+        error(
+            f"Expected mode in {supported('modes')}, got {self.curation_config.mode}."
+        )
 
     def _direct_annotations(self, curation: Annotations) -> Annotations:
         """Identify and return terms in the query that have annotations."""

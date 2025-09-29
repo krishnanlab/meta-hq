@@ -8,7 +8,7 @@ Last updated: 2025-09-24 by Parker Hicks
 """
 
 from metahq_cli.util.messages import error
-from metahq_cli.util.supported import REQUIRED_FILTERS
+from metahq_cli.util.supported import required_filters
 
 
 class FilterParser:
@@ -30,7 +30,7 @@ class FilterParser:
         parser.filters = as_dict
 
         not_in_filters = []
-        for key in REQUIRED_FILTERS:
+        for key in required_filters():
             if key not in parser.filters:
                 not_in_filters.append(key)
 
