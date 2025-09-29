@@ -29,8 +29,10 @@ Date: 2025-09-25
 
 
 import os
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import Literal, NotRequired, TypedDict
+
 import duckdb
 import polars as pl
 from rank_bm25 import BM25Plus
@@ -52,7 +54,11 @@ SCOPE_WEIGHTS = {
 # per the OBO 1.4 spec, synonyms with no scope are treated as RELATED
 DEFAULT_SCOPE = "RELATED"
 
-def doc_text_for(name: str, syns: list[dict]) -> str:
+class SynonymEntry(TypedDict):
+    text: str
+    scope: NotRequired[Literal["EXACT", "NARROW", "BROAD", "RELATED"]]
+
+def doc_text_for(name: str, syns: list[SynonymEntry]) -> str:
     """
     Build the doc_text column for BM25 indexing from the name and synonyms.
 
@@ -79,7 +85,7 @@ def doc_text_for(name: str, syns: list[dict]) -> str:
     
     return " \n ".join(parts)
 
-def search(query: str, db: Path=None, k: int=20, type: str=None, ontology: str=None, verbose: bool=False) -> pl.DataFrame:
+def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, ontology: str | None=None, verbose: bool=False) -> pl.DataFrame:
     """
     Given a query string, return the top k hits from the ontology search index.
 
