@@ -135,26 +135,10 @@ class Retriever:
     def _direct_annotations(self, curation: Annotations) -> Annotations:
         """Identify and return terms in the query that have annotations."""
 
-        terms_with_anno = [
-            term for term in self.curation_config.terms if term in curation.entities
-        ]
-        not_in_anno = [
-            term for term in self.curation_config.terms if not term in terms_with_anno
-        ]
+        available_terms = self._filter_missing_entities(curation)
 
-        if len(not_in_anno) == len(self.curation_config.terms):
-            error(
-                "No direct annotations for any terms. Try propagating or different contitions."
-            )
-
-        if self.verbose:
-            if len(terms_with_anno) != len(self.curation_config.terms):
-                warning(
-                    f"Warning: {not_in_anno} have no direct annotations. Try propagating or different conditions."
-                )
-
-        return curation.select(terms_with_anno).filter(
-            pl.any_horizontal(pl.col(terms_with_anno) == 1)
+        return curation.select(available_terms).filter(
+            pl.any_horizontal(pl.col(available_terms) == 1)
         )
 
     def _propagate_annotations(
@@ -171,7 +155,7 @@ class Retriever:
 
         return result
 
-    def _query(self):
+    def _query(self) -> Annotations:
         return Query(
             database=self.query_config.database,
             attribute=self.query_config.attribute,
@@ -183,6 +167,26 @@ class Retriever:
 
     def _query_silent(self):
         return self._query()
+
+    def _filter_missing_entities(self, curation: Annotations | Labels) -> list[str]:
+        terms_with_anno = [
+            term for term in self.curation_config.terms if term in curation.entities
+        ]
+        not_in_anno = [
+            term for term in self.curation_config.terms if not term in terms_with_anno
+        ]
+
+        if len(not_in_anno) == len(self.curation_config.terms):
+            error(
+                "No annotations for any terms. Try propagating or use different contitions."
+            )
+
+        if self.verbose:
+            if len(terms_with_anno) != len(self.curation_config.terms):
+                warning(
+                    f"Warning: {not_in_anno} have no annotations. Try propagating or use different conditions."
+                )
+        return terms_with_anno
 
     @spinner(desc="Querying...", p_message="Querying...", end_message="Done")
     def _query_verbose(self):

@@ -14,13 +14,18 @@ from metahq_core.util.supported import get_onto_families, ontologies
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig, Retriever
 from metahq_cli.util.checkers import check_filters
 from metahq_cli.util.helpers import FilterParser
-from metahq_cli.util.messages import warning
+from metahq_cli.util.messages import error, warning
 from metahq_cli.util.supported import REQUIRED_FILTERS
-
 
 # ===================================================
 # ==== helpers to build retrieval configurations
 # ===================================================
+
+
+def _parse(terms: list[str], available: list[str]):
+    return [term for term in terms if term in available]
+
+
 def parse_onto_terms(terms: str, reference: str):
     available = (
         pl.scan_parquet(get_onto_families(reference)["relations"])
@@ -28,15 +33,21 @@ def parse_onto_terms(terms: str, reference: str):
         .names()
     )
 
-    parse = lambda terms: [term for term in terms if term in available]
-
     if terms == "all":
         from metahq_core.ontology.base import Ontology
 
         onto = Ontology.from_obo(ontologies(reference), reference)
-        return parse(list(onto.class_dict.keys()))
+        return _parse(list(onto.class_dict.keys()), available)
 
-    return parse(terms.split(","))
+    _terms = terms.split(",")
+    parsed = _parse(_terms, available)
+
+    if len(parsed) > 0:
+        return parsed
+    print("returning error")
+    error(
+        f"Error: {_terms} have no annotations. Try propagating or use different conditions."
+    )
 
 
 def make_query_config(db: str, attribute: str, level: str, filters: dict[str, str]):
