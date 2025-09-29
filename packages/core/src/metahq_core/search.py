@@ -136,8 +136,7 @@ def search(query: str, db: Path=None, k: int=20, type: str=None, ontology: str=N
             raise NoResultsFound(f"No entities matched the filters: ontology={ontology}, type={type}")
         
         # 2) Tokenize the corpus
-        tokenize = lambda s: re.findall(r"[A-Za-z0-9]+", s.lower())
-        corpus_tokens = [tokenize(t) for t in df["doc_text"].to_list()]
+        corpus_tokens = df["doc_text"].str.to_lowercase().str.extract_all(r"[A-Za-z0-9]+")
 
         # 3) Fit BM25Plus (BM25Okapi has issues with doc lengths biasing results)
         # bm25 = BM25Okapi(corpus_tokens)
