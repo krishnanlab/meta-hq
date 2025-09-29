@@ -13,7 +13,7 @@ Last updated: 2025-09-29 by Parker Hicks
 
 from pathlib import Path
 
-from metahq_core.util.io import checkdir
+from metahq_core.util.io import checkdir, load_txt
 from metahq_core.util.supported import supported
 
 from metahq_cli.util.messages import error
@@ -26,6 +26,20 @@ def check_filter_keys(filters: dict[str, str]):
         if f not in required_filters():
             unaccaptable.append(f)
     return unaccaptable
+
+
+def check_binary(file: Path | str) -> bool:
+    with open(file, "rb") as f:
+        return b"\x00" in f.read(8000)
+
+
+def check_if_txt(string: str) -> list[str] | str:
+    if Path(string).is_file():
+        if check_binary(Path(string)):
+            error(f"Detected binary file: {string}. Please write terms to text file.")
+        return load_txt(string)
+
+    return string
 
 
 def check_level(level: str):

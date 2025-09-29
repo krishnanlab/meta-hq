@@ -7,6 +7,8 @@ Date: 2025-09-05
 Last updated: 2025-09-26 by Parker Hicks
 """
 
+from pathlib import Path
+
 import click
 import polars as pl
 from metahq_core.util.supported import get_onto_families, ontologies
@@ -16,6 +18,7 @@ from metahq_cli.util.checkers import (
     check_filter,
     check_filter_keys,
     check_format,
+    check_if_txt,
     check_metadata,
     check_mode,
     check_outfile,
@@ -33,7 +36,7 @@ def _parse(terms: list[str], available: list[str]) -> list[str]:
     return [term for term in terms if term in available]
 
 
-def parse_onto_terms(terms: str, reference: str) -> list[str]:
+def parse_onto_terms(terms: list[str], reference: str) -> list[str]:
     available = (
         pl.scan_parquet(get_onto_families(reference)["relations"])
         .collect_schema()
@@ -46,12 +49,12 @@ def parse_onto_terms(terms: str, reference: str) -> list[str]:
         onto = Ontology.from_obo(ontologies(reference), reference)
         return _parse(list(onto.class_dict.keys()), available)
 
-    _terms = terms.split(",")
-    parsed = _parse(_terms, available)
+    parsed = _parse(terms, available)
 
     if len(parsed) == 0:
         error(
-            f"Error: {_terms} have no annotations. Try propagating or use different conditions."
+            f"""{terms} have no annotations for ontology: {reference.upper()}.
+Try propagating or use different conditions."""
         )
 
     return parsed
@@ -77,15 +80,31 @@ def make_query_config(db: str, attribute: str, level: str, filters: dict[str, st
     )
 
 
+def make_sex_curation(terms: str, mode: str):
+    _terms = check_if_txt(terms)
+    check_mode("sex", mode)
+
+    if isinstance(_terms, str):
+        _terms = _terms.split(",")
+
+    _terms = map_sex_to_id(_terms)
+    return CurationConfig(mode, _terms, ontology="sex")
+
+
 def make_curation_config(terms: str, mode: str, ontology: str):
     """Construct a curation configuration."""
     if ontology == "sex":
-        check_mode("sex", mode)
+        return make_sex_curation(terms, mode)
 
-        _terms = map_sex_to_id(terms.split(","))
-
-    else:
+    if terms == "all":
         _terms = parse_onto_terms(terms, ontology)
+    else:
+        _terms = check_if_txt(terms)
+
+    if isinstance(_terms, str):
+        _terms = _terms.split(",")
+
+    _terms = parse_onto_terms(_terms, ontology)
 
     return CurationConfig(mode, _terms, ontology)
 
