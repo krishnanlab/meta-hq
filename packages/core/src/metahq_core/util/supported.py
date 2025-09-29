@@ -75,7 +75,6 @@ def _sample_metadata() -> list[str]:
         "series",
         "platform",
         "description",
-        "srr",
         "srx",
         "srs",
         "srp",
@@ -88,9 +87,6 @@ def _series_metadata() -> list[str]:
         "series",
         "platform",
         "description",
-        "srr",
-        "srx",
-        "srs",
         "srp",
     ]
 
