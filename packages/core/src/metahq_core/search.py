@@ -180,7 +180,7 @@ def search(query: str, db: Path=None, k: int=20, type: str=None, ontology: str=N
                 syn_df = pl.from_arrow(con.execute(syn_sql).arrow())
                 result_synonyms[term_id] = [
                     (r["synonym"], r["scope"])
-                    for r in syn_df.iter_rows(named=True)
+                    for r in syn_df.select(["synonym", "scope"]).rows(named=True)
                 ]
             except ValueError:
                 # no synonyms for this term
