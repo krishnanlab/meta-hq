@@ -131,10 +131,15 @@ class LabelsExporter(BaseExporter):
             Metadata fields to include.
 
         """
-        _labels = {
-            term: {"positive": [], "negative": [], "control": []}
-            for term in curation.entities
-        }
+        if ("MONDO:0000000" in curation.entities) or ("control" in curation.entities):
+            _labels = {
+                term: {"positive": [], "negative": [], "control": []}
+                for term in curation.entities
+            }
+        else:
+            _labels = {
+                term: {"positive": [], "negative": []} for term in curation.entities
+            }
 
         if (metadata is None) or (
             isinstance(metadata, str)
