@@ -12,9 +12,10 @@ import polars as pl
 import pytest
 
 from metahq_core.search import search, NoResultsFound
+from metahq_core.util.supported import get_ontology_search_db
 
 # Path to the database file
-DEFAULT_DB = "ontologies.duckdb"
+DEFAULT_DB = get_ontology_search_db()
 
 
 class TestSearch:
