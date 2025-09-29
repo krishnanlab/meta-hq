@@ -4,6 +4,9 @@
 Build a DuckDB database with entries from the names_synonyms.json files
 for MONDO, UBERON, and CL.
 
+This command expects to be run in an environment in which both the metahq-core
+and metahq-cli packages and their dependencies are installed.
+
 The `ontology_search_docs` table is used for BM25 searches; it weighs
 the name and synonyms by simply repeating each element by its weight.
 Since BM25 uses TF/IDF, this results in more repetitious elements
