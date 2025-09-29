@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+"""
+CLI command to search the ontology database for terms. Relies
+on metahq_core.search.search() to do the actual searching.
+
+Author: Faisal Alquaddoomi
+Date: 2025-09-25
+"""
 
 import click
 
