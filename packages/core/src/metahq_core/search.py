@@ -165,7 +165,7 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
         """
 
         if verbose:
-            print(f"SQL:n\{sql}")
+            print(f"SQL:\n{sql}\n")
         
         # execute the query and get the results as a polars DataFrame
         try:
@@ -188,8 +188,8 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
             delta=0.5
         )
 
-        # 4) Tokenize the query, apply BM25 to get scores, and return the top k hits
-        q_tokens = tokenize(query)
+        # 4) Tokenize the query in the same way as the corpus, apply BM25 to get scores, and return the top k hits
+        q_tokens = re.findall(r"[A-Za-z0-9]+", query.lower())
         scores = [x for x in bm25.get_scores(q_tokens) if x > 0]
 
         # if we have no scores > 0, then there are no results
