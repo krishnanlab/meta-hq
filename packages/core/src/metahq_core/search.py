@@ -42,9 +42,6 @@ TABLE_DOCS = "ontology_search_docs"
 class NoResultsFound(Exception):
     """
     Raised when no results are found for a given query.
-    
-    Specifically, this is a re-raise of the duckdb ValueError that occurs
-    when a query that returns no results is converted to a polars DataFrame.
     """
     pass
 
@@ -168,15 +165,12 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
             print(f"SQL:\n{sql}\n")
         
         # execute the query and get the results as a polars DataFrame
-        try:
-            # load into a polars DataFrame here
-            # (we catch ValueError here as an indication that there weren't any
-            # results, since we have no way of knowing if there are no results
-            # until we try to convert to a DataFrame)
-            df = con.execute(sql).pl()
-        except ValueError:
+        df = con.execute(sql).pl()
+
+        # check that the df is not empty; if it is, raise an error
+        if df.is_empty():
             raise NoResultsFound(f"No entities matched the filters: ontology={ontology}, type={type}")
-        
+
         # 2) Tokenize the corpus
         corpus_tokens = df["doc_text"].str.to_lowercase().str.extract_all(r"[A-Za-z0-9]+")
 
