@@ -259,7 +259,7 @@ def ontologies(query: str) -> Path:
 
 def onto_relations(query: str, relatives: str) -> Path:
     """Returns the path to a queried ontology."""
-    _supported = supported("relations")
+    _supported = supported("ontologies")
     if query in _supported:
         if relatives in get_onto_families(query).keys():
             return get_onto_families(query)[relatives]
@@ -295,7 +295,6 @@ def _supported() -> dict[str, list[str]]:
         "levels": _levels(),
         "modes": _modes(),
         "ontologies": _ontologies(),
-        "relations": _ontologies(),
         "sample_metadata": _sample_metadata(),
         "series_metadata": _series_metadata(),
         "species": list(species_map().keys()),
