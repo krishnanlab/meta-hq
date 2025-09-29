@@ -165,7 +165,7 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
         """
 
         if verbose:
-            print(f"SQL: {sql}")
+            print(f"SQL:n\{sql}")
         
         # execute the query and get the results as a polars DataFrame
         try:
