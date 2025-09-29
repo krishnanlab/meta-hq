@@ -98,6 +98,10 @@ class Retriever:
         Currently not get a spinner wrapper. Rather, progress bars are shown
         for curation propagation steps.
         """
+        if annotations.n_indices == 0:
+            error(
+                "No annotations for any terms. Try propagating or use different contitions."
+            )
         return self._curate_by_mode(annotations)
 
     def query(self):
