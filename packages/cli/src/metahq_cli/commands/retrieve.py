@@ -12,21 +12,27 @@ import polars as pl
 from metahq_core.util.supported import get_onto_families, ontologies
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig, Retriever
-from metahq_cli.util.checkers import check_filters
+from metahq_cli.util.checkers import (
+    check_filters,
+    check_format,
+    check_metadata,
+    check_mode,
+    check_outfile,
+)
 from metahq_cli.util.helpers import FilterParser
-from metahq_cli.util.messages import error, warning
-from metahq_cli.util.supported import REQUIRED_FILTERS
+from metahq_cli.util.messages import error
+from metahq_cli.util.supported import required_filters
 
 # ===================================================
 # ==== helpers to build retrieval configurations
 # ===================================================
 
 
-def _parse(terms: list[str], available: list[str]):
+def _parse(terms: list[str], available: list[str]) -> list[str]:
     return [term for term in terms if term in available]
 
 
-def parse_onto_terms(terms: str, reference: str):
+def parse_onto_terms(terms: str, reference: str) -> list[str]:
     available = (
         pl.scan_parquet(get_onto_families(reference)["relations"])
         .collect_schema()
@@ -42,16 +48,20 @@ def parse_onto_terms(terms: str, reference: str):
     _terms = terms.split(",")
     parsed = _parse(_terms, available)
 
-    if len(parsed) > 0:
-        return parsed
-    print("returning error")
-    error(
-        f"Error: {_terms} have no annotations. Try propagating or use different conditions."
-    )
+    if len(parsed) == 0:
+        error(
+            f"Error: {_terms} have no annotations. Try propagating or use different conditions."
+        )
+
+    return parsed
 
 
 def make_query_config(db: str, attribute: str, level: str, filters: dict[str, str]):
-    """Construct a query configuration."""
+    """
+    Construct a query configuration.
+
+    Query parameters are checked in the metahq_core.query module.
+    """
     return QueryConfig(
         database=db,
         attribute=attribute,
@@ -65,9 +75,7 @@ def make_query_config(db: str, attribute: str, level: str, filters: dict[str, st
 def make_curation_config(terms: str, mode: str, ontology: str):
     """Construct a curation configuration."""
     if ontology == "sex":
-        if mode != "direct":
-            warning("Sex queries must be direct annotations.")
-            print("Changing mode to direct...")
+        check_mode("sex", mode)
 
         _terms = map_sex_to_id(terms.split(","))
 
@@ -75,6 +83,17 @@ def make_curation_config(terms: str, mode: str, ontology: str):
         _terms = parse_onto_terms(terms, ontology)
 
     return CurationConfig(mode, _terms, ontology)
+
+
+def make_output_config(
+    outfile: str, fmt: str, metadata: str, level: str
+) -> OutputConfig:
+    """Construct an output configuration."""
+    check_metadata(level, metadata)
+    check_format(fmt)
+    check_outfile(outfile)
+
+    return OutputConfig(outfile, fmt, metadata)
 
 
 def map_sex_to_id(terms: list[str]):
@@ -96,7 +115,7 @@ def report_bad_filters(filters):
     bad_filters = check_filters(filters)
     if len(bad_filters) > 0:
         exc = click.ClickException("Unsupported filter argument")
-        exc.add_note(f"Expected filters in {REQUIRED_FILTERS}, got {bad_filters}.")
+        exc.add_note(f"Expected filters in {required_filters()}, got {bad_filters}.")
 
 
 def set_verbosity(quiet: bool):
@@ -125,7 +144,7 @@ def retrieve_commands():
 @click.option("--output", type=click.Path(), default="annotations.parquet")
 @click.option("--fmt", type=str, default="parquet")
 @click.option("--metadata", type=str, default="sample")
-@click.option("--quiet", is_flag=True)
+@click.option("--quiet", is_flag=True, default=False)
 def retrieve_tissues(terms, level, mode, fmt, metadata, filters, output, quiet):
     """Retrieval command for tissue ontology terms."""
     verbose = set_verbosity(quiet)
@@ -137,7 +156,7 @@ def retrieve_tissues(terms, level, mode, fmt, metadata, filters, output, quiet):
     # make configs
     query_config = make_query_config("geo", "tissue", level, filters)
     curation_config = make_curation_config(terms, mode, "uberon")
-    output_config = OutputConfig(output, fmt, metadata)
+    output_config = make_output_config(output, fmt, metadata, level=level)
 
     # retrieve
     retriever = Retriever(query_config, curation_config, output_config, verbose)
@@ -168,7 +187,7 @@ def retrieve_diseases(terms, level, mode, fmt, metadata, filters, output, quiet)
     # make configs
     query_config = make_query_config("geo", "disease", level, filters)
     curation_config = make_curation_config(terms, mode, "mondo")
-    output_config = OutputConfig(output, fmt, metadata)
+    output_config = make_output_config(output, fmt, metadata, level=level)
 
     # retrieve
     retriever = Retriever(query_config, curation_config, output_config, verbose)
@@ -199,7 +218,7 @@ def retrieve_sex(terms, level, mode, fmt, metadata, filters, output, quiet):
     # make configs
     query_config = make_query_config("geo", "sex", level, filters)
     curation_config = make_curation_config(terms, mode, "sex")
-    output_config = OutputConfig(output, fmt, metadata)
+    output_config = make_output_config(output, fmt, metadata, level=level)
 
     # retrieve
     retriever = Retriever(query_config, curation_config, output_config, verbose)
