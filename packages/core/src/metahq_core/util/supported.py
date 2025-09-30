@@ -65,7 +65,7 @@ def _modes() -> list[str]:
 # tmp fix. Need to find out why these are included in anno
 def na_entities() -> list[str]:
     """Return annotations not to include"""
-    return ["na", "", "NA"]
+    return ["na", "", "NA", "not annotated"]
 
 
 def _ontologies() -> list[str]:
