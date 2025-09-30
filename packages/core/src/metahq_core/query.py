@@ -516,7 +516,7 @@ class Query:
             return __ecodes
 
         if ecode in map_:
-            return [map_[ecode]]
+            return [map_[ecode]]  # provided shorthand
         if ecode in map_.values():
             return [ecode]
         raise ValueError(
@@ -526,9 +526,9 @@ class Query:
     def _load_species(self, species: str) -> str:
         map_ = species_map()
         if species in map_:
-            return map_[species]
+            return map_[species]  # provided shorthand
         if species in map_.values():
-            return species
+            return reverse_dict(map_)[species]
         raise ValueError(
             f"Invalid species query: {species}. Run metahq supported species for available options."
         )
