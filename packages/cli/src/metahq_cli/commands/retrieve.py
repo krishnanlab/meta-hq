@@ -167,10 +167,13 @@ def retrieve_commands():
 )
 @click.option("--output", type=click.Path(), default="annotations.parquet")
 @click.option("--fmt", type=str, default="parquet")
-@click.option("--metadata", type=str, default="sample")
+@click.option("--metadata", type=str, default="df")
 @click.option("--quiet", is_flag=True, default=False)
 def retrieve_tissues(terms, level, mode, fmt, metadata, filters, output, quiet):
     """Retrieval command for tissue ontology terms."""
+    if metadata == "df":
+        metadata = level
+
     verbose = set_verbosity(quiet)
 
     # parse and check filters
@@ -197,11 +200,14 @@ def retrieve_tissues(terms, level, mode, fmt, metadata, filters, output, quiet):
     type=str,
     default="species=human,ecode=expert-curated,technology=rnaseq",
 )
-@click.option("--metadata", type=str, default="sample")
+@click.option("--metadata", type=str, default="df")
 @click.option("--output", type=click.Path(), default="annotations.parquet")
 @click.option("--quiet", is_flag=True, default=False)
 def retrieve_diseases(terms, level, mode, fmt, metadata, filters, output, quiet):
     """Retrieval command for disease ontology terms."""
+    if metadata == "df":
+        metadata = level
+
     verbose = set_verbosity(quiet)
 
     # parse and check filters
@@ -228,11 +234,14 @@ def retrieve_diseases(terms, level, mode, fmt, metadata, filters, output, quiet)
     type=str,
     default="species=human,ecode=expert-curated,technology=rnaseq",
 )
-@click.option("--metadata", type=str, default="sample")
+@click.option("--metadata", type=str, default="df")
 @click.option("--output", type=click.Path(), default="annotations.parquet")
 @click.option("--quiet", is_flag=True, default=False)
 def retrieve_sex(terms, level, mode, fmt, metadata, filters, output, quiet):
     """Retrieval command for sex annotations."""
+    if metadata == "df":
+        metadata = level
+
     verbose = set_verbosity(quiet)
 
     # parse and check filters
