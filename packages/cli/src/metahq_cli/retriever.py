@@ -18,7 +18,7 @@ from metahq_core.query import Query
 from metahq_core.util.progress import spinner
 from metahq_core.util.supported import supported
 
-from metahq_cli.util.messages import error, warning
+from metahq_cli.util.messages import TruncatedList, error, warning
 
 if TYPE_CHECKING:
     from metahq_core.curations.annotations import Annotations
@@ -190,7 +190,7 @@ class Retriever:
         if self.verbose:
             if len(terms_with_anno) != len(self.curation_config.terms):
                 warning(
-                    f"{not_in_anno} have no annotations. Try propagating or use different conditions."
+                    f"{TruncatedList(not_in_anno)} have no annotations. Try propagating or use different conditions."
                 )
         return terms_with_anno
 
