@@ -4,7 +4,7 @@ This script stores file path constants and functions to retrieve those paths.
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2025-09-29 by Parker Hicks
+Last updated: 2025-10-02 by Parker Hicks
 """
 
 from pathlib import Path
@@ -99,6 +99,11 @@ def _series_metadata() -> list[str]:
 def _technologies() -> list[str]:
     """Return supported technologies"""
     return ["microarray", "rnaseq"]
+
+
+def disease_ontologies() -> tuple[str, ...]:
+    """Return available disease ontologies."""
+    return tuple(["MONDO"])
 
 
 def species_map() -> dict[str, str]:
