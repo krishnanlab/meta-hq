@@ -17,6 +17,7 @@ from metahq_core.export.base import BaseExporter
 from metahq_core.util.io import checkdir, load_bson, save_json
 from metahq_core.util.supported import (
     database_ids,
+    disease_ontologies,
     geo_metadata,
     get_annotations,
     metadata_fields,
@@ -131,10 +132,18 @@ class LabelsExporter(BaseExporter):
             Metadata fields to include.
 
         """
-        _labels = {
-            term: {"positive": [], "negative": [], "control": []}
-            for term in curation.entities
-        }
+        has_controls = any(
+            term.startswith(disease_ontologies()) for term in curation.entities
+        )
+        if has_controls:
+            _labels = {
+                term: {"positive": [], "negative": [], "control": []}
+                for term in curation.entities
+            }
+        else:
+            _labels = {
+                term: {"positive": [], "negative": []} for term in curation.entities
+            }
 
         if (metadata is None) or (
             isinstance(metadata, str)
@@ -356,7 +365,13 @@ class LabelsExporter(BaseExporter):
         for entity in labels:
             label = str(row[entity])
             if label in LABEL_KEY:
-                labels[entity][LABEL_KEY[label]].append(idx)
+                try:
+                    labels[entity][LABEL_KEY[label]].append(idx)
+                except KeyError:
+                    print(labels[entity])
+                    print(LABEL_KEY[label])
+                    print(idx)
+                    exit()
 
     def _write_row_with_metadata(
         self,

@@ -13,10 +13,12 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
+from metahq_core.curations._multiprocess_propagator import propagate_controls
 from metahq_core.curations.labels import Labels
-from metahq_core.curations.propagator import Propagator, propagate_controls
+from metahq_core.curations.propagator import Propagator
 from metahq_core.ontology.graph import Graph
 from metahq_core.util.helpers import merge_list_values
+from metahq_core.util.progress import progress_wrapper
 from metahq_core.util.supported import ontologies
 
 if TYPE_CHECKING:
@@ -56,7 +58,9 @@ class AnnotationsConverter:
 
     """
 
-    def __init__(self, anno, to_terms, ontology, control_col="MONDO:0000000"):
+    def __init__(
+        self, anno, to_terms, ontology, control_col="MONDO:0000000", verbose=False
+    ):
         self.anno: Annotations = anno
         self.to_terms: list[str] = to_terms
         self.ontology: str = ontology
@@ -65,6 +69,7 @@ class AnnotationsConverter:
         self.control_col: str = control_col
 
         self.graph = Graph.from_obo(ontologies(ontology), ontology=ontology)
+        self.verbose: bool = verbose
 
     def propagate_up(self):
         """
@@ -74,7 +79,11 @@ class AnnotationsConverter:
         self._setup_to_annotate()
 
         propagator = Propagator(
-            self.ontology, self.anno, self.to_terms, relatives=["ancestors"]
+            self.ontology,
+            self.anno,
+            self.to_terms,
+            relatives=["ancestors"],
+            verbose=self.verbose,
         )
         new, cols, ids = propagator.propagate_up()
 
@@ -116,7 +125,13 @@ class AnnotationsConverter:
         if self.controls and ctrl_ids is not None and not self.anno.collapsed:
 
             ctrl_labels = propagate_controls(
-                ctrl_ids, label_mat, ids, cols, self.anno.index_col, groups
+                ctrl_ids,
+                label_mat,
+                ids,
+                cols,
+                self.anno.index_col,
+                groups,
+                verbose=self.verbose,
             )
 
             return Labels.from_df(
@@ -135,7 +150,14 @@ class AnnotationsConverter:
             "ancestors": self.graph.ancestors_from,
             "descendants": self.graph.descendants_from,
         }
-        relation_map = opt[relatives](self.to_terms)
+        relation_map = progress_wrapper(
+            f"Extracting term {relatives}...",
+            verbose=self.verbose,
+            total=len(self.to_terms),
+            func=opt[relatives],
+            nodes=self.to_terms,
+        )
+
         return merge_list_values(relation_map)
 
     def _prepare_control_data(self):
@@ -201,9 +223,10 @@ class AnnotationsConverter:
             self.anno,
             self.to_terms,
             relatives=["ancestors", "descendants"],
+            verbose=self.verbose,
         )
-        up_mat, cols, up_ids = propagator.propagate_up()
-        down_mat, _, _ = propagator.propagate_down()
+        up_mat, cols, up_ids = propagator.propagate_up(verbose=self.verbose)
+        down_mat, _, _ = propagator.propagate_down(verbose=self.verbose)
 
         neg_mask = (up_mat == 0) & (down_mat == 0)
         up_mat[neg_mask] = -1

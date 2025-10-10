@@ -114,7 +114,7 @@ class Annotations(BaseCuration):
         data: pl.DataFrame,
         ids: pl.DataFrame,
         index_col: str,
-        group_cols: tuple[str, ...] = ("group", "platform"),
+        group_cols: tuple[str, ...] = ("series", "platform"),
         collapsed: bool = False,
     ):
         self.data = data
@@ -234,6 +234,7 @@ class Annotations(BaseCuration):
         mode: Literal[0, 1],
         control_col: str = "MONDO:0000000",
         group_col: str = "series",
+        verbose: bool = False,
     ) -> Labels | Annotations:
         """Convert annotations to propagated labels.
 
@@ -273,7 +274,7 @@ class Annotations(BaseCuration):
 
         """
         converter = AnnotationsConverter(
-            self, to_terms, ontology, control_col=control_col
+            self, to_terms, ontology, control_col=control_col, verbose=verbose
         )
 
         if mode == 0:
@@ -356,7 +357,7 @@ class Annotations(BaseCuration):
         cls,
         df: pl.DataFrame,
         index_col: str,
-        group_cols: tuple[str, ...] | list[str] = ("group", "platform"),
+        group_cols: tuple[str, ...] | list[str] = ("series", "platform"),
         **kwargs,
     ) -> Annotations:
         """Creates an Annotations object from a combined DataFrame."""
@@ -382,7 +383,7 @@ class Annotations(BaseCuration):
     @property
     def groups(self) -> list[str]:
         """Returns the groups column of the Annotations curation."""
-        return self.ids["group"].to_list()
+        return self.ids["series"].to_list()
 
     @property
     def ids(self) -> pl.DataFrame:
