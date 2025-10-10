@@ -1,21 +1,17 @@
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "metahq_cli"
+name = "metahq-cli"
 version = "0.1.0"
 description = "The meta-hq CLI."
-readme = "README.md"
 requires-python = ">=3.11"
+readme = "README.md"
 authors = [
     {name = "Parker Hicks", email = "parker.hicks@cuanschutz.edu"},
+    {name = "Faisal Alquaddoomi", email = "faisal.alquaddoomi@cuanschutz.edu"},
 ]
 keywords = ["cli", "tool", "core"]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Intended Audience :: Computational biologists",
-    "License :: BSD 3-Clause",
+    "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
@@ -28,40 +24,21 @@ dependencies = [
     "polars>=1.27.0",
     "pymongo>=4.13.0",
     "pyarrow>=10.0.0",
-    "tqdm>=4.60.0",   
     "pydantic>=2.0.0",
     "click>=8.3.0",
     "rich>=13.0.0",
+    "metahq-core",
 ]
 
 [project.scripts]
 metahq = "metahq_cli.main:main"
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-cov",
-    "black",
-    "isort",
-    "flake8",
-    "mypy",
-]
-test = [
-    "pytest>=6.0",
-    "pytest-cov",
-    "pytest-benchmark",
-]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[project.urls]
-Homepage = "https://github.com/krishnanlab/meta-hq"
-Repository = "https://github.com/krishnanlab/meta-hq"
-Issues = "https://github.com/krishnanlab/meta-hq/issues"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-dir]
-"" = "src"
+[tool.hatch.build.targets.wheel]
+packages = ["src/metahq_cli"]
 
 [tool.black]
 line-length = 88

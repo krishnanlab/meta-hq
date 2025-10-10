@@ -1,14 +1,15 @@
 [project]
-name = "metahq-core"
+name = "metahq"
 version = "0.1.0"
-description = "Core API for the meta-hq CLI."
+description = "Core API and CLI APIs for meta-hq."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
     {name = "Parker Hicks", email = "parker.hicks@cuanschutz.edu"},
     {name = "Faisal Alquaddoomi", email = "faisal.alquaddoomi@cuanschutz.edu"},
 ]
-keywords = ["cli", "tool", "core"]
+license = {file = "LICENSE"}
+keywords = ["cli", "metadata", "database"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -16,26 +17,23 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 
-dependencies = [
-    "networkx>=3.0", 
-    "numpy>=2.3.0",
-    "polars>=1.27.0",
-    "pymongo>=4.13.0",
-    "pyarrow>=10.0.0",
-    "pydantic>=2.0.0",
-    "pyyaml>=5.1",
-    "duckdb>=1.4.0",
-    "rank-bm25>=0.2.2",
-]
+# see independent package pyproject.toml for dependencies
+dependencies = ["metahq-core", "metahq-cli"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.uv.workspace]
+members = ["packages/core", "packages/cli"]
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/metahq_core"]
+[tool.uv.sources]
+metahq-core = { workspace = true }
+metahq-cli = { workspace = true }
+
+[project.urls]
+Homepage = "https://github.com/krishnanlab/meta-hq"
+Repository = "https://github.com/krishnanlab/meta-hq"
+Issues = "https://github.com/krishnanlab/meta-hq/issues"
 
 [tool.black]
 line-length = 88
