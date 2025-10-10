@@ -4,7 +4,7 @@ Helper class to facilitate propagation of annotations by chunks.
 Author: Parker Hicks
 Date: 2025-09-26
 
-Last updated: 2025-09-26
+Last updated: 2025-10-10
 """
 
 from __future__ import annotations
@@ -142,6 +142,24 @@ def propagate_controls(
 
     labels: NpIntMatrix
         Propagated labels with -1, 0, +1 labels to disease terms.
+
+    label_ids: pl.DataFrame
+        Index to group ID mapping.
+
+    diseases: list[str]
+        Disease terms to propagate to.
+
+    index_col: str
+        Name of column storing index IDs.
+
+    group_col: str
+        Name of column storing group IDs.
+
+    n_processes: int
+        Number of cores to use. Defaults to all available - 1.
+
+    verbose: bool
+        If true, prints debug information.
 
     """
     if n_processes is None:
