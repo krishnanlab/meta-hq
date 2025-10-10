@@ -163,6 +163,23 @@ def get_ontology_dirs(onto: str) -> Path:
     return opt[onto]
 
 
+def get_ontology_files(onto: str) -> Path:
+    """Returns the path to the specified ontology obo file."""
+    mondo = get_ontology_dirs("mondo")
+    uberon = get_ontology_dirs("uberon")
+    opt = {
+        "mondo": mondo / "mondo.obo",
+        "uberon": uberon / "uberon_ext.obo",
+    }
+
+    return opt[onto]
+
+
+def get_ontology_search_db() -> Path:
+    """Returns the path to the ontology search database."""
+    return get_data_dir() / "ontology" / "ontology_search.duckdb"
+ 
+
 def get_onto_families(onto: str) -> dict[str, Path]:
     """Returns the path to files outlining ontology relationships."""
     mondo = get_ontology_dirs("mondo")

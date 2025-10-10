@@ -1,0 +1,231 @@
+"""
+Implements a search method that uses the ontology term database to search for
+entities whose name or synonyms match a query. The search method uses BM25+ and
+weighs names and synonyms in decreasing order of specificity: names are weighed
+most highly, followed by exact synonyms, then narrow, broad, and finally related
+synonyms.
+
+Currently this weighting is applied by repeating each name or synonym by its
+weight to construct a "weighted document" that is then indexed by BM25+.
+
+Regarding the choice of BM25+ over BM25Okapi: BM25Okapi has a known issue where
+very short documents (e.g. a single word) are heavily favored over longer
+documents, even if the longer documents are a better match for the query. BM25+
+addresses this by adding a delta parameter that reduces the impact of document
+length on the score.
+
+While 95% our documents are generally the same length, between 15 and 400
+characters, there are a small number of documents that are much longer. More
+importantly, when I tried BM25+, I found that it returned results that better
+matched the expected results (albiet not exactly) for the given test queries in
+the root README.
+
+More experimentation is required on the precise algorithm and parameters to use,
+but the current implementation is IMHO a reasonable starting point.
+
+Author: Faisal Alquaddoomi
+Date: 2025-09-25
+"""
+
+
+import os
+import re
+from pathlib import Path
+from typing import Literal, NotRequired, TypedDict
+
+import duckdb
+import polars as pl
+from rank_bm25 import BM25Plus
+
+TABLE_DOCS = "ontology_search_docs"
+
+class NoResultsFound(Exception):
+    """
+    Raised when no results are found for a given query.
+    """
+    pass
+
+# weights for building doc_text, which is used for BM25 indexing
+NAME_WEIGHT = int(os.environ.get("NAME_WEIGHT", "10"))
+
+SCOPE_WEIGHTS = {
+    "EXACT": int(os.environ.get("SCOPE_WEIGHT_EXACT", "8")),
+    "NARROW": int(os.environ.get("SCOPE_WEIGHT_NARROW", "7")),
+    "BROAD": int(os.environ.get("SCOPE_WEIGHT_BROAD", "3")),
+    "RELATED": int(os.environ.get("SCOPE_WEIGHT_RELATED", "1")),
+}
+# per the OBO 1.4 spec, synonyms with no scope are treated as RELATED
+DEFAULT_SCOPE = "RELATED"
+
+class SynonymEntry(TypedDict):
+    text: str
+    scope: NotRequired[Literal["EXACT", "NARROW", "BROAD", "RELATED"]]
+
+def doc_text_for(name: str, syns: list[SynonymEntry]) -> str:
+    """
+    Build the doc_text column for BM25 indexing from the name and synonyms.
+
+    See the NAME_WEIGHT and SCOPE_WEIGHTS constants for how parts of the record
+    are weighted in the resulting document.
+
+    Per the OBO 1.4 spec, synonyms can have scopes in {EXACT, BROAD, NARROW,
+    RELATED}. If no scope is given, it is treated as RELATED.
+
+    :param name: The primary name of the term.
+    :param syns: List of {"text": str, "scope": str|None} synonym entries.
+    :returns: A string suitable for BM25 indexing.
+    """
+    parts = []
+
+    if name:
+        parts.extend([name] * NAME_WEIGHT)
+
+    for s in syns:
+        if not s["text"]:
+            continue
+        weight = SCOPE_WEIGHTS.get(s["scope"], SCOPE_WEIGHTS["RELATED"])
+        parts.extend([s["text"]] * weight)
+    
+    return " \n ".join(parts)
+
+def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, ontology: str | None=None, verbose: bool=False) -> pl.DataFrame:
+    """
+    Given a query string, return the top k hits from the ontology search index.
+
+    The search index is built from the ontology terms' names and synonyms, where
+    names are weighted more heavily than synonyms. The search uses the BM25+ algorithm
+    to rank the results.
+
+    :param query: the query string
+    :param db: path to the DuckDB database file, or None to use the default location
+    :param k: the number of top hits to return
+    :param type: if given, restrict results to this type (e.g. "celltype", "disease", or "tissue")
+    :param ontology: if given, restrict results to this ontology (e.g. "CL", "UBERON", or "MONDO")
+    :param verbose: if True, print debug information
+    :return: a polars DataFrame with columns: term_id, ontology, name, type, synonyms, score
+    """
+
+    # if db is None, use the Config to get the default location
+    if db is None:
+        from metahq_core.util.supported import get_ontology_search_db
+        db = str(get_ontology_search_db())
+
+    with duckdb.connect(db) as con:
+        # 1) Load docs (one per term)
+
+        # construct SQL to get all possible documents, including building the WHERE clause if needed
+        if type or ontology:
+            clauses = [
+                f"type='{type}'" if type else None,
+                f"ontology='{ontology}'" if ontology else None,
+            ]
+
+            where = "WHERE " + (" AND ".join(x for x in clauses if x is not None))
+        else:
+            where = ""
+
+        # in addition to fetching the normal info about each entity, we also
+        # compute the column 'doc_text' on the fly.
+
+        # we do this because rank_bm25 doesn't support field weights, so we
+        # simulate it by repeating terms in the document.
+
+        # we previously precomputed this column as 'doc_text' during the db
+        # build, but it blows up the size of the db quite a bit, and it's not
+        # that expensive to compute on the fly. we can also modify the weights
+        # at query time with this approach.
+        
+        sql = f"""
+        SELECT term_id, name, ontology, type,
+            (
+                SELECT REPEAT(name || ' ', {NAME_WEIGHT}) || ' ' ||
+                (
+                    SELECT COALESCE(
+                        STRING_AGG(
+                            REPEAT(
+                                synonym || ' ', 
+                                CASE scope
+                                    WHEN 'EXACT' THEN {SCOPE_WEIGHTS['EXACT']}
+                                    WHEN 'NARROW' THEN {SCOPE_WEIGHTS['NARROW']}
+                                    WHEN 'BROAD' THEN {SCOPE_WEIGHTS['BROAD']}
+                                    WHEN 'RELATED' THEN {SCOPE_WEIGHTS['RELATED']}
+                                    ELSE {SCOPE_WEIGHTS['RELATED']} -- treat unknown scope as RELATED
+                                END
+                            ), ' '
+                        ), ''
+                    )
+                )
+                FROM ontology_synonyms
+                WHERE term_id = ontology_search_docs.term_id
+            ) AS doc_text
+        FROM {TABLE_DOCS} {where}
+        """
+
+        if verbose:
+            print(f"SQL:\n{sql}\n")
+        
+        # execute the query and get the results as a polars DataFrame
+        df = con.execute(sql).pl()
+
+        # check that the df is not empty; if it is, raise an error
+        if df.is_empty():
+            raise NoResultsFound(f"No entities matched the filters: ontology={ontology}, type={type}")
+
+        # 2) Tokenize the corpus
+        corpus_tokens = df["doc_text"].str.to_lowercase().str.extract_all(r"[A-Za-z0-9]+")
+
+        # 3) Fit BM25Plus (BM25Okapi has issues with doc lengths biasing results)
+        # bm25 = BM25Okapi(corpus_tokens)
+        bm25 = BM25Plus(
+            corpus_tokens,
+            k1=1.2, b=0.8,
+            delta=0.5
+        )
+
+        # 4) Tokenize the query in the same way as the corpus, apply BM25 to get scores, and return the top k hits
+        q_tokens = re.findall(r"[A-Za-z0-9]+", query.lower())
+        scores = [x for x in bm25.get_scores(q_tokens) if x > 0]
+
+        # if we have no scores > 0, then there are no results
+        if len(scores) == 0:
+            raise NoResultsFound(f"No results found for query: '{query}'")
+        
+        top_idx = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:k]
+
+        # for each hit, query for and return its synonyms ordered by scope specificity, then alphabetically
+        # this could probably be optimized by doing a single query for all synonyms
+        # but this is simpler and k is generally small
+        result_synonyms = {}
+        for i in top_idx:
+            term_id = df["term_id"][i]
+            syn_sql = f"""
+            SELECT synonym, scope
+            FROM ontology_synonyms
+            WHERE term_id='{term_id}'
+            ORDER BY CASE scope
+                WHEN 'EXACT' THEN 0
+                WHEN 'BROAD' THEN 1
+                WHEN 'NARROW' THEN 2
+                WHEN 'RELATED' THEN 3
+                ELSE 9
+            END, synonym
+            """
+            
+            try:
+                syn_df = con.execute(syn_sql).pl()
+                result_synonyms[term_id] = [
+                    (r["synonym"], r["scope"])
+                    for r in syn_df.select(["synonym", "scope"]).rows(named=True)
+                ]
+            except ValueError:
+                # no synonyms for this term
+                result_synonyms[term_id] = []
+
+    return pl.DataFrame({
+        "term_id":  [ df["term_id"][i]                          for i in top_idx ],
+        "ontology": [ df["ontology"][i]                         for i in top_idx ],
+        "name":     [ df["name"][i]                             for i in top_idx ],
+        "type":     [ df["type"][i]                             for i in top_idx ],
+        "synonyms": [ result_synonyms.get(df["term_id"][i], []) for i in top_idx ],
+        "score":    [ float(scores[i])                          for i in top_idx ],
+    })
