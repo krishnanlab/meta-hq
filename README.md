@@ -17,7 +17,7 @@ tar -xvf metahq.tar.gz -C ~/metahq
 
 ## 2. Install metahq
 
-For dev install, see [dev install instructions](../docs/INSTALL.md). Otherwise run the following:
+For dev install, see [dev install instructions](docs/INSTALL.md). Otherwise run the following:
 
 ```
 pip install metahq
