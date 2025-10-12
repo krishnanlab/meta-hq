@@ -35,6 +35,22 @@ Homepage = "https://github.com/krishnanlab/meta-hq"
 Repository = "https://github.com/krishnanlab/meta-hq"
 Issues = "https://github.com/krishnanlab/meta-hq/issues"
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov",
+    "black",
+    "isort",
+    "flake8",
+    "mypy",
+]
+
+test = [
+    "pytest>=8.0",
+    "pytest-cov",
+    "pytest-benchmark",
+]
+
 [tool.black]
 line-length = 88
 target-version = ['py38']
