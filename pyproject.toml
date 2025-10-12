@@ -30,6 +30,9 @@ members = ["packages/core", "packages/cli"]
 metahq-core = { workspace = true }
 metahq-cli = { workspace = true }
 
+[project.scripts]
+metahq = "metahq_cli.main:main"
+
 [project.urls]
 Homepage = "https://github.com/krishnanlab/meta-hq"
 Repository = "https://github.com/krishnanlab/meta-hq"
