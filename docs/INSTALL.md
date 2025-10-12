@@ -1,5 +1,13 @@
 # MetaHQ installation
 
+## Normal install
+
+Run the following command:
+
+```bash
+pip install metahq
+```
+
 ## Development install
 
 ### uv tools
@@ -14,7 +22,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ### metahq install
 
-To install `metahq`, run the following within the root of the repository:
+To install `metahq`, run the following within the root of the `metahq` repository:
 
 ```bash
 uv pip install -e . ".[dev]"
