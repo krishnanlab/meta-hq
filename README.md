@@ -15,23 +15,18 @@ From `/path/to/metahq` run:
 tar -xvf metahq.tar.gz -C ~/metahq
 ```
 
-## 2. Setup the metahq conda env:
+## 2. Install metahq
 
-```bash
-conda env create -f environment.yml
-conda activate metahq
+For dev install, see [dev install instructions](../docs/INSTALL.md). Otherwise run the following:
+
 ```
-
-Install local dependencies for develpment:
-
-```bash
-pip install -e packages/core packages/cli
+pip install metahq
 ```
 
 ## 3. Setup the metahq config
 
-This creates a config file in `~/metahq` that outlines where to pull data from for MetaHQ functionalities. 
-**NOTE**: there is no Zenodo DOI yet. Just use something random. 
+This creates a config file in `~/metahq` that outlines where to pull data from for MetaHQ functionalities.
+**NOTE**: there is no Zenodo DOI yet. Just use something random.
 
 ```bash
 metahq setup --zenodo_doi xxx --data_dir ~/metahq/data
