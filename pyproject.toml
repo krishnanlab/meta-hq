@@ -8,7 +8,7 @@ authors = [
     {name = "Parker Hicks", email = "parker.hicks@cuanschutz.edu"},
     {name = "Faisal Alquaddoomi", email = "faisal.alquaddoomi@cuanschutz.edu"},
 ]
-license = {file = "LICENSE"}
+license = "BSD-3-Clause"
 keywords = ["cli", "metadata", "database"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -29,6 +29,12 @@ members = ["packages/core", "packages/cli"]
 [tool.uv.sources]
 metahq-core = { workspace = true }
 metahq-cli = { workspace = true }
+
+[tool.setuptools.packages.find]
+where = ["packages"] 
+include = ["core", "cli"]
+exclude = ["demo", "results", "run", "data"]
+namespaces = false 
 
 [project.scripts]
 metahq = "metahq_cli.main:main"
