@@ -2,9 +2,17 @@
 
 A platform for harmonizing and distributing community-curated high-quality metadata of public omics samples and datasets.
 
-# Setup (dev)
+## Setup
 
-## 1. Setup metahq dir in home directory
+### 1. Install metahq
+
+For dev install, see [dev install instructions](docs/INSTALL.md). Otherwise run the following:
+
+```bash
+pip install metahq
+```
+
+### 2. Setup metahq dir in home directory (dev only)
 
 MetaHQ will require users to download a data instance from Zenodo. The data used here are not yet uploaded to Zenodo
 and are instead included in `metahq.tar.gz`. Unzip this file and place the folder into your home directory.
@@ -15,31 +23,18 @@ From `/path/to/metahq` run:
 tar -xvf metahq.tar.gz -C ~/metahq
 ```
 
-## 2. Setup the metahq conda env:
+### 3. Setup the metahq config
 
-```bash
-conda env create -f environment.yml
-conda activate metahq
-```
-
-Install local dependencies for develpment:
-
-```bash
-pip install -e packages/core packages/cli
-```
-
-## 3. Setup the metahq config
-
-This creates a config file in `~/metahq` that outlines where to pull data from for MetaHQ functionalities. 
-**NOTE**: there is no Zenodo DOI yet. Just use something random. 
+This creates a config file in `~/metahq` that outlines where to pull data from for MetaHQ functionalities.
+**NOTE**: there is no Zenodo DOI yet. Just use something random.
 
 ```bash
 metahq setup --zenodo_doi xxx --data_dir ~/metahq/data
 ```
 
-# Functionalities
+## Functionalities
 
-## Term search
+### Term search
 
 Input a free text query (e.g. "heart attack") and return the most similar ontology term IDs (e.g., MONDO:0005068)
 
@@ -94,7 +89,7 @@ Should return something like:
 
 ```
 
-## Curation retrieval
+### Curation retrieval
 
 ```bash
 metahq retrieve diseases \
