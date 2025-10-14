@@ -4,6 +4,8 @@ on metahq_core.search.search() to do the actual searching.
 
 Author: Faisal Alquaddoomi
 Date: 2025-09-25
+
+Last updated: 2025-10-14 by Parker Hicks
 """
 
 import click
@@ -11,7 +13,6 @@ from metahq_core.search import NoResultsFound
 from metahq_core.search import search as core_search
 from metahq_core.util.supported import get_ontology_search_db
 
-# DEFAULT_DB = get_ontology_search_db()
 DEFAULT_TOP_HITS = 3
 
 
