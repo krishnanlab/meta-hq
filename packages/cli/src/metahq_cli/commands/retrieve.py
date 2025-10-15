@@ -91,10 +91,24 @@ def make_sex_curation(terms: str, mode: str):
     return CurationConfig(mode, _terms, ontology="sex")
 
 
+def make_age_curation(terms: str, mode: str):
+    _terms = check_if_txt(terms)
+    check_mode("age", mode)
+
+    if isinstance(_terms, str):
+        _terms = _terms.split(",")
+
+    _terms = map_sex_to_id(_terms)
+    return CurationConfig(mode, _terms, ontology="age")
+
+
 def make_curation_config(terms: str, mode: str, ontology: str):
     """Construct a curation configuration."""
     if ontology == "sex":
         return make_sex_curation(terms, mode)
+
+    if ontology == "age":
+        return make_age_curation(terms, mode)
 
     if terms == "all":
         _terms = parse_onto_terms(terms, ontology)
@@ -259,7 +273,33 @@ def retrieve_sex(terms, level, mode, fmt, metadata, filters, output, quiet):
 
 
 @retrieve_commands.command("age")
-@click.option("--terms", type=str, default="10-20,70-80")
-@click.option("--filters", type=str, default="species=human,ecode=expert-curated")
-def retrieve_age(terms, fmt, include_metadata, filters, output):
-    pass
+@click.option("--terms", type=str, default="male,female")
+@click.option("--level", type=click.Choice(["sample", "series"]))
+@click.option("--fmt", type=str, default="parquet")
+@click.option(
+    "--filters",
+    type=str,
+    default="species=human,ecode=expert-curated,technology=rnaseq",
+)
+@click.option("--metadata", type=str, default="df")
+@click.option("--output", type=click.Path(), default="annotations.parquet")
+@click.option("--quiet", is_flag=True, default=False)
+def retrieve_age(terms, level, fmt, metadata, filters, output, quiet):
+    """Retrieval command for age group annotations."""
+    if metadata == "df":
+        metadata = level
+
+    verbose = set_verbosity(quiet)
+
+    # parse and check filters
+    filters = FilterParser.from_str(filters).filters
+    report_bad_filters(filters)
+
+    # make configs
+    query_config = make_query_config("geo", "age", level, filters)
+    curation_config = make_curation_config(terms, "direct", "age")
+    output_config = make_output_config(output, fmt, metadata, level=level)
+
+    # retrieve
+    retriever = Retriever(query_config, curation_config, output_config, verbose)
+    retriever.retrieve()

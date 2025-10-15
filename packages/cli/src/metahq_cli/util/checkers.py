@@ -8,7 +8,7 @@ for CLI-based checks and MetaHQ core function checks.
 Author: Parker Hicks
 Date: 2025-09
 
-Last updated: 2025-09-29 by Parker Hicks
+Last updated: 2025-10-15 by Parker Hicks
 """
 
 from pathlib import Path
@@ -70,7 +70,7 @@ def check_format(fmt: str):
 
 
 def check_mode(task: str, mode: str):
-    if (task == "sex") & (mode != "direct"):
+    if (task in ["sex", "age"]) & (mode != "direct"):
         error(
             "Sex annotation queries must be direct annotations. Change to mode argument to 'direct'."
         )
