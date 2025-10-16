@@ -102,6 +102,19 @@ def _technologies() -> list[str]:
     return ["microarray", "rnaseq"]
 
 
+def age_groups() -> list[str]:
+    """Return supported age groups."""
+    return [
+        "fetus",
+        "infant",
+        "child",
+        "adolescent",
+        "adult",
+        "older_adult",
+        "eldery_adult",
+    ]
+
+
 def disease_ontologies() -> tuple[str, ...]:
     """Return available disease ontologies."""
     return tuple(["MONDO"])
@@ -196,18 +209,6 @@ def get_onto_families(onto: str) -> dict[str, Path]:
             "ids": uberon / "id.txt",
             "systems": uberon / "systems.txt",
         },
-    }
-
-    return opt[onto]
-
-
-def get_ontology_files(onto: str) -> Path:
-    """Returns the path to the specified ontology obo file."""
-    mondo = get_ontology_dirs("mondo")
-    uberon = get_ontology_dirs("uberon")
-    opt = {
-        "mondo": mondo / "mondo.obo",
-        "uberon": uberon / "uberon_ext.obo",
     }
 
     return opt[onto]

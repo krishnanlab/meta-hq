@@ -4,14 +4,12 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-09-26 by Parker Hicks
+Last updated: 2025-10-16 by Parker Hicks
 """
-
-from pathlib import Path
 
 import click
 import polars as pl
-from metahq_core.util.supported import get_onto_families, ontologies
+from metahq_core.util.supported import age_groups, get_onto_families, ontologies
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig, Retriever
 from metahq_cli.util.checkers import (
@@ -98,7 +96,6 @@ def make_age_curation(terms: str, mode: str):
     if isinstance(_terms, str):
         _terms = _terms.split(",")
 
-    _terms = map_sex_to_id(_terms)
     return CurationConfig(mode, _terms, ontology="age")
 
 
@@ -273,12 +270,19 @@ def retrieve_sex(terms, level, mode, fmt, metadata, filters, output, quiet):
 
 
 @retrieve_commands.command("age")
-@click.option("--terms", type=str)
-@click.option("--level", type=click.Choice(["sample", "series"]))
+@click.option(
+    "--terms",
+    type=str,
+    help=f"Choose from {age_groups()}. Can combine like 'fetus,adult'.",
+)
+@click.option(
+    "--level", type=click.Choice(["sample", "series"]), help="GEO annotation level."
+)
 @click.option(
     "--filters",
     type=str,
     default="species=human,ecode=expert,technology=rnaseq",
+    help="Filters for species, ecode, and technology. Run `metahq supported` for options.",
 )
 @click.option("--metadata", type=str, default="default")
 @click.option("--fmt", type=str, default="parquet")
