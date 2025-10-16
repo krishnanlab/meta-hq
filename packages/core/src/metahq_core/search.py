@@ -27,7 +27,6 @@ Author: Faisal Alquaddoomi
 Date: 2025-09-25
 """
 
-
 import os
 import re
 from pathlib import Path
@@ -37,13 +36,10 @@ import duckdb
 import polars as pl
 from rank_bm25 import BM25Plus
 
+from metahq_core.util.exceptions import NoResultsFound
+
 TABLE_DOCS = "ontology_search_docs"
 
-class NoResultsFound(Exception):
-    """
-    Raised when no results are found for a given query.
-    """
-    pass
 
 # weights for building doc_text, which is used for BM25 indexing
 NAME_WEIGHT = int(os.environ.get("NAME_WEIGHT", "10"))
@@ -57,9 +53,11 @@ SCOPE_WEIGHTS = {
 # per the OBO 1.4 spec, synonyms with no scope are treated as RELATED
 DEFAULT_SCOPE = "RELATED"
 
+
 class SynonymEntry(TypedDict):
     text: str
     scope: NotRequired[Literal["EXACT", "NARROW", "BROAD", "RELATED"]]
+
 
 def doc_text_for(name: str, syns: list[SynonymEntry]) -> str:
     """
@@ -85,10 +83,18 @@ def doc_text_for(name: str, syns: list[SynonymEntry]) -> str:
             continue
         weight = SCOPE_WEIGHTS.get(s["scope"], SCOPE_WEIGHTS["RELATED"])
         parts.extend([s["text"]] * weight)
-    
+
     return " \n ".join(parts)
 
-def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, ontology: str | None=None, verbose: bool=False) -> pl.DataFrame:
+
+def search(
+    query: str,
+    db: Path | None = None,
+    k: int = 20,
+    type: str | None = None,
+    ontology: str | None = None,
+    verbose: bool = False,
+) -> pl.DataFrame:
     """
     Given a query string, return the top k hits from the ontology search index.
 
@@ -108,6 +114,7 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
     # if db is None, use the Config to get the default location
     if db is None:
         from metahq_core.util.supported import get_ontology_search_db
+
         db = str(get_ontology_search_db())
 
     with duckdb.connect(db) as con:
@@ -134,7 +141,7 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
         # build, but it blows up the size of the db quite a bit, and it's not
         # that expensive to compute on the fly. we can also modify the weights
         # at query time with this approach.
-        
+
         sql = f"""
         SELECT term_id, name, ontology, type,
             (
@@ -163,24 +170,24 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
 
         if verbose:
             print(f"SQL:\n{sql}\n")
-        
+
         # execute the query and get the results as a polars DataFrame
         df = con.execute(sql).pl()
 
         # check that the df is not empty; if it is, raise an error
         if df.is_empty():
-            raise NoResultsFound(f"No entities matched the filters: ontology={ontology}, type={type}")
+            raise NoResultsFound(
+                f"No entities matched the filters: ontology={ontology}, type={type}"
+            )
 
         # 2) Tokenize the corpus
-        corpus_tokens = df["doc_text"].str.to_lowercase().str.extract_all(r"[A-Za-z0-9]+")
+        corpus_tokens = (
+            df["doc_text"].str.to_lowercase().str.extract_all(r"[A-Za-z0-9]+")
+        )
 
         # 3) Fit BM25Plus (BM25Okapi has issues with doc lengths biasing results)
         # bm25 = BM25Okapi(corpus_tokens)
-        bm25 = BM25Plus(
-            corpus_tokens,
-            k1=1.2, b=0.8,
-            delta=0.5
-        )
+        bm25 = BM25Plus(corpus_tokens, k1=1.2, b=0.8, delta=0.5)
 
         # 4) Tokenize the query in the same way as the corpus, apply BM25 to get scores, and return the top k hits
         q_tokens = re.findall(r"[A-Za-z0-9]+", query.lower())
@@ -189,7 +196,7 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
         # if we have no scores > 0, then there are no results
         if len(scores) == 0:
             raise NoResultsFound(f"No results found for query: '{query}'")
-        
+
         top_idx = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:k]
 
         # for each hit, query for and return its synonyms ordered by scope specificity, then alphabetically
@@ -210,7 +217,7 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
                 ELSE 9
             END, synonym
             """
-            
+
             try:
                 syn_df = con.execute(syn_sql).pl()
                 result_synonyms[term_id] = [
@@ -221,11 +228,13 @@ def search(query: str, db: Path | None=None, k: int=20, type: str | None=None, o
                 # no synonyms for this term
                 result_synonyms[term_id] = []
 
-    return pl.DataFrame({
-        "term_id":  [ df["term_id"][i]                          for i in top_idx ],
-        "ontology": [ df["ontology"][i]                         for i in top_idx ],
-        "name":     [ df["name"][i]                             for i in top_idx ],
-        "type":     [ df["type"][i]                             for i in top_idx ],
-        "synonyms": [ result_synonyms.get(df["term_id"][i], []) for i in top_idx ],
-        "score":    [ float(scores[i])                          for i in top_idx ],
-    })
+    return pl.DataFrame(
+        {
+            "term_id": [df["term_id"][i] for i in top_idx],
+            "ontology": [df["ontology"][i] for i in top_idx],
+            "name": [df["name"][i] for i in top_idx],
+            "type": [df["type"][i] for i in top_idx],
+            "synonyms": [result_synonyms.get(df["term_id"][i], []) for i in top_idx],
+            "score": [float(scores[i]) for i in top_idx],
+        }
+    )
