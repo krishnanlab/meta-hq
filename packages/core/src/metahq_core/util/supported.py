@@ -32,6 +32,7 @@ def _attributes() -> list[str]:
         "tissue",
         "disease",
         "sex",
+        "age",
     ]
 
 
@@ -99,6 +100,19 @@ def _series_metadata() -> list[str]:
 def _technologies() -> list[str]:
     """Return supported technologies"""
     return ["microarray", "rnaseq"]
+
+
+def age_groups() -> list[str]:
+    """Return supported age groups."""
+    return [
+        "fetus",
+        "infant",
+        "child",
+        "adolescent",
+        "adult",
+        "older_adult",
+        "eldery_adult",
+    ]
 
 
 def disease_ontologies() -> tuple[str, ...]:
@@ -178,7 +192,7 @@ def get_ontology_files(onto: str) -> Path:
 def get_ontology_search_db() -> Path:
     """Returns the path to the ontology search database."""
     return get_data_dir() / "ontology" / "ontology_search.duckdb"
- 
+
 
 def get_onto_families(onto: str) -> dict[str, Path]:
     """Returns the path to files outlining ontology relationships."""
@@ -195,18 +209,6 @@ def get_onto_families(onto: str) -> dict[str, Path]:
             "ids": uberon / "id.txt",
             "systems": uberon / "systems.txt",
         },
-    }
-
-    return opt[onto]
-
-
-def get_ontology_files(onto: str) -> Path:
-    """Returns the path to the specified ontology obo file."""
-    mondo = get_ontology_dirs("mondo")
-    uberon = get_ontology_dirs("uberon")
-    opt = {
-        "mondo": mondo / "mondo.obo",
-        "uberon": uberon / "uberon_ext.obo",
     }
 
     return opt[onto]

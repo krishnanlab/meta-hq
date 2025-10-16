@@ -4,14 +4,12 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-09-26 by Parker Hicks
+Last updated: 2025-10-16 by Parker Hicks
 """
-
-from pathlib import Path
 
 import click
 import polars as pl
-from metahq_core.util.supported import get_onto_families, ontologies
+from metahq_core.util.supported import age_groups, get_onto_families, ontologies
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig, Retriever
 from metahq_cli.util.checkers import (
@@ -91,10 +89,23 @@ def make_sex_curation(terms: str, mode: str):
     return CurationConfig(mode, _terms, ontology="sex")
 
 
+def make_age_curation(terms: str, mode: str):
+    _terms = check_if_txt(terms)
+    check_mode("age", mode)
+
+    if isinstance(_terms, str):
+        _terms = _terms.split(",")
+
+    return CurationConfig(mode, _terms, ontology="age")
+
+
 def make_curation_config(terms: str, mode: str, ontology: str):
     """Construct a curation configuration."""
     if ontology == "sex":
         return make_sex_curation(terms, mode)
+
+    if ontology == "age":
+        return make_age_curation(terms, mode)
 
     if terms == "all":
         _terms = parse_onto_terms(terms, ontology)
@@ -259,7 +270,40 @@ def retrieve_sex(terms, level, mode, fmt, metadata, filters, output, quiet):
 
 
 @retrieve_commands.command("age")
-@click.option("--terms", type=str, default="10-20,70-80")
-@click.option("--filters", type=str, default="species=human,ecode=expert-curated")
-def retrieve_age(terms, fmt, include_metadata, filters, output):
-    pass
+@click.option(
+    "--terms",
+    type=str,
+    help=f"Choose from {age_groups()}. Can combine like 'fetus,adult'.",
+)
+@click.option(
+    "--level", type=click.Choice(["sample", "series"]), help="GEO annotation level."
+)
+@click.option(
+    "--filters",
+    type=str,
+    default="species=human,ecode=expert,technology=rnaseq",
+    help="Filters for species, ecode, and technology. Run `metahq supported` for options.",
+)
+@click.option("--metadata", type=str, default="default")
+@click.option("--fmt", type=str, default="parquet")
+@click.option("--output", type=click.Path(), default="annotations.parquet")
+@click.option("--quiet", is_flag=True, default=False)
+def retrieve_age(terms, level, fmt, metadata, filters, output, quiet):
+    """Retrieval command for age group annotations."""
+    if metadata == "default":
+        metadata = level
+
+    verbose = set_verbosity(quiet)
+
+    # parse and check filters
+    filters = FilterParser.from_str(filters).filters
+    report_bad_filters(filters)
+
+    # make configs
+    query_config = make_query_config("geo", "age", level, filters)
+    curation_config = make_curation_config(terms, "direct", "age")
+    output_config = make_output_config(output, fmt, metadata, level=level)
+
+    # retrieve
+    retriever = Retriever(query_config, curation_config, output_config, verbose)
+    retriever.retrieve()
