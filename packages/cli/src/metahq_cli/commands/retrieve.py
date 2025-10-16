@@ -273,20 +273,20 @@ def retrieve_sex(terms, level, mode, fmt, metadata, filters, output, quiet):
 
 
 @retrieve_commands.command("age")
-@click.option("--terms", type=str, default="male,female")
+@click.option("--terms", type=str)
 @click.option("--level", type=click.Choice(["sample", "series"]))
-@click.option("--fmt", type=str, default="parquet")
 @click.option(
     "--filters",
     type=str,
-    default="species=human,ecode=expert-curated,technology=rnaseq",
+    default="species=human,ecode=expert,technology=rnaseq",
 )
-@click.option("--metadata", type=str, default="df")
+@click.option("--metadata", type=str, default="default")
+@click.option("--fmt", type=str, default="parquet")
 @click.option("--output", type=click.Path(), default="annotations.parquet")
 @click.option("--quiet", is_flag=True, default=False)
 def retrieve_age(terms, level, fmt, metadata, filters, output, quiet):
     """Retrieval command for age group annotations."""
-    if metadata == "df":
+    if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
