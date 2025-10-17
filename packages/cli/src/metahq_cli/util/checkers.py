@@ -15,9 +15,10 @@ from pathlib import Path
 
 from metahq_core.util.io import checkdir, load_txt
 from metahq_core.util.supported import supported
+from numpy import log
 
 from metahq_cli.util.messages import error
-from metahq_cli.util.supported import formats, required_filters
+from metahq_cli.util.supported import formats, log_map, required_filters
 
 
 def check_filter_keys(filters: dict[str, str]):
@@ -45,6 +46,19 @@ def check_if_txt(string: str) -> list[str] | str:
 def check_level(level: str):
     if level not in supported("levels"):
         error(f"Expected level in {supported('levels')}, got {level}.")
+
+
+def check_loglevel(loglevel: int | str) -> int:
+    """Check input log level."""
+    mapping = log_map()
+    if isinstance(loglevel, str) and (loglevel in mapping):
+        return mapping[loglevel]
+    if isinstance(loglevel, int) and (loglevel in mapping.values()):
+        return loglevel
+
+    raise ValueError(
+        f"Invalid log level. Choose from {list(mapping.keys())} or {list(mapping.values())}."
+    )
 
 
 def check_metadata(level: str, metadata: str):
