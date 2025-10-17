@@ -4,7 +4,7 @@ Facilitates argument and curation parsing for metaHQ retrieval commands.
 Author: Parker Hicks
 Date: 2025-09-25
 
-Last updated: 2025-09-26
+Last updated: 2025-10-16 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -15,12 +15,16 @@ from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 from metahq_core.query import Query
-from metahq_core.util.progress import spinner
+from metahq_core.util.exceptions import NoResultsFound
+from metahq_core.util.progress import get_console
 from metahq_core.util.supported import supported
 
-from metahq_cli.util.messages import TruncatedList, error, warning
+from metahq_cli.logger import setup_logger
+from metahq_cli.util.messages import TruncatedList
 
 if TYPE_CHECKING:
+    import logging
+
     from metahq_core.curations.annotations import Annotations
     from metahq_core.curations.labels import Labels
 
@@ -55,6 +59,14 @@ class OutputConfig:
     metadata: str
 
 
+@dataclass
+class LogConfig:
+    """Storage for logger parameters."""
+
+    level: int
+    outdir: Path
+
+
 class Retriever:
     """
     Queries, curates, and saves MetaHQ annotations.
@@ -84,24 +96,34 @@ class Retriever:
         Performs the pipeline of query -> curate -> save
     """
 
-    def __init__(self, query_config, curation_config, output_config, verbose):
+    def __init__(
+        self, query_config, curation_config, output_config, logger, verbose=True
+    ):
         self.query_config: QueryConfig = query_config
         self.curation_config: CurationConfig = curation_config
         self.output_config: OutputConfig = output_config
 
-        self.verbose = verbose
+        self.log: logging.Logger = logger
+        self.verbose: bool = verbose
+
+        if verbose:
+            self.log.debug(
+                "Using configs:\n%s\n%s\n%s",
+                self.query_config,
+                self.curation_config,
+                self.output_config,
+            )
 
     def curate(self, annotations: Annotations):
-        """
-        Mutate curations by specified mode.
-
-        Currently not get a spinner wrapper. Rather, progress bars are shown
-        for curation propagation steps.
-        """
+        """Mutate curations by specified mode."""
         if annotations.n_indices == 0:
-            error(
-                "No annotations for any terms. Try propagating or use different contitions."
-            )
+            msg = "No annotations for any terms. Try propagating or use different contitions."
+            self.log.error(msg)
+            raise NoResultsFound(msg)
+
+        if self.verbose:
+            self.log.info("Curating...")
+
         return self._curate_by_mode(annotations)
 
     def query(self):
@@ -119,9 +141,7 @@ class Retriever:
 
     def save_curation(self, curation: Annotations | Labels):
         """Saves the curation."""
-        if self.verbose:
-            self._save_verbose(curation)
-        self._save_silent(curation)
+        self._save(curation)
 
     def _curate_by_mode(self, curation: Annotations) -> Annotations | Labels:
         """Apply the appropriate curation method to queried annotations."""
@@ -134,9 +154,16 @@ class Retriever:
         if self.curation_config.mode == "label":
             return self._propagate_annotations(curation, mode=1)
 
-        error(
-            f"Expected mode in {supported('modes')}, got {self.curation_config.mode}."
+        msg = (
+            "Expected mode in %s, got %s.",
+            supported("modes"),
+            self.curation_config.mode,
         )
+
+        if self.verbose:
+            self.log.error(msg)
+
+        raise ValueError(msg)
 
     def _direct_annotations(self, curation: Annotations) -> Annotations:
         """Identify and return terms in the query that have annotations."""
@@ -156,12 +183,14 @@ class Retriever:
             self.curation_config.terms,
             self.curation_config.ontology,
             mode=mode,
-            verbose=self.verbose,
         )
 
         return result
 
     def _query(self) -> Annotations:
+        if self.verbose:
+            self.log.info("Querying...")
+
         return Query(
             database=self.query_config.database,
             attribute=self.query_config.attribute,
@@ -169,6 +198,8 @@ class Retriever:
             ecode=self.query_config.ecode,
             species=self.query_config.species,
             technology=self.query_config.technology,
+            logger=self.log,
+            verbose=self.verbose,
         ).annotations()
 
     def _query_silent(self):
@@ -183,31 +214,28 @@ class Retriever:
         ]
 
         if len(not_in_anno) == len(self.curation_config.terms):
-            error(
-                "No annotations for any terms. Try propagating or use different contitions."
-            )
+            msg = "No annotations for any terms. Try propagating or use different contitions."
+            self.log.error(msg)
+            raise NoResultsFound(msg)
 
         if self.verbose:
             if len(terms_with_anno) != len(self.curation_config.terms):
-                warning(
-                    f"{TruncatedList(not_in_anno)} have no annotations. Try propagating or use different conditions."
+                self.log.warning(
+                    "%s have no annotations. Try propagating or use different conditions.",
+                    TruncatedList(not_in_anno),
                 )
         return terms_with_anno
 
-    @spinner(desc="Querying...", p_message="Querying...", end_message="Done")
     def _query_verbose(self):
         return self._query()
 
     def _save(self, curation):
+
+        if self.verbose:
+            self.log.info("Saving to %s...", self.output_config.outfile)
+
         curation.save(
             outfile=self.output_config.outfile,
             fmt=self.output_config.fmt,
             metadata=self.output_config.metadata,
         )
-
-    def _save_silent(self, curation):
-        self._save(curation)
-
-    @spinner(desc="Saving...", p_message="...", end_message="Done")
-    def _save_verbose(self, curation):
-        self._save(curation)

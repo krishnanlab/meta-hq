@@ -10,7 +10,7 @@ Last updated: 2025-09-12 by Parker Hicks
 from __future__ import annotations
 
 import warnings
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import polars as pl
@@ -18,7 +18,11 @@ import polars as pl
 from metahq_core.curations.base import BaseCuration
 from metahq_core.curations.index import Ids
 from metahq_core.export.labels import LabelsExporter
+from metahq_core.logger import setup_logger
 from metahq_core.util.alltypes import FilePath, NpIntMatrix
+
+if TYPE_CHECKING:
+    import logging
 
 
 # TODO: Add method to remove redundant terms
@@ -98,6 +102,8 @@ class Labels(BaseCuration):
         index_col: str,
         group_cols: tuple[str, ...] = ("group", "platform"),
         collapsed: bool = False,
+        logger=setup_logger(__name__),
+        verbose=True,
     ):
         self.data = data
         self.index_col = index_col
@@ -105,6 +111,9 @@ class Labels(BaseCuration):
         self._ids = Ids.from_dataframe(ids, index_col)
         self.collapsed = collapsed
         self.controls: bool = False
+
+        self.log: logging.Logger = logger
+        self.verbose: bool = verbose
 
     def add_ids(self, new: pl.DataFrame) -> Labels:
         """
@@ -143,6 +152,8 @@ class Labels(BaseCuration):
             index_col=self.index_col,
             group_cols=self.group_cols,
             collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def head(self, *args, **kwargs) -> str:
@@ -168,7 +179,9 @@ class Labels(BaseCuration):
             If True, will add index titles to each entry.
 
         """
-        LabelsExporter().save(self, fmt, outfile, metadata)
+        LabelsExporter(logger=self.log, verbose=self.verbose).save(
+            self, fmt, outfile, metadata
+        )
 
     def select(self, *args, **kwargs) -> Labels:
         """Select annotation columns while maintaining ids."""
@@ -180,6 +193,8 @@ class Labels(BaseCuration):
             index_col=self.index_col,
             group_cols=self.group_cols,
             collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def slice(self, offset: int, length: int | None = None) -> Labels:
@@ -193,6 +208,8 @@ class Labels(BaseCuration):
             index_col=self.index_col,
             group_cols=self.group_cols,
             collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def subset_index(self, subset: list[str] | np.ndarray) -> Labels:
@@ -215,15 +232,19 @@ class Labels(BaseCuration):
         )
 
         diff = abs(len(mask) != len(subset))
-        if diff != 0:
-            warnings.warn(f"{diff} indices not found in the frame.", RuntimeWarning)
+        if (diff != 0) and self.verbose:
+            self.log.warning("%s indices not found in the frame.", diff)
 
-        return Labels(
-            self.data.with_row_index()
+        return self.__class__(
+            data=self.data.with_row_index()
             .filter(pl.col("index").is_in(mask))
             .drop("index"),
-            self._ids.filter_by_mask(mask).data,
-            self.index_col,
+            ids=self._ids.filter_by_mask(mask).data,
+            index_col=self.index_col,
+            group_cols=self.group_cols,
+            collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def to_numpy(self) -> NpIntMatrix:
