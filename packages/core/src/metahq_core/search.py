@@ -27,16 +27,21 @@ Author: Faisal Alquaddoomi
 Date: 2025-09-25
 """
 
+from __future__ import annotations
+
 import os
 import re
 from pathlib import Path
-from typing import Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
 
 import duckdb
 import polars as pl
 from rank_bm25 import BM25Plus
 
 from metahq_core.util.exceptions import NoResultsFound
+
+if TYPE_CHECKING:
+    import logging
 
 TABLE_DOCS = "ontology_search_docs"
 
@@ -93,6 +98,7 @@ def search(
     k: int = 20,
     type: str | None = None,
     ontology: str | None = None,
+    logger: logging.Logger | None = None,
     verbose: bool = False,
 ) -> pl.DataFrame:
     """
@@ -110,6 +116,13 @@ def search(
     :param verbose: if True, print debug information
     :return: a polars DataFrame with columns: term_id, ontology, name, type, synonyms, score
     """
+
+    if logger is None:
+        from metahq_core.logger import setup_logger
+
+        logger = setup_logger(
+            __name__, level=20, log_dir=Path(__file__).resolve().parents[0]
+        )
 
     # if db is None, use the Config to get the default location
     if db is None:
@@ -169,16 +182,20 @@ def search(
         """
 
         if verbose:
-            print(f"SQL:\n{sql}\n")
+            logger.debug("SQL:\n%s\n", sql)
 
         # execute the query and get the results as a polars DataFrame
         df = con.execute(sql).pl()
 
         # check that the df is not empty; if it is, raise an error
         if df.is_empty():
-            raise NoResultsFound(
-                f"No entities matched the filters: ontology={ontology}, type={type}"
+            msg = (
+                "No entities matched the filters: ontology=%s, type=%s",
+                ontology,
+                type,
             )
+
+            raise NoResultsFound(msg)
 
         # 2) Tokenize the corpus
         corpus_tokens = (
