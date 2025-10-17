@@ -4,7 +4,7 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2025-09-24 by Parker Hicks
+Last updated: 2025-10-16 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -14,15 +14,19 @@ from typing import TYPE_CHECKING, Literal
 import polars as pl
 
 from metahq_core.export.base import BaseExporter
+from metahq_core.logger import setup_logger
 from metahq_core.util.io import checkdir, load_bson, save_json
 from metahq_core.util.supported import (
     database_ids,
     geo_metadata,
     get_annotations,
     metadata_fields,
+    supported,
 )
 
 if TYPE_CHECKING:
+    import logging
+
     from metahq_core.curations.annotations import Annotations
     from metahq_core.util.alltypes import FilePath, NpIntMatrix
 
@@ -32,6 +36,10 @@ ANNOTATION_KEY = {"1": True, "0": False}
 
 class AnnotationsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
+
+    def __init__(self, logger=setup_logger(__name__), verbose=True):
+        self.log: logging.Logger = logger
+        self.verbose: bool = verbose
 
     def get_sra(self, anno: Annotations, fields: list[str]) -> Annotations:
         """
@@ -96,7 +104,11 @@ class AnnotationsExporter(BaseExporter):
             "csv": self.to_csv,
             "tsv": self.to_tsv,
         }
+
         opt[fmt](anno, file, metadata, **kwargs)
+
+        if self.verbose:
+            self.log.info("Saved!")
 
     def to_csv(
         self, anno: Annotations, file: FilePath, metadata: str | None = None, **kwargs
@@ -137,7 +149,10 @@ class AnnotationsExporter(BaseExporter):
             self._save_json_with_metadata(anno, file, metadata)
 
         else:
-            raise ValueError("Weird metadata values.")
+            msg = ("Unexpected metedata arguments %s", metadata)
+            self.log.error(msg)
+            self.log.debug("metadata dtype: %s", type(metadata))
+            raise ValueError(msg)
 
     def to_numpy(self, anno: Annotations) -> NpIntMatrix:
         """Returns the annotation data as a numpy array."""
@@ -191,9 +206,14 @@ class AnnotationsExporter(BaseExporter):
         elif representative.startswith("GSE"):
             level = "series"
         else:
-            raise RuntimeError(
-                "Congradulations! You broke the application. Please submit an issue."
-            )
+            msg = "Congratulations! You broke the application. Please submit an issue."
+            if self.verbose:
+                self.log.error(msg)
+                self.log.debug(
+                    "%s was used to identify if the passed level is sample or series",
+                    representative,
+                )
+            raise RuntimeError(msg)
 
         return (
             pl.scan_parquet(geo_metadata(level))
@@ -213,7 +233,10 @@ class AnnotationsExporter(BaseExporter):
         if fmt in opt:
             return opt[fmt]
 
-        raise ValueError(f"Expected fmt in {list(opt.keys())}, got {fmt}.")
+        msg = ("Expected fmt in %s, got %s.", list(opt.keys()), fmt)
+        if self.verbose:
+            self.log.error(msg)
+        raise ValueError(msg)
 
     def _load_annotations(self, level: str) -> dict:
         """Load the annotations dictionary for a given level."""
@@ -223,9 +246,10 @@ class AnnotationsExporter(BaseExporter):
         if level == "series":
             return load_bson(get_annotations("series"))
 
-        raise ValueError(
-            f"Expected annotations level in [sample, series], got {level}."
-        )
+        msg = ("Expected annotations level in %s, got %s.", supported("levels"), level)
+        if self.verbose:
+            self.log.error(msg)
+        raise ValueError(msg)
 
     def _parse_metafields(self, index_col, fields: str) -> list[str]:
         """Parse and check user-specified metadata fields."""
@@ -235,10 +259,12 @@ class AnnotationsExporter(BaseExporter):
         for field in _metadata:
             if field not in metadata_fields(index_col):
                 flagged = True
-                print(f"Requested metadata: {field}, is not available. Skipping...")
+                self.log.warning(
+                    "Requested metadata: %s, is not available. Skipping...", field
+                )
 
         if flagged:
-            print("Run metahq metadata to see available metadata fields.")
+            self.log.info("Run `metahq supported` to see available metadata fields.")
 
         if not index_col in _metadata:
             _metadata.append(index_col)

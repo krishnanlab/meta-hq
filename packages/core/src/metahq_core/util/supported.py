@@ -120,6 +120,11 @@ def disease_ontologies() -> tuple[str, ...]:
     return tuple(["MONDO"])
 
 
+def sexes() -> list[str]:
+    """Return available sexes."""
+    return ["male", "female"]
+
+
 def species_map() -> dict[str, str]:
     """Return species common and scientific names."""
     return {
@@ -151,6 +156,15 @@ def get_config():
 def get_data_dir():
     """Extracts the MetaHQ data directory from the config."""
     return Path(get_config()["data_dir"])
+
+
+def get_log_dir() -> Path:
+    """Returns the path to the default logging directory."""
+    logs = METAHQ / "log"
+    if not logs.exists():
+        logs.mkdir(exist_ok=True, parents=True)
+
+    return logs
 
 
 def geo_metadata(level: Literal["sample", "series"]) -> Path:

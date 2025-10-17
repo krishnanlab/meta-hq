@@ -18,7 +18,7 @@ given a negative label for that term.
 Author: Parker Hicks
 Date: 2025-04-23
 
-Last updated: 2025-09-25 by Parker Hicks
+Last updated: 2025-10-16 by Parker Hicks
 """
 
 from typing import TYPE_CHECKING, Literal
@@ -27,10 +27,13 @@ import numpy as np
 import polars as pl
 
 from metahq_core.curations._multiprocess_propagator import MultiprocessPropagator
+from metahq_core.logger import setup_logger
 from metahq_core.util.alltypes import NpIntMatrix, NpStringArray
 from metahq_core.util.supported import onto_relations
 
 if TYPE_CHECKING:
+    import logging
+
     from metahq_core.curations.annotations import Annotations
 
 
@@ -69,7 +72,15 @@ class Propagator:
 
     """
 
-    def __init__(self, ontology, anno, to_terms, relatives, verbose):
+    def __init__(
+        self,
+        ontology,
+        anno,
+        to_terms,
+        relatives,
+        logger=setup_logger(__name__),
+        verbose=True,
+    ):
         self.ontology: str = ontology
         self.anno: Annotations = anno
         self.to: list[str] = to_terms
@@ -78,7 +89,9 @@ class Propagator:
         self._relatives: list[str] = relatives
         self._load_family()
 
-        self._propagator = MultiprocessPropagator(verbose)
+        self.log: logging.Logger = logger
+        self.verbose: bool = verbose
+        self._propagator = MultiprocessPropagator(logger=logger, verbose=verbose)
 
     def propagate_down(
         self, verbose: bool = False

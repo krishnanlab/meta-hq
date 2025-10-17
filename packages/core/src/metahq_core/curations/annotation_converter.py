@@ -4,7 +4,7 @@ Class to facilitate Annotations propagation and convertion to labels.
 Author: Parker Hicks
 Date: 2025-09-10
 
-Last updated: 2025-09-12 by Parker Hicks
+Last updated: 2025-10-16 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -16,13 +16,19 @@ import polars as pl
 from metahq_core.curations._multiprocess_propagator import propagate_controls
 from metahq_core.curations.labels import Labels
 from metahq_core.curations.propagator import Propagator
+from metahq_core.logger import setup_logger
 from metahq_core.ontology.graph import Graph
 from metahq_core.util.helpers import merge_list_values
 from metahq_core.util.progress import progress_wrapper
 from metahq_core.util.supported import ontologies
 
 if TYPE_CHECKING:
+    import logging
+
     from metahq_core.curations.annotations import Annotations
+
+
+WARNING_SIZE = 1000
 
 
 class AnnotationsConverter:
@@ -59,7 +65,13 @@ class AnnotationsConverter:
     """
 
     def __init__(
-        self, anno, to_terms, ontology, control_col="MONDO:0000000", verbose=False
+        self,
+        anno,
+        to_terms,
+        ontology,
+        control_col="MONDO:0000000",
+        logger=setup_logger(__name__),
+        verbose=False,
     ):
         self.anno: Annotations = anno
         self.to_terms: list[str] = to_terms
@@ -69,6 +81,8 @@ class AnnotationsConverter:
         self.control_col: str = control_col
 
         self.graph = Graph.from_obo(ontologies(ontology), ontology=ontology)
+
+        self.log: logging.Logger = logger
         self.verbose: bool = verbose
 
     def propagate_up(self):
@@ -78,11 +92,17 @@ class AnnotationsConverter:
         """
         self._setup_to_annotate()
 
+        if self.verbose:
+            self.log.info("Propagating annotations up...")
+            self.log.debug(
+                "Propagating to %s terms in %s", len(self.to_terms), self.ontology
+            )
         propagator = Propagator(
             self.ontology,
             self.anno,
             self.to_terms,
             relatives=["ancestors"],
+            logger=self.log,
             verbose=self.verbose,
         )
         new, cols, ids = propagator.propagate_up()
@@ -138,25 +158,38 @@ class AnnotationsConverter:
                 labels_df.update(ctrl_labels, on=self.anno.index_col, how="full"),
                 self.anno.index_col,
                 tuple(self.anno.group_cols),
+                logger=self.log,
+                verbose=self.verbose,
             )
 
         return Labels.from_df(
-            labels_df, self.anno.index_col, tuple(self.anno.group_cols)
+            labels_df,
+            self.anno.index_col,
+            tuple(self.anno.group_cols),
+            logger=self.log,
+            verbose=self.verbose,
         )
 
-    def _get_graph_relations(self, relatives: str) -> list[str]:
+    def _get_graph_relations(self, relatives: str, total=None) -> list[str]:
         """Get all ancestors or descendants of a list of ontology terms."""
         opt = {
             "ancestors": self.graph.ancestors_from,
             "descendants": self.graph.descendants_from,
         }
-        relation_map = progress_wrapper(
-            f"Extracting term {relatives}...",
-            verbose=self.verbose,
-            total=len(self.to_terms),
-            func=opt[relatives],
-            nodes=self.to_terms,
-        )
+        if total is None:
+            total = len(self.to_terms)
+
+        if total > WARNING_SIZE:
+            relation_map = progress_wrapper(
+                f"{relatives}...",
+                verbose=self.verbose,
+                total=total,
+                func=opt[relatives],
+                nodes=self.to_terms,
+                padding="    ",
+            )
+        else:
+            relation_map = opt[relatives](nodes=self.to_terms)
 
         return merge_list_values(relation_map)
 
@@ -201,6 +234,14 @@ class AnnotationsConverter:
         a -1 label. If samples are annotated to ancestors of the selected terms,
         they are assigned a 0 label.
         """
+        total = len(self.to_terms)
+
+        if self.verbose:
+            self.log.info("Extracting ontology relationships for %s terms...", total)
+
+            if total > WARNING_SIZE:
+                self.log.info("This may take up to a minute.")
+
         descendants = self._get_graph_relations("descendants")
         ancestors = self._get_graph_relations("ancestors")
 
@@ -218,6 +259,15 @@ class AnnotationsConverter:
         annotated to any descendants OR ancestors of to_terms, then they are
         assigned a -1.
         """
+        if self.verbose:
+            self.log.info("Converting annotations to labels...")
+            self.log.debug(
+                "Labeling %s entries to %s terms in %s",
+                self.anno.n_indices,
+                len(self.to_terms),
+                self.ontology.upper(),
+            )
+
         propagator = Propagator(
             self.ontology,
             self.anno,

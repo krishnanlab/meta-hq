@@ -45,15 +45,16 @@ def spinner(desc, p_message, end_message):
     return decorator
 
 
-def progress_bar():
+def progress_bar(padding: str = ""):
     """
     Creates a custom rich progress bar.
 
-    Taken from Timothy Gebhard:
+    Modified from Timothy Gebhard:
     https://timothygebhard.de/posts/richer-progress-bars-for-rich/
 
     """
     return Progress(
+        TextColumn(padding),
         TextColumn("{task.description} [progress.percentage]{task.percentage:>3.0f}%"),
         BarColumn(),
         TextColumn("•"),
@@ -64,10 +65,11 @@ def progress_bar():
     )
 
 
-def progress_wrapper(desc, verbose, total, func, *args, **kwargs):
+def progress_wrapper(desc, verbose, total, func, padding="", *args, **kwargs):
     """Function wrapper to apply a spinner while process ongoing."""
     if verbose:
         with Progress(
+            TextColumn(padding),
             SpinnerColumn(speed=2),
             TextColumn(desc),
             console=console,
@@ -80,3 +82,8 @@ def progress_wrapper(desc, verbose, total, func, *args, **kwargs):
             return result
 
     return func(*args, **kwargs)
+
+
+def get_console() -> Console:
+    """Return the Rich Console for console sharing across rich handlers."""
+    return console

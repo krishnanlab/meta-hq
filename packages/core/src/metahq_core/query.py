@@ -4,14 +4,15 @@ Class to query the annotations dictionary.
 Author: Parker Hicks
 Date: 2025-03
 
-Last updated: 2025-09-05 by Parker Hicks
+Last updated: 2025-10-16 by Parker Hicks
 """
 
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import polars as pl
 
 from metahq_core.curations.annotations import Annotations
+from metahq_core.logger import setup_logger
 from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import (
@@ -23,6 +24,9 @@ from metahq_core.util.supported import (
     species_map,
     technologies,
 )
+
+if TYPE_CHECKING:
+    import logging
 
 
 class AccessionIDs:
@@ -343,6 +347,8 @@ class Query:
         ecode="expert-curated",
         species="human",
         technology="rnaseq",
+        logger=setup_logger(__name__),
+        verbose=True,
     ):
         self.database: str = database
         self.attribute: str = attributes(attribute)
@@ -352,6 +358,9 @@ class Query:
         self.technology: str = technologies(technology)
 
         self._annotations: dict[str, Any] = self._load_annotations()
+
+        self.log: logging.Logger = logger
+        self.verbose: bool = verbose
 
     def annotations(self, anchor: str = "id"):
         """
@@ -405,6 +414,8 @@ class Query:
             attr_anno.drop(na_cols),
             index_col=index,
             group_cols=groups,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def assign_index_groups(self):

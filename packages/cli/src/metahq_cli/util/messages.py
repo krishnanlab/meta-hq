@@ -31,7 +31,7 @@ class TruncatedList:
     def __repr__(self):
         per_side = self.max_show // 2
 
-        start = ", ".join(map(str, self.data[:per_side]))
-        end = ", ".join(map(str, self.data[-per_side:]))
+        start = ", ".join(map(repr, self.data[:per_side]))
+        end = ", ".join(map(repr, self.data[-per_side:]))
 
         return f"[{start}, ... , {end}] (n={len(self.data)})"

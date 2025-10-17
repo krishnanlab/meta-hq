@@ -4,12 +4,12 @@ Class for storing and mutating annotation collections.
 Author: Parker Hicks
 Date: 2025-04-14
 
-Last updated: 2025-09-08 by Parker Hicks
+Last updated: 2025-10-16 by Parker Hicks
 """
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 
@@ -18,7 +18,11 @@ from metahq_core.curations.base import BaseCuration
 from metahq_core.curations.index import Ids
 from metahq_core.curations.labels import Labels
 from metahq_core.export.annotations import AnnotationsExporter
+from metahq_core.logger import setup_logger
 from metahq_core.util.alltypes import FilePath
+
+if TYPE_CHECKING:
+    import logging
 
 
 class Annotations(BaseCuration):
@@ -116,6 +120,8 @@ class Annotations(BaseCuration):
         index_col: str,
         group_cols: tuple[str, ...] = ("series", "platform"),
         collapsed: bool = False,
+        logger=setup_logger(__name__),
+        verbose=True,
     ):
         self.data = data
         self.index_col = index_col
@@ -123,6 +129,9 @@ class Annotations(BaseCuration):
         self._ids = Ids.from_dataframe(ids, index_col)
         self.collapsed = collapsed
         self.controls: bool = False
+
+        self.log: logging.Logger = logger
+        self.verbose: bool = verbose
 
     def add_ids(self, new: pl.DataFrame) -> Annotations:
         """
@@ -173,6 +182,8 @@ class Annotations(BaseCuration):
             index_col=self.index_col,
             group_cols=self.group_cols,
             collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def filter(self, condition: pl.Expr) -> Annotations:
@@ -190,6 +201,8 @@ class Annotations(BaseCuration):
             index_col=self.index_col,
             group_cols=self.group_cols,
             collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def head(self, *args, **kwargs) -> str:
@@ -215,7 +228,9 @@ class Annotations(BaseCuration):
             If True, will add index titles to each entry.
 
         """
-        AnnotationsExporter().save(self, fmt, outfile, metadata)
+        AnnotationsExporter(logger=self.log, verbose=self.verbose).save(
+            self, fmt, outfile, metadata
+        )
 
     def sort_columns(self):
         """Sorts term columns."""
@@ -225,6 +240,8 @@ class Annotations(BaseCuration):
             index_col=self.index_col,
             group_cols=self.group_cols,
             collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def propagate(
@@ -234,7 +251,6 @@ class Annotations(BaseCuration):
         mode: Literal[0, 1],
         control_col: str = "MONDO:0000000",
         group_col: str = "series",
-        verbose: bool = False,
     ) -> Labels | Annotations:
         """Convert annotations to propagated labels.
 
@@ -274,7 +290,12 @@ class Annotations(BaseCuration):
 
         """
         converter = AnnotationsConverter(
-            self, to_terms, ontology, control_col=control_col, verbose=verbose
+            self,
+            to_terms,
+            ontology,
+            control_col=control_col,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
         if mode == 0:
@@ -284,12 +305,18 @@ class Annotations(BaseCuration):
                 ids=ids,
                 index_col=self.index_col,
                 group_cols=self.group_cols,
+                logger=self.log,
+                verbose=self.verbose,
             )
 
         if mode == 1:
             return converter.to_labels(groups=group_col)
 
-        raise ValueError(f"Mode {mode} not available.")
+        msg = ("Mode %s not available.", mode)
+        if self.verbose:
+            self.log.error(msg)
+
+        raise ValueError(msg)
 
     def select(self, *args, **kwargs) -> Annotations:
         """Select annotation columns while maintaining ids."""
@@ -301,6 +328,8 @@ class Annotations(BaseCuration):
             index_col=self.index_col,
             group_cols=self.group_cols,
             collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def slice(self, offset: int, length: int | None = None) -> Annotations:
@@ -314,6 +343,8 @@ class Annotations(BaseCuration):
             index_col=self.index_col,
             group_cols=self.group_cols,
             collapsed=self.collapsed,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
     def _collapse(self, on: str):
