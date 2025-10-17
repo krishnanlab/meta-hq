@@ -16,10 +16,8 @@ from typing import TYPE_CHECKING, Literal
 import polars as pl
 from metahq_core.query import Query
 from metahq_core.util.exceptions import NoResultsFound
-from metahq_core.util.progress import get_console
 from metahq_core.util.supported import supported
 
-from metahq_cli.logger import setup_logger
 from metahq_cli.util.messages import TruncatedList
 
 if TYPE_CHECKING:
@@ -57,14 +55,6 @@ class OutputConfig:
     outfile: str | Path
     fmt: Literal["json", "parquet", "csv", "tsv"]
     metadata: str
-
-
-@dataclass
-class LogConfig:
-    """Storage for logger parameters."""
-
-    level: int
-    outdir: Path
 
 
 class Retriever:
