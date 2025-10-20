@@ -5,7 +5,7 @@ on metahq_core.search.search() to do the actual searching.
 Author: Faisal Alquaddoomi
 Date: 2025-09-25
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-10-20 by Parker Hicks
 """
 
 import click
@@ -16,7 +16,6 @@ from metahq_core.util.supported import get_log_dir, get_ontology_search_db
 
 from metahq_cli.logger import setup_logger
 
-DEFAULT_DB = get_ontology_search_db()
 DEFAULT_TOP_HITS = 3
 DEFAULT_LOG_DIR = get_log_dir()
 
@@ -26,8 +25,8 @@ DEFAULT_LOG_DIR = get_log_dir()
 @click.option(
     "--db",
     "-b",
-    type=click.Path(exists=True, dir_okay=False),
-    default=DEFAULT_DB,
+    type=str,
+    default="default",
     help="DuckDB file",
 )
 @click.option(
@@ -90,6 +89,9 @@ def search(
     logger = setup_logger(
         __name__, console=get_console(), level=loglevel, log_dir=logdir
     )
+
+    if db == "default":
+        db = get_ontology_search_db()
 
     try:
         results = core_search(
