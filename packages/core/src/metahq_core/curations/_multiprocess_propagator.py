@@ -4,25 +4,31 @@ Helper class to facilitate propagation of annotations by chunks.
 Author: Parker Hicks
 Date: 2025-09-26
 
-Last updated: 2025-10-10
+Last updated: 2025-10-16
 """
 
 from __future__ import annotations
 
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from typing import TYPE_CHECKING
 
 import numpy as np
 import polars as pl
 
+from metahq_core.logger import setup_logger
 from metahq_core.util.alltypes import NpIntMatrix
 from metahq_core.util.progress import progress_bar
+
+if TYPE_CHECKING:
+    import logging
 
 
 class MultiprocessPropagator:
     """Exists to allow multiprocessing within the Propagator class."""
 
-    def __init__(self, verbose):
+    def __init__(self, logger, verbose=True):
+        self.log: logging.Logger = logger
         self.verbose: bool = verbose
 
     @staticmethod
@@ -82,7 +88,7 @@ class MultiprocessPropagator:
     def _execute_verbose(
         self, executor: ProcessPoolExecutor, args_list: list, desc: str
     ) -> list:
-        with progress_bar() as progress:
+        with progress_bar(padding="    ") as progress:
             task = progress.add_task(desc, total=len(args_list))
 
             futures = {
@@ -183,7 +189,7 @@ def propagate_controls(
         }
 
         if verbose:
-            with progress_bar() as progress:
+            with progress_bar(padding="    ") as progress:
                 task = progress.add_task("Propagating controls", total=len(args_list))
 
                 futures = {

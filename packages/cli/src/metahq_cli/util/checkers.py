@@ -8,16 +8,17 @@ for CLI-based checks and MetaHQ core function checks.
 Author: Parker Hicks
 Date: 2025-09
 
-Last updated: 2025-09-29 by Parker Hicks
+Last updated: 2025-10-15 by Parker Hicks
 """
 
 from pathlib import Path
 
 from metahq_core.util.io import checkdir, load_txt
 from metahq_core.util.supported import supported
+from numpy import log
 
 from metahq_cli.util.messages import error
-from metahq_cli.util.supported import formats, required_filters
+from metahq_cli.util.supported import formats, log_map, required_filters
 
 
 def check_filter_keys(filters: dict[str, str]):
@@ -47,6 +48,19 @@ def check_level(level: str):
         error(f"Expected level in {supported('levels')}, got {level}.")
 
 
+def check_loglevel(loglevel: int | str) -> int:
+    """Check input log level."""
+    mapping = log_map()
+    if isinstance(loglevel, str) and (loglevel in mapping):
+        return mapping[loglevel]
+    if isinstance(loglevel, int) and (loglevel in mapping.values()):
+        return loglevel
+
+    raise ValueError(
+        f"Invalid log level. Choose from {list(mapping.keys())} or {list(mapping.values())}."
+    )
+
+
 def check_metadata(level: str, metadata: str):
     _metadata = metadata.split(",")
 
@@ -70,7 +84,7 @@ def check_format(fmt: str):
 
 
 def check_mode(task: str, mode: str):
-    if (task == "sex") & (mode != "direct"):
+    if (task in ["sex", "age"]) & (mode != "direct"):
         error(
             "Sex annotation queries must be direct annotations. Change to mode argument to 'direct'."
         )

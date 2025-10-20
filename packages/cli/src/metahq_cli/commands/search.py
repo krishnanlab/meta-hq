@@ -5,15 +5,19 @@ on metahq_core.search.search() to do the actual searching.
 Author: Faisal Alquaddoomi
 Date: 2025-09-25
 
-Last updated: 2025-10-14 by Parker Hicks
+Last updated: 2025-10-20 by Parker Hicks
 """
 
 import click
 from metahq_core.search import NoResultsFound
 from metahq_core.search import search as core_search
-from metahq_core.util.supported import get_ontology_search_db
+from metahq_core.util.progress import get_console
+from metahq_core.util.supported import get_log_dir, get_ontology_search_db
+
+from metahq_cli.logger import setup_logger
 
 DEFAULT_TOP_HITS = 3
+DEFAULT_LOG_DIR = get_log_dir()
 
 
 @click.command(name="search", context_settings={"help_option_names": ["-h", "--help"]})
@@ -60,16 +64,44 @@ DEFAULT_TOP_HITS = 3
     "--scopes", "-x", is_flag=True, default=False, help="Include scopes in synonym list"
 )
 @click.option(
+    "--loglevel",
+    type=click.Choice(["notset", "debug", "info", "warning", "error", "critical"]),
+    default="info",
+)
+@click.option("--logdir", type=click.Path(), default=DEFAULT_LOG_DIR)
+@click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Emits debug information"
 )
-def search(query, db, type, ontology, max_results, scores, extended, scopes, verbose):
+def search(
+    query,
+    db,
+    type,
+    ontology,
+    max_results,
+    scores,
+    extended,
+    scopes,
+    loglevel,
+    logdir,
+    verbose,
+):
     """Search for terms in the ontology database."""
+    logger = setup_logger(
+        __name__, console=get_console(), level=loglevel, log_dir=logdir
+    )
+
     if db == "default":
         db = get_ontology_search_db()
 
     try:
         results = core_search(
-            query, db=db, type=type, ontology=ontology, k=max_results, verbose=verbose
+            query,
+            db=db,
+            type=type,
+            ontology=ontology,
+            k=max_results,
+            logger=logger,
+            verbose=verbose,
         )
 
         # format results like so:

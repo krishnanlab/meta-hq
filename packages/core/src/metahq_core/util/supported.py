@@ -32,6 +32,7 @@ def _attributes() -> list[str]:
         "tissue",
         "disease",
         "sex",
+        "age",
     ]
 
 
@@ -101,9 +102,27 @@ def _technologies() -> list[str]:
     return ["microarray", "rnaseq"]
 
 
+def age_groups() -> list[str]:
+    """Return supported age groups."""
+    return [
+        "fetus",
+        "infant",
+        "child",
+        "adolescent",
+        "adult",
+        "older_adult",
+        "eldery_adult",
+    ]
+
+
 def disease_ontologies() -> tuple[str, ...]:
     """Return available disease ontologies."""
     return tuple(["MONDO"])
+
+
+def sexes() -> list[str]:
+    """Return available sexes."""
+    return ["male", "female"]
 
 
 def species_map() -> dict[str, str]:
@@ -137,6 +156,15 @@ def get_config():
 def get_data_dir():
     """Extracts the MetaHQ data directory from the config."""
     return Path(get_config()["data_dir"])
+
+
+def get_log_dir() -> Path:
+    """Returns the path to the default logging directory."""
+    logs = METAHQ / "log"
+    if not logs.exists():
+        logs.mkdir(exist_ok=True, parents=True)
+
+    return logs
 
 
 def geo_metadata(level: Literal["sample", "series"]) -> Path:
@@ -178,7 +206,7 @@ def get_ontology_files(onto: str) -> Path:
 def get_ontology_search_db() -> Path:
     """Returns the path to the ontology search database."""
     return get_data_dir() / "ontology" / "ontology_search.duckdb"
- 
+
 
 def get_onto_families(onto: str) -> dict[str, Path]:
     """Returns the path to files outlining ontology relationships."""
@@ -195,18 +223,6 @@ def get_onto_families(onto: str) -> dict[str, Path]:
             "ids": uberon / "id.txt",
             "systems": uberon / "systems.txt",
         },
-    }
-
-    return opt[onto]
-
-
-def get_ontology_files(onto: str) -> Path:
-    """Returns the path to the specified ontology obo file."""
-    mondo = get_ontology_dirs("mondo")
-    uberon = get_ontology_dirs("uberon")
-    opt = {
-        "mondo": mondo / "mondo.obo",
-        "uberon": uberon / "uberon_ext.obo",
     }
 
     return opt[onto]
