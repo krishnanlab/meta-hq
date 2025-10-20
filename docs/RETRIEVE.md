@@ -4,6 +4,15 @@ With MetaHQ retrieval functions, users can query and manipulate tissue, disease,
 
 Most retrieve commands share the same set of arguments: `terms`, `level`, `filters`, `metadata`, `fmt`, and `output`.
 
+### Terms
+
+The `terms` argument specifies the entities to retrieve annotations for. Queries can be passed as a comma-delimited string of term IDs (e.g., `"UBERON:0000948,UBERON:0000955"`, `"M,F"`)
+or a text file where each line contains a single term ID. Users may also pass `--terms "all"` to retrieve annotations for all tissues.
+
+### Level
+
+MetaHQ allows for sample- and series-level annotations specified by passing `"sample"` or `"series"` to the `--level` argument. Default is `sample`.
+
 ### Mode
 
 Tissue and disease retrieval include an additional `mode` argument allowing users to retrieve direct annotations to the queried terms, propagated annotations, or labels.
@@ -15,6 +24,8 @@ Tissue and disease retrieval include an additional `mode` argument allowing user
   a 0 label (or unknown), and all other entries are assigned a -1 label. Additionally, disease labels include samples annotated as healthy controls. These samples are assigned a label of 2 to diseases
   that any of the other samples from the same series as the control sample are annotated to.
 
+Default is `direct`.
+
 ### Filters
 
 Users can filter for various attributes of the annotations. Filters should be passed as a single string with entries separated by commas (e.g. `"species=human,ecode=expert,technology=rnaseq"`).
@@ -23,12 +34,12 @@ Users can filter for various attributes of the annotations. Filters should be pa
 
 A vast majority of annotations are derived from human samples and series, but all of the following species are queriable:
 
-- human (homo sapiens)
-- mouse (mus musculus)
-- rat (rattus norvegicus)
-- fish (danio rerio)
-- fly (drosolphila melanogaster)
-- worm (caenorhabditis elegans)
+- _human_ (homo sapiens)
+- _mouse_ (mus musculus)
+- _rat_ (rattus norvegicus)
+- _fish_ (danio rerio)
+- _fly_ (drosolphila melanogaster)
+- _worm_ (caenorhabditis elegans)
 
 #### ecode
 
@@ -43,7 +54,44 @@ Currently MetaHQ only contains annotations for _microarray_ and _rnaseq_
 - _microarray_: Annotations derived from expert curators.
 - _rnaseq_: Annotations that were predicted using some automated system where a subset of those predictions were checked by an expert.
 
+### Metadata
+
+Users can include verious metadata associated with returned samples and series.
+
+At the **sample level**, users can include the following:
+
+- sample
+- series
+- platform
+- description
+- srx
+- srs
+- srp
+
+At the **series level**, users can include the following:
+
+- series
+- platform
+- description
+- srp
+
+The defualt argument is the annotation level.
+
+### Formats
+
+The following file formats are supported:
+
+- _csv_
+- _tsv_
+- _parquet_
+- _json_
+
+For large queries (e.g., `--terms "all"`), we recommend using the `parquet` format. Default is `parquet`.
+
 ## tissues
+
+Tissue queries require ontology term ID inputs. To find the appropriate term ID for your context of interest, see [metahq search](SEARCH.md)
+or the EMBL-EBI ontology lookup service [here](https://www.ebi.ac.uk/ols4). Only ontology term IDs can be input to the `term` argument.
 
 #### Example:
 
@@ -76,6 +124,6 @@ Simliar to sex retrieval, there is no `mode` argument since only direct annotati
 
 `metahq retrieve age --terms "infant,older_adult" --level sample --filters "species=human,ecode=expert,technology=rnaseq" --metadata "sample,series,platform" --fmt tsv --output annotations.tsv`
 
-### References
+## References
 
 Ober, C., Loisel, D. A., & Gilad, Y. (2008). Sex-specific genetic architecture of human disease. Nature Reviews Genetics, 9(12), 911-922.
