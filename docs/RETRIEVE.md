@@ -60,20 +60,20 @@ Users can include verious metadata associated with returned samples and series.
 
 At the **sample level**, users can include the following:
 
-- sample
-- series
-- platform
-- description
-- srx
-- srs
-- srp
+- _sample_
+- _series_
+- _platform_
+- _description_
+- _srx_
+- _srs_
+- _srp_
 
 At the **series level**, users can include the following:
 
-- series
-- platform
-- description
-- srp
+- _series_
+- _platform_
+- _description_
+- _srp_
 
 The defualt argument is the annotation level.
 
