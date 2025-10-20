@@ -64,7 +64,7 @@ DEFAULT_TOP_HITS = 3
 )
 def search(query, db, type, ontology, max_results, scores, extended, scopes, verbose):
     """Search for terms in the ontology database."""
-    if db == "defualt":
+    if db == "default":
         db = get_ontology_search_db()
 
     try:
