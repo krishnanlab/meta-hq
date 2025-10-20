@@ -25,7 +25,7 @@ DEFAULT_LOG_DIR = get_log_dir()
 @click.option(
     "--db",
     "-b",
-    type=click.Path(exists=True, dir_okay=False),
+    type=str,
     default="default",
     help="DuckDB file",
 )
