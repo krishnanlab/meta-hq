@@ -67,7 +67,7 @@ tar -xvf metahq.tar.gz -C ~/
 metahq setup --zenodo_doi xxx --data_dir ~/metahq/data
 ```
 
-## Search
+## Search ([docs](../docs/SEARCH.md))
 
 Great, we should be ready to go now. Let's retrieve some annotations. We want to search for heart and brain annotations, but don't know what the ontology term IDs are for these anatomical systems.
 So, we can run `metahq search` to figure this out.
@@ -93,7 +93,7 @@ So, let's run `metahq supported` to see what's offered by MetaHQ.
 metahq supported
 ```
 
-## Retrieve tissues
+## Retrieve tissues ([docs](../docs/RETRIEVE.md))
 
 Alright now we're ready to go. Let's retrieve our tissue annotations.
 
