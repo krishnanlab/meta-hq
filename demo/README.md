@@ -30,18 +30,22 @@ To install on macOS and Linux:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-uv venv
-source .venv/bin/activate
 ```
 
 To install on windows:
 
 ```bash
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-.venv\Scripts\activate
 ```
 
 3. Install MetaHQ (dev)
+
+Create a compute environment
+
+```bash
+conda create -n metahq python=3.12 -y
+conda activate metahq
+```
 
 Run the following:
 
@@ -77,7 +81,7 @@ metahq search --query heart --type tissue --ontology UBERON -k 3
 Brain:
 
 ```bash
-metahq search --query brain --type tissue --ontology UBERON -k 3
+metahq search --query brain --type tissue --ontology UBERON -k 10
 ```
 
 ## Supported
