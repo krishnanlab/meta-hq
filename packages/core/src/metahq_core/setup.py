@@ -4,12 +4,11 @@ Command to setup the metahq configuration.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-09-05
+Last updated: 2025-10-13
 """
 
 import sys
 from pathlib import Path
-from string import Template
 
 import yaml
 
