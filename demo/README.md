@@ -54,7 +54,7 @@ uv pip install -e . ".[dev]"
 Currently this is stored in `tar.gz` file in the repo. This will be posted on Zenodo.
 
 ```bash
-tar -xvf metahq.tar.gz -C ~/metahq
+tar -xvf metahq.tar.gz -C ~/
 ```
 
 5. Configure MetaHQ
