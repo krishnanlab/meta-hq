@@ -16,6 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 
 dependencies = [
@@ -28,6 +29,22 @@ dependencies = [
     "pyyaml>=5.1",
     "duckdb>=1.4.0",
     "rank-bm25>=0.2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov",
+    "black",
+    "isort",
+    "flake8",
+    "mypy",
+]
+
+test = [
+    "pytest>=8.0",
+    "pytest-cov",
+    "pytest-benchmark",
 ]
 
 [build-system]
