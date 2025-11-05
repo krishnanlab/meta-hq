@@ -4,24 +4,14 @@ This script contains a series of tests of the `Graph` child class of `Ontology`.
 Author: Parker Hicks
 Date: 2025-02-11
 
-Last updated: 2025-09-02 by Parker Hicks
+Last updated: 2025-11-05 by Parker Hicks
 """
-
-from pathlib import Path
 
 import numpy as np
 import pytest
 
-from ontology.graph import Graph
-
-ROOT_DIR = Path(__file__).resolve().parents[3]
-MONDO_OBO = ROOT_DIR / "data/ontology/mondo/mondo.obo"
-UBERON_OBO = ROOT_DIR / "data/ontology/uberon_ext/uberon_ext.obo"
-
-OBO_FILES: list[tuple[str, Path]] = [
-    ("mondo", MONDO_OBO),
-    ("uberon", UBERON_OBO),
-]
+from metahq_core.ontology.graph import Graph
+from metahq_core.util.supported import get_ontology_files
 
 
 class TestGraph:
@@ -30,12 +20,12 @@ class TestGraph:
     `Ontology` class are tested in `test_Ontology.py` and will not be tested here.
     """
 
-    # Test cases for `descendants_from`
+    # test cases for `descendants_from`
     @pytest.mark.parametrize(
         "inputs",
         [
             {
-                "obo": OBO_FILES[0],
+                "ontology": "mondo",
                 "query": ["MONDO:0043544", "MONDO:0045024"],
                 "true": {
                     "MONDO:0043544": [
@@ -51,7 +41,7 @@ class TestGraph:
                 },
             },  # MONDO test
             {
-                "obo": OBO_FILES[1],
+                "ontology": "uberon",
                 "query": [
                     "UBERON:0000948",
                     "UBERON:0001113",
@@ -76,9 +66,9 @@ class TestGraph:
         inputs: dict,
     ):
         """Checks descendant identification."""
-        obo_init = inputs["obo"]
+        onto = inputs["ontology"]
 
-        graph = Graph.from_obo(obo=obo_init[1], ontology=obo_init[0])
+        graph = Graph.from_obo(obo=get_ontology_files(onto), ontology=onto)
         descendants = graph.descendants_from(inputs["query"])
 
         for ancestor, children in descendants.items():
@@ -86,12 +76,12 @@ class TestGraph:
                 np.isin(inputs["true"][ancestor], children)
             ), f"Test children for {ancestor} not in descendants."
 
-    # Test cases for `ancestors_from`
+    # test cases for `ancestors_from`
     @pytest.mark.parametrize(
         "inputs",
         [
             {
-                "obo": OBO_FILES[0],
+                "ontology": "mondo",
                 "query": [
                     "MONDO:0022424",
                     "MONDO:0004652",
@@ -110,7 +100,7 @@ class TestGraph:
                 },
             },
             {
-                "obo": OBO_FILES[1],
+                "ontology": "uberon",
                 "query": [
                     "UBERON:0001982",
                     "UBERON:0000162",
@@ -135,9 +125,9 @@ class TestGraph:
         inputs: dict,
     ):
         """Test function to get ancestors from a list of queries"""
-        obo_init = inputs["obo"]
+        onto = inputs["ontology"]
 
-        graph = Graph.from_obo(obo=obo_init[1], ontology=obo_init[0])
+        graph = Graph.from_obo(obo=get_ontology_files(onto), ontology=onto)
         ancestors = graph.ancestors_from(inputs["query"])
 
         for child, extended_family in ancestors.items():
