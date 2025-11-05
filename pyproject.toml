@@ -1,6 +1,10 @@
 [tool.uv.workspace]
 members = ["packages/core", "packages/cli"]
 
+[tool.uv.sources]
+metahq-core = { workspace = true }
+metahq-cli = { workspace = true }
+
 [tool.uv]
 dev-dependencies = [
     "pytest>=8.0",
@@ -10,5 +14,7 @@ dev-dependencies = [
     "isort",
     "flake8",
     "mypy",
+    "metahq-cli",
+    "metahq-core",
 ]
 

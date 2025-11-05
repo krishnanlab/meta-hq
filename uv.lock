@@ -13,6 +13,8 @@ dev = [
     { name = "black" },
     { name = "flake8" },
     { name = "isort" },
+    { name = "metahq-cli", editable = "packages/cli" },
+    { name = "metahq-core", editable = "packages/core" },
     { name = "mypy" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "pytest-benchmark" },
