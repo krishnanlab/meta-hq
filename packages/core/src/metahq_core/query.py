@@ -184,7 +184,7 @@ class LongAnnotations:
                 index=level,
                 on=anchor,
                 values=anchor,
-                aggregate_function=pl.count(),
+                aggregate_function=pl.len(),
             )
             .fill_null(0)
             .with_columns(pl.exclude(level).cast(pl.Int32))
