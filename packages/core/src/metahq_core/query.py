@@ -511,11 +511,10 @@ class Query:
         return anno
 
     def _load_platforms(self) -> list[str]:
-        return (
+        return list(
             pl.scan_parquet(get_technologies())
             .filter(pl.col("technology") == self.technology)
             .collect()["id"]
-            .to_list()
         )
 
     def _load_ecode(self, ecode: str) -> list[str]:
