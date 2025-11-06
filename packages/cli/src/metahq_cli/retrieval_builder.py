@@ -23,7 +23,6 @@ from metahq_cli.util.checkers import (
     check_mode,
     check_outfile,
 )
-from metahq_cli.util.helpers import FilterParser
 from metahq_cli.util.messages import TruncatedList
 from metahq_cli.util.supported import required_filters
 
@@ -37,7 +36,7 @@ class Builder:
         self.verbose: bool = verbose
 
     def get_filters(self, filters: str) -> dict[str, str]:
-        _filters = FilterParser.from_str(filters).filters
+        _filters = self._parse_filters(filters)
         self.report_bad_filters(_filters)
         return _filters
 
@@ -196,3 +195,19 @@ Try propagating or use different conditions."""
         if quiet:
             return False
         return True
+
+    def _parse_filters(self, filters: str) -> dict[str, str]:
+        as_list: list[list[str]] = [f.split("=") for f in filters.split(",")]
+        as_dict: dict[str, str] = {f[0]: f[1] for f in as_list}
+
+        not_in_filters: list[str] = []
+        for key in required_filters():
+            if key not in as_dict:
+                not_in_filters.append(key)
+
+        if len(not_in_filters) > 0:
+            msg: str = f"Missing required filters {not_in_filters}."
+            self.log.error(msg)
+            raise RuntimeError(msg)
+
+        return as_dict
