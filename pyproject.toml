@@ -14,6 +14,7 @@ dev-dependencies = [
     "isort",
     "flake8",
     "mypy",
+    "vulture",
     "metahq-cli",
     "metahq-core",
 ]
