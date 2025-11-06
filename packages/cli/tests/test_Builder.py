@@ -8,7 +8,7 @@ Last updated: 2025-11-06 by Parker Hicks
 """
 
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 import pytest
 from metahq_core.util.exceptions import NoResultsFound
