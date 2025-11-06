@@ -100,7 +100,11 @@ class TestRetriever:
         """fixture for retriever instance"""
         query_config, curation_config, output_config = sample_configs
         return Retriever(
-            query_config, curation_config, output_config, logger=mock_logger, verbose=False
+            query_config,
+            curation_config,
+            output_config,
+            logger=mock_logger,
+            verbose=False,
         )
 
     @pytest.fixture
@@ -108,14 +112,22 @@ class TestRetriever:
         """fixture for verbose retriever instance"""
         query_config, curation_config, output_config = sample_configs
         return Retriever(
-            query_config, curation_config, output_config, logger=mock_logger, verbose=True
+            query_config,
+            curation_config,
+            output_config,
+            logger=mock_logger,
+            verbose=True,
         )
 
     def test_retriever_initialization(self, sample_configs, mock_logger):
         """test retriever init stores configs correctly"""
         query_config, curation_config, output_config = sample_configs
         retriever = Retriever(
-            query_config, curation_config, output_config, logger=mock_logger, verbose=True
+            query_config,
+            curation_config,
+            output_config,
+            logger=mock_logger,
+            verbose=True,
         )
 
         assert retriever.query_config == query_config
@@ -130,7 +142,11 @@ class TestRetriever:
         """test retriever logs configs in verbose mode"""
         query_config, curation_config, output_config = sample_configs
         Retriever(
-            query_config, curation_config, output_config, logger=mock_logger, verbose=True
+            query_config,
+            curation_config,
+            output_config,
+            logger=mock_logger,
+            verbose=True,
         )
 
         mock_logger.debug.assert_called_once()
@@ -143,7 +159,11 @@ class TestRetriever:
         """test retriever does not log configs in silent mode"""
         query_config, curation_config, output_config = sample_configs
         Retriever(
-            query_config, curation_config, output_config, logger=mock_logger, verbose=False
+            query_config,
+            curation_config,
+            output_config,
+            logger=mock_logger,
+            verbose=False,
         )
 
         mock_logger.debug.assert_not_called()
@@ -454,7 +474,9 @@ class TestRetriever:
         else:
             with patch.object(retriever, "_propagate_annotations") as mock_method:
                 retriever._curate_by_mode(mock_annotations)
-                mock_method.assert_called_once_with(mock_annotations, mode=expected_mode)
+                mock_method.assert_called_once_with(
+                    mock_annotations, mode=expected_mode
+                )
 
     def test_output_config_with_pathlib_path(self):
         """test output config accepts pathlib path objects"""

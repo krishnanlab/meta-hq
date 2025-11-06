@@ -59,9 +59,13 @@ class TestBuilder:
                 }
                 mock_parse.return_value = expected_filters
 
-                result = builder.get_filters("species=human,ecode=expert,technology=rnaseq")
+                result = builder.get_filters(
+                    "species=human,ecode=expert,technology=rnaseq"
+                )
 
-                mock_parse.assert_called_once_with("species=human,ecode=expert,technology=rnaseq")
+                mock_parse.assert_called_once_with(
+                    "species=human,ecode=expert,technology=rnaseq"
+                )
                 mock_report.assert_called_once_with(expected_filters)
                 assert result == expected_filters
 
@@ -121,9 +125,7 @@ class TestBuilder:
         """test _parse_filters correctly parses key=value pairs"""
         mock_required.return_value = ["species", "ecode", "technology"]
 
-        result = builder._parse_filters(
-            "species=mouse,ecode=all,technology=microarray"
-        )
+        result = builder._parse_filters("species=mouse,ecode=all,technology=microarray")
 
         assert result["species"] == "mouse"
         assert result["ecode"] == "all"
@@ -392,9 +394,7 @@ class TestBuilder:
             assert "have no annotations" in str(exc_info.value)
 
     @patch("metahq_cli.retrieval_builder.pl.scan_parquet")
-    def test_parse_onto_terms_logs_error_when_verbose(
-        self, mock_scan, verbose_builder
-    ):
+    def test_parse_onto_terms_logs_error_when_verbose(self, mock_scan, verbose_builder):
         """test parse_onto_terms logs error in verbose mode when no results"""
         mock_schema = Mock()
         mock_schema.names.return_value = ["UBERON:0000001"]
@@ -443,7 +443,9 @@ class TestBuilder:
         with patch("metahq_cli.retrieval_builder.get_onto_families") as mock_get:
             mock_get.return_value = {"relations": "path/to/relations.parquet"}
 
-            result = builder.parse_onto_terms(["UBERON:0000001", "MONDO:0000001"], "uberon")
+            result = builder.parse_onto_terms(
+                ["UBERON:0000001", "MONDO:0000001"], "uberon"
+            )
 
             assert result == ["UBERON:0000001"]
             builder.log.warning.assert_not_called()
@@ -469,7 +471,9 @@ class TestBuilder:
                 ]
                 mock_onto_class.from_obo.return_value = mock_onto
 
-                with patch("metahq_cli.retrieval_builder.ontologies") as mock_ontologies:
+                with patch(
+                    "metahq_cli.retrieval_builder.ontologies"
+                ) as mock_ontologies:
                     mock_ontologies.return_value = "path/to/ontology.obo"
 
                     result = builder.parse_onto_terms("all", "uberon")
