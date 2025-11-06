@@ -13,7 +13,6 @@ import numpy as np
 import polars as pl
 import pytest
 
-from metahq_core.curations.index import Ids
 from metahq_core.curations.labels import Labels
 
 ["MONDO:0001657", "MONDO:0004790", "MONDO:0005147", "MONDO:0000000"]
