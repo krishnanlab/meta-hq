@@ -1,28 +1,3 @@
-[project]
-name = "metahq"
-version = "0.1.0"
-description = "Core API and CLI APIs for meta-hq."
-readme = "README.md"
-requires-python = ">=3.11"
-authors = [
-    {name = "Parker Hicks", email = "parker.hicks@cuanschutz.edu"},
-    {name = "Faisal Alquaddoomi", email = "faisal.alquaddoomi@cuanschutz.edu"},
-]
-license = "BSD-3-Clause"
-keywords = ["cli", "metadata", "database"]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Science/Research",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-]
-
-# see independent package pyproject.toml for dependencies
-dependencies = ["metahq-core", "metahq-cli"]
-
 [tool.uv.workspace]
 members = ["packages/core", "packages/cli"]
 
@@ -30,53 +5,17 @@ members = ["packages/core", "packages/cli"]
 metahq-core = { workspace = true }
 metahq-cli = { workspace = true }
 
-[tool.setuptools.packages.find]
-where = ["packages"] 
-include = ["core", "cli"]
-exclude = ["demo", "results", "run", "data"]
-namespaces = false 
-
-[project.scripts]
-metahq = "metahq_cli.main:main"
-
-[project.urls]
-Homepage = "https://github.com/krishnanlab/meta-hq"
-Repository = "https://github.com/krishnanlab/meta-hq"
-Issues = "https://github.com/krishnanlab/meta-hq/issues"
-
-[project.optional-dependencies]
-dev = [
+[tool.uv]
+dev-dependencies = [
     "pytest>=8.0",
     "pytest-cov",
+    "pytest-benchmark",
     "black",
     "isort",
     "flake8",
     "mypy",
+    "vulture",
+    "metahq-cli",
+    "metahq-core",
 ]
 
-test = [
-    "pytest>=8.0",
-    "pytest-cov",
-    "pytest-benchmark",
-]
-
-[tool.black]
-line-length = 88
-target-version = ['py38']
-include = '\.pyi?$'
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]

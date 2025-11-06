@@ -184,7 +184,7 @@ class LongAnnotations:
                 index=level,
                 on=anchor,
                 values=anchor,
-                aggregate_function=pl.count(),
+                aggregate_function=pl.len(),
             )
             .fill_null(0)
             .with_columns(pl.exclude(level).cast(pl.Int32))
@@ -511,11 +511,10 @@ class Query:
         return anno
 
     def _load_platforms(self) -> list[str]:
-        return (
+        return list(
             pl.scan_parquet(get_technologies())
             .filter(pl.col("technology") == self.technology)
             .collect()["id"]
-            .to_list()
         )
 
     def _load_ecode(self, ecode: str) -> list[str]:
