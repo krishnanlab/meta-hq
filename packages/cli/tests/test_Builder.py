@@ -7,7 +7,6 @@ Date: 2025-11-06
 Last updated: 2025-11-06 by Parker Hicks
 """
 
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
