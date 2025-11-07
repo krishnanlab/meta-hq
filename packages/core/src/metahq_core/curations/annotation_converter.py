@@ -143,6 +143,35 @@ class AnnotationsConverter:
 
         # handle controls
         if self.controls and ctrl_ids is not None and not self.anno.collapsed:
+            print("propagating controls")
+
+            print(label_mat, cols, ids)
+            print(labels_df)
+
+            def _propagate_controls(_labels, _group, _ctrl_ids):
+                mapper = {0: 0, 1: 1, -1: 0}
+                select = self.to_terms + [_group]
+                sums = (
+                    _labels.with_columns(pl.all().replace(mapper))
+                    .select(select)
+                    .group_by(_group)
+                    .sum()
+                )
+
+                result = (
+                    _ctrl_ids.join(sums, on=_group)
+                    .select(
+                        pl.col("sample"),
+                        pl.col(_group),
+                        (pl.col(pl.Int32).gt(0) * 2).cast(pl.Int32),
+                    )
+                    .filter(pl.any_horizontal(pl.col(pl.Int32).ne(0)))
+                )
+                print(result)
+
+            _propagate_controls(labels_df, "series", ctrl_ids)
+
+            exit()
 
             ctrl_labels = propagate_controls(
                 ctrl_ids,
