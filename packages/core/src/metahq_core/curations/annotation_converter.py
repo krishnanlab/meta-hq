@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from metahq_core.curations._multiprocess_propagator import propagate_controls
+# from metahq_core.curations._multiprocess_propagator
 from metahq_core.curations.labels import Labels
-from metahq_core.curations.propagator import Propagator
+from metahq_core.curations.propagator import Propagator, propagate_controls
 from metahq_core.logger import setup_logger
 from metahq_core.ontology.graph import Graph
 from metahq_core.util.helpers import merge_list_values
@@ -143,48 +143,15 @@ class AnnotationsConverter:
 
         # handle controls
         if self.controls and ctrl_ids is not None and not self.anno.collapsed:
-            print("propagating controls")
 
-            print(label_mat, cols, ids)
-            print(labels_df)
+            self.log.info("Propagating controls...")
 
-            def _propagate_controls(_labels, _group, _ctrl_ids):
-                mapper = {0: 0, 1: 1, -1: 0}
-                select = self.to_terms + [_group]
-                sums = (
-                    _labels.with_columns(pl.all().replace(mapper))
-                    .select(select)
-                    .group_by(_group)
-                    .sum()
-                )
-
-                result = (
-                    _ctrl_ids.join(sums, on=_group)
-                    .select(
-                        pl.col("sample"),
-                        pl.col(_group),
-                        (pl.col(pl.Int32).gt(0) * 2).cast(pl.Int32),
-                    )
-                    .filter(pl.any_horizontal(pl.col(pl.Int32).ne(0)))
-                )
-                print(result)
-
-            _propagate_controls(labels_df, "series", ctrl_ids)
-
-            exit()
-
-            ctrl_labels = propagate_controls(
-                ctrl_ids,
-                label_mat,
-                ids,
-                cols,
-                self.anno.index_col,
-                groups,
-                verbose=self.verbose,
+            labels_df = propagate_controls(
+                labels_df, self.to_terms, "sample", "series", ctrl_ids
             )
 
             return Labels.from_df(
-                labels_df.update(ctrl_labels, on=self.anno.index_col, how="full"),
+                labels_df,
                 self.anno.index_col,
                 tuple(self.anno.group_cols),
                 logger=self.log,
