@@ -310,7 +310,7 @@ class Annotations(BaseCuration):
             )
 
         if mode == 1:
-            return converter.to_labels(groups=group_col)
+            return converter.to_labels()
 
         msg = ("Mode %s not available.", mode)
         if self.verbose:

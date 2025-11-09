@@ -4,7 +4,7 @@ Class to facilitate Annotations propagation and convertion to labels.
 Author: Parker Hicks
 Date: 2025-09-10
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-08 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -13,9 +13,8 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from metahq_core.curations._multiprocess_propagator import propagate_controls
 from metahq_core.curations.labels import Labels
-from metahq_core.curations.propagator import Propagator
+from metahq_core.curations.propagator import Propagator, propagate_controls
 from metahq_core.logger import setup_logger
 from metahq_core.ontology.graph import Graph
 from metahq_core.util.helpers import merge_list_values
@@ -109,7 +108,7 @@ class AnnotationsConverter:
 
         return pl.DataFrame(new, schema=cols), ids
 
-    def to_labels(self, groups: str = "group"):
+    def to_labels(self):
         """
         Convert annotations to propagated labels.
 
@@ -137,25 +136,26 @@ class AnnotationsConverter:
 
         # extract controls if they exist
         ctrl_ids = self._prepare_control_data()
-
-        label_mat, cols, ids = self._make_labels()
-        labels_df = ids.hstack(pl.DataFrame(label_mat, schema=cols))
+        labels_df = self._make_labels()
 
         # handle controls
         if self.controls and ctrl_ids is not None and not self.anno.collapsed:
 
-            ctrl_labels = propagate_controls(
-                ctrl_ids,
-                label_mat,
-                ids,
-                cols,
-                self.anno.index_col,
-                groups,
+            labels_df = progress_wrapper(
+                "Propagating controls",
                 verbose=self.verbose,
+                total=None,
+                func=propagate_controls,
+                labels=labels_df,
+                to_terms=self.to_terms,
+                index_col="sample",
+                group_col="series",
+                ctrl_ids=ctrl_ids,
+                padding="    ",
             )
 
             return Labels.from_df(
-                labels_df.update(ctrl_labels, on=self.anno.index_col, how="full"),
+                labels_df,
                 self.anno.index_col,
                 tuple(self.anno.group_cols),
                 logger=self.log,
@@ -253,7 +253,7 @@ class AnnotationsConverter:
 
         self.anno = self.anno.select(_from)
 
-    def _make_labels(self):
+    def _make_labels(self) -> pl.DataFrame:
         """
         Propagates up to to_terms and down to to_terms. If any samples are not
         annotated to any descendants OR ancestors of to_terms, then they are
@@ -281,4 +281,4 @@ class AnnotationsConverter:
         neg_mask = (up_mat == 0) & (down_mat == 0)
         up_mat[neg_mask] = -1
 
-        return up_mat, cols, up_ids
+        return up_ids.hstack(pl.DataFrame(up_mat, schema=cols))

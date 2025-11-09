@@ -220,3 +220,71 @@ class Propagator:
         if nchunks == 0:
             nchunks = 1
         return np.array_split(self.anno.data.to_numpy().astype(np.float32), nchunks)
+
+
+def propagate_controls(
+    labels: pl.DataFrame,
+    to_terms: list[str],
+    index_col: str,
+    group_col: str,
+    ctrl_ids: pl.DataFrame,
+) -> pl.DataFrame:
+    """Vectorized control propagation.
+
+    For any samples (index) directly annotated as controls (MONDO:0000000), they are assigned
+    a label of 2 for any disease term IDs that are labeled as positives for any other
+    samples that come from the same study (group) as the control samples.
+
+    Parameters
+    ----------
+    labels: pl.DataFrame
+        Labels DataFrame with an index and group column specifically. Values are -1, 0, and 1
+        indicating if an index is labeled to a term (other columns), not, or unknown.
+
+    to_terms: list[str]
+        Ontology term IDs for which to generate labels. Must be in the columns of labels.
+
+    index_col: str
+        Name of the column in labels storing index IDs.
+
+    group_col: str
+        Name of the column in labels storing group IDs.
+
+    ctrl_ids: pl.DataFrame
+        DataFrame of index IDs that are healthy controls and any other ID columns that are
+        also in labels.
+
+    Returns
+    -------
+    A DataFrame of -1, 0, 1, and 2 labels of all available indices where 2 indicates if an
+    index is a control for a particular disease.
+
+    """
+    mapper = {0: 0, 1: 1, -1: 0}
+    select = to_terms + [group_col]
+    sums = (
+        labels.with_columns(pl.all().replace(mapper))
+        .select(select)
+        .group_by(group_col)
+        .sum()
+    )
+
+    id_cols = [col for col in ctrl_ids.columns if col not in to_terms]
+
+    ctrl_labels = (
+        ctrl_ids.join(sums, on=group_col)
+        .select(
+            pl.col(id_cols),
+            (pl.col(to_terms).gt(0) * 2).cast(pl.Int32),
+        )
+        .filter(pl.any_horizontal(pl.col(to_terms).ne(0)))
+        .select(labels.columns)
+    )
+
+    return pl.concat(
+        [
+            labels.join(ctrl_ids, on=index_col, how="anti"),
+            ctrl_labels,
+        ],
+        how="vertical",
+    ).sort(by=group_col)
