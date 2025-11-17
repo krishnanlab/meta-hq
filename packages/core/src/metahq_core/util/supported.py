@@ -224,6 +224,9 @@ def get_ontology_families(onto: str) -> dict[str, Path]:
             "systems": uberon / "systems.txt",
         },
     }
+    supported_relations = list(opt.keys())
+    if not onto in opt:
+        raise ValueError(f"Expected onto in {supported_relations}, got {onto}.")
 
     return opt[onto]
 
