@@ -208,7 +208,7 @@ def get_ontology_search_db() -> Path:
     return get_data_dir() / "ontology" / "ontology_search.duckdb"
 
 
-def get_onto_families(onto: str) -> dict[str, Path]:
+def get_ontology_families(onto: str) -> dict[str, Path]:
     """Returns the path to files outlining ontology relationships."""
     mondo = get_ontology_dirs("mondo")
     uberon = get_ontology_dirs("uberon")
@@ -299,8 +299,8 @@ def onto_relations(query: str, relatives: str) -> Path:
     """Returns the path to a queried ontology."""
     _supported = supported("ontologies")
     if query in _supported:
-        if relatives in get_onto_families(query).keys():
-            return get_onto_families(query)[relatives]
+        if relatives in get_ontology_families(query).keys():
+            return get_ontology_families(query)[relatives]
         raise ValueError(f"Relatives for {query} do not exist.")
     raise ValueError(f"Expected ontology in {_supported}, got {query}.")
 
