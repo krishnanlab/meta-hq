@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 from metahq_core.util.exceptions import NoResultsFound
-from metahq_core.util.supported import get_onto_families, ontologies
+from metahq_core.util.supported import get_ontology_families, ontologies
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig
 from metahq_cli.util.checkers import (
@@ -45,7 +45,7 @@ class Builder:
 
     def parse_onto_terms(self, terms: list[str], reference: str) -> list[str]:
         available = (
-            pl.scan_parquet(get_onto_families(reference)["relations"])
+            pl.scan_parquet(get_ontology_families(reference)["relations"])
             .collect_schema()
             .names()
         )
