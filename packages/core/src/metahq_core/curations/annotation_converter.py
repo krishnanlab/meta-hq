@@ -9,6 +9,7 @@ Last updated: 2025-11-17 by Parker Hicks
 
 from __future__ import annotations
 
+from time import sleep
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -144,16 +145,16 @@ class AnnotationsConverter:
         if self.controls and ctrl_ids is not None and not self.anno.collapsed:
 
             labels_df = progress_wrapper(
-                "Propagating controls",
+                "Propagating controls...",
                 verbose=self.verbose,
                 total=None,
+                padding="    ",
                 func=propagate_controls,
                 labels=labels_df,
                 to_terms=self.to_terms,
                 index_col="sample",
                 group_col="series",
                 ctrl_ids=ctrl_ids,
-                padding="    ",
             )
 
             return Labels.from_df(
@@ -163,6 +164,9 @@ class AnnotationsConverter:
                 logger=self.log,
                 verbose=self.verbose,
             )
+
+        if self.verbose:
+            self.log.debug("No controls found.")
 
         return Labels.from_df(
             labels_df,
