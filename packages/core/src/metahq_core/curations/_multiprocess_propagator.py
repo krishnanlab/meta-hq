@@ -4,13 +4,13 @@ Helper class to facilitate propagation of annotations by chunks.
 Author: Parker Hicks
 Date: 2025-09-26
 
-Last updated: 2025-11-08 by Parker Hicks
+Last updated: 2025-11-18 by Parker Hicks
 """
 
 from __future__ import annotations
 
 import multiprocessing as mp
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -26,7 +26,10 @@ if TYPE_CHECKING:
 class MultiprocessPropagator:
     """Exists to allow multiprocessing within the Propagator class."""
 
-    def __init__(self, logger, verbose=True):
+    def __init__(self, logger=None, loglevel=20, verbose=True):
+
+        if logger is None:
+            logger = setup_logger(__name__, level=loglevel)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
 
@@ -40,6 +43,7 @@ class MultiprocessPropagator:
         """
         chunk_idx, chunk, family = args
         result = np.einsum("ij,jk->ik", chunk, family)
+
         return chunk_idx, result
 
     def multiprocess_propagate(
@@ -62,7 +66,7 @@ class MultiprocessPropagator:
         propagated = np.empty(final_shape, dtype=np.int32)
         args_list = [(i, chunk, family) for i, chunk in enumerate(split)]
 
-        with ProcessPoolExecutor(max_workers=n_processes) as executor:
+        with ThreadPoolExecutor(max_workers=n_processes) as executor:
             if self.verbose:
                 results = self._execute_verbose(executor, args_list, desc)
             else:
@@ -78,14 +82,17 @@ class MultiprocessPropagator:
 
         return propagated
 
-    def _execute_silent(self, executor: ProcessPoolExecutor, args_list: list) -> list:
+    def _execute_silent(self, executor: ThreadPoolExecutor, args_list: list) -> list:
         futures = {
             executor.submit(self._process_chunk, args): args for args in args_list
         }
         return [future.result() for future in as_completed(futures)]
 
     def _execute_verbose(
-        self, executor: ProcessPoolExecutor, args_list: list, desc: str
+        self,
+        executor: ThreadPoolExecutor,
+        args_list: list,
+        desc: str,
     ) -> list:
         with progress_bar(padding="    ") as progress:
             task = progress.add_task(desc, total=len(args_list))
