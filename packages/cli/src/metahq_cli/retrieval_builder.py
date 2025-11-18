@@ -51,10 +51,7 @@ class Builder:
         )
 
         if terms == "all":
-            from metahq_core.ontology.base import Ontology
-
-            onto = Ontology.from_obo(ontologies(reference), reference)
-            return self._parse(list(onto.class_dict.keys()), available)
+            return available
 
         parsed = self._parse(terms, available)
 
