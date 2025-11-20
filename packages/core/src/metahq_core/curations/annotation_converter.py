@@ -4,12 +4,11 @@ Class to facilitate Annotations propagation and convertion to labels.
 Author: Parker Hicks
 Date: 2025-09-10
 
-Last updated: 2025-11-17 by Parker Hicks
+Last updated: 2025-11-19 by Parker Hicks
 """
 
 from __future__ import annotations
 
-from time import sleep
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -26,9 +25,6 @@ if TYPE_CHECKING:
     import logging
 
     from metahq_core.curations.annotations import Annotations
-
-
-WARNING_SIZE = 1000
 
 
 class AnnotationsConverter:
@@ -244,9 +240,6 @@ class AnnotationsConverter:
 
         if self.verbose:
             self.log.info("Extracting ontology relationships for %s terms...", total)
-
-            if total > WARNING_SIZE:
-                self.log.info("This may take up to a minute.")
 
         descendants = self._get_ontology_relations("descendants")
         ancestors = self._get_ontology_relations("ancestors")
