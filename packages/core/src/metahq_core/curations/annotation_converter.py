@@ -181,17 +181,14 @@ class AnnotationsConverter:
         if total is None:
             total = len(self.to_terms)
 
-        if total > WARNING_SIZE:
-            relation_map = progress_wrapper(
-                f"{relatives}...",
-                verbose=self.verbose,
-                total=total,
-                func=opt[relatives],
-                subset=self.to_terms,
-                padding="    ",
-            )
-        else:
-            relation_map = opt[relatives](subset=self.to_terms)
+        relation_map = progress_wrapper(
+            f"{relatives}...",
+            verbose=self.verbose,
+            total=total,
+            func=opt[relatives],
+            subset=self.to_terms,
+            padding="    ",
+        )
 
         return merge_list_values(relation_map)
 
