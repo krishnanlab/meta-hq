@@ -384,7 +384,7 @@ class TestBuilder:
         mock_lazyframe.collect_schema.return_value = mock_schema
         mock_scan.return_value = mock_lazyframe
 
-        with patch("metahq_cli.retrieval_builder.get_onto_families") as mock_get:
+        with patch("metahq_cli.retrieval_builder.get_ontology_families") as mock_get:
             mock_get.return_value = {"relations": "path/to/relations.parquet"}
 
             with pytest.raises(NoResultsFound) as exc_info:
@@ -401,7 +401,7 @@ class TestBuilder:
         mock_lazyframe.collect_schema.return_value = mock_schema
         mock_scan.return_value = mock_lazyframe
 
-        with patch("metahq_cli.retrieval_builder.get_onto_families") as mock_get:
+        with patch("metahq_cli.retrieval_builder.get_ontology_families") as mock_get:
             mock_get.return_value = {"relations": "path/to/relations.parquet"}
 
             with pytest.raises(NoResultsFound):
@@ -420,7 +420,7 @@ class TestBuilder:
         mock_lazyframe.collect_schema.return_value = mock_schema
         mock_scan.return_value = mock_lazyframe
 
-        with patch("metahq_cli.retrieval_builder.get_onto_families") as mock_get:
+        with patch("metahq_cli.retrieval_builder.get_ontology_families") as mock_get:
             mock_get.return_value = {"relations": "path/to/relations.parquet"}
 
             result = verbose_builder.parse_onto_terms(
@@ -439,7 +439,7 @@ class TestBuilder:
         mock_lazyframe.collect_schema.return_value = mock_schema
         mock_scan.return_value = mock_lazyframe
 
-        with patch("metahq_cli.retrieval_builder.get_onto_families") as mock_get:
+        with patch("metahq_cli.retrieval_builder.get_ontology_families") as mock_get:
             mock_get.return_value = {"relations": "path/to/relations.parquet"}
 
             result = builder.parse_onto_terms(
@@ -458,7 +458,7 @@ class TestBuilder:
         mock_lazyframe.collect_schema.return_value = mock_schema
         mock_scan.return_value = mock_lazyframe
 
-        with patch("metahq_cli.retrieval_builder.get_onto_families") as mock_get:
+        with patch("metahq_cli.retrieval_builder.get_ontology_families") as mock_get:
             mock_get.return_value = {"relations": "path/to/relations.parquet"}
 
             with patch("metahq_core.ontology.base.Ontology") as mock_onto_class:

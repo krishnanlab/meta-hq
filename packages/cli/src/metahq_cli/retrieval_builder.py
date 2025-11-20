@@ -4,14 +4,14 @@ Class to take retrieval arguments, check them, and build the retrieval query.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-10-16
+Last updated: 2025-11-19 by Parker Hicks
 """
 
 from typing import TYPE_CHECKING
 
 import polars as pl
 from metahq_core.util.exceptions import NoResultsFound
-from metahq_core.util.supported import get_onto_families, ontologies
+from metahq_core.util.supported import get_ontology_families
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig
 from metahq_cli.util.checkers import (
@@ -45,16 +45,13 @@ class Builder:
 
     def parse_onto_terms(self, terms: list[str], reference: str) -> list[str]:
         available = (
-            pl.scan_parquet(get_onto_families(reference)["relations"])
+            pl.scan_parquet(get_ontology_families(reference)["relations"])
             .collect_schema()
             .names()
         )
 
         if terms == "all":
-            from metahq_core.ontology.base import Ontology
-
-            onto = Ontology.from_obo(ontologies(reference), reference)
-            return self._parse(list(onto.class_dict.keys()), available)
+            return available
 
         parsed = self._parse(terms, available)
 
