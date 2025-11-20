@@ -120,7 +120,8 @@ class Annotations(BaseCuration):
         index_col: str,
         group_cols: tuple[str, ...] = ("series", "platform"),
         collapsed: bool = False,
-        logger=setup_logger(__name__),
+        logger=None,
+        loglevel=20,
         verbose=True,
     ):
         self.data = data
@@ -130,6 +131,8 @@ class Annotations(BaseCuration):
         self.collapsed = collapsed
         self.controls: bool = False
 
+        if logger is None:
+            logger = setup_logger(__name__, level=loglevel)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
 
@@ -250,7 +253,6 @@ class Annotations(BaseCuration):
         ontology: str,
         mode: Literal[0, 1],
         control_col: str = "MONDO:0000000",
-        group_col: str = "series",
     ) -> Labels | Annotations:
         """Convert annotations to propagated labels.
 
@@ -280,9 +282,6 @@ class Annotations(BaseCuration):
 
         control_col: str
             Column name for control annotations.
-
-        group_col: str
-            Column name of the group IDs. Used to assign control labels.
 
         Returns
         -------

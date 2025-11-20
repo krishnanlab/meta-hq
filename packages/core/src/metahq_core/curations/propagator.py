@@ -18,7 +18,7 @@ given a negative label for that term.
 Author: Parker Hicks
 Date: 2025-04-23
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-18 by Parker Hicks
 """
 
 from typing import TYPE_CHECKING, Literal
@@ -127,6 +127,7 @@ class Propagator:
             lf.select(_from)
             .with_columns(all_terms)
             .filter(pl.col("terms").is_in(self.to))
+            .sort(by="terms")
             .drop("terms")
             .collect()
             .transpose()
@@ -146,7 +147,7 @@ class Propagator:
 
         """
         return (
-            lf.select(self.to)
+            lf.select(sorted(self.to))
             .with_columns(all_terms)
             .filter(pl.col("terms").is_in(_from))
             .drop("terms")
@@ -156,7 +157,7 @@ class Propagator:
 
     def _load_family(self):
         """
-        Loads the terms x terms adjacency matrices for ancestor and descendant relationships.
+        Loads the terms x terms relations matrix for ancestor and descendant relationships.
         These matrices store column-wise relational annotations where if term_n is an ancestor
         of term_m, then ancestors[n, m] will be 1 and ancestors[m, n] will be 0. This matrix is
         transposed when loading to get row-wise relational annotations and match dimensions with

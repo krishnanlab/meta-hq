@@ -4,7 +4,7 @@ Class to facilitate Annotations propagation and convertion to labels.
 Author: Parker Hicks
 Date: 2025-09-10
 
-Last updated: 2025-11-08 by Parker Hicks
+Last updated: 2025-11-19 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -16,18 +16,15 @@ import polars as pl
 from metahq_core.curations.labels import Labels
 from metahq_core.curations.propagator import Propagator, propagate_controls
 from metahq_core.logger import setup_logger
-from metahq_core.ontology.graph import Graph
+from metahq_core.ontology.loader import RelationsLoader
 from metahq_core.util.helpers import merge_list_values
 from metahq_core.util.progress import progress_wrapper
-from metahq_core.util.supported import ontologies
+from metahq_core.util.supported import get_ontology_families
 
 if TYPE_CHECKING:
     import logging
 
     from metahq_core.curations.annotations import Annotations
-
-
-WARNING_SIZE = 1000
 
 
 class AnnotationsConverter:
@@ -79,7 +76,9 @@ class AnnotationsConverter:
         self.controls = False
         self.control_col: str = control_col
 
-        self.graph = Graph.from_obo(ontologies(ontology), ontology=ontology)
+        self._relation_loader = RelationsLoader(
+            get_ontology_families(ontology)["relations"]
+        )
 
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
@@ -142,16 +141,16 @@ class AnnotationsConverter:
         if self.controls and ctrl_ids is not None and not self.anno.collapsed:
 
             labels_df = progress_wrapper(
-                "Propagating controls",
+                "Propagating controls...",
                 verbose=self.verbose,
                 total=None,
+                padding="    ",
                 func=propagate_controls,
                 labels=labels_df,
                 to_terms=self.to_terms,
                 index_col="sample",
                 group_col="series",
                 ctrl_ids=ctrl_ids,
-                padding="    ",
             )
 
             return Labels.from_df(
@@ -162,6 +161,9 @@ class AnnotationsConverter:
                 verbose=self.verbose,
             )
 
+        if self.verbose:
+            self.log.debug("No controls found.")
+
         return Labels.from_df(
             labels_df,
             self.anno.index_col,
@@ -170,11 +172,11 @@ class AnnotationsConverter:
             verbose=self.verbose,
         )
 
-    def _get_graph_relations(self, relatives: str, total=None) -> list[str]:
+    def _get_ontology_relations(self, relatives: str, total=None) -> list[str]:
         """Get all ancestors or descendants of a list of ontology terms."""
         opt = {
-            "ancestors": self.graph.ancestors_from,
-            "descendants": self.graph.descendants_from,
+            "ancestors": self._relation_loader.get_ancestors,
+            "descendants": self._relation_loader.get_descendants,
         }
         if total is None:
             total = len(self.to_terms)
@@ -185,11 +187,11 @@ class AnnotationsConverter:
                 verbose=self.verbose,
                 total=total,
                 func=opt[relatives],
-                nodes=self.to_terms,
+                subset=self.to_terms,
                 padding="    ",
             )
         else:
-            relation_map = opt[relatives](nodes=self.to_terms)
+            relation_map = opt[relatives](subset=self.to_terms)
 
         return merge_list_values(relation_map)
 
@@ -217,9 +219,9 @@ class AnnotationsConverter:
         propagate them up to those terms.
 
         """
-        descendants = self._get_graph_relations("descendants")
+        descendants = self._get_ontology_relations("descendants")
 
-        _from = list(set(self.to_terms + descendants))
+        _from = list(set(descendants))
         _from = [term for term in _from if term in self.anno.entities]
 
         self.anno = self.anno.select(_from).filter(
@@ -239,13 +241,10 @@ class AnnotationsConverter:
         if self.verbose:
             self.log.info("Extracting ontology relationships for %s terms...", total)
 
-            if total > WARNING_SIZE:
-                self.log.info("This may take up to a minute.")
+        descendants = self._get_ontology_relations("descendants")
+        ancestors = self._get_ontology_relations("ancestors")
 
-        descendants = self._get_graph_relations("descendants")
-        ancestors = self._get_graph_relations("ancestors")
-
-        _from = list(set(self.to_terms + descendants + ancestors))
+        _from = list(set(descendants + ancestors))
         _from = [term for term in _from if term in self.anno.entities]
 
         if self.control_col in self.anno.entities:
