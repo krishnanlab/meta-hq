@@ -10,7 +10,8 @@ Last updated: 2025-11-18 by Parker Hicks
 from __future__ import annotations
 
 import multiprocessing as mp
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -22,6 +23,10 @@ from metahq_core.util.progress import progress_bar
 if TYPE_CHECKING:
     import logging
 
+
+PROCESS_POOL_THRESHOLD = os.environ.get("PROCESS_POOL_THRESHOLD", 40)
+
+type Executor = ProcessPoolExecutor | ThreadPoolExecutor
 
 class MultiprocessPropagator:
     """Exists to allow multiprocessing within the Propagator class."""
@@ -66,11 +71,17 @@ class MultiprocessPropagator:
         propagated = np.empty(final_shape, dtype=np.int32)
         args_list = [(i, chunk, family) for i, chunk in enumerate(split)]
 
-        with ThreadPoolExecutor(max_workers=n_processes) as executor:
+        executor = (
+            ThreadPoolExecutor
+            if len(args_list) < int(PROCESS_POOL_THRESHOLD)
+            else ProcessPoolExecutor
+        )
+
+        with executor(max_workers=n_processes) as _executor:
             if self.verbose:
-                results = self._execute_verbose(executor, args_list, desc)
+                results = self._execute_verbose(_executor, args_list, desc)
             else:
-                results = self._execute_silent(executor, args_list)
+                results = self._execute_silent(_executor, args_list)
 
         # combine
         start = 0
@@ -82,7 +93,7 @@ class MultiprocessPropagator:
 
         return propagated
 
-    def _execute_silent(self, executor: ThreadPoolExecutor, args_list: list) -> list:
+    def _execute_silent(self, executor: Executor, args_list: list) -> list:
         futures = {
             executor.submit(self._process_chunk, args): args for args in args_list
         }
@@ -90,7 +101,7 @@ class MultiprocessPropagator:
 
     def _execute_verbose(
         self,
-        executor: ThreadPoolExecutor,
+        executor: Executor,
         args_list: list,
         desc: str,
     ) -> list:
