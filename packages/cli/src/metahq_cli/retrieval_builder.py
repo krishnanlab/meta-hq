@@ -4,14 +4,14 @@ Class to take retrieval arguments, check them, and build the retrieval query.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-10-16
+Last updated: 2025-11-19 by Parker Hicks
 """
 
 from typing import TYPE_CHECKING
 
 import polars as pl
 from metahq_core.util.exceptions import NoResultsFound
-from metahq_core.util.supported import get_ontology_families, ontologies
+from metahq_core.util.supported import get_ontology_families
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig
 from metahq_cli.util.checkers import (
