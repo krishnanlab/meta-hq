@@ -10,14 +10,14 @@ Last updated: 2025-10-02 by Parker Hicks
 from pathlib import Path
 from typing import Literal
 
-from metahq_core.util.io import load_yaml
+from metahq_core.util.io import checkdir, load_yaml
 
 # Root dir of metahq package
 ROOT: Path = Path(__file__).resolve().parents[5]
 
 # Root dir of config
 HOME = Path.home()
-METAHQ = HOME / "metahq"
+METAHQ = checkdir(HOME / "metahq")
 CONFIG_FILE = METAHQ / "config.yaml"
 
 
@@ -158,13 +158,9 @@ def get_data_dir():
     return Path(get_config()["data_dir"])
 
 
-def get_log_dir() -> Path:
-    """Returns the path to the default logging directory."""
-    logs = METAHQ / "log"
-    if not logs.exists():
-        logs.mkdir(exist_ok=True, parents=True)
-
-    return logs
+def get_log_file() -> Path:
+    """Returns the path to the default logging file."""
+    return METAHQ / "log.log"
 
 
 def geo_metadata(level: Literal["sample", "series"]) -> Path:
