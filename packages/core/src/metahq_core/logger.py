@@ -4,17 +4,16 @@ Logger setup.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-20 by Parker Hicks
 """
 
 import logging
-from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
 from metahq_core.util.supported import get_log_dir
 
-DEFAULT_LOGS = get_log_dir()
+DEFAULT_LOGS = get_log_file()
 
 
 def setup_logger(
@@ -59,9 +58,8 @@ def setup_logger(
     logger.addHandler(console_handler)
 
     # file handler
-    date_time = datetime.now().strftime("%m-%d-%Y__%Hhr_%Mmin")
     file_handler = TimedRotatingFileHandler(
-        Path(log_dir) / f"{date_time}.log",
+        Path(log_dir) / "log.log",
         when="midnight",
         interval=1,
         backupCount=30,
