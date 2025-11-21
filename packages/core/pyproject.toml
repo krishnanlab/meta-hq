@@ -54,6 +54,10 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 path = "src/metahq_core/__init__.py"
 
+[tool.hatch.build.targets.sdist]
+exclude = ["/.git", "/__pycache__", "*.pyc"]
+include = ["src/metahq_core"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/metahq_core"]
 
