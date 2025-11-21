@@ -240,9 +240,9 @@ class Downloader:
                 self.logger.warning("Could not determine file size.")
                 self.logger.info("Downloading without progress bar.")
 
-    ##########################
-    #####   downloaders  #####
-    ##########################
+    # ========================================
+    # ======  downloaders
+    # ========================================
 
     def _download(self):
         if self.verbose:
@@ -273,9 +273,9 @@ class Downloader:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
 
-    ##########################
-    #####   extractors  ######
-    ##########################
+    # ========================================
+    # ======  tar extractors
+    # ========================================
 
     def _extract(self):
         with tarfile.open(self.config.outfile, mode="r:gz") as tar:
@@ -296,9 +296,9 @@ class Downloader:
         shutil.rmtree(tar_dir)
         (base_dir / self.config.filename).unlink()
 
-    ##########################
-    #######   helpers  #######
-    ##########################
+    # ========================================
+    # ======  helpers
+    # ========================================
 
     def _make_config(self, doi: str, outdir: str | Path) -> FileConfig:
         info: dict[str, str] = metahq_dois(doi)
@@ -320,9 +320,9 @@ class Downloader:
 
         return f"{base_url}/{doi}/{files_dir}/{filename}"
 
-    ##########################
-    #####   error msg   ######
-    ##########################
+    # ========================================
+    # ======  error messages
+    # ========================================
 
     def _raise_connection_error(self):
         self.logger.error(
