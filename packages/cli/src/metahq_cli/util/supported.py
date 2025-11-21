@@ -9,11 +9,18 @@ Last updated: 2025-11-20 by Parker Hicks
 
 from pathlib import Path
 
-LATEST_VERSION: str = "v1.0.0-alpha"
+import click
+
+LATEST_DATABASE: dict[str, str] = {"version": "v1.0.1-alpha", "doi": "17666183"}
 
 
 def formats() -> list[str]:
     return ["parquet", "tsv", "csv", "json"]
+
+
+def log_level_opt() -> click.Choice:
+    """Returns available logging level choices."""
+    return click.Choice(["notset", "debug", "info", "warning", "error", "critical"])
 
 
 def log_map() -> dict[str, int]:
