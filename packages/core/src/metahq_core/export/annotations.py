@@ -4,11 +4,12 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import polars as pl
@@ -37,7 +38,10 @@ ANNOTATION_KEY = {"1": True, "0": False}
 class AnnotationsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
 
-    def __init__(self, logger=setup_logger(__name__), verbose=True):
+    def __init__(self, logger=None, loglevel=20, logdir=Path("."), verbose=True):
+
+        if logger is None:
+            logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
 

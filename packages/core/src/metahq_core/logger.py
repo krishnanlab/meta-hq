@@ -4,20 +4,18 @@ Logger setup.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-11-20 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
-from metahq_core.util.supported import get_log_dir
-
-DEFAULT_LOGS = get_log_file()
-
 
 def setup_logger(
-    name: str, level: int = logging.INFO, log_dir: str | Path = DEFAULT_LOGS
+    name: str,
+    log_dir: str | Path,
+    level: int = logging.INFO,
 ) -> logging.Logger:
     """
     Sets up a logger.

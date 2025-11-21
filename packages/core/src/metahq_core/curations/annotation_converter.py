@@ -4,11 +4,12 @@ Class to facilitate Annotations propagation and convertion to labels.
 Author: Parker Hicks
 Date: 2025-09-10
 
-Last updated: 2025-11-19 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -66,7 +67,9 @@ class AnnotationsConverter:
         to_terms,
         ontology,
         control_col="MONDO:0000000",
-        logger=setup_logger(__name__),
+        logger=None,
+        loglevel=20,
+        logdir=Path("."),
         verbose=False,
     ):
         self.anno: Annotations = anno
@@ -80,6 +83,8 @@ class AnnotationsConverter:
             get_ontology_families(ontology)["relations"]
         )
 
+        if logger is None:
+            logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
 
