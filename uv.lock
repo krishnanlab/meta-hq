@@ -363,7 +363,6 @@ wheels = [
 
 [[package]]
 name = "metahq-cli"
-version = "0.1.0"
 source = { editable = "packages/cli" }
 dependencies = [
     { name = "click" },
@@ -407,7 +406,6 @@ provides-extras = ["dev", "test"]
 
 [[package]]
 name = "metahq-core"
-version = "0.1.0"
 source = { editable = "packages/core" }
 dependencies = [
     { name = "duckdb" },
