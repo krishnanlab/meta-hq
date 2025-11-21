@@ -4,9 +4,10 @@ This script stores file path constants and functions to retrieve those paths.
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2025-10-02 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
+import sys
 from pathlib import Path
 from typing import Literal
 
@@ -17,8 +18,6 @@ ROOT: Path = Path(__file__).resolve().parents[5]
 
 # Root dir of config
 HOME = Path.home()
-METAHQ = checkdir(HOME / "metahq")
-CONFIG_FILE = METAHQ / "config.yaml"
 
 
 # =======================================================
@@ -150,17 +149,47 @@ def get_annotations(level: Literal["sample", "series"]) -> Path:
 
 def get_config():
     """Loads the MetaHQ config file."""
-    return load_yaml(CONFIG_FILE)
+    return load_yaml(get_config_file())
 
 
-def get_data_dir():
+def get_config_file():
+    """Returns the path to the MetaHQ config file if it exists."""
+    file = get_config_file_no_check()
+
+    if not file.exists():
+        raise RuntimeError("MetaHQ is not configured. Run `metahq setup`.")
+
+    return file
+
+
+def get_config_file_no_check():
+    """Only used to intialize MetaHQ."""
+    return get_metahq_home() / "config.yaml"
+
+
+def get_data_dir() -> Path:
     """Extracts the MetaHQ data directory from the config."""
     return Path(get_config()["data_dir"])
 
 
-def get_log_file() -> Path:
+def get_default_data_dir() -> Path:
+    """Return the default data directory."""
+    return Path.home() / ".metahq_data"
+
+
+def get_log_dir() -> Path:
+    """Return log directory defined in config."""
+    return get_config()["logs"]
+
+
+def get_default_log_dir():
+    """Returns path to default logging directory."""
+    return get_metahq_home()
+
+
+def get_default_log_file() -> Path:
     """Returns the path to the default logging file."""
-    return METAHQ / "log.log"
+    return get_default_log_dir() / "log.log"
 
 
 def geo_metadata(level: Literal["sample", "series"]) -> Path:
@@ -174,6 +203,14 @@ def geo_metadata(level: Literal["sample", "series"]) -> Path:
 def get_metadata_path() -> Path:
     """Returns the path to MetaHQ metadata."""
     return get_data_dir() / "metadata"
+
+
+def get_metahq_home() -> Path:
+    """Returns the home directory for MetaHQ.
+
+    Makes the directory if it doesn't exist.
+    """
+    return checkdir(Path.home() / "MetaHQ")
 
 
 def get_ontology_dirs(onto: str) -> Path:
