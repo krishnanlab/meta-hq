@@ -5,7 +5,7 @@ Implemented in the `metahq setup` CLI command.
 Author: Parker Hicks
 Date: 2025-11-20
 
-Last updated: 2025-11-20 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
 import shutil
@@ -162,7 +162,6 @@ class Downloader:
         self._move_tar_contents(base_dir=self.config.outdir, tar_dir=tar_dir)
 
         if self.verbose:
-            self.logger.info("Done!")
             self.logger.info("Saved the MetaHQ database to %s.", self.config.outdir)
 
     def get(self):
@@ -223,7 +222,7 @@ class Downloader:
 
     def _download(self):
         if self.verbose:
-            self.logger.debug("use progress: %s", self._use_progress)
+            self.logger.debug("Show progress bar: %s", self._use_progress)
 
         if self._use_progress:
             self._download_with_progress()
