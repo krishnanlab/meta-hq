@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import click
 import requests
 from metahq_core.util.io import checkdir
 from metahq_core.util.progress import get_console, progress_bar
@@ -78,6 +79,15 @@ class FileConfig:
 
     def __post_init__(self):
         self.outdir = checkdir(self.outdir)
+
+    def check_outdir(self):
+        """Check that outdir exists."""
+        checkdir(self.outdir)
+
+    @property
+    def filename_stemmed(self) -> str:
+        """Return file name without any extentions."""
+        return str(self.filename).split(".", maxsplit=1)[0]
 
     @property
     def outfile(self) -> Path:
@@ -149,6 +159,20 @@ class Downloader:
 
         self._use_progress: bool = True
 
+    def check_outdir_exists(self):
+        """Check if the data directory exists."""
+        if self.config.outdir.exists():
+            if click.confirm(
+                f"Data directory: {self.config.outdir} exists. Overwrite?",
+                default=False,
+            ):
+                self.logger.info("Removing existing data directory...")
+                shutil.rmtree(self.config.outdir)
+                self.config.check_outdir()
+            else:
+                self.logger.info("Keeping existing data directory.")
+                sys.exit("Terminating...")
+
     def extract(self):
         """Extract the tar archive."""
         if self.verbose:
@@ -156,9 +180,7 @@ class Downloader:
 
         self._extract()
 
-        tar_dir = (
-            self.config.outdir / str(self.config.filename).split(".", maxsplit=1)[0]
-        )
+        tar_dir = self.config.outdir / self.config.filename_stemmed
         self._move_tar_contents(base_dir=self.config.outdir, tar_dir=tar_dir)
 
         if self.verbose:
@@ -166,6 +188,8 @@ class Downloader:
 
     def get(self):
         """Downloads the database .tar.gz file from Zenodo."""
+        self.check_outdir_exists()
+
         try:
             self.get_stats()
             self._download()
