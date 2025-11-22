@@ -182,7 +182,7 @@ def get_log_dir() -> Path:
     return get_config()["logs"]
 
 
-def get_default_log_dir():
+def get_default_log_dir() -> Path:
     """Returns path to default logging directory."""
     return get_metahq_home()
 
