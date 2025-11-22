@@ -163,7 +163,7 @@ def get_config_file():
 
 
 def get_config_file_no_check():
-    """Only used to intialize MetaHQ."""
+    """Only used to initialize MetaHQ."""
     return get_metahq_home() / "config.yaml"
 
 
