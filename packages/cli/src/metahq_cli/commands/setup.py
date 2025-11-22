@@ -7,8 +7,6 @@ Date: 2025-09-05
 Last updated: 2025-11-21 by Parker Hicks
 """
 
-from importlib.metadata import version
-
 import click
 from metahq_core.util.progress import console
 from metahq_core.util.supported import get_default_data_dir, get_default_log_dir
@@ -18,8 +16,6 @@ from metahq_cli.setup.config import Config
 from metahq_cli.setup.downloader import Downloader
 from metahq_cli.util.helpers import set_verbosity
 from metahq_cli.util.supported import LATEST_DATABASE, log_level_opt
-
-METAHQ_VERSION = version("metahq_core")
 
 
 @click.command
@@ -50,12 +46,19 @@ def setup(doi: str, data_dir: str, loglevel: str, logdir: str, quiet: bool):
         data_dir = str(get_default_data_dir())
 
     logger.info("Downloading MetaHQ database...")
-    downloader = Downloader(doi, data_dir, logger=logger, verbose=verbose)
+    downloader = Downloader(
+        doi, data_dir, logger=logger, logdir=logdir, verbose=verbose
+    )
     downloader.get()
     downloader.extract()
 
     logger.info("Configuring MetaHQ...")
     config = Config(
-        METAHQ_VERSION, doi, data_dir, logdir, logger=logger, verbose=verbose
+        downloader.database_version,
+        doi,
+        data_dir,
+        logdir,
+        logger=logger,
+        verbose=verbose,
     )
     config.setup()
