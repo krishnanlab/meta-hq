@@ -77,10 +77,7 @@ class FileConfig:
     outdir: Path
     filesize: int | None = None
 
-    def __post_init__(self):
-        self.outdir = checkdir(self.outdir)
-
-    def check_outdir(self):
+    def make_outdir(self):
         """Check that outdir exists."""
         checkdir(self.outdir)
 
@@ -148,12 +145,15 @@ class Downloader:
         outdir: str | Path = DEFAULT_OUTDIR,
         logger=None,
         loglevel=20,
+        logdir=Path("."),
         verbose=True,
     ):
         self.config: FileConfig = self._make_config(doi, outdir)
 
         if logger is None:
-            logger = setup_logger(__name__, level=loglevel, console=get_console())
+            logger = setup_logger(
+                __name__, level=loglevel, log_dir=logdir, console=get_console()
+            )
         self.logger: logging.Logger = logger
         self.verbose: bool = verbose
 
@@ -168,10 +168,12 @@ class Downloader:
             ):
                 self.logger.info("Removing existing data directory...")
                 shutil.rmtree(self.config.outdir)
-                self.config.check_outdir()
+                self.config.make_outdir()
             else:
                 self.logger.info("Keeping existing data directory.")
                 sys.exit("Terminating...")
+        else:
+            self.config.make_outdir()
 
     def extract(self):
         """Extract the tar archive."""
@@ -240,6 +242,11 @@ class Downloader:
                 self.logger.warning("Could not determine file size.")
                 self.logger.info("Downloading without progress bar.")
 
+    @property
+    def database_version(self) -> str:
+        """Return the MetaHQ database version."""
+        return self.config.version
+
     # ========================================
     # ======  downloaders
     # ========================================
@@ -279,7 +286,9 @@ class Downloader:
 
     def _extract(self):
         with tarfile.open(self.config.outfile, mode="r:gz") as tar:
-            tar.extractall(path=self.config.outdir, members=tar.getmembers())
+            tar.extractall(
+                path=self.config.outdir, members=tar.getmembers(), filter="data"
+            )
 
     def _move_tar_contents(self, base_dir: Path, tar_dir: Path):
         target_dir = base_dir
