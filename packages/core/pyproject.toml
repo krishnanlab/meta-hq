@@ -1,6 +1,6 @@
 [project]
 name = "metahq-core"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Core API for the meta-hq CLI."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -50,6 +50,13 @@ test = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/metahq_core/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.git", "/__pycache__", "*.pyc"]
+include = ["src/metahq_core"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/metahq_core"]
