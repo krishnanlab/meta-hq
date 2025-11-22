@@ -83,7 +83,7 @@ class FileConfig:
 
     @property
     def filename_stemmed(self) -> str:
-        """Return file name without any extentions."""
+        """Return file name without any extensions."""
         return str(self.filename).split(".", maxsplit=1)[0]
 
     @property
