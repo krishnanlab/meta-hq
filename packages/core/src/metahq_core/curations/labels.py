@@ -4,12 +4,12 @@ Class for mutating and operating on sets of labels.
 Author: Parker Hicks
 Date: 2025-08-13
 
-Last updated: 2025-09-12 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
 from __future__ import annotations
 
-import warnings
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -102,7 +102,9 @@ class Labels(BaseCuration):
         index_col: str,
         group_cols: tuple[str, ...] = ("group", "platform"),
         collapsed: bool = False,
-        logger=setup_logger(__name__),
+        logger=None,
+        loglevel=20,
+        logdir=Path("."),
         verbose=True,
     ):
         self.data = data
@@ -112,6 +114,8 @@ class Labels(BaseCuration):
         self.collapsed = collapsed
         self.controls: bool = False
 
+        if logger is None:
+            logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
 

@@ -17,7 +17,6 @@ from metahq_core.util.supported import get_log_dir, get_ontology_search_db
 from metahq_cli.logger import setup_logger
 
 DEFAULT_TOP_HITS = 3
-DEFAULT_LOG_DIR = get_log_dir()
 
 
 @click.command(name="search", context_settings={"help_option_names": ["-h", "--help"]})
@@ -68,7 +67,6 @@ DEFAULT_LOG_DIR = get_log_dir()
     type=click.Choice(["notset", "debug", "info", "warning", "error", "critical"]),
     default="info",
 )
-@click.option("--logdir", type=click.Path(), default=DEFAULT_LOG_DIR)
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Emits debug information"
 )
@@ -82,12 +80,11 @@ def search(
     extended,
     scopes,
     loglevel,
-    logdir,
     verbose,
 ):
     """Search for terms in the ontology database."""
     logger = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=logdir
+        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
     )
 
     if db == "default":

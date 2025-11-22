@@ -4,26 +4,22 @@ Logger setup.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from metahq_core.util.supported import get_log_dir
 from rich.logging import RichHandler
 
 from metahq_cli.util.checkers import check_loglevel
 
 if TYPE_CHECKING:
     from rich.console import Console
-
-DEFAULT_LOGS = get_log_dir()
 
 
 class ColoredFormatter(logging.Formatter):
@@ -47,8 +43,8 @@ class ColoredFormatter(logging.Formatter):
 def setup_logger(
     name: str,
     console: Console,
+    log_dir: str | Path,
     level: int | str = logging.INFO,
-    log_dir: str | Path = DEFAULT_LOGS,
 ) -> logging.Logger:
     """
     Sets up a logger.
@@ -98,9 +94,8 @@ def setup_logger(
     logger.addHandler(console_handler)
 
     # file handler
-    date_time = datetime.now().strftime("%m-%d-%Y__%Hhr_%Mmin")
     file_handler = TimedRotatingFileHandler(
-        Path(log_dir) / f"{date_time}.log",
+        Path(log_dir) / "log.log",
         when="midnight",
         interval=1,
         backupCount=30,

@@ -1,6 +1,6 @@
 [project]
 name = "metahq-cli"
-version = "0.1.0"
+dynamic = ["version"]
 description = "The meta-hq CLI."
 requires-python = ">=3.11"
 readme = "README.md"
@@ -23,6 +23,7 @@ dependencies = [
     "click>=8.3.0",
     "metahq-core>=0.1.0",
     "rich>=13.0.0",
+    "requests>=2.30.0",
 ]
 
 [project.optional-dependencies]
@@ -47,6 +48,13 @@ metahq = "metahq_cli.main:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/metahq_cli/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.git", "/__pycache__", "*.pyc"]
+include = ["src/metahq_cli"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/metahq_cli"]

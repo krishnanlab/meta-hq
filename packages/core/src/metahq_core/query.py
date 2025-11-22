@@ -4,9 +4,10 @@ Class to query the annotations dictionary.
 Author: Parker Hicks
 Date: 2025-03
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import polars as pl
@@ -347,7 +348,9 @@ class Query:
         ecode="expert-curated",
         species="human",
         technology="rnaseq",
-        logger=setup_logger(__name__),
+        logger=None,
+        loglevel=20,
+        logdir=Path("."),
         verbose=True,
     ):
         self.database: str = database
@@ -359,6 +362,8 @@ class Query:
 
         self._annotations: dict[str, Any] = self._load_annotations()
 
+        if logger is None:
+            logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
 

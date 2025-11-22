@@ -12,8 +12,10 @@ The values of these DataFrames answer the following questions with a
 Author: Parker Hicks
 Date: 2025-11-17
 
-Last updated: 2025-11-17 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
+
+from pathlib import Path
 
 import polars as pl
 
@@ -33,11 +35,11 @@ class RelationsLoader:
 
     """
 
-    def __init__(self, file, logger=None, loglevel=20):
+    def __init__(self, file, logger=None, loglevel=20, logdir=Path(".")):
         self.relations: pl.LazyFrame = self.setup(file)
 
         if logger is None:
-            logger = setup_logger(__name__, level=loglevel)
+            logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.logger = logger
 
     def setup(self, file) -> pl.LazyFrame:

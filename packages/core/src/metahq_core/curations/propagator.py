@@ -18,9 +18,10 @@ given a negative label for that term.
 Author: Parker Hicks
 Date: 2025-04-23
 
-Last updated: 2025-11-18 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -78,7 +79,9 @@ class Propagator:
         anno,
         to_terms,
         relatives,
-        logger=setup_logger(__name__),
+        logger=None,
+        loglevel=20,
+        logdir=Path("."),
         verbose=True,
     ):
         self.ontology: str = ontology
@@ -89,6 +92,8 @@ class Propagator:
         self._relatives: list[str] = relatives
         self._load_family()
 
+        if logger is None:
+            logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
         self._propagator = MultiprocessPropagator(logger=logger, verbose=verbose)

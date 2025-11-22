@@ -4,7 +4,7 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-21 by Parker Hicks
 """
 
 import click
@@ -14,10 +14,9 @@ from metahq_core.util.supported import age_groups, get_log_dir
 from metahq_cli.logger import setup_logger
 from metahq_cli.retrieval_builder import Builder
 from metahq_cli.retriever import Retriever
+from metahq_cli.util.supported import log_level_opt
 
-DEFAULT_LOG_DIR = get_log_dir()
-
-LOGLEVEL_OPT = click.Choice(["notset", "debug", "info", "warning", "error", "critical"])
+LOGLEVEL_OPT = log_level_opt()
 FMT_OPT = click.Choice(["csv", "tsv", "parquet", "json"])
 LEVEL_OPT = click.Choice(["sample", "series"])
 MODE_OPT = click.Choice(["direct", "propagate", "label"])
@@ -59,23 +58,19 @@ def retrieve_commands():
 @click.option("--metadata", type=str, default="default")
 @click.option("--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level.")
 @click.option(
-    "--logdir",
-    type=click.Path(),
-    default=DEFAULT_LOG_DIR,
-    help="Path to directory storing logs.",
-)
-@click.option(
     "--quiet", is_flag=True, default=False, help="No log or console output if applied."
 )
 def retrieve_tissues(
-    terms, level, mode, fmt, metadata, filters, output, loglevel, logdir, quiet
+    terms, level, mode, fmt, metadata, filters, output, loglevel, quiet
 ):
     """Retrieval command for tissue ontology terms."""
     if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
-    log = setup_logger(__name__, console=get_console(), level=loglevel, log_dir=logdir)
+    log = setup_logger(
+        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+    )
 
     builder = Builder(logger=log, verbose=verbose)
 
@@ -116,23 +111,19 @@ def retrieve_tissues(
 )
 @click.option("--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level.")
 @click.option(
-    "--logdir",
-    type=click.Path(),
-    default=DEFAULT_LOG_DIR,
-    help="Path to directory storing logs.",
-)
-@click.option(
     "--quiet", is_flag=True, default=False, help="No log or console output if applied."
 )
 def retrieve_diseases(
-    terms, level, mode, fmt, metadata, filters, output, loglevel, logdir, quiet
+    terms, level, mode, fmt, metadata, filters, output, loglevel, quiet
 ):
     """Retrieval command for disease ontology terms."""
     if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
-    log = setup_logger(__name__, console=get_console(), level=loglevel, log_dir=logdir)
+    log = setup_logger(
+        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+    )
 
     builder = Builder(logger=log, verbose=verbose)
 
@@ -170,21 +161,17 @@ def retrieve_diseases(
 )
 @click.option("--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level.")
 @click.option(
-    "--logdir",
-    type=click.Path(),
-    default=DEFAULT_LOG_DIR,
-    help="Path to directory storing logs.",
-)
-@click.option(
     "--quiet", is_flag=True, default=False, help="No log or console output if applied."
 )
-def retrieve_sex(terms, level, fmt, metadata, filters, output, loglevel, logdir, quiet):
+def retrieve_sex(terms, level, fmt, metadata, filters, output, loglevel, quiet):
     """Retrieval command for sex annotations."""
     if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
-    log = setup_logger(__name__, console=get_console(), level=loglevel, log_dir=logdir)
+    log = setup_logger(
+        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+    )
 
     builder = Builder(logger=log, verbose=verbose)
 
@@ -227,21 +214,17 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, loglevel, logdir,
 )
 @click.option("--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level.")
 @click.option(
-    "--logdir",
-    type=click.Path(),
-    default=DEFAULT_LOG_DIR,
-    help="Path to directory storing logs.",
-)
-@click.option(
     "--quiet", is_flag=True, default=False, help="No log or console output if applied."
 )
-def retrieve_age(terms, level, fmt, metadata, filters, output, loglevel, logdir, quiet):
+def retrieve_age(terms, level, fmt, metadata, filters, output, loglevel, quiet):
     """Retrieval command for age group annotations."""
     if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
-    log = setup_logger(__name__, console=get_console(), level=loglevel, log_dir=logdir)
+    log = setup_logger(
+        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+    )
 
     builder = Builder(logger=log, verbose=verbose)
 
