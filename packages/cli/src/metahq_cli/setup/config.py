@@ -126,7 +126,7 @@ class Config:
         self.save_config(self.make_config())
 
     def initialize_config(self):
-        """Updated the meta-hq config file."""
+        """Initialize the meta-hq config file."""
         config = {
             "version": self.version,
             "zenodo_doi": self.zenodo_doi,
@@ -135,7 +135,7 @@ class Config:
         }
 
         if self.verbose:
-            self.logger.debug("Initialized configuration: %s", config)
+            self.logger.debug("New configuration: %s", config)
 
         return config
 
