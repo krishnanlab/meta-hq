@@ -73,7 +73,7 @@ def metahq_dois(doi: str) -> dict[str, str]:
     }
     if not doi in dois:
         available = list(dois.keys())
-        raise ValueError(f"Expected doi in {available}, got {dois}.")
+        raise ValueError(f"Expected doi in {available}, got {doi}.")
 
     return dois[doi]
 
