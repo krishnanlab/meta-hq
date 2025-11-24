@@ -1,6 +1,6 @@
 """
 Definition of common arguments across CLI commands. Exists to
-remove redundancy and improve readibility in CLI command
+remove redundancy and improve readability in CLI command
 definitions.
 
 Author: Parker Hicks
