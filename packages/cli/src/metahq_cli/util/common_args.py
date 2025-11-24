@@ -24,7 +24,7 @@ def logging_args(command):
     """Decorator to assign logging arguments across CLI commands."""
 
     @click.option(
-        "--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level."
+        "--log-level", type=LOGLEVEL_OPT, default="info", help="Logging level."
     )
     @click.option(
         "--quiet",
