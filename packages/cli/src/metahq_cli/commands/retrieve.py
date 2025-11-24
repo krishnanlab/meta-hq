@@ -28,6 +28,35 @@ def set_verbosity(quiet: bool):
     return True
 
 
+def check_direct(mode: str, direct: bool, verbose: bool, logger) -> str:
+    """Checks if direct flag was passed to return direct annotations.
+
+    Parameters
+    ----------
+    mode: str
+        The user's passed mode. Either annotate or label.
+
+    direct: bool
+        Value of the `direct` command argument.
+
+    verbose: bool
+        Verbosity yes or no.
+
+    logger: logging.Logger
+        Initialized Python Logger object.
+
+    Returns
+    -------
+    'direct' if `direct` is True, otherwise mode.
+
+    """
+    if direct:
+        if verbose:
+            logger.info("Overriding passed mode '%s' with 'direct'.", mode)
+        return "direct"
+    return mode
+
+
 # ===================================================
 # ==== entry point
 # ===================================================
@@ -60,8 +89,15 @@ def retrieve_commands():
 @click.option(
     "--quiet", is_flag=True, default=False, help="No log or console output if applied."
 )
+@click.option(
+    "--direct",
+    is_flag=True,
+    default=False,
+    help="Get direct annotations. Hidden because not practical.",
+    hidden=True,
+)
 def retrieve_tissues(
-    terms, level, mode, fmt, metadata, filters, output, loglevel, quiet
+    terms, level, mode, fmt, metadata, filters, output, loglevel, quiet, direct
 ):
     """Retrieval command for tissue ontology terms."""
     if metadata == "default":
@@ -72,6 +108,8 @@ def retrieve_tissues(
         __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
     )
 
+    # hidden from user. Used to test annotation quality.
+    mode = check_direct(mode, direct, verbose, log)
     builder = Builder(logger=log, verbose=verbose)
 
     # parse and check filters
