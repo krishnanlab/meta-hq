@@ -48,7 +48,7 @@ def retrieval_args(command):
     @click.option(
         "--filters",
         type=str,
-        default="species=human,ecode=expert,technology=rnaseq",
+        default="species=human,ecode=expert,tech=rnaseq",
         help="Filters for species, ecode, and technology. Run `metahq supported` for options.",
     )
     @click.option(
