@@ -4,22 +4,22 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 import click
 from metahq_core.util.progress import get_console
-from metahq_core.util.supported import age_groups, get_log_dir
+from metahq_core.util.supported import get_log_dir, supported
 
 from metahq_cli.logger import setup_logger
 from metahq_cli.retrieval_builder import Builder
 from metahq_cli.retriever import Retriever
-from metahq_cli.util.supported import log_level_opt
 
-LOGLEVEL_OPT = log_level_opt()
-FMT_OPT = click.Choice(["csv", "tsv", "parquet", "json"])
-LEVEL_OPT = click.Choice(["sample", "series"])
-MODE_OPT = click.Choice(["direct", "propagate", "label"])
+LOGLEVEL_OPT = click.Choice(supported("log_levels"))
+FMT_OPT = click.Choice(supported("formats"))
+LEVEL_OPT = click.Choice(supported("levels"))
+MODE_OPT = click.Choice(supported("modes"))
+AGE_GROUP_OPT = click.Choice(supported("age_groups") + ["all"])
 
 
 def set_verbosity(quiet: bool):
@@ -40,7 +40,7 @@ def retrieve_commands():
 @click.option("--terms", type=str, default="UBERON:0000948,UBERON:0000955")
 @click.option("--level", type=LEVEL_OPT, default="sample", help="GEO annotation level.")
 @click.option(
-    "--mode", type=MODE_OPT, default="direct", help="Mode to retrieve annotations."
+    "--mode", type=MODE_OPT, default="annotate", help="Retrieve annotations or labels."
 )
 @click.option(
     "--filters",
@@ -193,9 +193,9 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, loglevel, quiet):
 @retrieve_commands.command("age")
 @click.option(
     "--terms",
-    type=str,
+    type=AGE_GROUP_OPT,
     default="all",
-    help=f"Choose from {age_groups()}. Can combine like 'fetus,adult'.",
+    help="Age groups to choose. Can combine like 'fetus,adult'.",
 )
 @click.option("--level", type=LEVEL_OPT, default="sample", help="GEO annotation level.")
 @click.option(

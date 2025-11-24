@@ -4,24 +4,30 @@ Command to set up the meta-hq CLI.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 import click
 from metahq_core.util.progress import console
-from metahq_core.util.supported import get_default_data_dir, get_default_log_dir
+from metahq_core.util.supported import (
+    get_default_data_dir,
+    get_default_log_dir,
+    supported,
+)
 
 from metahq_cli.logger import setup_logger
 from metahq_cli.setup.config import Config
 from metahq_cli.setup.downloader import Downloader
 from metahq_cli.util.helpers import set_verbosity
-from metahq_cli.util.supported import LATEST_DATABASE, log_level_opt
+from metahq_cli.util.supported import LATEST_DATABASE
+
+LOG_LEVEL_OPT = click.Choice(supported("log_levels"))
 
 
 @click.command
 @click.option("--doi", type=str, default="latest")
 @click.option("--data_dir", type=click.Path(), default="default")
-@click.option("--loglevel", type=log_level_opt(), default="info", help="Logging level.")
+@click.option("--loglevel", type=LOG_LEVEL_OPT, default="info", help="Logging level.")
 @click.option(
     "--logdir",
     type=str,

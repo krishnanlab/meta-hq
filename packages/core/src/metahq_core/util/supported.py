@@ -71,7 +71,7 @@ def _log_levels() -> list[str]:
 
 
 def _modes() -> list[str]:
-    return ["direct", "propagate", "label"]
+    return ["annotate", "label"]
 
 
 # tmp fix. Need to find out why these are included in anno
