@@ -4,7 +4,7 @@ Facilitates argument and curation parsing for metaHQ retrieval commands.
 Author: Parker Hicks
 Date: 2025-09-25
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -138,7 +138,7 @@ class Retriever:
         if self.curation_config.mode == "direct":
             return self._direct_annotations(curation)
 
-        if self.curation_config.mode == "propagate":
+        if self.curation_config.mode == "annotate":
             return self._propagate_annotations(curation, mode=0)
 
         if self.curation_config.mode == "label":

@@ -4,7 +4,7 @@ Class to take retrieval arguments, check them, and build the retrieval query.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-11-19 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 from typing import TYPE_CHECKING
