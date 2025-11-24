@@ -122,9 +122,9 @@ Try propagating or use different conditions."""
         check_mode("age", mode)
 
         if _terms == "all":
-            from metahq_core.util.supported import age_groups
+            from metahq_core.util.supported import supported
 
-            _terms = age_groups()
+            _terms = supported("age_groups")
 
         elif isinstance(_terms, str):
             _terms = _terms.split(",")
