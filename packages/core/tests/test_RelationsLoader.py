@@ -16,7 +16,7 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from metahq_core.ontology.loader import ROW_ID, COL_ID, RelationsLoader
+from metahq_core.ontology.loader import COL_ID, ROW_ID, RelationsLoader
 
 
 @pytest.fixture
@@ -44,18 +44,20 @@ def sample_relations_data():
     - Row C: descendants of C are [C]
     - Row D: descendants of D are [D]
     """
-    return pl.DataFrame({
-        "A": [1, 0, 0, 0],  # Column A: only A itself is its ancestor
-        "B": [1, 1, 0, 0],  # Column B: A and B are ancestors of B
-        "C": [1, 0, 1, 0],  # Column C: A and C are ancestors of C
-        "D": [1, 1, 0, 1],  # Column D: A, B, and D are ancestors of D
-    })
+    return pl.DataFrame(
+        {
+            "A": [1, 0, 0, 0],  # Column A: only A itself is its ancestor
+            "B": [1, 1, 0, 0],  # Column B: A and B are ancestors of B
+            "C": [1, 0, 1, 0],  # Column C: A and C are ancestors of C
+            "D": [1, 1, 0, 1],  # Column D: A, B, and D are ancestors of D
+        }
+    )
 
 
 @pytest.fixture
 def sample_parquet_file(sample_relations_data):
     """Create a temporary parquet file with sample relations data."""
-    with tempfile.NamedTemporaryFile(mode='wb', suffix='.parquet', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="wb", suffix=".parquet", delete=False) as f:
         temp_path = f.name
         sample_relations_data.write_parquet(temp_path)
 
@@ -85,7 +87,8 @@ class TestRelationsLoader:
     def test_init_with_custom_logger(self, sample_parquet_file):
         """Test that RelationsLoader accepts a custom logger."""
         from metahq_core.logger import setup_logger
-        custom_logger = setup_logger("test_logger", level=10)
+
+        custom_logger = setup_logger("test_logger", level=10, log_dir=Path("."))
 
         loader = RelationsLoader(sample_parquet_file, logger=custom_logger)
 
@@ -306,8 +309,9 @@ class TestRelationsLoaderEdgeCases:
             for ancestor in ancestor_list:
                 # If ancestor is an ancestor of term,
                 # then term should be a descendant of ancestor
-                assert term in descendants.get(ancestor, []), \
-                    f"{ancestor} is ancestor of {term}, but {term} not in descendants of {ancestor}"
+                assert term in descendants.get(
+                    ancestor, []
+                ), f"{ancestor} is ancestor of {term}, but {term} not in descendants of {ancestor}"
 
     def test_self_relationships(self, loader):
         """Test that terms are their own ancestors and descendants."""

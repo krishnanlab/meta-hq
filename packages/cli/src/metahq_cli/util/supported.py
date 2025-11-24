@@ -4,23 +4,12 @@ Settings for supported CLI options.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-11-20 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 from pathlib import Path
 
-import click
-
 LATEST_DATABASE: dict[str, str] = {"version": "v1.0.1-alpha", "doi": "17666183"}
-
-
-def formats() -> list[str]:
-    return ["parquet", "tsv", "csv", "json"]
-
-
-def log_level_opt() -> click.Choice:
-    """Returns available logging level choices."""
-    return click.Choice(["notset", "debug", "info", "warning", "error", "critical"])
 
 
 def log_map() -> dict[str, int]:
@@ -36,7 +25,7 @@ def log_map() -> dict[str, int]:
 
 
 def required_filters() -> list[str]:
-    return ["species", "technology", "ecode"]
+    return ["species", "tech", "ecode"]
 
 
 def sample_ids() -> list[str]:

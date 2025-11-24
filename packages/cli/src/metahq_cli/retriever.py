@@ -4,7 +4,7 @@ Facilitates argument and curation parsing for metaHQ retrieval commands.
 Author: Parker Hicks
 Date: 2025-09-25
 
-Last updated: 2025-10-16 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ class QueryConfig:
     level: str
     ecode: str
     species: str
-    technology: str
+    tech: str
 
 
 @dataclass
@@ -107,7 +107,7 @@ class Retriever:
     def curate(self, annotations: Annotations):
         """Mutate curations by specified mode."""
         if annotations.n_indices == 0:
-            msg = "No annotations for any terms. Try propagating or use different contitions."
+            msg = "No annotations for any terms. Try using different conditions."
             self.log.error(msg)
             raise NoResultsFound(msg)
 
@@ -138,7 +138,7 @@ class Retriever:
         if self.curation_config.mode == "direct":
             return self._direct_annotations(curation)
 
-        if self.curation_config.mode == "propagate":
+        if self.curation_config.mode == "annotate":
             return self._propagate_annotations(curation, mode=0)
 
         if self.curation_config.mode == "label":
@@ -187,7 +187,7 @@ class Retriever:
             level=self.query_config.level,
             ecode=self.query_config.ecode,
             species=self.query_config.species,
-            technology=self.query_config.technology,
+            technology=self.query_config.tech,
             logger=self.log,
             verbose=self.verbose,
         ).annotations()
@@ -204,15 +204,17 @@ class Retriever:
         ]
 
         if len(not_in_anno) == len(self.curation_config.terms):
-            msg = "No annotations for any terms. Try propagating or use different contitions."
+            msg = "No annotations for any terms. Try using different conditions."
             self.log.error(msg)
             raise NoResultsFound(msg)
 
         if self.verbose:
             if len(terms_with_anno) != len(self.curation_config.terms):
+                if len(not_in_anno) > 10:
+                    not_in_anno = TruncatedList(not_in_anno)
                 self.log.warning(
-                    "%s have no annotations. Try propagating or use different conditions.",
-                    TruncatedList(not_in_anno),
+                    "Queries: %s have no annotations. Try using different conditions.",
+                    not_in_anno,
                 )
         return terms_with_anno
 

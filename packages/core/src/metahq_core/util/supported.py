@@ -1,10 +1,13 @@
 """
 This script stores file path constants and functions to retrieve those paths.
 
+Functions beginning with an underscore are intended to be called through the
+`supported` function or are just helpers.
+
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 from pathlib import Path
@@ -52,13 +55,23 @@ def _ecodes() -> dict[str, str]:
     }
 
 
+def _formats() -> list[str]:
+    """Returns supported save formats."""
+    return ["parquet", "tsv", "csv", "json"]
+
+
 def _levels() -> list[str]:
     """Return supported annotation levels."""
     return ["sample", "series"]
 
 
+def _log_levels() -> list[str]:
+    """Return supported logger levels."""
+    return ["notset", "debug", "info", "warning", "error", "critical"]
+
+
 def _modes() -> list[str]:
-    return ["direct", "propagate", "label"]
+    return ["annotate", "label"]
 
 
 # tmp fix. Need to find out why these are included in anno
@@ -100,7 +113,7 @@ def _technologies() -> list[str]:
     return ["microarray", "rnaseq"]
 
 
-def age_groups() -> list[str]:
+def _age_groups() -> list[str]:
     """Return supported age groups."""
     return [
         "fetus",
@@ -364,7 +377,9 @@ def _supported() -> dict[str, list[str]]:
     """Returns mapping between all supported entities and their items."""
     return {
         "attributes": _attributes(),
+        "age_groups": _age_groups(),
         "ecodes": list(_ecodes().keys()),
+        "formats": _formats(),
         "levels": _levels(),
         "modes": _modes(),
         "ontologies": _ontologies(),
@@ -372,6 +387,7 @@ def _supported() -> dict[str, list[str]]:
         "series_metadata": _series_metadata(),
         "species": list(species_map().keys()),
         "technologies": _technologies(),
+        "log_levels": _log_levels(),
     }
 
 

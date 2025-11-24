@@ -4,7 +4,7 @@ Class to take retrieval arguments, check them, and build the retrieval query.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-11-19 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 from typing import TYPE_CHECKING
@@ -88,7 +88,7 @@ Try propagating or use different conditions."""
         """
         check_filter("ecodes", filters["ecode"])
         check_filter("species", filters["species"])
-        check_filter("technologies", filters["technology"])
+        check_filter("technologies", filters["tech"])
 
         return QueryConfig(
             database=db,
@@ -96,7 +96,7 @@ Try propagating or use different conditions."""
             level=level,
             ecode=filters["ecode"],
             species=filters["species"],
-            technology=filters["technology"],
+            tech=filters["tech"],
         )
 
     def make_sex_curation(self, terms: str, mode: str):
@@ -122,9 +122,9 @@ Try propagating or use different conditions."""
         check_mode("age", mode)
 
         if _terms == "all":
-            from metahq_core.util.supported import age_groups
+            from metahq_core.util.supported import supported
 
-            _terms = age_groups()
+            _terms = supported("age_groups")
 
         elif isinstance(_terms, str):
             _terms = _terms.split(",")
@@ -187,11 +187,6 @@ Try propagating or use different conditions."""
                 self.log.error(msg)
 
             raise ValueError(msg)
-
-    def set_verbosity(self, quiet: bool):
-        if quiet:
-            return False
-        return True
 
     def _parse_filters(self, filters: str) -> dict[str, str]:
         as_list: list[list[str]] = [f.split("=") for f in filters.split(",")]

@@ -8,17 +8,16 @@ for CLI-based checks and MetaHQ core function checks.
 Author: Parker Hicks
 Date: 2025-09
 
-Last updated: 2025-10-15 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 from pathlib import Path
 
 from metahq_core.util.io import checkdir, load_txt
 from metahq_core.util.supported import supported
-from numpy import log
 
 from metahq_cli.util.messages import error
-from metahq_cli.util.supported import formats, log_map, required_filters
+from metahq_cli.util.supported import log_map, required_filters
 
 
 def check_filter_keys(filters: dict[str, str]):
@@ -78,7 +77,7 @@ def check_metadata(level: str, metadata: str):
 
 
 def check_format(fmt: str):
-    _supported = formats()
+    _supported = supported("formats")
     if fmt not in _supported:
         error(f"Expected fmt argument in {_supported}, got {fmt}.")
 

@@ -4,28 +4,53 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 import click
 from metahq_core.util.progress import get_console
-from metahq_core.util.supported import age_groups, get_log_dir
+from metahq_core.util.supported import get_log_dir, supported
 
 from metahq_cli.logger import setup_logger
 from metahq_cli.retrieval_builder import Builder
 from metahq_cli.retriever import Retriever
-from metahq_cli.util.supported import log_level_opt
+from metahq_cli.util.common_args import (
+    logging_args,
+    ontology_retrieval_args,
+    retrieval_args,
+)
+from metahq_cli.util.helpers import set_verbosity
 
-LOGLEVEL_OPT = log_level_opt()
-FMT_OPT = click.Choice(["csv", "tsv", "parquet", "json"])
-LEVEL_OPT = click.Choice(["sample", "series"])
-MODE_OPT = click.Choice(["direct", "propagate", "label"])
+AGE_GROUP_OPT = click.Choice(supported("age_groups") + ["all"])
 
 
-def set_verbosity(quiet: bool):
-    if quiet:
-        return False
-    return True
+def check_direct(mode: str, direct: bool, verbose: bool, logger) -> str:
+    """Checks if direct flag was passed to return direct annotations.
+
+    Parameters
+    ----------
+    mode: str
+        The user's passed mode. Either annotate or label.
+
+    direct: bool
+        Value of the `direct` command argument.
+
+    verbose: bool
+        Verbosity yes or no.
+
+    logger: logging.Logger
+        Initialized Python Logger object.
+
+    Returns
+    -------
+    'direct' if `direct` is True, otherwise mode.
+
+    """
+    if direct:
+        if verbose:
+            logger.info("Overriding passed mode '%s' with 'direct'.", mode)
+        return "direct"
+    return mode
 
 
 # ===================================================
@@ -37,31 +62,12 @@ def retrieve_commands():
 
 
 @retrieve_commands.command("tissues")
+@logging_args
+@retrieval_args
+@ontology_retrieval_args
 @click.option("--terms", type=str, default="UBERON:0000948,UBERON:0000955")
-@click.option("--level", type=LEVEL_OPT, default="sample", help="GEO annotation level.")
-@click.option(
-    "--mode", type=MODE_OPT, default="direct", help="Mode to retrieve annotations."
-)
-@click.option(
-    "--filters",
-    type=str,
-    default="species=human,ecode=expert,technology=rnaseq",
-    help="Filters for species, ecode, and technology. Run `metahq supported` for options.",
-)
-@click.option(
-    "--output",
-    type=click.Path(),
-    default="annotations.parquet",
-    help="Path to outfile.",
-)
-@click.option("--fmt", type=FMT_OPT, default="parquet")
-@click.option("--metadata", type=str, default="default")
-@click.option("--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level.")
-@click.option(
-    "--quiet", is_flag=True, default=False, help="No log or console output if applied."
-)
 def retrieve_tissues(
-    terms, level, mode, fmt, metadata, filters, output, loglevel, quiet
+    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
 ):
     """Retrieval command for tissue ontology terms."""
     if metadata == "default":
@@ -69,9 +75,11 @@ def retrieve_tissues(
 
     verbose = set_verbosity(quiet)
     log = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
+    # hidden from user. Used to test annotation quality.
+    mode = check_direct(mode, direct, verbose, log)
     builder = Builder(logger=log, verbose=verbose)
 
     # parse and check filters
@@ -90,31 +98,12 @@ def retrieve_tissues(
 
 
 @retrieve_commands.command("diseases")
+@logging_args
+@retrieval_args
+@ontology_retrieval_args
 @click.option("--terms", type=str, default="MONDO:0004994,MONDO:0018177")
-@click.option("--level", type=LEVEL_OPT, default="sample", help="GEO annotation level.")
-@click.option(
-    "--mode", type=MODE_OPT, default="direct", help="Mode to retrieve annotations."
-)
-@click.option("--fmt", type=FMT_OPT, default="parquet")
-@click.option(
-    "--filters",
-    type=str,
-    default="species=human,ecode=expert,technology=rnaseq",
-    help="Filters for species, ecode, and technology. Run `metahq supported` for options.",
-)
-@click.option("--metadata", type=str, default="default")
-@click.option(
-    "--output",
-    type=click.Path(),
-    default="annotations.parquet",
-    help="Path to outfile.",
-)
-@click.option("--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level.")
-@click.option(
-    "--quiet", is_flag=True, default=False, help="No log or console output if applied."
-)
 def retrieve_diseases(
-    terms, level, mode, fmt, metadata, filters, output, loglevel, quiet
+    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
 ):
     """Retrieval command for disease ontology terms."""
     if metadata == "default":
@@ -122,9 +111,11 @@ def retrieve_diseases(
 
     verbose = set_verbosity(quiet)
     log = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
+    # hidden from user. Used to test annotation quality.
+    mode = check_direct(mode, direct, verbose, log)
     builder = Builder(logger=log, verbose=verbose)
 
     # parse and check filters
@@ -143,34 +134,17 @@ def retrieve_diseases(
 
 
 @retrieve_commands.command("sex")
+@logging_args
+@retrieval_args
 @click.option("--terms", type=str, default="male,female")
-@click.option("--level", type=LEVEL_OPT, default="sample", help="GEO annotation level.")
-@click.option("--fmt", type=FMT_OPT, default="parquet")
-@click.option(
-    "--filters",
-    type=str,
-    default="species=human,ecode=expert,technology=rnaseq",
-    help="Filters for species, ecode, and technology. Run `metahq supported` for options.",
-)
-@click.option("--metadata", type=str, default="default")
-@click.option(
-    "--output",
-    type=click.Path(),
-    default="annotations.parquet",
-    help="Path to outfile.",
-)
-@click.option("--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level.")
-@click.option(
-    "--quiet", is_flag=True, default=False, help="No log or console output if applied."
-)
-def retrieve_sex(terms, level, fmt, metadata, filters, output, loglevel, quiet):
+def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet):
     """Retrieval command for sex annotations."""
     if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
     log = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
     builder = Builder(logger=log, verbose=verbose)
@@ -191,39 +165,22 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, loglevel, quiet):
 
 
 @retrieve_commands.command("age")
+@logging_args
+@retrieval_args
 @click.option(
     "--terms",
-    type=str,
+    type=AGE_GROUP_OPT,
     default="all",
-    help=f"Choose from {age_groups()}. Can combine like 'fetus,adult'.",
+    help="Age groups to choose. Can combine like 'fetus,adult'.",
 )
-@click.option("--level", type=LEVEL_OPT, default="sample", help="GEO annotation level.")
-@click.option(
-    "--filters",
-    type=str,
-    default="species=human,ecode=expert,technology=rnaseq",
-    help="Filters for species, ecode, and technology. Run `metahq supported` for options.",
-)
-@click.option("--metadata", type=str, default="default")
-@click.option("--fmt", type=FMT_OPT, default="parquet")
-@click.option(
-    "--output",
-    type=click.Path(),
-    default="annotations.parquet",
-    help="Path to outfile.",
-)
-@click.option("--loglevel", type=LOGLEVEL_OPT, default="info", help="Logging level.")
-@click.option(
-    "--quiet", is_flag=True, default=False, help="No log or console output if applied."
-)
-def retrieve_age(terms, level, fmt, metadata, filters, output, loglevel, quiet):
+def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet):
     """Retrieval command for age group annotations."""
     if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
     log = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
     builder = Builder(logger=log, verbose=verbose)
