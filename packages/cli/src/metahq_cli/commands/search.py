@@ -74,13 +74,13 @@ def search(
     scores,
     extended,
     scopes,
-    loglevel,
+    log_level,
     quiet,
 ):
     """Search for terms in the ontology database."""
     verbose = set_verbosity(quiet)
     logger = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
     if db == "default":
