@@ -68,7 +68,7 @@ def retrieval_args(command):
 
 def ontology_retrieval_args(command):
     """
-    Decorator to assign common arguments specific to retrival for
+    Decorator to assign common arguments specific to retrieval for
     ontology-based queries like tisues and diseases
     """
 
