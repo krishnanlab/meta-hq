@@ -12,7 +12,6 @@ from metahq_core.util.progress import console
 from metahq_core.util.supported import (
     get_default_data_dir,
     get_default_log_dir,
-    supported,
 )
 
 from metahq_cli.logger import setup_logger
