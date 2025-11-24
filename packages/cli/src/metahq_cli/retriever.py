@@ -36,7 +36,7 @@ class QueryConfig:
     level: str
     ecode: str
     species: str
-    technology: str
+    tech: str
 
 
 @dataclass
@@ -187,7 +187,7 @@ class Retriever:
             level=self.query_config.level,
             ecode=self.query_config.ecode,
             species=self.query_config.species,
-            technology=self.query_config.technology,
+            technology=self.query_config.tech,
             logger=self.log,
             verbose=self.verbose,
         ).annotations()
