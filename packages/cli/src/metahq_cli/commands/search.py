@@ -5,7 +5,7 @@ on metahq_core.search.search() to do the actual searching.
 Author: Faisal Alquaddoomi
 Date: 2025-09-25
 
-Last updated: 2025-10-20 by Parker Hicks
+Last updated: 2025-11-24 by Parker Hicks
 """
 
 import click
@@ -15,12 +15,15 @@ from metahq_core.util.progress import get_console
 from metahq_core.util.supported import get_log_dir, get_ontology_search_db
 
 from metahq_cli.logger import setup_logger
+from metahq_cli.util.common_args import logging_args
+from metahq_cli.util.helpers import set_verbosity
 
 DEFAULT_TOP_HITS = 3
 
 
 @click.command(name="search", context_settings={"help_option_names": ["-h", "--help"]})
-@click.option("--query", "-q", type=str, required=True, help="Search query")
+@logging_args
+@click.option("--query", type=str, required=True, help="Search query")
 @click.option(
     "--db",
     "-b",
@@ -62,14 +65,6 @@ DEFAULT_TOP_HITS = 3
 @click.option(
     "--scopes", "-x", is_flag=True, default=False, help="Include scopes in synonym list"
 )
-@click.option(
-    "--loglevel",
-    type=click.Choice(["notset", "debug", "info", "warning", "error", "critical"]),
-    default="info",
-)
-@click.option(
-    "--verbose", "-v", is_flag=True, default=False, help="Emits debug information"
-)
 def search(
     query,
     db,
@@ -80,9 +75,10 @@ def search(
     extended,
     scopes,
     loglevel,
-    verbose,
+    quiet,
 ):
     """Search for terms in the ontology database."""
+    verbose = set_verbosity(quiet)
     logger = setup_logger(
         __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
     )
