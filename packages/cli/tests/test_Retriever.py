@@ -29,7 +29,7 @@ class TestQueryConfig:
             level="test_level",
             ecode="test_ecode",
             species="test_species",
-            technology="test_tech",
+            tech="test_tech",
         )
 
         assert config.database == "test_db"
@@ -37,7 +37,7 @@ class TestQueryConfig:
         assert config.level == "test_level"
         assert config.ecode == "test_ecode"
         assert config.species == "test_species"
-        assert config.technology == "test_tech"
+        assert config.tech == "test_tech"
 
 
 class TestCurationConfig:
@@ -81,7 +81,7 @@ class TestRetriever:
             level="test_level",
             ecode="test_ecode",
             species="test_species",
-            technology="test_tech",
+            tech="test_tech",
         )
 
         curation_config = CurationConfig(
@@ -244,7 +244,7 @@ class TestRetriever:
         """test curation with propagate mode"""
         mock_annotations = Mock()
         mock_annotations.n_indices = 10
-        retriever.curation_config.mode = "propagate"
+        retriever.curation_config.mode = "annotate"
 
         with patch.object(retriever, "_propagate_annotations") as mock_propagate:
             mock_propagate.return_value = mock_annotations
@@ -451,7 +451,7 @@ class TestRetriever:
         "mode,expected_mode",
         [
             ("direct", None),  # direct doesn't call propagate
-            ("propagate", 0),
+            ("annotate", 0),
             ("label", 1),
         ],
     )
