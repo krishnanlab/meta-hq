@@ -204,7 +204,7 @@ class Retriever:
         ]
 
         if len(not_in_anno) == len(self.curation_config.terms):
-            msg = "No annotations for any terms. Try using different contitions."
+            msg = "No annotations for any terms. Try using different conditions."
             self.log.error(msg)
             raise NoResultsFound(msg)
 
