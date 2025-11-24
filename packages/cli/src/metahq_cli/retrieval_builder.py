@@ -88,7 +88,7 @@ Try propagating or use different conditions."""
         """
         check_filter("ecodes", filters["ecode"])
         check_filter("species", filters["species"])
-        check_filter("technologies", filters["technology"])
+        check_filter("technologies", filters["tech"])
 
         return QueryConfig(
             database=db,
@@ -96,7 +96,7 @@ Try propagating or use different conditions."""
             level=level,
             ecode=filters["ecode"],
             species=filters["species"],
-            technology=filters["technology"],
+            technology=filters["tech"],
         )
 
     def make_sex_curation(self, terms: str, mode: str):

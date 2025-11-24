@@ -25,7 +25,7 @@ def log_map() -> dict[str, int]:
 
 
 def required_filters() -> list[str]:
-    return ["species", "technology", "ecode"]
+    return ["species", "tech", "ecode"]
 
 
 def sample_ids() -> list[str]:
