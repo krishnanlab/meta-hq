@@ -188,11 +188,6 @@ Try propagating or use different conditions."""
 
             raise ValueError(msg)
 
-    def set_verbosity(self, quiet: bool):
-        if quiet:
-            return False
-        return True
-
     def _parse_filters(self, filters: str) -> dict[str, str]:
         as_list: list[list[str]] = [f.split("=") for f in filters.split(",")]
         as_dict: dict[str, str] = {f[0]: f[1] for f in as_list}
