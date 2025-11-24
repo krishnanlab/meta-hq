@@ -54,16 +54,14 @@ class TestBuilder:
                 expected_filters = {
                     "species": "human",
                     "ecode": "expert",
-                    "technology": "rnaseq",
+                    "tech": "rnaseq",
                 }
                 mock_parse.return_value = expected_filters
 
-                result = builder.get_filters(
-                    "species=human,ecode=expert,technology=rnaseq"
-                )
+                result = builder.get_filters("species=human,ecode=expert,tech=rnaseq")
 
                 mock_parse.assert_called_once_with(
-                    "species=human,ecode=expert,technology=rnaseq"
+                    "species=human,ecode=expert,tech=rnaseq"
                 )
                 mock_report.assert_called_once_with(expected_filters)
                 assert result == expected_filters
@@ -71,33 +69,33 @@ class TestBuilder:
     @patch("metahq_cli.retrieval_builder.required_filters")
     def test_parse_filters_success(self, mock_required, builder):
         """test _parse_filters successfully parses valid filter string"""
-        mock_required.return_value = ["species", "ecode", "technology"]
+        mock_required.return_value = ["species", "ecode", "tech"]
 
-        result = builder._parse_filters("species=human,ecode=expert,technology=rnaseq")
+        result = builder._parse_filters("species=human,ecode=expert,tech=rnaseq")
 
         assert result == {
             "species": "human",
             "ecode": "expert",
-            "technology": "rnaseq",
+            "tech": "rnaseq",
         }
 
     @patch("metahq_cli.retrieval_builder.required_filters")
     def test_parse_filters_missing_required_filters(self, mock_required, builder):
         """test _parse_filters raises RuntimeError when required filters are missing"""
-        mock_required.return_value = ["species", "ecode", "technology"]
+        mock_required.return_value = ["species", "ecode", "tech"]
 
         with pytest.raises(RuntimeError) as exc_info:
             builder._parse_filters("species=human,ecode=expert")
 
         assert "Missing required filters" in str(exc_info.value)
-        assert "technology" in str(exc_info.value)
+        assert "tech" in str(exc_info.value)
 
     @patch("metahq_cli.retrieval_builder.required_filters")
     def test_parse_filters_logs_error_on_missing_filters(
         self, mock_required, verbose_builder
     ):
         """test _parse_filters logs error when required filters are missing"""
-        mock_required.return_value = ["species", "ecode", "technology"]
+        mock_required.return_value = ["species", "ecode", "tech"]
 
         with pytest.raises(RuntimeError):
             verbose_builder._parse_filters("species=human,ecode=expert")
@@ -109,7 +107,7 @@ class TestBuilder:
     @patch("metahq_cli.retrieval_builder.required_filters")
     def test_parse_filters_multiple_missing_filters(self, mock_required, builder):
         """test _parse_filters reports all missing required filters"""
-        mock_required.return_value = ["species", "ecode", "technology"]
+        mock_required.return_value = ["species", "ecode", "tech"]
 
         with pytest.raises(RuntimeError) as exc_info:
             builder._parse_filters("species=human")
@@ -117,24 +115,24 @@ class TestBuilder:
         error_msg = str(exc_info.value)
         assert "Missing required filters" in error_msg
         assert "ecode" in error_msg
-        assert "technology" in error_msg
+        assert "tech" in error_msg
 
     @patch("metahq_cli.retrieval_builder.required_filters")
     def test_parse_filters_parses_correctly(self, mock_required, builder):
         """test _parse_filters correctly parses key=value pairs"""
-        mock_required.return_value = ["species", "ecode", "technology"]
+        mock_required.return_value = ["species", "ecode", "tech"]
 
-        result = builder._parse_filters("species=mouse,ecode=all,technology=microarray")
+        result = builder._parse_filters("species=mouse,ecode=all,tech=microarray")
 
         assert result["species"] == "mouse"
         assert result["ecode"] == "all"
-        assert result["technology"] == "microarray"
+        assert result["tech"] == "microarray"
         assert len(result) == 3
 
     @patch("metahq_cli.retrieval_builder.check_filter")
     def test_query_config_creates_config(self, mock_check, builder):
         """test query_config creates QueryConfig with correct parameters"""
-        filters = {"species": "human", "ecode": "expert", "technology": "rnaseq"}
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
         result = builder.query_config("geo", "tissue", "sample", filters)
 
@@ -144,7 +142,7 @@ class TestBuilder:
         assert result.level == "sample"
         assert result.species == "human"
         assert result.ecode == "expert"
-        assert result.technology == "rnaseq"
+        assert result.tech == "rnaseq"
 
         # Check that filters were validated
         assert mock_check.call_count == 3
@@ -152,7 +150,7 @@ class TestBuilder:
     @patch("metahq_cli.retrieval_builder.check_filter")
     def test_query_config_validates_filters(self, mock_check, builder):
         """test query_config validates all filter parameters"""
-        filters = {"species": "human", "ecode": "expert", "technology": "rnaseq"}
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
         builder.query_config("geo", "tissue", "sample", filters)
 
@@ -201,7 +199,7 @@ class TestBuilder:
     def test_report_bad_filters_no_bad_filters(self, mock_check_keys, builder):
         """test report_bad_filters passes when filters are valid"""
         mock_check_keys.return_value = []
-        filters = {"species": "human", "ecode": "expert", "technology": "rnaseq"}
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
         # Should not raise any exception
         builder.report_bad_filters(filters)
@@ -227,18 +225,6 @@ class TestBuilder:
             verbose_builder.report_bad_filters(filters)
 
         verbose_builder.log.error.assert_called_once()
-
-    def test_set_verbosity_returns_false_when_quiet(self, builder):
-        """test set_verbosity returns False when quiet=True"""
-        result = builder.set_verbosity(quiet=True)
-
-        assert result is False
-
-    def test_set_verbosity_returns_true_when_not_quiet(self, builder):
-        """test set_verbosity returns True when quiet=False"""
-        result = builder.set_verbosity(quiet=False)
-
-        assert result is True
 
     @patch("metahq_cli.retrieval_builder.check_if_txt")
     @patch("metahq_cli.retrieval_builder.check_mode")
@@ -277,13 +263,30 @@ class TestBuilder:
         """test make_age_curation with 'all' returns all age groups"""
         mock_check_txt.return_value = "all"
 
-        with patch("metahq_core.util.supported.age_groups") as mock_age_groups:
-            mock_age_groups.return_value = ["fetus", "adult", "child"]
+        with patch("metahq_core.util.supported._age_groups") as mock_age_groups:
+            mock_age_groups.return_value = [
+                "fetus",
+                "infant",
+                "child",
+                "adolescent",
+                "adult",
+                "older_adult",
+                "elderly",
+            ]
             result = builder.make_age_curation("all", "direct")
 
             assert isinstance(result, CurationConfig)
             assert result.mode == "direct"
-            assert result.terms == ["fetus", "adult", "child"]
+            assert result.terms == [
+                "fetus",
+                "infant",
+                "child",
+                "adolescent",
+                "adult",
+                "older_adult",
+                "elderly",
+            ]
+
             assert result.ontology == "age"
             mock_check_mode.assert_called_once_with("age", "direct")
 
@@ -469,15 +472,9 @@ class TestBuilder:
                     "UBERON:0000003",
                 ]
                 mock_onto_class.from_obo.return_value = mock_onto
+                result = builder.parse_onto_terms("all", "uberon")
 
-                with patch(
-                    "metahq_cli.retrieval_builder.ontologies"
-                ) as mock_ontologies:
-                    mock_ontologies.return_value = "path/to/ontology.obo"
-
-                    result = builder.parse_onto_terms("all", "uberon")
-
-                    assert "UBERON:0000001" in result
-                    assert "UBERON:0000002" in result
-                    # UBERON:0000003 is not in available list, so should not be included
-                    assert "UBERON:0000003" not in result
+                assert "UBERON:0000001" in result
+                assert "UBERON:0000002" in result
+                # UBERON:0000003 is not in available list, so should not be included
+                assert "UBERON:0000003" not in result
