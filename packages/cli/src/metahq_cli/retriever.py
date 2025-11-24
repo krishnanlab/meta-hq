@@ -107,7 +107,7 @@ class Retriever:
     def curate(self, annotations: Annotations):
         """Mutate curations by specified mode."""
         if annotations.n_indices == 0:
-            msg = "No annotations for any terms. Try using different contitions."
+            msg = "No annotations for any terms. Try using different conditions."
             self.log.error(msg)
             raise NoResultsFound(msg)
 
