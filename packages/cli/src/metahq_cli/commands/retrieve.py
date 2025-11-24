@@ -19,14 +19,9 @@ from metahq_cli.util.common_args import (
     ontology_retrieval_args,
     retrieval_args,
 )
+from metahq_cli.util.helpers import set_verbosity
 
 AGE_GROUP_OPT = click.Choice(supported("age_groups") + ["all"])
-
-
-def set_verbosity(quiet: bool):
-    if quiet:
-        return False
-    return True
 
 
 def check_direct(mode: str, direct: bool, verbose: bool, logger) -> str:
