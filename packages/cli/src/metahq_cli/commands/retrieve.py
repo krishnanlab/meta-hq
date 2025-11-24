@@ -72,7 +72,7 @@ def retrieve_commands():
 @ontology_retrieval_args
 @click.option("--terms", type=str, default="UBERON:0000948,UBERON:0000955")
 def retrieve_tissues(
-    terms, level, mode, fmt, metadata, filters, output, loglevel, quiet, direct
+    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
 ):
     """Retrieval command for tissue ontology terms."""
     if metadata == "default":
@@ -80,7 +80,7 @@ def retrieve_tissues(
 
     verbose = set_verbosity(quiet)
     log = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
     # hidden from user. Used to test annotation quality.
@@ -108,7 +108,7 @@ def retrieve_tissues(
 @ontology_retrieval_args
 @click.option("--terms", type=str, default="MONDO:0004994,MONDO:0018177")
 def retrieve_diseases(
-    terms, level, mode, fmt, metadata, filters, output, loglevel, quiet, direct
+    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
 ):
     """Retrieval command for disease ontology terms."""
     if metadata == "default":
@@ -116,7 +116,7 @@ def retrieve_diseases(
 
     verbose = set_verbosity(quiet)
     log = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
     # hidden from user. Used to test annotation quality.
@@ -142,14 +142,14 @@ def retrieve_diseases(
 @logging_args
 @retrieval_args
 @click.option("--terms", type=str, default="male,female")
-def retrieve_sex(terms, level, fmt, metadata, filters, output, loglevel, quiet):
+def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet):
     """Retrieval command for sex annotations."""
     if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
     log = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
     builder = Builder(logger=log, verbose=verbose)
@@ -178,14 +178,14 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, loglevel, quiet):
     default="all",
     help="Age groups to choose. Can combine like 'fetus,adult'.",
 )
-def retrieve_age(terms, level, fmt, metadata, filters, output, loglevel, quiet):
+def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet):
     """Retrieval command for age group annotations."""
     if metadata == "default":
         metadata = level
 
     verbose = set_verbosity(quiet)
     log = setup_logger(
-        __name__, console=get_console(), level=loglevel, log_dir=get_log_dir()
+        __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
     builder = Builder(logger=log, verbose=verbose)

@@ -26,19 +26,19 @@ from metahq_cli.util.supported import LATEST_DATABASE
 @click.command
 @logging_args
 @click.option("--doi", type=str, default="latest")
-@click.option("--data_dir", type=click.Path(), default="default")
+@click.option("--data-dir", type=click.Path(), default="default")
 @click.option(
-    "--logdir",
+    "--log-dir",
     type=str,
     default="default",
     help="Path to directory storing logs.",
 )
-def setup(doi: str, data_dir: str, loglevel: str, logdir: str, quiet: bool):
+def setup(doi: str, data_dir: str, log_level: str, log_dir: str, quiet: bool):
     """Creates the meta-hq package configuration file."""
-    if logdir == "default":
-        logdir = str(get_default_log_dir())
+    if log_dir == "default":
+        log_dir = str(get_default_log_dir())
 
-    logger = setup_logger(__name__, level=loglevel, log_dir=logdir, console=console)
+    logger = setup_logger(__name__, level=log_level, log_dir=log_dir, console=console)
     verbose = set_verbosity(quiet)
 
     if doi == "latest":
@@ -49,7 +49,7 @@ def setup(doi: str, data_dir: str, loglevel: str, logdir: str, quiet: bool):
 
     logger.info("Downloading MetaHQ database...")
     downloader = Downloader(
-        doi, data_dir, logger=logger, logdir=logdir, verbose=verbose
+        doi, data_dir, logger=logger, logdir=log_dir, verbose=verbose
     )
     downloader.get()
     downloader.extract()
@@ -59,7 +59,7 @@ def setup(doi: str, data_dir: str, loglevel: str, logdir: str, quiet: bool):
         downloader.database_version,
         doi,
         data_dir,
-        logdir,
+        log_dir,
         logger=logger,
         verbose=verbose,
     )
