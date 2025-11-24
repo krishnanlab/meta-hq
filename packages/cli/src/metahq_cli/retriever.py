@@ -107,7 +107,7 @@ class Retriever:
     def curate(self, annotations: Annotations):
         """Mutate curations by specified mode."""
         if annotations.n_indices == 0:
-            msg = "No annotations for any terms. Try propagating or use different contitions."
+            msg = "No annotations for any terms. Try using different contitions."
             self.log.error(msg)
             raise NoResultsFound(msg)
 
@@ -204,15 +204,17 @@ class Retriever:
         ]
 
         if len(not_in_anno) == len(self.curation_config.terms):
-            msg = "No annotations for any terms. Try propagating or use different contitions."
+            msg = "No annotations for any terms. Try using different contitions."
             self.log.error(msg)
             raise NoResultsFound(msg)
 
         if self.verbose:
             if len(terms_with_anno) != len(self.curation_config.terms):
+                if len(not_in_anno) > 10:
+                    not_in_anno = TruncatedList(not_in_anno)
                 self.log.warning(
-                    "%s have no annotations. Try propagating or use different conditions.",
-                    TruncatedList(not_in_anno),
+                    "Queries: %s have no annotations. Try using different conditions.",
+                    not_in_anno,
                 )
         return terms_with_anno
 
