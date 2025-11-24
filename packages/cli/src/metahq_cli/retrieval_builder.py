@@ -96,7 +96,7 @@ Try propagating or use different conditions."""
             level=level,
             ecode=filters["ecode"],
             species=filters["species"],
-            technology=filters["tech"],
+            tech=filters["tech"],
         )
 
     def make_sex_curation(self, terms: str, mode: str):
