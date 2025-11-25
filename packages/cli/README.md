@@ -1,5 +1,7 @@
 ![Logo](media/metahq_logo.png)
 
+<img src="media/metahq_logo.png" alt="Logo" width="400" height="200"/>
+
 A Package to query the MetaHQ database.
 
 ## Key features
