@@ -8,7 +8,7 @@ authors = [
     {name = "Parker Hicks", email = "parker.hicks@cuanschutz.edu"},
     {name = "Faisal Alquaddoomi", email = "faisal.alquaddoomi@cuanschutz.edu"},
 ]
-keywords = ["cli", "tool", "core"]
+keywords = ["CLI", "Database", "Data Curation", "Public Biomedical Data"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
