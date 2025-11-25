@@ -1,4 +1,6 @@
-# meta-hq
+<div align="left">
+    <img src="https://raw.githubusercontent.com/krishnanlab/meta-hq/media/metahq_logo.png" alt="MetaHQ Logo" width="400" height="200" />
+</div>
 
 A platform for harmonizing and distributing community-curated high-quality metadata of public omics samples and datasets.
 
