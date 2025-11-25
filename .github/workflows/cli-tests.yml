@@ -36,13 +36,14 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install dependencies
+      - name: Install core
+        working-directory: ./packages/core
         run: |
-          cd packages/core
           uv pip install --system -e .
-          cd ../../
 
-          cd packages/cli
+      - name: Install cli
+        working-directory: ./packages/cli
+        run: |
           uv pip install --system -e ".[test]"
 
       - name: Run tests
