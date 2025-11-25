@@ -11,10 +11,10 @@ A platform for harmonizing and distributing community-curated high-quality metad
 
 ## Status
 
-| Package | Version                                                | Tests                                                                                  |
-| ------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| core    | ![pypi](https://img.shields.io/pypi/v/metahq-core.svg) | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg) |
-| cli     | ![pypi](https://img.shields.io/pypi/v/metahq-cli.svg)  | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)  |
+| Package | Version                                                            | Tests                                                                                  |
+| ------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| core    | ![metahq-core pypi](https://img.shields.io/pypi/v/metahq-core.svg) | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg) |
+| cli     | ![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)   | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)  |
 
 ## Setup
 
