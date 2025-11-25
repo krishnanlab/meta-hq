@@ -8,7 +8,7 @@
 ![pypi](https://img.shields.io/pypi/v/metahq-cli.svg)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-A package to query the MetaHQ database.
+A command line interface to query the MetaHQ database.
 
 ## Key features
 
