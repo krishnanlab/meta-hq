@@ -5,7 +5,7 @@
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 ![pypi](https://img.shields.io/pypi/v/metahq-cli.svg)
 
-A Package to query the MetaHQ database.
+A package to query the MetaHQ database.
 
 ## Key features
 
