@@ -17,5 +17,6 @@ dev-dependencies = [
     "vulture",
     "metahq-cli",
     "metahq-core",
+    "mkdocs>=1.6.1",
 ]
 
