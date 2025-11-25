@@ -1,4 +1,6 @@
-<img src="media/metahq_logo.png" alt="Logo" width="500" height="250"/>
+<img src="media/metahq_logo.png" alt="Logo" width="400" height="200"/>
+
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 A Package to query the MetaHQ database.
 
