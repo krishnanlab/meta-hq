@@ -2,15 +2,19 @@
     <img src="https://raw.githubusercontent.com/krishnanlab/meta-hq/media/metahq_logo.png" alt="MetaHQ Logo" width="400" height="200" />
 </div>
 
-![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg)
-![CLI Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
-![metahq-core pypi](https://img.shields.io/pypi/v/metahq-core.svg)
-![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Latest database: 17666183](https://zenodo.org/badge/DOI/10.5281/zenodo.17666183.svg)](https://doi.org/10.5281/zenodo.17666183)
 
 A platform for harmonizing and distributing community-curated high-quality metadata of public omics samples and datasets.
+
+## Status
+
+| Package | Version                                                | Tests                                                                                  |
+| ------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| core    | ![pypi](https://img.shields.io/pypi/v/metahq-core.svg) | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg) |
+| cli     | ![pypi](https://img.shields.io/pypi/v/metahq-cli.svg)  | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)  |
 
 ## Setup
 
