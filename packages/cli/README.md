@@ -17,7 +17,7 @@ A Package to query the MetaHQ database.
 
 ## Docs
 
-Source Code: [https://github.com/krishnanlab/meta-hq](https://github.com/krishnanlab/meta-hq)
+Source Code: [https://github.com/krishnanlab/meta-hq/packages/cli](https://github.com/krishnanlab/meta-hq/packages/cli)
 
 ## Installation and setup
 
