@@ -2,12 +2,12 @@ name: CLI Tests
 
 on:
   push:
-    branches: [main, master, dev]
+    branches: [main, dev]
     paths:
       - "packages/cli/**"
       - ".github/workflows/cli-tests.yml"
   pull_request:
-    branches: [main, master, dev]
+    branches: [main, dev]
     paths:
       - "packages/cli/**"
 
