@@ -1,6 +1,6 @@
 <img src="media/metahq_logo.png" alt="Logo" width="400" height="200"/>
 
-![Tests](https://github.com/phicks22/meta-hq/workflows/CLI%20Tests/badge.svg)
+![CLI Tests](https://github.com/phicks22/meta-hq/workflows/CLI%20Tests/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
