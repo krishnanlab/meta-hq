@@ -47,9 +47,17 @@ metahq retrieve diseases --terms "MONDO:0004994,MONDO:0008903" \
 
 ## Search
 
-If you do not have ontology terms memorized off-hand, you can run the following command to find
-the ontology term IDs most similar to a free-text query of a disease, tissue, or cell line.
+If you do not have ontology terms memorized off-hand, shame on you. However, you can cheat and run the following
+command to find the ontology term IDs most similar to a free-text query of a disease, tissue, or cell line.
 
 ```bash
 metahq search --query "heart attack" --type disease --ontology MONDO
+```
+
+## Supported
+
+Run the following to view supported attributes, filters, formats, etc.
+
+```bash
+metahq supported
 ```
