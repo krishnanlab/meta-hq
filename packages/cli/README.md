@@ -3,9 +3,10 @@
 </div>
 
 ![CLI Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)
-![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
+![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 ![pypi](https://img.shields.io/pypi/v/metahq-cli.svg)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 A package to query the MetaHQ database.
 
