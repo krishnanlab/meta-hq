@@ -1,4 +1,4 @@
-<img src="media/metahq_logo.png" alt="Logo" width="600" height="300"/>
+<img src="media/metahq_logo.png" alt="Logo" width="500" height="250"/>
 
 A Package to query the MetaHQ database.
 
