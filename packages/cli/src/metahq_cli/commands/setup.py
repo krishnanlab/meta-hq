@@ -42,7 +42,7 @@ from metahq_cli.util.supported import LATEST_DATABASE
 )
 @logging_args
 def setup(doi: str, data_dir: str, log_level: str, log_dir: str, quiet: bool):
-    """Downloads the MetahQ database and configures the CLI."""
+    """Download the MetaHQ database and configure the CLI."""
     if log_dir == "default":
         log_dir = str(get_default_log_dir())
 
