@@ -13,7 +13,7 @@ install: clean
 	. .venv/bin/activate && cd packages/cli && uv pip install -e .
 
 dev: install
-	. .venv/bin/activate && uv pip install pytest pytest-cov black isort flake8 mypy
+	. .venv/bin/activate && uv pip install pytest pytest-cov black isort flake8 mypy mkdocs pymdown-extensions "mkdocstrings[python]" mkdocs-material mkdocs-click
 
 test:
 	. .venv/bin/activate && pytest
