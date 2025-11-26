@@ -21,20 +21,23 @@ from metahq_cli.util.helpers import set_verbosity
 from metahq_cli.util.supported import LATEST_DATABASE
 
 
-@click.command
+@click.command(name="setup", context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
+    "-d",
     "--doi",
     type=str,
     default="latest",
     help="Zenodo DOI of the MetaHQ database. Default is `latest`.",
 )
 @click.option(
+    "-o",
     "--data-dir",
     type=click.Path(),
     default="default",
     help="Path to directory to store the database. Default is `/home/path/.metahq_data`.",
 )
 @click.option(
+    "-l",
     "--log-dir",
     type=click.Path(),
     default="default",
