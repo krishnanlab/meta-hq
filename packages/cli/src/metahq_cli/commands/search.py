@@ -22,7 +22,6 @@ DEFAULT_TOP_HITS = 3
 
 
 @click.command(name="search", context_settings={"help_option_names": ["-h", "--help"]})
-@logging_args
 @click.option("--query", type=str, required=True, help="Search query")
 @click.option(
     "--db",
@@ -30,6 +29,7 @@ DEFAULT_TOP_HITS = 3
     type=str,
     default="default",
     help="DuckDB file",
+    hidden=True,
 )
 @click.option(
     "--type",
@@ -65,6 +65,7 @@ DEFAULT_TOP_HITS = 3
 @click.option(
     "--scopes", "-x", is_flag=True, default=False, help="Include scopes in synonym list"
 )
+@logging_args
 def search(
     query,
     db,
