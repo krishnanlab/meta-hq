@@ -11,47 +11,49 @@ Run the following to install the CLI. This will also install `metahq-core` by de
 
 === "pip"
 
-```bash
+    ``` bash
     pip install metahq-cli
-```
+    ```
 
 === "uv"
 
-```bash
+    ``` bash
     uv add metahq-cli
-```
+    ```
 
 === "conda"
 
-```bash
+    ``` bash
     conda env create -n metahq "python>=3.12"
     conda activate metahq
 
     pip install metahq-cli
-```
+    ```
 
 ### Core only
 
+Run the following to install `metahq-core`.
+
 === "pip"
 
-```bash
-    pip install metahq-core
-```
+    ``` bash
+    pip install metahq-cli
+    ```
 
 === "uv"
 
-```bash
-    uv add metahq-core
-```
+    ``` bash
+    uv add metahq-cli
+    ```
 
 === "conda"
 
-```bash
+    ``` bash
     conda env create -n metahq "python>=3.12"
     conda activate metahq
 
-    pip install metahq-core
-```
+    pip install metahq-cli
+    ```
 
 ## Install from Source
 
@@ -76,19 +78,19 @@ For contributing or development:
 
 === "Make (Recommended)"
 
-```bash
+    ```bash
     make dev
-```
+    ```
 
 === "uv"
 
-```bash
+    ```bash
     uv pip install -e . ".[dev]"
-```
+    ```
 
 === "Manual"
 
-```bash
+    ```bash
     pip install -e packages/core[dev]
     pip install -e packages/cli[dev]
-```
+    ```
