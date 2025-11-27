@@ -14,6 +14,7 @@ import polars as pl
 
 from metahq_core.curations.annotations import Annotations
 from metahq_core.logger import setup_logger
+from metahq_core.util.exceptions import NoResultsFound
 from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import (
@@ -23,6 +24,7 @@ from metahq_core.util.supported import (
     get_technologies,
     na_entities,
     species_map,
+    supported,
     technologies,
 )
 
@@ -73,100 +75,108 @@ class ParsedEntries:
 
 
 class LongAnnotations:
-    """
-    Annotations in long format.
+    """Annotations in long format.
+
     Exists to support modularity and readibility within the Query class.
 
-    Attributes
-    ----------
-    annotations: pl.DataFrame
-        DataFrame with columns storing accession IDs with an `id` and `value` column storing
-        multiple annotations for a single entry.
-
-    Methods
-    -------
-    column_intersection_with()
-        Finds the intersection between a list of strings and the annotations columns.
-
-    filter_na()
-        Removes rows that contain NA values.
-
-    pivot_wide()
-        Converts the annotations in long format to one-hot-encoded wide format.
-
-    stage_anchor()
-        Removes NA values from the `id` or `values` columns.
-
-    stage_level()
-        Filters the annotations that have missing IDs.
-
-    stage()
-        Prepares the annotations for conversion to wide format.
-
+    Attributes:
+        annotations (pl.DataFrame):
+            DataFrame with columns storing accession IDs with an `id` and `value` column storing
+            multiple annotations for a single entry.
     """
 
-    def __init__(self, annotations, id_cols):
+    def __init__(self, annotations):
         self.annotations: pl.DataFrame = annotations
-        self.id_cols: list[str] = id_cols
 
     def column_intersection_with(self, cols: list[str]) -> list[str]:
-        """Find intersection between cols and annotations columns."""
+        """Find intersection between cols and annotations columns.
+
+        Arguments:
+            cols (list[str]):
+                Any list of potential columns in the DataFrame.
+
+        Returns:
+            The intersection of columns.
+        """
         return list(set(cols) & set(self.annotations.columns))
 
     def filter_na(self, col: str):
-        """Removes entries in a column that are NA."""
+        """Removes entries in a column that are NA-like values (e.g., 'NA' or 'none').
+        Updates the annotations attribute in place.
+
+        Arguments:
+            col (str):
+                The name of a column in the DataFrame.
+        """
         self.annotations = self.annotations.filter(~pl.col(col).is_in(na_entities()))
 
-    def stage_anchor(self, anchor: str):
-        """Filters NA values from the anchor annotations column."""
+    def stage_anchor(self, anchor: Literal["id", "value"]):
+        """Filters NA values from the anchor annotations column.
+
+        Arguments:
+            anchor (Literal["id", "value"]):
+                The column storing desired format of annotations.
+        """
         self.filter_na(anchor)
 
-    def stage_level(self, level: str):
-        """
-        Filters NA values from the specified ID level column. If level
+    def stage_level(self, level: Literal["sample", "series"]):
+        """Filters NA values from the specified ID level column. If level
         is 'group', then it will also remove annotations with index IDs.
-        """
-        supported = ["sample", "series"]
-        if not level in supported:
-            raise ValueError(f"Expected level in {supported}, got {level}.")
 
-        if level == "group":
+        Arguments:
+            level (Literal['sample', 'series']):
+                Annotation level.
+        """
+        if not level in supported("levels"):
+            raise ValueError(f"Expected level in {supported("levels")}, got {level}.")
+
+        if level == "series":
             self.annotations = self.annotations.filter(pl.col("sample") == "NA").drop(
-                "index"
+                "sample"
             )
 
         self.filter_na(level)
 
-    def stage(self, level: str, anchor: str):
-        """Stages the annotations DataFrame to be converted to wide format."""
+    def stage(self, level: Literal["sample", "series"], anchor: Literal["id", "value"]):
+        """Stages the annotations DataFrame to be converted to wide format. Mutates the
+        annotations attribute in place.
+
+        Arguments:
+            level (Literal['sample', 'series']):
+                Annotation level.
+
+            anchor (Literal["id", "value"]):
+                The column storing desired format of annotations.
+
+        """
         self.stage_level(level)
         self.stage_anchor(anchor)
 
-    def pivot_wide(self, level: str, anchor: str) -> pl.DataFrame:
-        """
-        Pivots the to wide annotations with one-hot-encoded binary entries for
+    def pivot_wide(
+        self,
+        level: Literal["sample", "series"],
+        anchor: Literal["id", "value"],
+        id_cols: list[str],
+    ) -> pl.DataFrame:
+        """Pivots the to wide annotations with one-hot-encoded binary entries for
         each annotation.
 
-        Args
-        ----
-        level: str
-            ID level of the annotations. Either `index` or `group`.
-        anchor: str
-            Base of the annotations. Either `id` or `value`. Using `id` will return annotations
-            to ontology terms for tissue and disease attributes, M/F for the sex attribute, or
-            predetermined age groups for the age attribute. Using `value` will return annotations
-            with the free text names noted by the annotators.
+        Arguments:
+            level (Literal['sample', 'series']):
+                Annotation level.
 
-        Returns
-        -------
-        Annotations in one-hot-encoded wide format with the accession IDs for each annotation.
+            anchor (Literal["id", "value"]):
+                The column storing desired format of annotations.
+
+        Returns:
+            Annotations in one-hot-encoded wide format with the accession IDs for each annotation.
 
         """
         # remove unused entries
         self.stage(level, anchor)
 
         # prepare accession IDs DataFrame
-        id_cols = self.column_intersection_with(self.id_cols)
+        id_cols = self.column_intersection_with(id_cols)
         ids = self.annotations.select(id_cols)
 
         # remove unused columns for pivoting
@@ -195,55 +205,78 @@ class LongAnnotations:
 
 
 class UnParsedEntry:
-    """
-    Stores and extracts items from a single annotation entry of the annotations dictionary.
+    """Stores and extracts items from a single annotation entry of the annotations dictionary.
+
     Exists to support modularity and readibility within the Query class.
 
-    Attrubtes
-    ---------
-    entry: dict[str, dict[str, dict[str, str]]]
-        Nested dictionary of annotations in the following structure:
-            ID: {
-                attribute: {
-                    source: {
-                        id: "standardized ID",
-                        "value": "common name",
-                    } ...
-                } ...
+    Attributes:
+        entry (dict[str, dict[str, dict[str, str] | str]]):
+            Annotations for a single entry in the database.
 
-    attribute: str
-        Attribute to extract annotations for.
+        attribute (str):
+            Attribute to extract annotations for.
 
-    ecodes: str
-        Permitted evidence codes for annotations.
+        ecodes (list[str]):
+            Permitted evidence codes for annotations.
 
-    Methods
-    -------
-    get_annotations():
-        Retrieves all available annotations that match the specified parameters.
+        species (str):
+            Species for which to extract annotations for.
 
-    is_acceptable():
-        Determines if an entry has annotations available for the attribute.
-
-    get_id_value():
-        Extracts ID and value entries for an individual source within a single entry.
-
+    Examples:
+        >>> from metahq_core.query import UnParsedEntry
+        >>> entry = {
+                'GSM281311': {
+                    'organism': 'homo sapiens',
+                    'tissue': {
+                        'ursa': {
+                            'id': 'UBERON:0002113', 'value': 'kidney', 'ecode': 'expert-curated'
+                        }
+                    }
+                }
+            }
+        >>> UnParsedEntry(
+                entry,
+                attribute='tissue',
+                ecodes=['expert-curated'],
+                'homo sapiens'
+            )
     """
 
-    def __init__(self, _entry, _attribute, _ecodes, _species):
-        self.entry: dict[str, dict[str, dict[str, str]]] = _entry
-        self.attribute: str = _attribute
-        self.ecodes: list[str] = _ecodes
-        self.species: str = _species
+    def __init__(self, entry, attribute, ecodes, species):
+        self.entry: dict[str, dict[str, dict[str, str]]] = entry
+        self.attribute: str = attribute
+        self.ecodes: list[str] = ecodes
+        self.species: str = species
 
     def get_annotations(self) -> tuple[str, str]:
         """
         Retrieves the ID and value annotations for a single entry.
 
-        Returns
-        -------
-        ID and value annotations for a given attribute. If there are multiple annotations
-        across sources, then they are concatenated with a `|` delimiter.
+        Returns:
+            ID and value annotations for a given attribute. If there are multiple annotations
+                across sources, then they are concatenated with a `|` delimiter. If no ID or
+                value annotations exist, `NA` is returned.
+
+        Examples:
+            >>> from metahq_core.query import UnParsedEntry
+            >>> entry = {
+                    'GSM281311': {
+                        'organism': 'homo sapiens',
+                        'tissue': {
+                            'ursa': {
+                                'id': 'UBERON:0002113', 'value': 'kidney', 'ecode': 'expert-curated'
+                            }
+                        }
+                    }
+                }
+            >>> unparsed = UnParsedEntry(
+                    entry,
+                    attribute='tissue',
+                    ecodes=['expert-curated'],
+                    'homo sapiens'
+                )
+            >>> unparsed.get_annotations()
+            ('UBERON:0002113', 'kidney')
 
         """
         if not self.is_acceptable():
@@ -263,7 +296,54 @@ class UnParsedEntry:
         return "|".join(ids), "|".join(values)
 
     def is_acceptable(self) -> bool:
-        """Checks if an attribute annotation exists."""
+        """Checks if the entry is not empty and is an acceptable annotation given the
+        passed attribute, ecode, and species.
+
+        Returns:
+            True or False given the specified attributes.
+
+        Examples:
+            >>> from metahq_core.query import UnParsedEntry
+            >>> entry = {
+                    'GSM281311': {
+                        'organism': 'homo sapiens',
+                        'tissue': {
+                            'ursa': {
+                                'id': 'UBERON:0002113', 'value': 'kidney', 'ecode': 'expert-curated'
+                            }
+                        }
+                    }
+                }
+            >>> unparsed = UnParsedEntry(
+                    entry,
+                    attribute='tissue',
+                    ecodes=['expert-curated'],
+                    'homo sapiens'
+                )
+            >>> unparsed.is_acceptable()
+            True
+
+            If an attribute doesn't exist, it will return False.
+
+            >>> entry = {
+                    'GSM315993': {
+                        'organism': 'homo sapiens',
+                        'sex': {
+                            'Johnson 2023': {
+                                'id': 'F', 'ecode': 'expert-curated'
+                            }
+                        }
+                    }
+                }
+            >>> unparsed = UnParsedEntry(
+                    entry,
+                    attribute='tissue',
+                    ecodes=['expert-curated'],
+                    'homo sapiens'
+                )
+            >>> unparsed.is_acceptable()
+            False
+        """
         attr_exists = self.attribute in self.entry
         is_correct_species = self.entry["organism"] == self.species
         is_populated = len(self.entry) > 0
@@ -271,18 +351,15 @@ class UnParsedEntry:
         return attr_exists and is_populated and is_correct_species
 
     @staticmethod
-    def get_id_value(source_anno):
-        """
-        Extracts the ID and value for an annotation.
+    def get_id_value(source_anno) -> tuple[str, str]:
+        """Extracts the ID and value for an annotation.
 
-        Args
-        ----
-        source_anno: dict[str, str]
-            Annotations from a single source. Has keys ['id', 'value', 'ecode'].
+        Arguments:
+            source_anno (dict[str, str]):
+                Annotations from a single source. Has keys ['id', 'value', 'ecode'].
 
-        Returns
-        -------
-        Tuple of the ID and value for the attribute annotation from a single source.
+        Returns:
+            Tuple of the ID and value for the attribute annotation from a single source.
 
         """
         if "id" in source_anno:
@@ -294,66 +371,55 @@ class UnParsedEntry:
             value = source_anno["value"]
         else:
             value = "NA"
+
         return id_, value
 
 
 class Query:
-    """
-    Class to query the annotations dictionary.
+    """Class to query the annotations dictionary.
 
-    Attributes
-    ----------
-    database: str
-        Database to query annotations.
+    Attributes:
+        attribute (str):
+            Attribute to collect annotations for (e.g., tissue, disease, sex, age)
 
-    _annotations: dict
-        Nested dictionary of annotations.
+        level (Literal['sample', 'series']):
+            Level of annotations to query.
 
-    attribute: str
-        Attribute to collect annotations for (e.g., tissue, disease, sex, age)
+        ecodes (list[str]):
+            Acceptable evidence codes for annotations.
 
-    ecodes: list[str]
-        Acceptable evidence codes for annotations.
+        species (str):
+            Species for which to query annotations.
 
-    Methods
-    -------
-    annotations()
-        Primary function to extract formatted annotations from the annotations dictionary.
-        Can be propagated to labels if in wide format.
+        technology (str):
+            Technology of the queried samples.
 
-    compile_annotations()
-       Backend function of `annotations()`. Does the actual extracting.
+        _annotations (dict):
+            Nested dictionary of annotations.
 
-    get_accession_ids()
-       Retrives and structures accession IDs for a given entry.
-
-    get_valid_annotations()
-        Retrives all valid annotatiosn for a given entry.
-
-    _load_database()
-        Loads the annotations dictionary.
-
-    Example
-    -------
-    >>> from metahq import Query
-    >>> query = Query("geo", "tissue", "expert-curated")
-
+    Examples:
+        >>> from metahq_core.query import Query
+        >>> query = Query(
+                "tissue",
+                level="sample",
+                ecodes=["expert-curated"],
+                species="homo sapiens",
+                technology="rnaseq",
+            )
     """
 
     def __init__(
         self,
-        database,
         attribute,
-        level="sample",
-        ecode="expert-curated",
-        species="human",
-        technology="rnaseq",
+        level,
+        ecode,
+        species,
+        technology,
         logger=None,
         loglevel=20,
         logdir=Path("."),
         verbose=True,
     ):
-        self.database: str = database
         self.attribute: str = attributes(attribute)
         self.level: Literal["sample", "series"] = level
         self.ecodes: list[str] = self._load_ecode(ecode)
@@ -367,52 +433,38 @@ class Query:
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
 
-    def annotations(self, anchor: str = "id"):
+    def annotations(self, anchor: Literal["id", "value"] = "id") -> Annotations:
+        """Retrieve annotations from the databse annotations dictionary.
+
+        Arguments:
+            anchor (Literal['id', 'value']):
+                Base of the annotations. Either `id` or `value`. Using `id` will return annotations
+                to ontology terms for tissue and disease attributes, M/F for the sex attribute, or
+                predetermined age groups for the age attribute. Using `value` will return
+                annotations with the free text names for each id.
+
+        Returns:
+            An `Annotations` object with one-hot-encoded annotations to the specified attribute.
+
+        Examples:
+            >>> from metahq_core.query import Query
+            >>> query = Query(
+                "tissue",
+                level="sample",
+                ecodes=["expert-curated"],
+                species="homo sapiens",
+                technology="rnaseq",
+            )
+            >>> query.annotations(anchor='id')
         """
-        Retrieve annotations from the databse annotations dictionary.
+        # get ID column names
+        index, groups = self._assign_index_groups()
+        id_cols = [index] + list(groups)
 
-        Args
-        ----
-        level: str
-            Level of annotations. Can be `index` or `group`.
+        # construct the annotations
+        attr_anno = self.compile_annotations(id_cols)
+        attr_anno = LongAnnotations(attr_anno).pivot_wide(self.level, anchor, id_cols)
 
-        anchor: str
-            Base of the annotations. Either `id` or `value`. Using `id` will return annotations
-            to ontology terms for tissue and disease attributes, M/F for the sex attribute, or
-            predetermined age groups for the age attribute. Using `value` will return annotations
-            with the free text names noted by the annotators.
-
-        Returns
-        -------
-        An `Annotations` object with one-hot-encoded annotations to the specified attribute.
-
-        Example
-        -------
-        >>> from metahq import Query
-        >>> query = Query('geo', 'tissue', 'expert-curated', 'homo-sapiens')
-        >>> query.annotations(level='index', anchor='id')
-        ┌──────────┬───────────┬──────────┬────────────────┬───┬────────────────┐
-        │ group    ┆ index     ┆ platform ┆ UBERON:0002113 ┆ … ┆ UBERON_0000057 │
-        │ ---      ┆ ---       ┆ ---      ┆ ---            ┆   ┆ ---            │
-        │ str      ┆ str       ┆ str      ┆ i32            ┆   ┆ i32            │
-        ╞══════════╪═══════════╪══════════╪════════════════╪═══╪════════════════╡
-        │ GSE11151 ┆ GSM281311 ┆ GPL570   ┆ 1              ┆ … ┆ 0              │
-        │ GSE11151 ┆ GSM281312 ┆ GPL570   ┆ 1              ┆ … ┆ 0              │
-        │ GSE18969 ┆ GSM469548 ┆ NA       ┆ 1              ┆ … ┆ 0              │
-        │ GSE18969 ┆ GSM469549 ┆ NA       ┆ 1              ┆ … ┆ 0              │
-        │ GSE18969 ┆ GSM469550 ┆ NA       ┆ 1              ┆ … ┆ 0              │
-        │ …        ┆ …         ┆ …        ┆ …              ┆ … ┆ …              │
-        │ GSE2109  ┆ GSM152666 ┆ NA       ┆ 0              ┆ … ┆ 0              │
-        │ GSE2109  ┆ GSM179804 ┆ NA       ┆ 0              ┆ … ┆ 0              │
-        │ GSE2109  ┆ GSM353890 ┆ NA       ┆ 0              ┆ … ┆ 0              │
-        │ GSE2109  ┆ GSM102435 ┆ NA       ┆ 0              ┆ … ┆ 0              │
-        │ GSE2109  ┆ GSM353891 ┆ NA       ┆ 0              ┆ … ┆ 0              │
-        └──────────┴───────────┴──────────┴────────────────┴───┴────────────────┘
-
-        """
-        index, groups = self.assign_index_groups()
-        fields = [index] + list(groups)
-        attr_anno = self.compile_annotations(fields).pivot_wide(self.level, anchor)
         na_cols = list(set(attr_anno.columns) & set(na_entities()))
 
         return Annotations.from_df(
@@ -423,26 +475,22 @@ class Query:
             verbose=self.verbose,
         )
 
-    def assign_index_groups(self):
-        if self.level == "series":
-            return "series", tuple(["platform"])
+    def compile_annotations(self, id_cols: list[str]) -> pl.DataFrame:
+        """Extract attribute annotations and accession IDs from the annotations dictionary.
 
-        if self.level == "sample":
-            return "sample", tuple(["series", "platform"])
+        Arguments:
+            id_cols (list[str]):
+                Accession IDs
 
-        raise ValueError(f"Expected level in [sample, study], got {self.level}.")
+        Returns:
+            Polars DataFrame of all annotations in the annotations dictionary for a single
+                attribute.
 
-    def compile_annotations(self, fields: list[str]) -> LongAnnotations:
-        """
-        Extract attribute annotations and accession IDs from the annotations dictionary.
-
-        Returns
-        -------
-        Polars DataFrame of all annotations in the annotations dictionary for a single
-        attribute.
+        Raises:
+            NoResultsFound: If no attribute annotations can be found.
 
         """
-        parsed = ParsedEntries(fields)
+        parsed = ParsedEntries(id_cols)
         for entry in self._annotations:
             accessions = self.get_accession_ids(entry)
             id_, value = self.get_valid_annotations(entry)
@@ -454,27 +502,45 @@ class Query:
         )  # filter platforms just once for speed
 
         if parsed.height == 0:
-            raise RuntimeError(
-                f"""Unable to identify with provided parameters: [ATTRIBUTE: {self.attribute},
-                SPECIES: {self.species}, ECODES: {self.ecodes}, TECHNOLOGY: {self.technology}]"""
+            msg = (
+                """Unable to identify with provided parameters: [ATTRIBUTE: %s,
+                SPECIES: %s, ECODES: %s, TECHNOLOGY: %s]""",
+                self.attribute,
+                self.species,
+                self.ecodes,
+                self.technology,
             )
+            if self.verbose:
+                self.log.error(msg)
+            raise NoResultsFound(msg)
 
-        return LongAnnotations(parsed, fields)
+        return parsed
 
     def get_accession_ids(self, entry: str) -> dict[str, str]:
-        """
-        Updates an AccessionIDs object with index, group, and platform
+        """Updates an AccessionIDs object with index, group, and platform
         IDs from an annotations entry.
 
-        Args
-        ----
-        entry: str
-            Top key of the annotations dictionary to extract accession IDs for.
+        Arguments:
+            entry (str):
+                An ID with annotations in the database (i.e., one of the top level keys of
+                    the database.)
 
-        Returns
-        -------
-        Tuple of index, group, and platform ID for a given entry in the annotations
-        dictionary.
+        Returns:
+            accessions (dict[str, str]):
+                A populated dictionary of accession IDs and values for the passed entry.
+
+        Examples:
+            >>> from metahq_core.query import Query
+            >>> query = Query(
+                "tissue",
+                level="sample",
+                ecodes=["expert-curated"],
+                species="homo sapiens",
+                technology="rnaseq",
+            )
+            >>> query.get_accession_ids('GSM281311')
+            {'sample': 'GSM281311', 'series': 'GSE11151', 'platform': 'GPL570'}
+
 
         """
         if self.level == "sample":
@@ -492,14 +558,12 @@ class Query:
         """
         Extract id and value annotations for each source of annotations in an entry.
 
-        Args
-        ----
-        entry: str
-            A top-level key of the annotations dictionary.
+        Arguments:
+            entry: str
+                A top-level key of the annotations dictionary.
 
-        Returns
-        -------
-        Tuple of the annotation IDs and values.
+        Returns:
+            Tuple of the annotation IDs and values.
 
         """
         return UnParsedEntry(
@@ -509,8 +573,17 @@ class Query:
             self.species,
         ).get_annotations()
 
+    def _assign_index_groups(self):
+        if self.level == "series":
+            return "series", tuple(["platform"])
+
+        if self.level == "sample":
+            return "sample", tuple(["series", "platform"])
+
+        raise ValueError(f"Expected level in [sample, study], got {self.level}.")
+
     def _load_annotations(self):
-        """Loads the annotations dictionary for the specified database."""
+        """Loads the annotations dictionary for the specified level."""
         anno = load_bson(get_annotations(self.level))
 
         return anno
