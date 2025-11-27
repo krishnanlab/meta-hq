@@ -5,7 +5,7 @@ Welcome to the MetaHQ documentation!
 ## Features
 
 - 🔍 **Annotation Retrieval**: Query standardized and harmonized biomedical annotations
-- &#128296 &#x1F528 **Core Library**: Robust foundation for data curation and ontology management
+- &#128296 **Core Library**: Robust foundation for data curation and ontology management
 - 🖥️ **CLI Interface**: User-friendly command-line tools
 
 ## Packages
