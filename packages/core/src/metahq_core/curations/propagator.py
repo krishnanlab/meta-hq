@@ -18,7 +18,7 @@ given a negative label for that term.
 Author: Parker Hicks
 Date: 2025-04-23
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-11-28 by Parker Hicks
 """
 
 from pathlib import Path
@@ -42,35 +42,21 @@ class Propagator:
     """
     Class to propagate annotations to labels given an ontology structure.
 
-    Attributes
-    ----------
-    ontology: str
-        The name of an ontology supported by MetaHQ.
+    Attributes:
+        ontology (str):
+            The name of an ontology supported by MetaHQ.
 
-    anno: Annotations
-        A MetaHQ Annotations object with columns of ontology terms
-        rows as samples, and each value is a 1 or 0 indicating if a sample is
-        annotated to a particular term.
+        anno (Annotations):
+            A MetaHQ Annotations object with columns of ontology terms
+            rows as samples, and each value is a 1 or 0 indicating if a sample is
+            annotated to a particular term.
 
-    to: list[str]
-        A list of ontology term IDs to propagate annotations up or down to.
+        to (list[str]):
+            A list of ontology term IDs to propagate annotations up or down to.
 
-    family: dict[str, pl.DataFrame | list[str]]
-        A pointer to the ancestry and descendants adjacency matrices and ids
-        denoting their column ids.
-
-    Methods
-    -------
-    propagate_up()
-        Propagates annotations up to all terms in the annotations curation.
-        If an index is annotated to a descendant of a term in `to`, then it
-        is given an annotation of 1 to that term.
-
-    propagate_down()
-        Propagates annotations down to all terms in the annotations curation.
-        If an index is annotated to an ancestor of a term in `to`, then it
-        is given an annotation of 1 to that term.
-
+        family (dict[str, pl.DataFrame | list[str]]):
+            A pointer to the ancestry and descendants adjacency matrices and ids
+            denoting their column ids.
     """
 
     def __init__(
@@ -98,21 +84,27 @@ class Propagator:
         self.verbose: bool = verbose
         self._propagator = MultiprocessPropagator(logger=logger, verbose=verbose)
 
-    def propagate_down(
-        self, verbose: bool = False
-    ) -> tuple[NpIntMatrix, list[str], pl.DataFrame]:
-        """Propagates annotations down to the terms in self.to"""
-        if verbose:
+    def propagate_down(self) -> tuple[NpIntMatrix, list[str], pl.DataFrame]:
+        """Propagates annotations down to all terms in the annotations curation.
+        If an index is annotated to an ancestor of a term in `to`, then it
+        is given an annotation of 1 to that term.
+
+        """
+        if self.verbose:
             return self._propagate_to_family(
                 "descendants", task="Propagating descendants"
             )
         return self._propagate_to_family("descendants")
 
-    def propagate_up(
-        self, verbose: bool = False
-    ) -> tuple[NpIntMatrix, list[str], pl.DataFrame]:
-        """Propagates annotations up to the terms in self.to"""
-        if verbose:
+    def propagate_up(self) -> tuple[NpIntMatrix, list[str], pl.DataFrame]:
+        """Propagates annotations up to the terms in self.to
+
+        Propagates annotations up to all terms in the annotations curation.
+        If an index is annotated to a descendant of a term in `to`, then it
+        is given an annotation of 1 to that term.
+
+        """
+        if self.verbose:
             return self._propagate_to_family("ancestors", task="Propagating ancestors")
         return self._propagate_to_family("ancestors")
 
