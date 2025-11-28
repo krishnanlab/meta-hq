@@ -1,6 +1,6 @@
 site_name: MetaHQ Documentation
 site_description: Query systems for accessing the MetaHQ database.
-site_author: Parker Hicks, Faisal Alquaddoomi, Lydia Valtadoros
+site_author: Parker Hicks, Faisal Alquaddoomi
 site_url: https://krishnanlab.github.io/meta-hq/
 
 repo_name: krishnanlab/meta-hq
@@ -52,7 +52,8 @@ plugins:
           options:
             docstring_style: google
             show_source: false
-            show_root_heading: true
+            show_root_heading: false
+            show_root_toc_entry: false
             show_root_full_path: false
             show_submodules: true
             members_order: source
@@ -98,7 +99,11 @@ nav:
           - API Reference:
             - Overview: packages/core/api/index.md
             - Query: packages/core/api/query.md
-            - Curations: packages/core/api/curations.md
+            - Curations:
+              - Overview: packages/core/api/curations/index.md
+              - Annotations: packages/core/api/curations/annotations.md
+              - Labels: packages/core/api/curations/labels.md
+              - Propagator: packages/core/api/curations/propagator.md
             - Export: packages/core/api/export.md
             - Search: packages/core/api/search.md
             - Utilities: packages/core/api/util.md
@@ -106,7 +111,8 @@ nav:
       - CLI:
           - Overview: packages/cli/overview.md
           - Commands: packages/cli/commands.md
-          - API Reference: packages/cli/api.md
+          - API Reference:
+            - Overview: packages/cli/api/index.md
   - Developer Guide:
       - Contributing: developer/contributing.md
       - Development Setup: developer/setup.md
