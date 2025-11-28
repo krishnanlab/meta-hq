@@ -7,6 +7,9 @@ repo_name: krishnanlab/meta-hq
 repo_url: https://github.com/krishnanlab/meta-hq
 edit_uri: blob/main/docs/
 
+extra_css:
+  - stylesheets/extra.css
+
 theme:
   name: material
   palette:
@@ -48,9 +51,10 @@ plugins:
           paths: [packages/core/src, packages/cli/src]
           options:
             docstring_style: google
-            show_source: true
+            show_source: false
             show_root_heading: true
             show_root_full_path: false
+            show_submodules: true
             members_order: source
 
 markdown_extensions:
@@ -91,7 +95,14 @@ nav:
   - Packages:
       - Core:
           - Overview: packages/core/overview.md
-          - API Reference: packages/core/api.md
+          - API Reference:
+            - Overview: packages/core/api/index.md
+            - Query: packages/core/api/query.md
+            - Curations: packages/core/api/curations.md
+            - Export: packages/core/api/export.md
+            - Search: packages/core/api/search.md
+            - Utilities: packages/core/api/util.md
+            - Logger: packages/core/api/logger.md
       - CLI:
           - Overview: packages/cli/overview.md
           - Commands: packages/cli/commands.md
