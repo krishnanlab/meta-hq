@@ -1,7 +1,5 @@
 # MetaHQ Core API
 
-## Query
-
 ::: metahq_core.query.Query
     handler: python
     options:
