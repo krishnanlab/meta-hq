@@ -4,7 +4,7 @@ Class to query the annotations dictionary.
 Author: Parker Hicks
 Date: 2025-03
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-11-27 by Parker Hicks
 """
 
 from pathlib import Path
@@ -88,27 +88,27 @@ class LongAnnotations:
     def __init__(self, annotations):
         self.annotations: pl.DataFrame = annotations
 
-    def column_intersection_with(self, cols: list[str]) -> list[str]:
-        """Find intersection between cols and annotations columns.
+    def column_intersection_with(self, columns: list[str]) -> list[str]:
+        """Find intersection between `columns` and the columns in the `annotations` attribute.
 
         Arguments:
-            cols (list[str]):
+            columns (list[str]):
                 Any list of potential columns in the DataFrame.
 
         Returns:
             The intersection of columns.
         """
-        return list(set(cols) & set(self.annotations.columns))
+        return list(set(columns) & set(self.annotations.columns))
 
-    def filter_na(self, col: str):
+    def filter_na(self, column: str):
         """Removes entries in a column that are NA-like values (e.g., 'NA' or 'none').
         Updates the annotations attribute in place.
 
         Arguments:
-            col (str):
+            column (str):
                 The name of a column in the DataFrame.
         """
-        self.annotations = self.annotations.filter(~pl.col(col).is_in(na_entities()))
+        self.annotations = self.annotations.filter(~pl.col(column).is_in(na_entities()))
 
     def stage_anchor(self, anchor: Literal["id", "value"]):
         """Filters NA values from the anchor annotations column.
@@ -168,8 +168,34 @@ class LongAnnotations:
             anchor (Literal["id", "value"]):
                 The column storing desired format of annotations.
 
+            id_cols (list[str]):
+                Columns to keep as IDs when pivoting.
+
         Returns:
             Annotations in one-hot-encoded wide format with the accession IDs for each annotation.
+
+        Examples:
+            >>> from metahq_core.query import LongAnnotations
+            >>> anno = pl.DataFrame({
+                    'sample': ['GSM1', 'GSM2', 'GSM3'],
+                    'series': ['GSE1', 'GSE1', 'GSE2'],
+                    'platform': ['GPL1', 'GPL2', 'GPL2'],
+                    'id': ['UBERON:0000948|UBERON:0002349', 'UBERON:0002113', 'UBERON:0000955'],
+                    'value': ['heart|myocardium', 'kidney', 'brain'],
+                })
+            >>> anno = LongAnnotations(anno)
+            >>> anno.pivot_wide(
+                    level='sample', anchor='id', id_cols=['sample', 'series']
+                )
+            ┌────────┬────────┬────────────────┬────────────────┬────────────────┬────────────────┐
+            │ series ┆ sample ┆ UBERON:0000948 ┆ UBERON:0002349 ┆ UBERON:0002113 ┆ UBERON:0000955 │
+            │ ---    ┆ ---    ┆ ---            ┆ ---            ┆ ---            ┆ ---            │
+            │ str    ┆ str    ┆ i32            ┆ i32            ┆ i32            ┆ i32            │
+            ╞════════╪════════╪════════════════╪════════════════╪════════════════╪════════════════╡
+            │ GSE1   ┆ GSM1   ┆ 1              ┆ 1              ┆ 0              ┆ 0              │
+            │ GSE1   ┆ GSM2   ┆ 0              ┆ 0              ┆ 1              ┆ 0              │
+            │ GSE2   ┆ GSM3   ┆ 0              ┆ 0              ┆ 0              ┆ 1              │
+            └────────┴────────┴────────────────┴────────────────┴────────────────┴────────────────┘
 
         """
         # remove unused entries
