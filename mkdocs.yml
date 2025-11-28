@@ -103,6 +103,7 @@ nav:
               - Overview: packages/core/api/curations/index.md
               - Annotations: packages/core/api/curations/annotations.md
               - Labels: packages/core/api/curations/labels.md
+              - Ids: packages/core/api/curations/ids.md
               - Propagator: packages/core/api/curations/propagator.md
             - Export: packages/core/api/export.md
             - Search: packages/core/api/search.md
