@@ -1,19 +1,20 @@
 """
 Class for performing annotation propagation.
 
-Assigns labels to terms by propagating annotations through
-an ontology structure.
-
-Applies the dot product between an annotations matrix and familial adjacency
+Applies the dot product between an annotations matrix and familial membership
 matrices. Below is the computation:
 
     (samples x reference_terms) @ (reference_terms, propagated_terms)
         -> (samples x propagated_terms).
 
-This is done once for ancestors and once for descendants. Then for each sample,
+To propagate upwards, the (reference_terms, propagated_terms) familial membership
+matrix indicates ancestor relationships. To propagate downwards, the 
+(reference_terms, propagated_terms) familial membership matrix indicates descendant 
+relationships.
+
+If labeling, this is done once for ancestors and once for descendants. Then for each sample,
 if a term is is not an ancestor or descendant of that sample, then the sample is
 given a negative label for that term.
-
 
 Author: Parker Hicks
 Date: 2025-04-23
@@ -39,7 +40,7 @@ if TYPE_CHECKING:
 
 
 class Propagator:
-    """Class to propagate annotations to labels given an ontology structure.
+    """Class to propagate annotations given an particular ontology structure.
 
     Attributes:
         ontology (str):
