@@ -193,6 +193,9 @@ class Annotations(BaseCuration):
             outfile (str | Path):
                 Path to outfile.json.
 
+            fmt (Literal["json", "parquet", "csv", "tsv"]):
+                File format to save to.
+
             metadata (bool):
                 If True, will add index titles to each entry.
         """
@@ -426,7 +429,7 @@ class Annotations(BaseCuration):
         cls,
         df: pl.DataFrame,
         index_col: str,
-        group_cols: tuple[str, ...] | list[str] = ("series", "platform"),
+        group_cols: tuple[str, ...] | list[str],
         **kwargs,
     ) -> Annotations:
         """Creates an Annotations object from a combined DataFrame.
@@ -447,6 +450,7 @@ class Annotations(BaseCuration):
             An Annotations object constructed from `df`.
 
         Examples:
+            >>> from metahq_core.curations.annotations import Annotations
             >>> anno = pl.DataFrame(
                     {
                         "series": ["GSE1", "GSE1", "GSE2"],
@@ -556,7 +560,7 @@ class Annotations(BaseCuration):
         return self._ids.data
 
     @property
-    def index(self) -> list:
+    def index(self) -> list[str]:
         """Return the index column as a list.
 
         Examples:
