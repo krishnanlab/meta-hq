@@ -107,7 +107,13 @@ nav:
               - Propagator: packages/core/api/curations/propagator.md
             - Export: packages/core/api/export.md
             - Search: packages/core/api/search.md
-            - Utilities: packages/core/api/util.md
+            - Utilities:
+              - Overview: packages/core/api/util/index.md
+              - IO: packages/core/api/util/io.md
+              - Exceptions: packages/core/api/util/exceptions.md
+              - Helpers: packages/core/api/util/helpers.md
+              - Progress: packages/core/api/util/progress.md
+              - Supported: packages/core/api/util/supported.md
             - Logger: packages/core/api/logger.md
       - CLI:
           - Overview: packages/cli/overview.md
