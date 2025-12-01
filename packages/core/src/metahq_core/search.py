@@ -62,6 +62,15 @@ DEFAULT_SCOPE = "RELATED"
 
 
 class SynonymEntry(TypedDict):
+    """Storage of synonyms and their scope.
+
+    Attributes:
+        text (str):
+            Any piece of text.
+        scope (NotRequired[Literal["EXACT", "NARROW", "BROAD", "RELATED"]]):
+            The importance of `text`.
+    """
+
     text: str
     scope: NotRequired[Literal["EXACT", "NARROW", "BROAD", "RELATED"]]
 
