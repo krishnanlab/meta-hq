@@ -4,7 +4,7 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-11-24 by Parker Hicks
+Last updated: 2025-12-01 by Parker Hicks
 """
 
 import click
@@ -61,15 +61,17 @@ def retrieve_commands():
     """Retrieval commands for tissue, disease, sex, and age annotations."""
 
 
-@retrieve_commands.command("tissues")
-@logging_args
+@retrieve_commands.command("age")
+@click.option(
+    "--terms",
+    type=AGE_GROUP_OPT,
+    default="all",
+    help="Age groups to choose. Can combine like 'fetus,adult'.",
+)
 @retrieval_args
-@ontology_retrieval_args
-@click.option("--terms", type=str, default="UBERON:0000948,UBERON:0000955")
-def retrieve_tissues(
-    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
-):
-    """Retrieval command for tissue ontology terms."""
+@logging_args
+def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet):
+    """Retrieval command for age group annotations."""
     if metadata == "default":
         metadata = level
 
@@ -78,16 +80,14 @@ def retrieve_tissues(
         __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
-    # hidden from user. Used to test annotation quality.
-    mode = check_direct(mode, direct, verbose, log)
     builder = Builder(logger=log, verbose=verbose)
 
     # parse and check filters
     filters = builder.get_filters(filters)
 
     # make configs
-    query_config = builder.query_config("geo", "tissue", level, filters)
-    curation_config = builder.curation_config(terms, mode, "uberon")
+    query_config = builder.query_config("geo", "age", level, filters)
+    curation_config = builder.curation_config(terms, "direct", "age")
     output_config = builder.output_config(output, fmt, metadata, level=level)
 
     # retrieve
@@ -98,10 +98,10 @@ def retrieve_tissues(
 
 
 @retrieve_commands.command("diseases")
-@logging_args
+@click.option("--terms", type=str, default="MONDO:0004994,MONDO:0018177")
 @retrieval_args
 @ontology_retrieval_args
-@click.option("--terms", type=str, default="MONDO:0004994,MONDO:0018177")
+@logging_args
 def retrieve_diseases(
     terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
 ):
@@ -134,9 +134,9 @@ def retrieve_diseases(
 
 
 @retrieve_commands.command("sex")
-@logging_args
-@retrieval_args
 @click.option("--terms", type=str, default="male,female")
+@retrieval_args
+@logging_args
 def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet):
     """Retrieval command for sex annotations."""
     if metadata == "default":
@@ -164,17 +164,15 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet)
     retriever.retrieve()
 
 
-@retrieve_commands.command("age")
-@logging_args
+@retrieve_commands.command("tissues")
+@click.option("--terms", type=str, default="UBERON:0000948,UBERON:0000955")
 @retrieval_args
-@click.option(
-    "--terms",
-    type=AGE_GROUP_OPT,
-    default="all",
-    help="Age groups to choose. Can combine like 'fetus,adult'.",
-)
-def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet):
-    """Retrieval command for age group annotations."""
+@ontology_retrieval_args
+@logging_args
+def retrieve_tissues(
+    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
+):
+    """Retrieval command for tissue ontology terms."""
     if metadata == "default":
         metadata = level
 
@@ -183,14 +181,16 @@ def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet)
         __name__, console=get_console(), level=log_level, log_dir=get_log_dir()
     )
 
+    # hidden from user. Used to test annotation quality.
+    mode = check_direct(mode, direct, verbose, log)
     builder = Builder(logger=log, verbose=verbose)
 
     # parse and check filters
     filters = builder.get_filters(filters)
 
     # make configs
-    query_config = builder.query_config("geo", "age", level, filters)
-    curation_config = builder.curation_config(terms, "direct", "age")
+    query_config = builder.query_config("geo", "tissue", level, filters)
+    curation_config = builder.curation_config(terms, mode, "uberon")
     output_config = builder.output_config(output, fmt, metadata, level=level)
 
     # retrieve
