@@ -1,9 +1,10 @@
-## Installation
+We recommend using the `uv` to install `metahq` packages. It is a modern, simple, and fast Rust-based package manager.
+See the following link to install `uv`: [https://docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation)
 
 ## Prerequisites
 
-- Python 3.12 or higher.
-- pip, uv, or conda
+- `python>=3.12`
+- `pip`, `uv`, or `conda`
 
 ### CLI
 
@@ -37,13 +38,13 @@ Run the following to install `metahq-core`.
 === "pip"
 
     ``` bash
-    pip install metahq-cli
+    pip install metahq-core
     ```
 
 === "uv"
 
     ``` bash
-    uv add metahq-cli
+    uv add metahq-core
     ```
 
 === "conda"
@@ -52,25 +53,39 @@ Run the following to install `metahq-core`.
     conda env create -n metahq "python>=3.12"
     conda activate metahq
 
-    pip install metahq-cli
+    pip install metahq-core
     ```
 
 ## Install from Source
 
-### Clone the repository
+### 1) Clone the repository
 
 ```bash
-    git clone https://github.com/krishnanlab/meta-hq.git
-    cd meta-hq
+git clone https://github.com/krishnanlab/meta-hq.git
+cd meta-hq
 ```
 
-### Install packages
+### 2) Install packages
+
+Using `make` requires `uv` and will automatically create a `uv venv`. run `source .venv/bin/activate` to activate it.
 
 === "Make (Recommended)"
 
-```bash
+    ```bash
     make install
-```
+    ```
+
+=== "pip"
+
+    ```bash
+    pip install packages/core packages/cli
+    ```
+
+=== "pip (from tar)"
+
+    ```bash
+    pip install dist/metahq_core-0.1.2.tar.gz dist/metahq_cli-0.1.1.tar.gz
+    ```
 
 ## Development Installation
 
