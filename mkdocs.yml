@@ -90,9 +90,8 @@ nav:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
   - User Guide:
-      - CLI Usage: user-guide/cli-usage.md
-      - Search: user-guide/search.md
       - Retrieve: user-guide/retrieve.md
+      - Search: user-guide/search.md
       - Setup: user-guide/setup.md
   - Packages:
       - Core:
