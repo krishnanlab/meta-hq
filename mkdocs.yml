@@ -82,6 +82,7 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+      toc_depth: 4
 
 nav:
   - Home: index.md
@@ -117,7 +118,10 @@ nav:
             - Logger: packages/core/api/logger.md
       - CLI:
           - Overview: packages/cli/overview.md
-          - Commands: packages/cli/commands.md
+          - Commands:
+            - Setup: packages/cli/commands/setup.md
+            - Search: packages/cli/commands/search.md
+            - Retrieve: packages/cli/commands/retrieve.md
           - API Reference:
             - Overview: packages/cli/api/index.md
   - Developer Guide:
