@@ -101,9 +101,9 @@ def load_txt_sections(file: str | Path, delimiter: str, encoding="utf-8") -> lis
     """Load a .txt file in sections.
 
     Arguments:
-        file: str | Path
+        file (str | Path):
             Path to .txt file to load in sections.
-        delimter: str
+        delimiter (str):
             Pattern to split entries in the .txt file.
         encoding (str):
             Text encoding format.
@@ -119,7 +119,14 @@ def load_txt_sections(file: str | Path, delimiter: str, encoding="utf-8") -> lis
 
 
 def load_yaml(file: str | Path, encoding: str = "utf-8") -> dict[str, Any]:
-    """Load a yaml dictionary."""
+    """Load a yaml dictionary.
+
+    Arguments:
+        file (str | Path):
+            Path to .yaml file to load.
+        encoding (str):
+            Text encoding format.
+    """
     with open(file, "r", encoding=encoding) as stream:
         try:
             return yaml.safe_load(stream)
