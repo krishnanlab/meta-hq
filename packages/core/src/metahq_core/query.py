@@ -131,9 +131,10 @@ class LongAnnotations:
             raise ValueError(f"Expected level in {supported("levels")}, got {level}.")
 
         if level == "series":
-            self.annotations = self.annotations.filter(pl.col("sample") == "NA").drop(
-                "sample"
-            )
+            self.annotations = self.annotations.filter(pl.col(level) != "NA")
+
+            if "sample" in self.annotations.columns:
+                self.annotations = self.annotations.drop("sample")
 
         self.filter_na(level)
 
