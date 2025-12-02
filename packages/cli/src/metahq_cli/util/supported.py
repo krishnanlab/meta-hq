@@ -9,10 +9,10 @@ Last updated: 2025-11-24 by Parker Hicks
 
 from pathlib import Path
 
-LATEST_DATABASE: dict[str, str] = {"version": "v1.0.1-alpha", "doi": "17666183"}
+LATEST_DATABASE: dict[str, str] = {"version": "v1.0.0", "doi": "17666183"}
 DOIS = {
     "17663087": {"version": "v1.0.0-alpha", "filename": "metahq.tar.gz"},
-    "17666183": {"version": "v1.0.1-alpha", "filename": "metahq_data.tar.gz"},
+    "17666183": {"version": "v1.0.0", "filename": "metahq_data.tar.gz"},
 }
 
 
