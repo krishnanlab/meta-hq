@@ -436,6 +436,7 @@ class Query:
 
     def __init__(
         self,
+        database,
         attribute,
         level,
         ecode,
@@ -446,6 +447,7 @@ class Query:
         logdir=Path("."),
         verbose=True,
     ):
+        self.database: str = database
         self.attribute: str = attributes(attribute)
         self.level: Literal["sample", "series"] = level
         self.ecodes: list[str] = self._load_ecode(ecode)
