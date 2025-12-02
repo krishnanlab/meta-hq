@@ -402,7 +402,7 @@ class UnParsedEntry:
 
 
 class Query:
-    """Class to query the annotations dictionary.
+    """Class to query the MetaHQ database.
 
     Attributes:
         attribute (str):
@@ -460,7 +460,7 @@ class Query:
         self.verbose: bool = verbose
 
     def annotations(self, anchor: Literal["id", "value"] = "id") -> Annotations:
-        """Retrieve annotations from the databse annotations dictionary.
+        """Retrieve annotations from the MetaHQ database.
 
         Arguments:
             anchor (Literal['id', 'value']):
@@ -502,7 +502,7 @@ class Query:
         )
 
     def compile_annotations(self, id_cols: list[str]) -> pl.DataFrame:
-        """Extract attribute annotations and accession IDs from the annotations dictionary.
+        """Extract attribute annotations and accession IDs from the database.
 
         Arguments:
             id_cols (list[str]):
@@ -581,8 +581,7 @@ class Query:
         return accessions
 
     def get_valid_annotations(self, entry: str) -> tuple[str, str]:
-        """
-        Extract id and value annotations for each source of annotations in an entry.
+        """Extract id and value annotations for each source of annotations in an entry.
 
         Arguments:
             entry: str
@@ -609,7 +608,7 @@ class Query:
         raise ValueError(f"Expected level in [sample, study], got {self.level}.")
 
     def _load_annotations(self):
-        """Loads the annotations dictionary for the specified level."""
+        """Loads the MetaHQ database for the specified level."""
         anno = load_bson(get_annotations(self.level))
 
         return anno
