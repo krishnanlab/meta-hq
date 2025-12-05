@@ -128,6 +128,9 @@ nav:
               - QueryConfig: packages/cli/api/configs/query.md
               - CurationConfig: packages/cli/api/configs/curation.md
               - OutputConfig: packages/cli/api/configs/output.md
+            - Setup: 
+              - Config: packages/cli/api/setup/config.md
+              - Downloader: packages/cli/api/setup/download.md
   - Developer Guide:
       - Contributing: developer/contributing.md
       - Development Setup: developer/setup.md
