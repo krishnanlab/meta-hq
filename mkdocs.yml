@@ -122,8 +122,12 @@ nav:
             - Search: packages/cli/commands/search.md
             - Retrieve: packages/cli/commands/retrieve.md
           - API Reference:
-            - Retriever: packages/cli/api/retriever.md
             - Builder: packages/cli/api/builder.md
+            - Retriever: packages/cli/api/retriever.md
+            - Retrieval Configs: 
+              - QueryConfig: packages/cli/api/configs/query.md
+              - CurationConfig: packages/cli/api/configs/curation.md
+              - OutputConfig: packages/cli/api/configs/output.md
   - Developer Guide:
       - Contributing: developer/contributing.md
       - Development Setup: developer/setup.md

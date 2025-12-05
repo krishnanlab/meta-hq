@@ -1,1 +1,1 @@
-::: metahq_cli.retriever
+::: metahq_cli.retriever.Retriever
