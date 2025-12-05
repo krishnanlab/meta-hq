@@ -95,14 +95,14 @@ nav:
         - Search: user-guide/cli/search.md
         - Retrieve: user-guide/cli/retrieve.md
   - Packages:
-      - Home: packages/index.md
       - Core:
-          - Overview: packages/core/overview.md
           - API Reference:
-            - Overview: packages/core/api/index.md
-            - Query: packages/core/api/query.md
+            - Query: 
+              - Query: packages/core/api/query/query.md
+              - LongAnnotations: packages/core/api/query/long_anno.md
+              - ParsedEntry: packages/core/api/query/parsed.md
+              - UnParsedEntry: packages/core/api/query/unparsed.md
             - Curations:
-              - Overview: packages/core/api/curations/index.md
               - Annotations: packages/core/api/curations/annotations.md
               - Labels: packages/core/api/curations/labels.md
               - Ids: packages/core/api/curations/ids.md
@@ -110,7 +110,6 @@ nav:
             - Export: packages/core/api/export.md
             - Search: packages/core/api/search.md
             - Utilities:
-              - Overview: packages/core/api/util/index.md
               - IO: packages/core/api/util/io.md
               - Exceptions: packages/core/api/util/exceptions.md
               - Helpers: packages/core/api/util/helpers.md
@@ -118,13 +117,13 @@ nav:
               - Supported: packages/core/api/util/supported.md
             - Logger: packages/core/api/logger.md
       - CLI:
-          - Overview: packages/cli/overview.md
           - Commands:
             - Setup: packages/cli/commands/setup.md
             - Search: packages/cli/commands/search.md
             - Retrieve: packages/cli/commands/retrieve.md
           - API Reference:
-            - Overview: packages/cli/api/index.md
+            - Retriever: packages/cli/api/retriever.md
+            - Builder: packages/cli/api/builder.md
   - Developer Guide:
       - Contributing: developer/contributing.md
       - Development Setup: developer/setup.md
