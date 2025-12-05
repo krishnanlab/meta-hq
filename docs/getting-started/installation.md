@@ -4,9 +4,9 @@ See the following link to install `uv`: [https://docs.astral.sh/uv/getting-start
 ## Prerequisites
 
 - `python>=3.12`
-- `pip`, `uv`, or `conda`
+- `pip` or `uv`
 
-### CLI
+### CLI (Recommended)
 
 Run the following to install the CLI. This will also install `metahq-core` by default.
 
@@ -20,15 +20,6 @@ Run the following to install the CLI. This will also install `metahq-core` by de
 
     ``` bash
     uv add metahq-cli
-    ```
-
-=== "conda"
-
-    ``` bash
-    conda env create -n metahq "python>=3.12"
-    conda activate metahq
-
-    pip install metahq-cli
     ```
 
 ### Core only
@@ -45,15 +36,6 @@ Run the following to install `metahq-core`.
 
     ``` bash
     uv add metahq-core
-    ```
-
-=== "conda"
-
-    ``` bash
-    conda env create -n metahq "python>=3.12"
-    conda activate metahq
-
-    pip install metahq-core
     ```
 
 ## Install from Source
