@@ -4,7 +4,7 @@ Command to setup the metahq configuration.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-12-05 by Parker Hicks
 """
 
 import sys
@@ -25,9 +25,23 @@ CONFIG_FILE: Path = get_config_file_no_check()
 
 
 class Config:
-    """
-    Class to store and assess and create the meta-hq configuration file.
+    """Class to store and assess and create the meta-hq configuration file.
 
+    Attributes:
+        version (str):
+            A version name of the MetaHQ database (e.g., `'v0.1.0'`).
+
+        zenodo_doi (str):
+            A DOI of the MetaHQ database in Zenodo.
+
+        data_dir (str):
+            Path to where the MetaHQ data are stored.
+
+        logs (str):
+            Path to where the MetaHQ logs are stored.
+
+        ok_keys (list[str]):
+            Acceptable keys in the config.
     """
 
     def __init__(
@@ -50,7 +64,6 @@ class Config:
                 __name__, level=loglevel, log_dir=logs, console=console
             )
         self.logger: logging.Logger = logger
-
         self.verbose = verbose
 
         self.ok_keys: list[str] = ["version", "zenodo_doi", "data_dir", "logs"]
@@ -105,7 +118,13 @@ class Config:
         }
 
     def save_config(self, config: dict[str, str]):
-        """Saves a config file."""
+        """Saves a config file.
+
+        Arguments:
+            config (dict[str, str]):
+                A config with acceptable keys.
+
+        """
         self.logger.info("Saving MetaHQ config to %s", CONFIG_FILE)
         with open(CONFIG_FILE, "w", encoding="utf-8") as stream:
             try:
@@ -141,5 +160,5 @@ class Config:
 
     @property
     def path(self) -> str:
-        """Returns /path/to/config.yaml"""
+        """Returns `/path/to/config.yaml`"""
         return str(CONFIG_FILE)
