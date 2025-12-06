@@ -134,11 +134,9 @@ nav:
   - Developer Guide:
       - Contributing: developer/contributing.md
       - Development Setup: developer/setup.md
-      - Testing: developer/testing.md
-      - Architecture: developer/architecture.md
   - About:
+      - Mission: about/mission.md
       - License: about/license.md
-      - Changelog: about/changelog.md
 
 extra:
   social:
