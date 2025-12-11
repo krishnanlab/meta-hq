@@ -1,4 +1,4 @@
-We recommend using the `uv` to install `metahq` packages. It is a modern, simple, and fast Rust-based package manager.
+We recommend using the `uv` package manager to install `metahq` packages. It is a modern, simple, and fast Rust-based package manager.
 See the following link to install `uv`: [https://docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation)
 
 ## Prerequisites
