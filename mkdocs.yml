@@ -95,6 +95,7 @@ nav:
         - Search: user-guide/cli/search.md
         - Retrieve: user-guide/cli/retrieve.md
   - Packages:
+      - Overview: packages/index.md
       - Core:
           - API Reference:
             - Query: 
