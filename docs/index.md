@@ -12,7 +12,7 @@ Welcome to the MetaHQ documentation!
 
 - [Installation Guide](getting-started/installation.md)
 - [Quick Start Tutorial](getting-started/quickstart.md)
-- [CLI Commands](packages/cli/commands/overview.md)
+- [CLI User Guide](user-guide/cli/setup.md)
 - [Contributing](developer/contributing.md)
 
 ## Packages
@@ -40,7 +40,4 @@ A command-line interface built on top of MetaHQ Core, providing easy-to-use comm
 
 ## Getting Help
 
-If you encounter any issues or have questions:
-
-- Check the [User Guide](user-guide/cli-usage.md)
-- Open an issue on [GitHub](https://github.com/krishnan/meta-hq/issues)
+Open an issue on [GitHub](https://github.com/krishnan/meta-hq/issues) if you encounter any issues or have questions:
