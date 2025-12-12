@@ -1,0 +1,152 @@
+site_name: MetaHQ Documentation
+site_description: Query systems for accessing the MetaHQ database.
+site_author: Parker Hicks, Faisal Alquaddoomi
+site_url: https://krishnanlab.github.io/meta-hq/
+
+repo_name: krishnanlab/meta-hq
+repo_url: https://github.com/krishnanlab/meta-hq
+edit_uri: blob/main/docs/
+
+extra_css:
+  - stylesheets/extra.css
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [packages/core/src, packages/cli/src]
+          options:
+            docstring_style: google
+            show_source: false
+            show_root_heading: false
+            show_root_toc_entry: false
+            show_root_full_path: false
+            show_submodules: true
+            members_order: source
+
+markdown_extensions:
+  - mkdocs-click
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 4
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - User Guide:
+      - CLI:
+        - Setup: user-guide/cli/setup.md
+        - Search: user-guide/cli/search.md
+        - Retrieve: user-guide/cli/retrieve.md
+  - Packages:
+      - Overview: packages/index.md
+      - Core:
+          - API Reference:
+            - Query: 
+              - Query: packages/core/api/query/query.md
+              - LongAnnotations: packages/core/api/query/long_anno.md
+              - ParsedEntry: packages/core/api/query/parsed.md
+              - UnParsedEntry: packages/core/api/query/unparsed.md
+            - Curations:
+              - Annotations: packages/core/api/curations/annotations.md
+              - Labels: packages/core/api/curations/labels.md
+              - Ids: packages/core/api/curations/ids.md
+              - Propagator: packages/core/api/curations/propagator.md
+            - Export: packages/core/api/export.md
+            - Search: packages/core/api/search.md
+            - Utilities:
+              - IO: packages/core/api/util/io.md
+              - Exceptions: packages/core/api/util/exceptions.md
+              - Helpers: packages/core/api/util/helpers.md
+              - Progress: packages/core/api/util/progress.md
+              - Supported: packages/core/api/util/supported.md
+            - Logger: packages/core/api/logger.md
+      - CLI:
+          - Commands:
+            - Setup: packages/cli/commands/setup.md
+            - Search: packages/cli/commands/search.md
+            - Retrieve: packages/cli/commands/retrieve.md
+          - API Reference:
+            - Builder: packages/cli/api/builder.md
+            - Retriever: packages/cli/api/retriever.md
+            - Retrieval Configs: 
+              - QueryConfig: packages/cli/api/configs/query.md
+              - CurationConfig: packages/cli/api/configs/curation.md
+              - OutputConfig: packages/cli/api/configs/output.md
+            - Setup: 
+              - Config: packages/cli/api/setup/config.md
+              - Downloader: packages/cli/api/setup/download.md
+  - Developer Guide:
+      - Contributing: developer/contributing.md
+      - Development Setup: developer/setup.md
+  - About:
+      - Mission: about/mission.md
+      - License: about/license.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/krishnanlab/meta-hq
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/metahq-cli/
+
+extra_css:
+  - stylesheets/extra.css
+
+copyright: Copyright &copy; 2025 The Krishnan Lab
