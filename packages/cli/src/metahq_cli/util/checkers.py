@@ -1,0 +1,110 @@
+"""
+Checker functions for the MetaHQ CLI pipelines.
+
+These checkers pull from two separate supported modules from
+metahq_core and metahq_cli since there are different requirements
+for CLI-based checks and MetaHQ core function checks.
+
+Author: Parker Hicks
+Date: 2025-09
+
+Last updated: 2025-11-24 by Parker Hicks
+"""
+
+from pathlib import Path
+
+from metahq_core.util.io import checkdir, load_txt
+from metahq_core.util.supported import supported
+
+from metahq_cli.util.messages import error
+from metahq_cli.util.supported import log_map, required_filters
+
+
+def check_filter_keys(filters: dict[str, str]):
+    unaccaptable = []
+    for f in filters:
+        if f not in required_filters():
+            unaccaptable.append(f)
+    return unaccaptable
+
+
+def check_binary(file: Path | str) -> bool:
+    with open(file, "rb") as f:
+        return b"\x00" in f.read(8000)
+
+
+def check_if_txt(string: str) -> list[str] | str:
+    if Path(string).is_file():
+        if check_binary(Path(string)):
+            error(f"Detected binary file: {string}. Please write terms to text file.")
+        return load_txt(string)
+
+    return string
+
+
+def check_level(level: str):
+    if level not in supported("levels"):
+        error(f"Expected level in {supported('levels')}, got {level}.")
+
+
+def check_loglevel(loglevel: int | str) -> int:
+    """Check input log level."""
+    mapping = log_map()
+    if isinstance(loglevel, str) and (loglevel in mapping):
+        return mapping[loglevel]
+    if isinstance(loglevel, int) and (loglevel in mapping.values()):
+        return loglevel
+
+    raise ValueError(
+        f"Invalid log level. Choose from {list(mapping.keys())} or {list(mapping.values())}."
+    )
+
+
+def check_metadata(level: str, metadata: str):
+    _metadata = metadata.split(",")
+
+    if level == "sample":
+        _supported = supported("sample_metadata")
+
+    elif level == "series":
+        _supported = supported("series_metadata")
+
+    else:
+        check_level(level)
+        exit(0)
+
+    report_bad_entries("metadata", _supported, _metadata)
+
+
+def check_format(fmt: str):
+    _supported = supported("formats")
+    if fmt not in _supported:
+        error(f"Expected fmt argument in {_supported}, got {fmt}.")
+
+
+def check_mode(task: str, mode: str):
+    if (task in ["sex", "age"]) & (mode != "direct"):
+        error(
+            "Sex annotation queries must be direct annotations. Change to mode argument to 'direct'."
+        )
+
+
+def check_outfile(outfile: Path | str):
+    _ = checkdir(outfile, is_file=True)
+
+
+def check_filter(_filter: str, query: str):
+    """Supports checking for ecode, technology, and species."""
+    _supported = supported(_filter)
+    if not query in _supported:
+        error(f"Expected {_filter} in {_supported}, got {query}.")
+
+
+def report_bad_entries(field: str, _supported: list[str], entries: list[str]):
+    bad = []
+    for entry in entries:
+        if entry not in _supported:
+            bad.append(entry)
+
+    if len(bad) > 0:
+        error(f"Bad arguments for {field}: {bad}. Expected arguments in {_supported}.")
