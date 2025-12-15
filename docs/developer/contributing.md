@@ -102,3 +102,7 @@ To submit codebase contributions, please use the following PR template:
 - [ ] Added/updated tests
 - [ ] Updated documentation (if applicable)
 ```
+
+## Contact
+
+If you have any questions, please contact [arjun.krishnan@cuanschutz.edu](mailto:arjun.krishnan@cuanschutz.edu).
