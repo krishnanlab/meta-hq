@@ -547,7 +547,7 @@ class Query:
         if species in map_:
             return map_[species]  # provided shorthand
         if species in map_.values():
-            return reverse_dict(map_)[species]
+            return species
         raise ValueError(
             f"Invalid species query: {species}. Run metahq supported species for available options."
         )
