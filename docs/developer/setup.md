@@ -22,24 +22,27 @@ and `packages/core`, respectively.
 
 Install with:
 
-=== "Make (Recommended)"
+=== "make (uv)"
+
+    ```bash
+    make uv_dev
+    ```
+
+=== "make"
 
     ```bash
     make dev
     ```
 
-=== "uv"
+Or manually:
 
-    ```bash
-    uv pip install -e . ".[dev]"
-    ```
+```bash
+cd packages/core
+pip install -e ".[dev]"
 
-=== "Manual"
-
-    ```bash
-    pip install -e packages/core[dev]
-    pip install -e packages/cli[dev]
-    ```
+cd ../cli
+pip install -e ".[dev]"
+```
 
 ## Configure the package
 
