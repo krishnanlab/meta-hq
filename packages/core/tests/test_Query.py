@@ -59,7 +59,7 @@ def sample_long_annotations():
 def sample_annotation_entry():
     """Sample annotation entry from the annotations dictionary"""
     return {
-        "organism": "Homo sapiens",
+        "organism": "homo sapiens",
         "tissue": {
             "source1": {
                 "id": "UBERON:0001",
@@ -92,7 +92,7 @@ def mock_annotations_dict():
     """Mock annotations dictionary with multiple entries"""
     return {
         "entry1": {
-            "organism": "Homo sapiens",
+            "organism": "homo sapiens",
             "tissue": {
                 "source1": {
                     "id": "UBERON:0001",
@@ -107,7 +107,7 @@ def mock_annotations_dict():
             },
         },
         "entry2": {
-            "organism": "Homo sapiens",
+            "organism": "homo sapiens",
             "tissue": {
                 "source1": {
                     "id": "UBERON:0002",
@@ -122,7 +122,7 @@ def mock_annotations_dict():
             },
         },
         "entry3": {
-            "organism": "Mus musculus",
+            "organism": "mus musculus",
             "tissue": {
                 "source1": {
                     "id": "UBERON:0003",
@@ -374,37 +374,37 @@ class TestUnParsedEntry:
     def test_init(self, sample_annotation_entry):
         """Test basic initialization"""
         entry = UnParsedEntry(
-            sample_annotation_entry, "tissue", ["expert-curated"], "Homo sapiens"
+            sample_annotation_entry, "tissue", ["expert-curated"], "homo sapiens"
         )
         assert entry.entry == sample_annotation_entry
         assert entry.attribute == "tissue"
         assert entry.ecodes == ["expert-curated"]
-        assert entry.species == "Homo sapiens"
+        assert entry.species == "homo sapiens"
 
     def test_is_acceptable_valid(self, sample_annotation_entry):
         """Test is_acceptable returns True for valid entry"""
         entry = UnParsedEntry(
-            sample_annotation_entry, "tissue", ["expert-curated"], "Homo sapiens"
+            sample_annotation_entry, "tissue", ["expert-curated"], "homo sapiens"
         )
         assert entry.is_acceptable() is True
 
     def test_is_acceptable_wrong_species(self, sample_annotation_entry):
         """Test is_acceptable returns False for wrong species"""
         entry = UnParsedEntry(
-            sample_annotation_entry, "tissue", ["expert-curated"], "Mus musculus"
+            sample_annotation_entry, "tissue", ["expert-curated"], "mus musculus"
         )
         assert entry.is_acceptable() is False
 
     def test_is_acceptable_missing_attribute(self, sample_annotation_entry):
         """Test is_acceptable returns False when attribute doesn't exist"""
         entry = UnParsedEntry(
-            sample_annotation_entry, "age", ["expert-curated"], "Homo sapiens"
+            sample_annotation_entry, "age", ["expert-curated"], "homo sapiens"
         )
         assert entry.is_acceptable() is False
 
     def test_is_acceptable_empty_entry(self):
         """Test is_acceptable returns False for empty entry"""
-        entry = UnParsedEntry({}, "tissue", ["expert-curated"], "Homo sapiens")
+        entry = UnParsedEntry({}, "tissue", ["expert-curated"], "homo sapiens")
         assert entry.is_acceptable() is False
 
     def test_get_id_value(self):
@@ -431,7 +431,7 @@ class TestUnParsedEntry:
     def test_get_annotations_single_source(self):
         """Test getting annotations from a single source"""
         entry_data = {
-            "organism": "Homo sapiens",
+            "organism": "homo sapiens",
             "tissue": {
                 "source1": {
                     "id": "UBERON:0001",
@@ -440,7 +440,7 @@ class TestUnParsedEntry:
                 }
             },
         }
-        entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "Homo sapiens")
+        entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
         ids, values = entry.get_annotations()
         assert ids == "UBERON:0001"
         assert values == "brain"
@@ -448,7 +448,7 @@ class TestUnParsedEntry:
     def test_get_annotations_multiple_sources(self, sample_annotation_entry):
         """Test getting annotations from multiple sources"""
         entry = UnParsedEntry(
-            sample_annotation_entry, "tissue", ["expert-curated"], "Homo sapiens"
+            sample_annotation_entry, "tissue", ["expert-curated"], "homo sapiens"
         )
         ids, values = entry.get_annotations()
         # Results are concatenated with | and order might vary due to set
@@ -461,7 +461,7 @@ class TestUnParsedEntry:
     def test_get_annotations_filtered_by_ecode(self):
         """Test that annotations are filtered by evidence code"""
         entry_data = {
-            "organism": "Homo sapiens",
+            "organism": "homo sapiens",
             "tissue": {
                 "source1": {
                     "id": "UBERON:0001",
@@ -475,7 +475,7 @@ class TestUnParsedEntry:
                 },
             },
         }
-        entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "Homo sapiens")
+        entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
         ids, values = entry.get_annotations()
         # Should only include expert-curated annotation
         assert ids == "UBERON:0001"
@@ -484,7 +484,7 @@ class TestUnParsedEntry:
     def test_get_annotations_not_acceptable(self):
         """Test getting annotations when entry is not acceptable"""
         entry_data = {
-            "organism": "Mus musculus",
+            "organism": "mus musculus",
             "tissue": {
                 "source1": {
                     "id": "UBERON:0001",
@@ -493,7 +493,7 @@ class TestUnParsedEntry:
                 }
             },
         }
-        entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "Homo sapiens")
+        entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
         ids, values = entry.get_annotations()
         assert ids == "NA"
         assert values == "NA"
@@ -510,16 +510,18 @@ class TestQueryInit:
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
     def test_init_basic(self, mock_get_annotations, mock_load_bson):
-        """Test basic initialization with default parameters"""
+        """Test basic initialization."""
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue")
+        query = Query(
+            "geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq"
+        )
 
         assert query.database == "geo"
         assert query.attribute == "tissue"
         assert query.level == "sample"
-        assert query.species == "Homo sapiens"
+        assert query.species == "homo sapiens"
         assert query.technology == "rnaseq"
 
     @patch("metahq_core.query.load_bson")
@@ -581,7 +583,7 @@ class TestQueryInit:
         mock_load_bson.return_value = {}
 
         query = Query("geo", "tissue", species="human")
-        assert query.species == "Homo sapiens"
+        assert query.species == "homo sapiens"
 
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
@@ -662,7 +664,7 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_annotations = {
             "entry1": {
-                "organism": "Homo sapiens",
+                "organism": "homo sapiens",
                 "tissue": {"source1": {"id": "UBERON:0001", "ecode": "expert-curated"}},
                 "accession_ids": {
                     "sample": "GSM1",
@@ -704,7 +706,7 @@ class TestQueryMethods:
         mock_load_bson.return_value = mock_annotations_dict
 
         query = Query("geo", "tissue", level="sample", species="human")
-        # entry3 is Mus musculus
+        # entry3 is mus musculus
         ids, values = query.get_valid_annotations("entry3")
 
         assert ids == "NA"
@@ -746,7 +748,7 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {
             "entry1": {
-                "organism": "Homo sapiens",
+                "organism": "homo sapiens",
                 "tissue": {"source1": {"id": "UBERON:0001", "ecode": "expert-curated"}},
                 "accession_ids": {
                     "sample": "GSM1",
