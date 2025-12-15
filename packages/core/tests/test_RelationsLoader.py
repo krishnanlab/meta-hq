@@ -16,7 +16,7 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from metahq_core.ontology.loader import COL_ID, ROW_ID, RelationsLoader
+from metahq_core.relations_loader import COL_ID, ROW_ID, RelationsLoader
 
 
 @pytest.fixture
