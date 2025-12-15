@@ -78,7 +78,13 @@ class Config:
         """Checks if config has correct structure."""
         config = self.load_config()
 
-        self.logger.debug("Existing config: %s", config)
+        if self.verbose:
+            self.logger.debug("Existing config: %s", config)
+
+        if config is None:
+            if self.verbose:
+                self.logger.info("Found empty config. Initializing a new one...")
+            self.set_default()
 
         return sorted(list(config.keys())) == sorted(self.ok_keys)
 
