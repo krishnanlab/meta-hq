@@ -246,7 +246,7 @@ class Builder:
         else:
             self.log.error("Invalid input: %s", terms)
 
-        _terms = self.map_sex_to_id(_terms)
+        _terms = self._map_sex_to_id(_terms)
         return CurationConfig(mode, _terms, ontology="sex")
 
     def _map_sex_to_id(self, terms: list[str]):
