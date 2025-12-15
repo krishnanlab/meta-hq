@@ -3,18 +3,16 @@ name = "metahq-core"
 dynamic = ["version"]
 description = "Core API for the meta-hq CLI."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [
     {name = "Parker Hicks", email = "parker.hicks@cuanschutz.edu"},
     {name = "Faisal Alquaddoomi", email = "faisal.alquaddoomi@cuanschutz.edu"},
 ]
-keywords = ["CLI", "Database", "Data Curation", "Public Biomedical Data"]
+keywords = ["Database", "Data Curation", "Public Biomedical Data"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
@@ -39,6 +37,12 @@ dev = [
     "isort",
     "flake8",
     "mypy",
+    "mkdocs>=1.6.1",
+    "pymdown-extensions",
+    "mkdocstrings[python]",
+    "mkdocs-material",
+    "mkdocs-click",
+    "vulture",
 ]
 
 test = [
@@ -71,7 +75,7 @@ profile = "black"
 multi_line_output = 3
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
