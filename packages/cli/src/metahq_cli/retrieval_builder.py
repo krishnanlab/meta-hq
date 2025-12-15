@@ -107,10 +107,11 @@ class Builder:
                 raise NoResultsFound(msg)
 
             # only raise warning if some are missing
-            self.log.warning(
-                "No annotations for input terms: %s",
-                missing,
-            )
+            if self.verbose:
+                self.log.warning(
+                    "No annotations for input terms: %s",
+                    missing,
+                )
 
         return parsed
 
