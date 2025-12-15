@@ -4,7 +4,7 @@ Command to setup the metahq configuration.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-12-15 by Parker Hicks
 """
 
 import sys
@@ -83,8 +83,8 @@ class Config:
 
         if config is None:
             if self.verbose:
-                self.logger.info("Found empty config. Initializing a new one...")
-            self.set_default()
+                self.logger.debug("Existing config is empty.")
+            return False
 
         return sorted(list(config.keys())) == sorted(self.ok_keys)
 
@@ -129,7 +129,7 @@ class Config:
     def set_default(self):
         """Makes a default meta-hq config."""
         self.logger.info("Making config with default arguments.")
-        self.save_config(self.make_config())
+        self.make_config()
 
     def initialize_config(self):
         """Initialize the meta-hq config file."""

@@ -311,24 +311,6 @@ class TestConfig:
             mock_save.assert_called_once_with({"test": "config"})
 
     # ========================================
-    # ======  set_default tests
-    # ========================================
-
-    def test_set_default_saves_config(self, config):
-        """Test set_default calls make_config and save_config."""
-        with (
-            patch.object(config, "make_config") as mock_make,
-            patch.object(config, "save_config") as mock_save,
-        ):
-            mock_make.return_value = {"default": "config"}
-
-            config.set_default()
-
-            mock_make.assert_called_once()
-            mock_save.assert_called_once_with({"default": "config"})
-            config.logger.info.assert_called()
-
-    # ========================================
     # ======  initialize_config tests
     # ========================================
 

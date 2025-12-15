@@ -461,9 +461,11 @@ class TestBuilder:
         mock_lazyframe.collect_schema.return_value = mock_schema
         mock_scan.return_value = mock_lazyframe
 
-        result = builder.parse_onto_terms("all", "uberon")
+        with patch("metahq_cli.retrieval_builder.get_ontology_families") as mock_get:
+            mock_get.return_value = {"relations": "path/to/relations.parquet"}
+            result = builder.parse_onto_terms("all", "uberon")
 
-        assert "UBERON:0000001" in result
-        assert "UBERON:0000002" in result
-        # UBERON:0000003 is not in available list, so should not be included
-        assert "UBERON:0000003" not in result
+            assert "UBERON:0000001" in result
+            assert "UBERON:0000002" in result
+            # UBERON:0000003 is not in available list, so should not be included
+            assert "UBERON:0000003" not in result
