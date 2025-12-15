@@ -19,7 +19,7 @@ Run the following to install the CLI. This will also install `metahq-core` by de
 === "uv"
 
     ``` bash
-    uv add metahq-cli
+    uv pip install metahq-cli
     ```
 
 ### Core only
@@ -35,7 +35,7 @@ Run the following to install `metahq-core`.
 === "uv"
 
     ``` bash
-    uv add metahq-core
+    uv pip install metahq-core
     ```
 
 ## Install from Source
@@ -49,13 +49,23 @@ cd meta-hq
 
 ### 2) Install packages
 
-Using `make` requires `uv` and will automatically create a `uv venv`. run `source .venv/bin/activate` to activate it.
+Some `make` commands require `uv` (e.g., `make uv_install` or `make uv_dev`). These will automatically create a `uv venv`. Run `source .venv/bin/activate` to activate it.
 
-=== "Make (Recommended)"
+Using `make`:
+
+=== "make (uv)"
+
+    ```bash
+    make uv_install
+    ```
+
+=== "make"
 
     ```bash
     make install
     ```
+
+Or with `pip`:
 
 === "pip"
 
@@ -71,23 +81,26 @@ Using `make` requires `uv` and will automatically create a `uv venv`. run `sourc
 
 ## Development Installation
 
-For contributing or development:
+For contributing or development with `make`:
 
-=== "Make (Recommended)"
+=== "make (uv)"
+
+    ```bash
+    make uv_dev
+    ```
+
+=== "make"
 
     ```bash
     make dev
     ```
 
-=== "uv"
+Or manually:
 
-    ```bash
-    uv pip install -e . ".[dev]"
-    ```
+```bash
+cd packages/core
+pip install -e ".[dev]"
 
-=== "Manual"
-
-    ```bash
-    pip install -e packages/core[dev]
-    pip install -e packages/cli[dev]
-    ```
+cd ../cli
+pip install -e ".[dev]"
+```
