@@ -8,7 +8,7 @@ and configure the package.
 Download the latest MetaHQ database and configure the CLI:
 
 ```bash
-$ metahq setup
+metahq setup
 ```
 
 ## Retrieve
@@ -17,7 +17,7 @@ Query the database for curated, biological context annotations. Below is an exam
 tissue annotations from human RNA-Seq samples:
 
 ```bash
-$ metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
+metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
     --level sample --filters "species=human,tech=rnaseq,ecode=expert" \
     --metadata "sample,series,description" --fmt tsv --output annotations.tsv
 ```
@@ -30,7 +30,7 @@ Tissue and disease queries require standardized ontology term ID inputs. The fol
 MONDO disease ontology term IDs to "heart attack".
 
 ```bash
-$ metahq search --query "heart attack" --type disease --ontology MONDO -k 5
+metahq search --query "heart attack" --type disease --ontology MONDO -k 5
 ```
 
 The EBI Ontology Lookup Service is also an excellent way to find term IDs. See the links below:
