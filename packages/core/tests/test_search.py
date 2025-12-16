@@ -8,7 +8,7 @@ These are unit tests that mock the DuckDB database connection to avoid
 dependency on actual database files while maintaining full test coverage
 of the search logic, BM25 ranking, and result processing.
 
-Author: Faisal Alquaddoomi
+Authors: Faisal Alquaddoomi, Parker Hicks
 Date: 2025-09-25
 
 Last updated: 2025-12-16 by Parker Hicks
