@@ -4,14 +4,20 @@ Test the search functionality of MetaHQ.
 This module tests the search functionality that allows users to query
 ontological terms by name and synonyms using BM25+ ranking.
 
-Author: Faisal Alquaddoomi
-Date: 2025-09-25
+This is an integration test that tests the same functionalities of the unit test
+found in `packages/core/tests/test_search.py`. This uses the actual database and `metahq setup`
+must be run before running this test.
+
+Authors: Faisal Alquaddoomi, Parker Hicks
+Date: 2025-12-16
+
+Last updated: 2025-12-16 by Parker Hicks
 """
 
 import polars as pl
 import pytest
 
-from metahq_core.search import search, NoResultsFound
+from metahq_core.search import NoResultsFound, search
 from metahq_core.util.supported import get_ontology_search_db
 
 # Path to the database file
