@@ -2,9 +2,9 @@
 Unit tests for Query class and related helper classes.
 
 Author: Parker Hicks
-Date: 2025-10-24
+Date: 2025-12-16
 
-Last updated: 2025-10-24 by Parker Hicks
+Last updated: 2025-12-16 by Parker Hicks
 """
 
 from unittest.mock import MagicMock, patch
@@ -711,3 +711,127 @@ class TestQueryMethods:
 
         assert ids == "NA"
         assert values == "NA"
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    @patch("metahq_core.query.pl.scan_parquet")
+    def test_compile_annotations(
+        self,
+        mock_scan_parquet,
+        mock_get_annotations,
+        mock_load_bson,
+        mock_annotations_dict,
+    ):
+        """Test compiling annotations from the dictionary"""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = mock_annotations_dict
+
+        # Mock platform filtering
+        mock_df = MagicMock()
+        mock_df.filter.return_value.collect.return_value = {"id": ["GPL570", "GPL96"]}
+        mock_scan_parquet.return_value = mock_df
+
+        query = Query("geo", "tissue", level="sample")
+        result = query.compile_annotations(["sample", "series", "platform"])
+
+        assert isinstance(result, LongAnnotations)
+        assert isinstance(result.annotations, pl.DataFrame)
+        assert result.annotations.height > 0
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    @patch("metahq_core.query.pl.scan_parquet")
+    def test_compile_annotations_empty_raises_error(
+        self, mock_scan_parquet, mock_get_annotations, mock_load_bson
+    ):
+        """Test that empty annotations raise RuntimeError"""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {
+            "entry1": {
+                "organism": "homo sapiens",
+                "tissue": {"source1": {"id": "UBERON:0001", "ecode": "expert-curated"}},
+                "accession_ids": {
+                    "sample": "GSM1",
+                    "series": "GSE1",
+                    "platform": "GPL999",
+                },
+            }
+        }
+
+        # Mock platform filtering to return no valid platforms
+        mock_df = MagicMock()
+        mock_df.filter.return_value.collect.return_value = {"id": ["GPL570"]}
+        mock_scan_parquet.return_value = mock_df
+
+        query = Query("geo", "tissue", level="sample")
+
+        with pytest.raises(
+            RuntimeError, match="Unable to identify with provided parameters"
+        ):
+            query.compile_annotations(["sample", "series", "platform"])
+
+
+class TestQueryIntegration:
+    """Integration tests for Query class end-to-end workflows"""
+
+    @patch("metahq_core.query.Annotations.from_df")
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    @patch("metahq_core.query.pl.scan_parquet")
+    def test_annotations_method(
+        self,
+        mock_scan_parquet,
+        mock_get_annotations,
+        mock_load_bson,
+        mock_from_df,
+        mock_annotations_dict,
+    ):
+        """Test the full annotations() method workflow"""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = mock_annotations_dict
+
+        # Mock platform filtering
+        mock_df = MagicMock()
+        mock_df.filter.return_value.collect.return_value = {"id": ["GPL570", "GPL96"]}
+        mock_scan_parquet.return_value = mock_df
+
+        # Mock the Annotations.from_df return
+        mock_annotations_obj = MagicMock()
+        mock_from_df.return_value = mock_annotations_obj
+
+        query = Query("geo", "tissue", level="sample")
+        result = query.annotations(anchor="id")
+
+        # Verify Annotations.from_df was called
+        assert mock_from_df.called
+        assert result == mock_annotations_obj
+
+    @patch("metahq_core.query.Annotations.from_df")
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    @patch("metahq_core.query.pl.scan_parquet")
+    def test_annotations_method_with_value_anchor(
+        self,
+        mock_scan_parquet,
+        mock_get_annotations,
+        mock_load_bson,
+        mock_from_df,
+        mock_annotations_dict,
+    ):
+        """Test annotations() method with value anchor"""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = mock_annotations_dict
+
+        # Mock platform filtering
+        mock_df = MagicMock()
+        mock_df.filter.return_value.collect.return_value = {"id": ["GPL570", "GPL96"]}
+        mock_scan_parquet.return_value = mock_df
+
+        mock_annotations_obj = MagicMock()
+        mock_from_df.return_value = mock_annotations_obj
+
+        query = Query("geo", "tissue", level="sample")
+        result = query.annotations(anchor="value")
+
+        assert mock_from_df.called
+        assert result == mock_annotations_obj
