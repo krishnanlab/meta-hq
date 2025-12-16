@@ -136,6 +136,7 @@ nav:
       - Contributing: developer/contributing.md
       - Development Setup: developer/setup.md
   - About:
+      - Cite Us: about/citation.md 
       - Mission: about/mission.md
       - License: about/license.md
 
