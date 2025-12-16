@@ -29,6 +29,7 @@ dependencies = [
     "pyyaml>=5.1",
     "duckdb>=1.4.0",
     "rank-bm25>=0.2.2",
+    "rich>=13.0.0",
 ]
 
 [project.optional-dependencies]
