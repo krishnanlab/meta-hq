@@ -6,7 +6,7 @@ See the following link to install `uv`: [https://docs.astral.sh/uv/getting-start
 - `python>=3.12`
 - `pip` or `uv`
 
-## Install from PyPI
+## Install from PyPI (Recommended)
 
 Run the following to install the CLI. This will also install `metahq-core` by default.
 
