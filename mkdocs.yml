@@ -94,35 +94,39 @@ nav:
         - Setup: user-guide/cli/setup.md
         - Search: user-guide/cli/search.md
         - Retrieve: user-guide/cli/retrieve.md
-  - Packages:
-      - Overview: packages/index.md
-      - Core:
-          - API Reference:
-            - Query: 
-              - Query: packages/core/api/query/query.md
-              - LongAnnotations: packages/core/api/query/long_anno.md
-              - ParsedEntry: packages/core/api/query/parsed.md
-              - UnParsedEntry: packages/core/api/query/unparsed.md
-            - Curations:
-              - Annotations: packages/core/api/curations/annotations.md
-              - Labels: packages/core/api/curations/labels.md
-              - Ids: packages/core/api/curations/ids.md
-              - Propagator: packages/core/api/curations/propagator.md
-            - Export: packages/core/api/export.md
-            - Search: packages/core/api/search.md
-            - Utilities:
-              - IO: packages/core/api/util/io.md
-              - Exceptions: packages/core/api/util/exceptions.md
-              - Helpers: packages/core/api/util/helpers.md
-              - Progress: packages/core/api/util/progress.md
-              - Supported: packages/core/api/util/supported.md
-            - Logger: packages/core/api/logger.md
-      - CLI:
-          - Commands:
-            - Setup: packages/cli/commands/setup.md
-            - Search: packages/cli/commands/search.md
-            - Retrieve: packages/cli/commands/retrieve.md
-          - API Reference:
+  - Contribute:
+    - Overview: contribute/index.md
+    - Annotations: contribute/annotations.md
+    - Code: contribute/code.md
+  - Developer Guide:
+      - Development Setup: developer/setup.md
+      - Packages Overview: developer/index.md
+      - Packages:
+          - metahq-core:
+              - Query:
+                - Query: packages/core/api/query/query.md
+                - LongAnnotations: packages/core/api/query/long_anno.md
+                - ParsedEntry: packages/core/api/query/parsed.md
+                - UnParsedEntry: packages/core/api/query/unparsed.md
+              - Curations:
+                - Annotations: packages/core/api/curations/annotations.md
+                - Labels: packages/core/api/curations/labels.md
+                - Ids: packages/core/api/curations/ids.md
+                - Propagator: packages/core/api/curations/propagator.md
+              - Export: packages/core/api/export.md
+              - Search: packages/core/api/search.md
+              - Utilities:
+                - IO: packages/core/api/util/io.md
+                - Exceptions: packages/core/api/util/exceptions.md
+                - Helpers: packages/core/api/util/helpers.md
+                - Progress: packages/core/api/util/progress.md
+                - Supported: packages/core/api/util/supported.md
+              - Logger: packages/core/api/logger.md
+          - metahq-cli:
+            - Commands:
+              - Setup: packages/cli/commands/setup.md
+              - Search: packages/cli/commands/search.md
+              - Retrieve: packages/cli/commands/retrieve.md
             - Builder: packages/cli/api/builder.md
             - Retriever: packages/cli/api/retriever.md
             - Retrieval Configs: 
@@ -132,12 +136,6 @@ nav:
             - Setup: 
               - Config: packages/cli/api/setup/config.md
               - Downloader: packages/cli/api/setup/download.md
-  - Contribute:
-    - Overview: contribute/index.md
-    - Annotations: contribute/annotations.md
-    - Code: contribute/code.md
-  - Developer Guide:
-      - Development Setup: developer/setup.md
   - About:
       - Cite Us: about/citation.md 
       - Mission: about/mission.md
