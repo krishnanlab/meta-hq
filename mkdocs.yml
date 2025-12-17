@@ -132,8 +132,11 @@ nav:
             - Setup: 
               - Config: packages/cli/api/setup/config.md
               - Downloader: packages/cli/api/setup/download.md
+  - Contribute:
+    - Overview: contribute/index.md
+    - Annotations: contribute/annotations.md
+    - Code: contribute/code.md
   - Developer Guide:
-      - Contributing: developer/contributing.md
       - Development Setup: developer/setup.md
   - About:
       - Cite Us: about/citation.md 

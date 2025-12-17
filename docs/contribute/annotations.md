@@ -1,17 +1,4 @@
-# Contributing
-
-Thank you for contributing to MetaHQ!
-
-## Ways to contribute
-
-There are two main ways to contribute to MetaHQ.
-
-1. Add new standardized sample and/or dataset annotations to the database.
-2. Add to the codebase.
-
-Substantial contributions through these means will result in authorship on future MetaHQ releases and publications.
-
-## Database contributions
+# Annotation contributions
 
 The primary goal of the MetaHQ database is to harmonize large collections of curated annotations.
 To maintain the quality and scale of the database, we focus on incorporating substantial annotation collections rather than individual or small-scale additions.
@@ -64,43 +51,6 @@ Please submit a pull request to [github.com/krishnanlab/meta-hq](https://github.
 - [ ] I have read the contributing guidelines
 - [ ] All contributors listed have agreed to their inclusion
 
-```
-
-## Codebase contributions
-
-We welcome code contributions that enhance MetaHQ's functionality, fix bugs, or improve performance. Examples of substantial codebase contributions include:
-
-- New features or modules
-- Bug fixes
-- Performance optimizations
-- Test coverage improvements
-- Significant refactoring
-
-**Note on documentation changes:** While we appreciate improvements to documentation, changes limited to README files, typo fixes, or minor formatting adjustments alone do not typically qualify for authorship.
-However, documentation contributions paired with code changes, or comprehensive documentation efforts (e.g., adding detailed API documentation, tutorials, or usage guides) are valued and considered substantial contributions.
-
-### Submitting code contributions
-
-To submit codebase contributions, please use the following PR template:
-
-```
-# What
-[High-level explanation of the PR]
-
-# Why
-[Explain why these changes are necessary]
-
-# How
-[High-level explanation of the approach taken]
-
-## Changes made
-[Detailed description of the changes made]
-
-# PR Checklist
-- [ ] Explained the purpose of this PR
-- [ ] Self-reviewed this PR
-- [ ] Added/updated tests
-- [ ] Updated documentation (if applicable)
 ```
 
 ## Contact
