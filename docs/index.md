@@ -12,31 +12,8 @@ Welcome to the MetaHQ documentation!
 
 - [Installation Guide](getting-started/installation.md)
 - [Quick Start Tutorial](getting-started/quickstart.md)
-- [CLI User Guide](user-guide/cli/setup.md)
-- [Contributing](developer/contributing.md)
-
-## Packages
-
-MetaHQ consists of two main packages:
-
-### MetaHQ Core
-
-The foundational library for the CLI providing data structures and utilities for annotation querying and manipulation.
-
-[Learn more about Core →](packages/core/overview.md)
-
-### MetaHQ CLI
-
-A command-line interface built on top of MetaHQ Core, providing easy-to-use commands for retrieving biomedical sample and study annotations.
-
-[Learn more about CLI →](packages/cli/overview.md)
-
-## Project Status
-
-| Package | Version                                                            | Tests                                                                                  |
-| ------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| core    | ![metahq-core pypi](https://img.shields.io/pypi/v/metahq-core.svg) | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg) |
-| cli     | ![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)   | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)  |
+- [CLI User Guide](user-guide/setup.md)
+- [Contributing](contribute/index.md)
 
 ## Getting Help
 
