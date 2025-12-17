@@ -35,5 +35,6 @@ metahq search --query "heart attack" --type disease --ontology MONDO -k 5
 
 The EBI Ontology Lookup Service is also an excellent way to find term IDs. See the links below:
 
-**UBERON/CL** (tissues/celltypes): [https://www.ebi.ac.uk/ols4/ontologies/uberon](https://www.ebi.ac.uk/ols4/ontologies/uberon)\
-**MONDO** (diseases): [https://www.ebi.ac.uk/ols4/ontologies/mondo](https://www.ebi.ac.uk/ols4/ontologies/mondo)
+**UBERON/CL** (tissues/celltypes): <br> [https://www.ebi.ac.uk/ols4/ontologies/uberon](https://www.ebi.ac.uk/ols4/ontologies/uberon)
+
+**MONDO** (diseases): <br> [https://www.ebi.ac.uk/ols4/ontologies/mondo](https://www.ebi.ac.uk/ols4/ontologies/mondo)
