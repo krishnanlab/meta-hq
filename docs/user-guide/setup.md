@@ -8,7 +8,7 @@ The MetaHQ configuration will always be stored in `/path/to/home/MetaHQ`.
 ## Options
 
 - `--doi`: The Zenodo DOI for a particular MetaHQ database version. Default: `latest`.
-- `--data-dir`: The Zenodo DOI for a particular MetaHQ database version. Default: `/path/to/home/.metahq_data`.
+- `--data-dir`: The location to install the MetaHQ database on your device. Default: `/path/to/home/.metahq_data`.
 
 ## Usage
 
