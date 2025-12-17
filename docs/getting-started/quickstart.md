@@ -5,7 +5,7 @@ and configure the package.
 
 ## Setup
 
-Download the latest MetaHQ database and configure the CLI:
+If you haven't already, download the latest MetaHQ database and configure the CLI by running the following:
 
 ```bash
 metahq setup
