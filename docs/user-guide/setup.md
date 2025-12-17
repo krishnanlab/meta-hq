@@ -8,7 +8,7 @@ The MetaHQ configuration will always be stored in `/path/to/home/MetaHQ`.
 ## Options
 
 - `--doi`: The Zenodo DOI for a particular MetaHQ database version. Default: `latest`.
-- `--data_dir`: The Zenodo DOI for a particular MetaHQ database version. Default: `/path/to/home/.metahq_data`.
+- `--data-dir`: The Zenodo DOI for a particular MetaHQ database version. Default: `/path/to/home/.metahq_data`.
 
 ## Usage
 
@@ -21,7 +21,7 @@ metahq setup [OPTIONS]
 Download the latest MetaHQ database and save to a custom directory.
 
 ```bash
-metahq setup --data_dir "/path/to/custom_dir"
+metahq setup --data-dir "/path/to/custom_dir"
 ```
 
 Download MetaHQ database v1.0.0
