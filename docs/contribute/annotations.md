@@ -13,7 +13,7 @@ To maintain the quality and scale of the database, we focus on incorporating sub
 While these are not strict cutoffs, they reflect the scale we aim to maintain. If you have a collection that approaches but doesn't quite meet these thresholds and
 you believe it would be valuable to the community, please reach out to discuss — we evaluate contributions on a case-by-case basis.
 
-See our [example annotation submission](#) for guidance on formatting and structure.
+See our [example annotation submission](https://github.com/krishnanlab/meta-hq/blob/main/data/disign_atlas_subset.tsv) for guidance on formatting and structure.
 
 ### Submitting database contributions
 
