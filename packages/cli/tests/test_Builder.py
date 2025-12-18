@@ -179,19 +179,19 @@ class TestBuilder:
 
     def test_map_sex_to_id_maps_male_and_female(self, builder):
         """test map_sex_to_id converts male/female to M/F"""
-        result = builder.map_sex_to_id(["male", "female"])
+        result = builder._map_sex_to_id(["male", "female"])
 
         assert result == ["M", "F"]
 
     def test_map_sex_to_id_preserves_ids(self, builder):
         """test map_sex_to_id preserves M and F unchanged"""
-        result = builder.map_sex_to_id(["M", "F"])
+        result = builder._map_sex_to_id(["M", "F"])
 
         assert result == ["M", "F"]
 
     def test_map_sex_to_id_mixed_input(self, builder):
         """test map_sex_to_id handles mixed input correctly"""
-        result = builder.map_sex_to_id(["male", "F", "female", "M"])
+        result = builder._map_sex_to_id(["male", "F", "female", "M"])
 
         assert result == ["M", "F", "F", "M"]
 

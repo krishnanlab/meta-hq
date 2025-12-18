@@ -4,7 +4,7 @@ Logger setup.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-11-28 by Parker Hicks
 """
 
 import logging
@@ -20,21 +20,18 @@ def setup_logger(
     """
     Sets up a logger.
 
-    Parameters
-    ----------
-    name: str
-        Logger name.
+    Arguments:
+        name (str):
+            Logger name.
 
-    log_dir: str | Path
-        Path to logging directory. Default is ~/metahq/logs
+        log_dir (str | Path):
+            Path to logging directory. Default is ~/metahq/logs
 
-    level: int
-        Logging level.
+        level (int):
+            Logging level.
 
-    Returns
-    -------
+    Returns:
         Configured logger.
-
     """
     logger = logging.getLogger(name)
 

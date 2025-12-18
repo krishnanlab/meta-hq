@@ -5,7 +5,7 @@ Implemented in the `metahq setup` CLI command.
 Author: Parker Hicks
 Date: 2025-11-20
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2025-12-05 by Parker Hicks
 """
 
 import shutil
@@ -39,8 +39,7 @@ DEFAULT_OUTDIR: Path = default_data_dir()
 class FileConfig:
     """Storage for MetaHQ database record information.
 
-    Attributes
-    ----------
+    Attributes:
     doi: str
         A valid MetaHQ Zenodo DOI.
 
@@ -59,15 +58,6 @@ class FileConfig:
 
     filesize: int | None:
         Size of the databse file in bytes.
-
-    Properties
-    ----------
-    outfile: Path
-        Path to the output file.
-
-    size_mb: float
-        File size in MB.
-
     """
 
     doi: str
@@ -103,40 +93,24 @@ class FileConfig:
 class Downloader:
     """Downloader for the MetaHQ database stored on Zenodo.
 
-    Attributes
-    ----------
-    doi: str
-        Zenodo DOI for the MetaHQ databse.
+    Attributes:
+        doi (str):
+            Zenodo DOI for the MetaHQ databse.
 
-    outdir: str
-        Path to the output directory in the user's system.
+        outdir (str):
+            Path to the output directory in the user's system.
 
-    logger: logging.Logger
-        Logger for process transparency.
+        logger (logging.Logger):
+            Logger for process transparency.
 
-    verbose: bool
-        Indicates if logs should be passed to stdout.
+        verbose (bool):
+            Indicates if logs should be passed to stdout.
 
-
-    Methods
-    -------
-    extract()
-        Extracts the MetaHQ database .tar.gz file.
-
-    get()
-        Downloads the MetaHQ database from Zenodo.
-
-    get_stats()
-        Check if the Zenodo DOI and metahq.tar.gz file exists
-        and retrieve requests stats.
-
-    Example
-    -------
-    >>> from metahq_cli.downloader import Downloader
-    >>> downloader = Downloader('17663087')
-    >>> downloader.get()
-    >>> downloader.extract()
-
+    Examples:
+        >>> from metahq_cli.downloader import Downloader
+        >>> downloader = Downloader('17663087')
+        >>> downloader.get()
+        >>> downloader.extract()
     """
 
     def __init__(
@@ -189,7 +163,11 @@ class Downloader:
             self.logger.info("Saved the MetaHQ database to %s.", self.config.outdir)
 
     def get(self):
-        """Downloads the database .tar.gz file from Zenodo."""
+        """Downloads the database .tar.gz file from Zenodo.
+
+        Raises:
+            You name it, this function will raise it.
+        """
         self.check_outdir_exists()
 
         try:

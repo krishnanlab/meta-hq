@@ -34,6 +34,12 @@ dev = [
     "isort",
     "flake8",
     "mypy",
+    "mkdocs>=1.6.1",
+    "mkdocstrings[python]",
+    "mkdocs-material",
+    "mkdocs-click",
+    "pymdown-extensions",
+    "vulture",
 ]
 
 test = [

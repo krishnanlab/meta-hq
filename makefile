@@ -1,4 +1,4 @@
-.PHONY: clean install dev test
+.PHONY: clean install uv_install dev uv_dev test
 
 clean:
 	find . -type d -name "build" -exec rm -rf {} + 2>/dev/null || true
@@ -7,13 +7,21 @@ clean:
 	find . -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
 	rm -rf .venv
 
-install: clean
+uv_install: clean
 	uv venv
-	. .venv/bin/activate && cd packages/core && uv pip install -e .
-	. .venv/bin/activate && cd packages/cli && uv pip install -e .
+	uv sync
+	. .venv/bin/activate 
 
-dev: install
-	. .venv/bin/activate && uv pip install pytest pytest-cov black isort flake8 mypy
+uv_dev: uv_install
+	. .venv/bin/activate && uv sync --dev
+
+install: clean
+	cd packages/core && pip install -e .
+	cd packages/cli && pip install -e .
+
+dev: clean
+	cd packages/core && pip install -e ".[dev]"
+	cd packages/cli && pip install -e ".[dev]"
 
 test:
 	. .venv/bin/activate && pytest

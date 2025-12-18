@@ -276,8 +276,8 @@ class AnnotationsConverter:
             relatives=["ancestors", "descendants"],
             verbose=self.verbose,
         )
-        up_mat, cols, up_ids = propagator.propagate_up(verbose=self.verbose)
-        down_mat, _, _ = propagator.propagate_down(verbose=self.verbose)
+        up_mat, cols, up_ids = propagator.propagate_up()
+        down_mat, _, _ = propagator.propagate_down()
 
         neg_mask = (up_mat == 0) & (down_mat == 0)
         up_mat[neg_mask] = -1
