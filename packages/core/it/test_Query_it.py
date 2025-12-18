@@ -19,6 +19,7 @@ from metahq_core.query import (
     Query,
     UnParsedEntry,
 )
+from metahq_core.util.exceptions import NoResultsFound
 
 # =======================================================
 # ==== Fixtures
@@ -51,8 +52,7 @@ def sample_long_annotations():
             "value": ["brain", "liver", "NA", "heart"],
         }
     )
-    id_cols = ["sample", "series", "platform"]
-    return LongAnnotations(data, id_cols)
+    return LongAnnotations(data)
 
 
 @pytest.fixture
@@ -276,7 +276,6 @@ class TestLongAnnotations:
     def test_init(self, sample_long_annotations):
         """Test basic initialization"""
         assert isinstance(sample_long_annotations.annotations, pl.DataFrame)
-        assert sample_long_annotations.id_cols == ["sample", "series", "platform"]
 
     def test_column_intersection_with(self, sample_long_annotations):
         """Test finding column intersection"""
@@ -333,8 +332,8 @@ class TestLongAnnotations:
                 "value": ["brain", "liver", "brain"],
             }
         )
-        long_anno = LongAnnotations(data, ["sample", "series", "platform"])
-        wide = long_anno.pivot_wide("sample", "id")
+        long_anno = LongAnnotations(data)
+        wide = long_anno.pivot_wide("sample", "id", ["sample", "series", "platform"])
 
         assert isinstance(wide, pl.DataFrame)
         assert "sample" in wide.columns
@@ -353,8 +352,8 @@ class TestLongAnnotations:
                 "value": ["brain|liver", "heart"],
             }
         )
-        long_anno = LongAnnotations(data, ["sample", "series", "platform"])
-        wide = long_anno.pivot_wide("sample", "id")
+        long_anno = LongAnnotations(data)
+        wide = long_anno.pivot_wide("sample", "id", ["sample", "series", "platform"])
 
         assert isinstance(wide, pl.DataFrame)
         # Should have separate columns for each annotation
@@ -552,7 +551,7 @@ class TestQueryInit:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue", ecode="expert")
+        query = Query("geo", "tissue", "sample", "expert", "homo sapiens", "rnaseq")
         assert query.ecodes == ["expert-curated"]
 
     @patch("metahq_core.query.load_bson")
@@ -562,7 +561,7 @@ class TestQueryInit:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue", ecode="expert-curated")
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
         assert query.ecodes == ["expert-curated"]
 
     @patch("metahq_core.query.load_bson")
@@ -573,7 +572,7 @@ class TestQueryInit:
         mock_load_bson.return_value = {}
 
         with pytest.raises(ValueError, match="Invalid ecode query"):
-            Query("geo", "tissue", ecode="invalid-ecode")
+            Query("geo", "tissue", "sample", "invalid-ecode", "homo sapiens", "rnaseq")
 
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
@@ -582,7 +581,7 @@ class TestQueryInit:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue", species="human")
+        query = Query("geo", "tissue", "sample", "expert-curated", "human", "rnaseq")
         assert query.species == "homo sapiens"
 
     @patch("metahq_core.query.load_bson")
@@ -593,7 +592,7 @@ class TestQueryInit:
         mock_load_bson.return_value = {}
 
         with pytest.raises(ValueError, match="Invalid species query"):
-            Query("geo", "tissue", species="invalid-species")
+            Query("geo", "tissue", "sample", "expert-curated", "invalid-species", "rnaseq")
 
 
 class TestQueryMethods:
@@ -606,8 +605,8 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue", level="sample")
-        index, groups = query.assign_index_groups()
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
+        index, groups = query._assign_index_groups()
 
         assert index == "sample"
         assert groups == ("series", "platform")
@@ -619,8 +618,8 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue", level="series")
-        index, groups = query.assign_index_groups()
+        query = Query("geo", "tissue", "series", "expert-curated", "homo sapiens", "rnaseq")
+        index, groups = query._assign_index_groups()
 
         assert index == "series"
         assert groups == ("platform",)
@@ -634,7 +633,7 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = mock_annotations_dict
 
-        query = Query("geo", "tissue", level="sample")
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
         accessions = query.get_accession_ids("entry1")
 
         assert accessions["sample"] == "GSM1"
@@ -650,7 +649,7 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = mock_annotations_dict
 
-        query = Query("geo", "tissue", level="series")
+        query = Query("geo", "tissue", "series", "expert-curated", "homo sapiens", "rnaseq")
         accessions = query.get_accession_ids("entry1")
 
         assert "sample" not in accessions
@@ -674,7 +673,7 @@ class TestQueryMethods:
         }
         mock_load_bson.return_value = mock_annotations
 
-        query = Query("geo", "tissue", level="sample")
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
         accessions = query.get_accession_ids("entry1")
 
         assert accessions["sample"] == "GSM1"
@@ -690,7 +689,7 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = mock_annotations_dict
 
-        query = Query("geo", "tissue", level="sample")
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
         ids, values = query.get_valid_annotations("entry1")
 
         assert ids == "UBERON:0001"
@@ -705,7 +704,7 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = mock_annotations_dict
 
-        query = Query("geo", "tissue", level="sample", species="human")
+        query = Query("geo", "tissue", "sample", "expert-curated", "human", "rnaseq")
         # entry3 is mus musculus
         ids, values = query.get_valid_annotations("entry3")
 
@@ -731,12 +730,11 @@ class TestQueryMethods:
         mock_df.filter.return_value.collect.return_value = {"id": ["GPL570", "GPL96"]}
         mock_scan_parquet.return_value = mock_df
 
-        query = Query("geo", "tissue", level="sample")
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
         result = query.compile_annotations(["sample", "series", "platform"])
 
-        assert isinstance(result, LongAnnotations)
-        assert isinstance(result.annotations, pl.DataFrame)
-        assert result.annotations.height > 0
+        assert isinstance(result, pl.DataFrame)
+        assert result.height > 0
 
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
@@ -763,10 +761,10 @@ class TestQueryMethods:
         mock_df.filter.return_value.collect.return_value = {"id": ["GPL570"]}
         mock_scan_parquet.return_value = mock_df
 
-        query = Query("geo", "tissue", level="sample")
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
 
         with pytest.raises(
-            RuntimeError, match="Unable to identify with provided parameters"
+            NoResultsFound, match="Unable to identify with provided parameters"
         ):
             query.compile_annotations(["sample", "series", "platform"])
 
@@ -799,7 +797,7 @@ class TestQueryIntegration:
         mock_annotations_obj = MagicMock()
         mock_from_df.return_value = mock_annotations_obj
 
-        query = Query("geo", "tissue", level="sample")
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
         result = query.annotations(anchor="id")
 
         # Verify Annotations.from_df was called
@@ -830,7 +828,7 @@ class TestQueryIntegration:
         mock_annotations_obj = MagicMock()
         mock_from_df.return_value = mock_annotations_obj
 
-        query = Query("geo", "tissue", level="sample")
+        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
         result = query.annotations(anchor="value")
 
         assert mock_from_df.called
