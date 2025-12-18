@@ -98,8 +98,8 @@ nav:
     - Annotations: contribute/annotations.md
     - Code: contribute/code.md
   - Developer Guide:
-      - Development Setup: developer/setup.md
       - Packages Overview: developer/index.md
+      - Development Setup: developer/setup.md
       - Packages:
           - metahq-core:
               - Query:
