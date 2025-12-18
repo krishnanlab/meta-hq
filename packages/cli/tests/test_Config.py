@@ -283,7 +283,7 @@ class TestConfig:
         assert saved_config == test_config
         config.logger.info.assert_called()
 
-    def test_save_config_exits_on_yaml_error(self, config):
+    def test_save_config_exits_on_yaml_error(self, config, mock_config_file):
         """Test save_config exits on YAML dump error."""
         # Create an object that can't be serialized to YAML
         unserializable = {"func": lambda x: x}

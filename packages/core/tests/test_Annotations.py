@@ -4,7 +4,7 @@ Unit tests for annotations curations class.
 Author: Parker Hicks
 Date: 2025-09-01
 
-Last updated: 2025-09-26 by Parker Hicks
+Last updated: 2025-12-17 by Parker Hicks
 """
 
 import polars as pl
@@ -281,7 +281,9 @@ class TestAnnotationsFromDf:
         data, ids = sample_data
         combined_df = pl.concat([ids, data], how="horizontal")
 
-        anno = Annotations.from_df(combined_df, index_col="sample")
+        anno = Annotations.from_df(
+            combined_df, index_col="sample", group_cols=("series", "platform")
+        )
         assert anno.group_cols == ("series", "platform")
 
     def test_from_df_with_list_group_cols(self, sample_data):

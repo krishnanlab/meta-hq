@@ -4,7 +4,7 @@ Unit tests for labelstations curations class.
 Author: Parker Hicks
 Date: 2025-09-01
 
-Last updated: 2025-11-05 by Parker Hicks
+Last updated: 2025-12-17 by Parker Hicks
 """
 
 from unittest.mock import patch
@@ -235,7 +235,9 @@ class TestLabelsFromDf:
         data, ids = sample_data
         combined_df = pl.concat([ids, data], how="horizontal")
 
-        labels = Labels.from_df(combined_df, index_col="index")
+        labels = Labels.from_df(
+            combined_df, index_col="index", group_cols=("group", "platform")
+        )
         assert labels.group_cols == ("group", "platform")
 
 
