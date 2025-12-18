@@ -161,7 +161,13 @@ def get_annotations(level: Literal["sample", "series"]) -> Path:
 
 def get_config():
     """Loads the MetaHQ config file."""
-    return load_yaml(get_config_file())
+    config = load_yaml(get_config_file())
+    if config is None:
+        raise RuntimeError(
+            "The MetaHQ configuration is contaminated. Run `metahq setup`."
+        )
+
+    return config
 
 
 def get_config_file():
