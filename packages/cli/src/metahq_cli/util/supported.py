@@ -9,7 +9,11 @@ Last updated: 2025-11-24 by Parker Hicks
 
 from pathlib import Path
 
-LATEST_DATABASE: dict[str, str] = {"version": "v1.0.1-alpha", "doi": "17666183"}
+LATEST_DATABASE: dict[str, str] = {"version": "v1.0.0", "doi": "17666183"}
+DOIS = {
+    "17663087": {"version": "v1.0.0-alpha", "filename": "metahq.tar.gz"},
+    "17666183": {"version": "v1.0.0", "filename": "metahq_data.tar.gz"},
+}
 
 
 def log_map() -> dict[str, int]:
@@ -56,15 +60,11 @@ def metahq_dois(doi: str) -> dict[str, str]:
     Database version and the filename for the particular DOI.
 
     """
-    dois = {
-        "17663087": {"version": "v1.0.0-alpha", "filename": "metahq.tar.gz"},
-        "17666183": {"version": "v1.0.1-alpha", "filename": "metahq_data.tar.gz"},
-    }
-    if not doi in dois:
-        available = list(dois.keys())
+    if not doi in DOIS:
+        available = list(DOIS.keys())
         raise ValueError(f"Expected doi in {available}, got {doi}.")
 
-    return dois[doi]
+    return DOIS[doi]
 
 
 def metahq_mother_dir() -> Path:

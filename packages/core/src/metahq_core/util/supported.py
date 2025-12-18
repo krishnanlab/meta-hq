@@ -326,6 +326,13 @@ def ecodes(query: list[str] | str) -> list[str]:
     return query
 
 
+def levels(query: str) -> str:
+    """Check if queried level is supported."""
+    if query in supported("levels"):
+        return query
+    raise ValueError(f"Expected query in {supported("levels")}, got {query}.")
+
+
 def metadata_fields(level: str) -> list[str]:
     """Returns supported metadata fields for a specified level."""
     if level == "sample":

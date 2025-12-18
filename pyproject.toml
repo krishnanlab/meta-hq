@@ -17,5 +17,9 @@ dev-dependencies = [
     "vulture",
     "metahq-cli",
     "metahq-core",
+    "mkdocs>=1.6.1",
+    "pymdown-extensions",
+    "mkdocstrings[python]",
+    "mkdocs-material",
+    "mkdocs-click",
 ]
-

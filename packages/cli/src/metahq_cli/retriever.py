@@ -4,7 +4,7 @@ Facilitates argument and curation parsing for metaHQ retrieval commands.
 Author: Parker Hicks
 Date: 2025-09-25
 
-Last updated: 2025-11-24 by Parker Hicks
+Last updated: 2025-12-05 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -29,7 +29,27 @@ if TYPE_CHECKING:
 
 @dataclass
 class QueryConfig:
-    """Storage for query parameters."""
+    """Storage for query parameters.
+
+    Attributes:
+        database (str):
+            The name of a supported database within MetaHQ.
+
+        attribute (str):
+            A supported attribute within MetaHQ.
+
+        level (str):
+            A level of annotations (e.g., 'sample' or 'series').
+
+        ecode (str):
+            Evidence code (e.g., 'expert', 'crowd', 'any')
+
+        species (str):
+            A supported species within MetaHQ.
+
+        tech (str):
+            A supported technology within MetaHQ.
+    """
 
     database: str
     attribute: str
@@ -41,7 +61,18 @@ class QueryConfig:
 
 @dataclass
 class CurationConfig:
-    """Storage for curation parameters."""
+    """Storage for curation parameters.
+
+    Attributes:
+        mode (str):
+            A supported curation mode (e.g., 'annotate', 'label').
+
+        terms (str):
+            A list of terms to curate annotations for.
+
+        ontology (str):
+            An ontology to use for propagating annotations and assigning labels.
+    """
 
     mode: str
     terms: list[str]
@@ -50,7 +81,18 @@ class CurationConfig:
 
 @dataclass
 class OutputConfig:
-    """Storage for output parameters."""
+    """Storage for output parameters.
+
+    Attributes:
+        outfile (str | Path):
+            Path to file to store annotations.
+
+        fmt (Literal["json", "parquet", "csv", "tsv"]):
+            Format of the output file.
+
+        metadata (str):
+            Comma-delimited string indicating which metadata fields to include.
+    """
 
     outfile: str | Path
     fmt: Literal["json", "parquet", "csv", "tsv"]
@@ -59,31 +101,18 @@ class OutputConfig:
 
 class Retriever:
     """
-    Queries, curates, and saves MetaHQ annotations.
+    Queries, curates, and saves MetaHQ annotations for `metahq retrieve`.
     Exists to reduce redundancy in MetaHQ retrieve commands.
 
-    Attributes
-    ----------
-    query_config: QueryConfig
-        Parameters for querying.
+    Attributes:
+        query_config: QueryConfig
+            Parameters for querying.
 
-    curation_config: CurationConfig
-        Parameters for curating annotations.
+        curation_config: CurationConfig
+            Parameters for curating annotations.
 
-    output_config: OutputConfig
-        Parameters for saving curations.
-
-    Methods
-    -------
-    curate()
-        Converts Annotations object to direct/propagated annotations
-        or to labels.
-
-    query()
-        Performs a MetaHQ query given a config of filters.
-
-    retrieve()
-        Performs the pipeline of query -> curate -> save
+        output_config: OutputConfig
+            Parameters for saving curations.
     """
 
     def __init__(
@@ -105,7 +134,18 @@ class Retriever:
             )
 
     def curate(self, annotations: Annotations):
-        """Mutate curations by specified mode."""
+        """Mutate curations by specified mode.
+
+        Arguments:
+            annotations: Annotations
+                A populated Annotations object.
+
+        Returns:
+            A populated Annotations or Labels object given the specified curation mode.
+
+        Raises:
+            `NoResultsFound` if there are no annotations for a set of query parameters.
+        """
         if annotations.n_indices == 0:
             msg = "No annotations for any terms. Try using different conditions."
             self.log.error(msg)
@@ -130,7 +170,12 @@ class Retriever:
         self.save_curation(curation)
 
     def save_curation(self, curation: Annotations | Labels):
-        """Saves the curation."""
+        """Saves the curation.
+
+        Arguments:
+            curation (Annotations | Labels):
+                A populated Annotations or Labels object to save.
+        """
         self._save(curation)
 
     def _curate_by_mode(self, curation: Annotations) -> Annotations | Labels:

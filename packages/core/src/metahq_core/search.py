@@ -25,6 +25,8 @@ but the current implementation is IMHO a reasonable starting point.
 
 Author: Faisal Alquaddoomi
 Date: 2025-09-25
+
+Last updated: 2025-11-28 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -60,13 +62,21 @@ DEFAULT_SCOPE = "RELATED"
 
 
 class SynonymEntry(TypedDict):
+    """Storage of synonyms and their scope.
+
+    Attributes:
+        text (str):
+            Any piece of text.
+        scope (NotRequired[Literal["EXACT", "NARROW", "BROAD", "RELATED"]]):
+            The importance of `text`.
+    """
+
     text: str
     scope: NotRequired[Literal["EXACT", "NARROW", "BROAD", "RELATED"]]
 
 
 def doc_text_for(name: str, syns: list[SynonymEntry]) -> str:
-    """
-    Build the doc_text column for BM25 indexing from the name and synonyms.
+    """Build the doc_text column for BM25 indexing from the name and synonyms.
 
     See the NAME_WEIGHT and SCOPE_WEIGHTS constants for how parts of the record
     are weighted in the resulting document.
@@ -74,9 +84,14 @@ def doc_text_for(name: str, syns: list[SynonymEntry]) -> str:
     Per the OBO 1.4 spec, synonyms can have scopes in {EXACT, BROAD, NARROW,
     RELATED}. If no scope is given, it is treated as RELATED.
 
-    :param name: The primary name of the term.
-    :param syns: List of {"text": str, "scope": str|None} synonym entries.
-    :returns: A string suitable for BM25 indexing.
+    Arguments:
+        name (str):
+            The primary name of the term.
+        syns (list[SynonymEntry]):
+            List of {"text": str, "scope": str|None} synonym entries.
+
+    Returns:
+        A string suitable for BM25 indexing.
     """
     parts = []
 
@@ -101,20 +116,28 @@ def search(
     logger: logging.Logger | None = None,
     verbose: bool = False,
 ) -> pl.DataFrame:
-    """
-    Given a query string, return the top k hits from the ontology search index.
+    """Given a query string, return the top k hits from the ontology search index.
 
     The search index is built from the ontology terms' names and synonyms, where
     names are weighted more heavily than synonyms. The search uses the BM25+ algorithm
     to rank the results.
 
-    :param query: the query string
-    :param db: path to the DuckDB database file, or None to use the default location
-    :param k: the number of top hits to return
-    :param type: if given, restrict results to this type (e.g. "celltype", "disease", or "tissue")
-    :param ontology: if given, restrict results to this ontology (e.g. "CL", "UBERON", or "MONDO")
-    :param verbose: if True, print debug information
-    :return: a polars DataFrame with columns: term_id, ontology, name, type, synonyms, score
+    Arguments:
+        query (str):
+            The query string.
+        db (Path | None):
+            Path to the DuckDB database file, or None to use the default location.
+        k (int):
+            The number of top hits to return.
+        type (str | None):
+            If given, restrict results to this type (e.g. "celltype", "disease", or "tissue").
+        ontology (str | None):
+            If given, restrict results to this ontology (e.g. "CL", "UBERON", or "MONDO").
+        verbose (bool):
+            If True, print debug information.
+
+    Returns:
+        A `polars.DataFrame` object with columns: term_id, ontology, name, type, synonyms, score.
     """
 
     if logger is None:
