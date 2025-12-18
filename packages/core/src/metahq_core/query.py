@@ -372,8 +372,12 @@ class UnParsedEntry:
             False
         """
         attr_exists = self.attribute in self.entry
-        is_correct_species = self.entry["organism"] == self.species
         is_populated = len(self.entry) > 0
+
+        if "organism" in self.entry:
+            is_correct_species = self.entry["organism"] == self.species
+        else:
+            is_correct_species = False
 
         return attr_exists and is_populated and is_correct_species
 
@@ -644,7 +648,7 @@ class Query:
         if species in map_:
             return map_[species]  # provided shorthand
         if species in map_.values():
-            return reverse_dict(map_)[species]
+            return species
         raise ValueError(
             f"Invalid species query: {species}. Run metahq supported species for available options."
         )

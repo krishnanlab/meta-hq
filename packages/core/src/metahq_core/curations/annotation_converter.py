@@ -17,7 +17,7 @@ import polars as pl
 from metahq_core.curations.labels import Labels
 from metahq_core.curations.propagator import Propagator, propagate_controls
 from metahq_core.logger import setup_logger
-from metahq_core.ontology.loader import RelationsLoader
+from metahq_core.relations_loader import RelationsLoader
 from metahq_core.util.helpers import merge_list_values
 from metahq_core.util.progress import progress_wrapper
 from metahq_core.util.supported import get_ontology_families
