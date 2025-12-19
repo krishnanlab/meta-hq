@@ -4,7 +4,7 @@ Class to query the annotations dictionary.
 Author: Parker Hicks
 Date: 2025-03
 
-Last updated: 2025-11-27 by Parker Hicks
+Last updated: 2025-12-19 by Parker Hicks
 """
 
 from pathlib import Path
@@ -15,7 +15,6 @@ import polars as pl
 from metahq_core.curations.annotations import Annotations
 from metahq_core.logger import setup_logger
 from metahq_core.util.exceptions import NoResultsFound
-from metahq_core.util.helpers import reverse_dict
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import (
     _ecodes,
