@@ -179,7 +179,7 @@ class AnnotationsExporter(BaseExporter):
         """
 
         if self._only_index(metadata, anno.index_col):
-            self._save_json_only_index(anno, file)
+            self._save_json_with_metadata(anno, file, anno.index_col)
 
         elif isinstance(metadata, str):
             self._save_json_with_metadata(anno, file, metadata)
@@ -392,10 +392,15 @@ class AnnotationsExporter(BaseExporter):
         self, anno: Annotations, file: FilePath, metadata: str
     ):
         """Save annotations as JSON with requested metadata."""
+
+        # add sources
+        anno = self.add_sources(anno)
+
         _anno: dict[str, dict[str, dict[str, str]]] = {
             term: {} for term in anno.entities
         }
         _metadata = self._parse_metafields(anno.index_col, metadata)
+        _metadata.extend(["sources"])
 
         if self._sra_in_metadata(_metadata):
             anno = self.get_sra(
