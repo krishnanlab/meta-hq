@@ -38,12 +38,44 @@ ANNOTATION_KEY = {"1": True, "0": False}
 class AnnotationsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
 
-    def __init__(self, logger=None, loglevel=20, logdir=Path("."), verbose=True):
+    def __init__(
+        self,
+        attribute: str,
+        level: str,
+        logger=None,
+        loglevel=20,
+        logdir=Path("."),
+        verbose=True,
+    ):
+        self.attribute = attribute
+        self._database = self._load_annotations(level)
 
         if logger is None:
             logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
+
+    def add_sources(self, anno: Annotations) -> Annotations:
+        """Add the sources that contributed to the lables of each sample or dataset.
+
+        Arguments:
+            labels (Labels):
+                A populated Labels curation object.
+
+        Returns:
+            The Labels object with additional source IDs for each index.
+
+        """
+        sources = {anno.index_col: [], "sources": []}
+        for idx in anno.index:
+            sources[anno.index_col].append(idx)
+
+            # get sources for a particular index for the specified attribute
+            sources["sources"].append(
+                "|".join(list(self._database[idx][self.attribute].keys()))
+            )
+
+        return anno.add_ids(pl.DataFrame(sources))
 
     def get_sra(self, anno: Annotations, fields: list[str]) -> Annotations:
         """
@@ -316,6 +348,10 @@ class AnnotationsExporter(BaseExporter):
             anno = self.get_sra(
                 anno, [field for field in _metadata if field in database_ids("sra")]
             )
+
+        # add sources
+        anno = self.add_sources(anno)
+        _metadata.extend(["sources"])
 
         if "description" in _metadata:
             self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
