@@ -393,6 +393,7 @@ class LabelsExporter(BaseExporter):
 
         # add sources
         curation = self.add_sources(curation)
+        _metadata = _metadata + ["sources"]
 
         if "description" in _metadata:
             self._save_table_with_description(
