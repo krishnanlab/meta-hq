@@ -322,12 +322,6 @@ class UnParsedEntry:
             values.add(value)
             sources.add(source)
 
-            # print(self.entry)
-            # print(id_)
-            # print(value)
-            # print(source)
-            # exit()
-
         return "|".join(ids), "|".join(values)
 
     def is_acceptable(self) -> bool:
