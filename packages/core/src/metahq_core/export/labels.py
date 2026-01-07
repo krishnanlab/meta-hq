@@ -196,13 +196,14 @@ class LabelsExporter(BaseExporter):
             isinstance(metadata, str)
             & (metadata.strip().replace(",", "") == curation.index_col)
         ):
-            # save with just index IDs
-            stacked = curation.data.hstack(curation.ids)
-            for row in stacked.iter_rows(named=True):
-                self._write_row(row, _labels, curation.index_col)
+            metadata = curation.index_col
 
-        elif isinstance(metadata, str):
+        if isinstance(metadata, str):
+            # add sources
+            curation = self.add_sources(curation)
+
             _metadata = self._parse_metafields(curation.index_col, metadata)
+            _metadata.extend(["sources"])
 
             if self._sra_in_metadata(_metadata):
                 curation = self.get_sra(
