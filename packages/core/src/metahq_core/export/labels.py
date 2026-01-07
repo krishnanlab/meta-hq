@@ -432,13 +432,7 @@ class LabelsExporter(BaseExporter):
         for entity in labels:
             label = str(row[entity])
             if label in LABEL_KEY:
-                try:
-                    labels[entity][LABEL_KEY[label]].append(idx)
-                except KeyError:
-                    print(labels[entity])
-                    print(LABEL_KEY[label])
-                    print(idx)
-                    exit()
+                labels[entity][LABEL_KEY[label]].append(idx)
 
     def _write_row_with_metadata(
         self,
