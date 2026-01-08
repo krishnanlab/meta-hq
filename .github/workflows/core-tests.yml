@@ -10,12 +10,14 @@ on:
     branches: [main, dev]
     paths:
       - "packages/core/**"
+      - ".github/workflows/core-tests.yml"
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.12", "3.13", "3.14"]
 
     defaults:
@@ -39,17 +41,3 @@ jobs:
       - name: Run tests
         run: |
           pytest tests/ -v
-
-      - name: Run tests with coverage
-        if: matrix.python-version == '3.13'
-        run: |
-          pytest tests/ --cov=src/metahq_core --cov-report=xml --cov-report=term
-
-      - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.13'
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./packages/core/coverage.xml
-          flags: core
-          name: codecov-core
-          fail_ci_if_error: false
