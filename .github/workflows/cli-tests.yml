@@ -11,6 +11,8 @@ on:
     branches: [main, dev]
     paths:
       - "packages/cli/**"
+      - "packages/core/**"
+      - ".github/workflows/cli-tests.yml"
 
 jobs:
   test:
