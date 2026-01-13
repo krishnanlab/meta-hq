@@ -92,11 +92,19 @@ class OutputConfig:
 
         metadata (str):
             Comma-delimited string indicating which metadata fields to include.
+
+        attribute (str):
+            A supported attribute within MetaHQ.
+
+        level (str):
+            A level of annotations (e.g., 'sample' or 'series').
     """
 
     outfile: str | Path
     fmt: Literal["json", "parquet", "csv", "tsv"]
     metadata: str
+    attribute: str
+    level: str
 
 
 class Retriever:
@@ -275,4 +283,6 @@ class Retriever:
             outfile=self.output_config.outfile,
             fmt=self.output_config.fmt,
             metadata=self.output_config.metadata,
+            attribute=self.output_config.attribute,
+            level=self.output_config.level,
         )

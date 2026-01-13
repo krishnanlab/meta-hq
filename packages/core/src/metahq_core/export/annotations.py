@@ -38,12 +38,44 @@ ANNOTATION_KEY = {"1": True, "0": False}
 class AnnotationsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
 
-    def __init__(self, logger=None, loglevel=20, logdir=Path("."), verbose=True):
+    def __init__(
+        self,
+        attribute: str,
+        level: str,
+        logger=None,
+        loglevel=20,
+        logdir=Path("."),
+        verbose=True,
+    ):
+        self.attribute = attribute
+        self._database = self._load_annotations(level)
 
         if logger is None:
             logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
+
+    def add_sources(self, anno: Annotations) -> Annotations:
+        """Add the sources that contributed to the lables of each sample or dataset.
+
+        Arguments:
+            labels (Labels):
+                A populated Labels curation object.
+
+        Returns:
+            The Labels object with additional source IDs for each index.
+
+        """
+        sources = {anno.index_col: [], "sources": []}
+        for idx in anno.index:
+            sources[anno.index_col].append(idx)
+
+            # get sources for a particular index for the specified attribute
+            sources["sources"].append(
+                "|".join(list(self._database[idx][self.attribute].keys()))
+            )
+
+        return anno.add_ids(pl.DataFrame(sources))
 
     def get_sra(self, anno: Annotations, fields: list[str]) -> Annotations:
         """
@@ -147,7 +179,7 @@ class AnnotationsExporter(BaseExporter):
         """
 
         if self._only_index(metadata, anno.index_col):
-            self._save_json_only_index(anno, file)
+            self._save_json_with_metadata(anno, file, anno.index_col)
 
         elif isinstance(metadata, str):
             self._save_json_with_metadata(anno, file, metadata)
@@ -317,6 +349,10 @@ class AnnotationsExporter(BaseExporter):
                 anno, [field for field in _metadata if field in database_ids("sra")]
             )
 
+        # add sources
+        anno = self.add_sources(anno)
+        _metadata.extend(["sources"])
+
         if "description" in _metadata:
             self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
 
@@ -356,10 +392,15 @@ class AnnotationsExporter(BaseExporter):
         self, anno: Annotations, file: FilePath, metadata: str
     ):
         """Save annotations as JSON with requested metadata."""
+
+        # add sources
+        anno = self.add_sources(anno)
+
         _anno: dict[str, dict[str, dict[str, str]]] = {
             term: {} for term in anno.entities
         }
         _metadata = self._parse_metafields(anno.index_col, metadata)
+        _metadata.extend(["sources"])
 
         if self._sra_in_metadata(_metadata):
             anno = self.get_sra(

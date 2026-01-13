@@ -185,6 +185,8 @@ class Annotations(BaseCuration):
         self,
         outfile: str | Path,
         fmt: Literal["json", "parquet", "csv", "tsv"],
+        attribute: str,
+        level: str,
         metadata: str | None = None,
     ):
         """Save the annotations curation.
@@ -196,12 +198,18 @@ class Annotations(BaseCuration):
             fmt (Literal["json", "parquet", "csv", "tsv"]):
                 File format to save to.
 
+            attribute (str):
+                A supported MetaHQ annotated attribute.
+
+            level (str):
+                An index level supported by MetaHQ.
+
             metadata (bool):
                 If True, will add index titles to each entry.
         """
-        AnnotationsExporter(logger=self.log, verbose=self.verbose).save(
-            self, fmt, outfile, metadata
-        )
+        AnnotationsExporter(
+            attribute, level, logger=self.log, verbose=self.verbose
+        ).save(self, fmt, outfile, metadata)
 
     def sort_columns(self):
         """Sorts term columns.

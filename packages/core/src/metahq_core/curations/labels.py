@@ -152,6 +152,8 @@ class Labels(BaseCuration):
         self,
         outfile: str | Path,
         fmt: Literal["json", "parquet", "csv", "tsv"],
+        attribute: str,
+        level: str,
         metadata: str | None = None,
     ):
         """Save the labels curation.
@@ -162,6 +164,12 @@ class Labels(BaseCuration):
 
             fmt (Literal["json", "parquet", "csv", "tsv"]):
                 File format to save to.
+
+            attribute (str):
+                A supported MetaHQ annotated attribute.
+
+            level (str):
+                An index level supported by MetaHQ.
 
             metadata (str | None):
                 Metadata fields to inlcude formatted as a comma
@@ -181,10 +189,12 @@ class Labels(BaseCuration):
                     'UBERON:0000955': [-1, -1, 1],
                 }
             >>> labels = Labels.from_df(anno, index_col='sample', group_cols=['series'])
-            >>> labels.save('/path/to/out.parquet', fmt="parquet")
+            >>> labels.save(
+                    '/path/to/out.parquet', fmt="parquet", attribute="tissue", level="sample"
+                )
 
         """
-        LabelsExporter(logger=self.log, verbose=self.verbose).save(
+        LabelsExporter(attribute, level, logger=self.log, verbose=self.verbose).save(
             self, fmt, outfile, metadata
         )
 
