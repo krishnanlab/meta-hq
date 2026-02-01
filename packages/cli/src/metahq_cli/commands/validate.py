@@ -12,7 +12,7 @@ from metahq_cli.util.common_args import logging_args
 from metahq_core.util.supported import get_default_log_dir
 from metahq_cli.util.helpers import set_verbosity
 
-from metahq_core.util.supported import get_config
+from metahq_core.util.supported import get_config, get_config_file
 from metahq_cli.util._validate import check_md5_match
 
 @click.command(name="validate", context_settings={"help_option_names": ["-h", "--help"]})
@@ -34,8 +34,9 @@ def validate(log_level: str, log_dir: str, quiet: bool):
     
     # read in config
     config = get_config()
-    print(config["data_dir"])
-    print(config["zenodo_doi"])
+    config_path = get_config_file()
+    logger.info(f"The path to config file is found at: {config_path}")
+    logger.info(f"Validating the files for the config options: {config}")
     
     changed_files = check_md5_match(config["zenodo_doi"], config["data_dir"])
     
