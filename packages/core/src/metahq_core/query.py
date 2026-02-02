@@ -60,13 +60,12 @@ class ParsedEntries:
 
     def __init__(self, fields):
         self.accessions = AccessionIDs(fields)
-        self.entries = {"id": [], "value": [], "source": []}
+        self.entries = {"id": [], "value": []}
 
-    def add(self, id_: str, value: str, source: str, accessions: dict[str, str]):
+    def add(self, id_: str, value: str, accessions: dict[str, str]):
         """Adds an annotation with an ID, value, and accession IDs. Args can be 'NA'."""
         self.entries["id"].append(id_)
         self.entries["value"].append(value)
-        self.entries["source"].append(source)
         self.accessions.add(accessions)
 
     def to_polars(self) -> pl.DataFrame:
@@ -275,7 +274,7 @@ class UnParsedEntry:
         self.ecodes: list[str] = ecodes
         self.species: str = species
 
-    def get_annotations(self) -> tuple[str, str, str]:
+    def get_annotations(self) -> tuple[str, str]:
         """
         Retrieves the ID and value annotations for a single entry.
 
@@ -307,12 +306,11 @@ class UnParsedEntry:
 
         """
         if not self.is_acceptable():
-            return ("NA", "NA", "NA")
+            return ("NA", "NA")
 
         # add attribute annotations across sources
         ids: set[str] = set()
         values: set[str] = set()
-        sources: set[str] = set()
         for source, annotations in self.entry[self.attribute].items():
             if annotations["ecode"] not in self.ecodes:
                 continue
@@ -320,9 +318,8 @@ class UnParsedEntry:
             id_, value = self.get_id_value(annotations)
             ids.add(id_)
             values.add(value)
-            sources.add(source)
 
-        return "|".join(ids), "|".join(values), "|".join(sorted(sources))
+        return "|".join(ids), "|".join(values)
 
     def is_acceptable(self) -> bool:
         """Checks if the entry is not empty and is an acceptable annotation given the
@@ -498,8 +495,6 @@ class Query:
 
         # construct the annotations
         attr_anno = self.compile_annotations(id_cols)
-        # print(attr_anno)
-        # print(set(attr_anno["source"].to_list()))
         attr_anno = LongAnnotations(attr_anno).pivot_wide(self.level, anchor, id_cols)
 
         na_cols = list(set(attr_anno.columns) & set(na_entities()))
@@ -530,8 +525,8 @@ class Query:
         parsed = ParsedEntries(id_cols)
         for entry in self._annotations:
             accessions = self.get_accession_ids(entry)
-            id_, value, source = self.get_valid_annotations(entry)
-            parsed.add(id_, value, source, accessions)
+            id_, value = self.get_valid_annotations(entry)
+            parsed.add(id_, value, accessions)
 
         parsed = parsed.to_polars()
         parsed = parsed.filter(
@@ -591,7 +586,7 @@ class Query:
 
         return accessions
 
-    def get_valid_annotations(self, entry: str) -> tuple[str, str, str]:
+    def get_valid_annotations(self, entry: str) -> tuple[str, str]:
         """Extract id and value annotations for each source of annotations in an entry.
 
         Arguments:
