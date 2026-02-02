@@ -7,7 +7,7 @@ Functions beginning with an underscore are intended to be called through the
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2025-11-24 by Parker Hicks
+Last updated: 2026-02-02 by Parker Hicks
 """
 
 from pathlib import Path
@@ -122,7 +122,7 @@ def _age_groups() -> list[str]:
         "adolescent",
         "adult",
         "older_adult",
-        "eldery_adult",
+        "elderly_adult",
     ]
 
 
