@@ -166,12 +166,14 @@ class TestBuilder:
         self, mock_outfile, mock_format, mock_metadata, builder
     ):
         """test output_config creates OutputConfig with correct parameters"""
-        result = builder.output_config("output.parquet", "parquet", "sample", "sample")
+        result = builder.output_config("output.parquet", "parquet", "sample", "sample", "test_attr")
 
         assert isinstance(result, OutputConfig)
         assert result.outfile == "output.parquet"
         assert result.fmt == "parquet"
         assert result.metadata == "sample"
+        assert result.attribute == "test_attr"
+        assert result.level == "sample"
 
         mock_metadata.assert_called_once_with("sample", "sample")
         mock_format.assert_called_once_with("parquet")

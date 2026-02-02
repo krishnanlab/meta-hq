@@ -57,11 +57,13 @@ class TestOutputConfig:
     """test outputconfig dataclass"""
 
     def test_output_config_creation(self):
-        config = OutputConfig(outfile="test.json", fmt="json", metadata="test_metadata")
+        config = OutputConfig(outfile="test.json", fmt="json", metadata="test_metadata", attribute="test_attr", level="test_level")
 
         assert config.outfile == "test.json"
         assert config.fmt == "json"
         assert config.metadata == "test_metadata"
+        assert config.attribute == "test_attr"
+        assert config.level == "test_level"
 
 
 class TestRetriever:
@@ -89,7 +91,7 @@ class TestRetriever:
         )
 
         output_config = OutputConfig(
-            outfile="test.json", fmt="json", metadata="test_metadata"
+            outfile="test.json", fmt="json", metadata="test_metadata", attribute="test_attr", level="test_level"
         )
 
         return query_config, curation_config, output_config
@@ -427,7 +429,7 @@ class TestRetriever:
         retriever._save(mock_curation)
 
         mock_curation.save.assert_called_once_with(
-            outfile="test.json", fmt="json", metadata="test_metadata"
+            outfile="test.json", fmt="json", metadata="test_metadata", attribute="test_attr", level="test_level"
         )
 
     @patch.object(Retriever, "query")
@@ -480,7 +482,7 @@ class TestRetriever:
     def test_output_config_with_pathlib_path(self):
         """test output config accepts pathlib path objects"""
         path_obj = Path("test_file.csv")
-        config = OutputConfig(outfile=path_obj, fmt="csv", metadata="test")
+        config = OutputConfig(outfile=path_obj, fmt="csv", metadata="test", attribute="test_attr", level="test_level")
 
         assert config.outfile == path_obj
         assert isinstance(config.outfile, Path)
@@ -491,5 +493,5 @@ class TestRetriever:
     )
     def test_output_config_supports_all_formats(self, fmt):
         """test output config accepts all supported formats"""
-        config = OutputConfig(outfile="test.file", fmt=fmt, metadata="test")
+        config = OutputConfig(outfile="test.file", fmt=fmt, metadata="test", attribute="test_attr", level="test_level")
         assert config.fmt == fmt

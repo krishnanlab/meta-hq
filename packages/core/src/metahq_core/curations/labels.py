@@ -240,7 +240,7 @@ class Labels(BaseCuration):
 
     def to_numpy(self) -> NpIntMatrix:
         """Wrapper for polars `to_numpy`."""
-        return LabelsExporter().to_numpy(self)
+        return self.data.to_numpy()
 
     @classmethod
     def from_df(
