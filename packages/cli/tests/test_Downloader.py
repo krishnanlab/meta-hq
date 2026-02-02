@@ -15,6 +15,11 @@ import requests
 
 from metahq_cli.setup.downloader import Downloader, FileConfig
 
+# set some global variables that will be updated for each version of database
+url_cur = "https://zenodo.org/api/records/17663087/files/metahq.tar.gz/content"
+doi_cur = "17663087"
+filename_cur = "metahq.tar.gz"
+version_cur = "v1.0.0-alpha"
 
 class TestFileConfig:
     """Tests for the FileConfig dataclass."""
@@ -30,10 +35,10 @@ class TestFileConfig:
     def file_config(self, tmp_path):
         """Fixture for a FileConfig instance."""
         return FileConfig(
-            doi="17663087",
-            filename="metahq.tar.gz",
-            url="https://zenodo.org/records/17663087/files/metahq.tar.gz",
-            version="v1.0.0-alpha",
+            doi=doi_cur,
+            filename=filename_cur,
+            url=url_cur,
+            version=version_cur,
             outdir=tmp_path,
             filesize=1048576,  # 1 MB
         )
@@ -41,17 +46,17 @@ class TestFileConfig:
     def test_fileconfig_initialization(self, tmp_path):
         """Test FileConfig stores all attributes correctly."""
         config = FileConfig(
-            doi="17663087",
-            filename="metahq.tar.gz",
-            url="https://zenodo.org/records/17663087/files/metahq.tar.gz",
-            version="v1.0.0-alpha",
+            doi=doi_cur,
+            filename=filename_cur,
+            url=url_cur,
+            version=version_cur,
             outdir=tmp_path,
         )
 
-        assert config.doi == "17663087"
-        assert config.filename == "metahq.tar.gz"
-        assert config.url == "https://zenodo.org/records/17663087/files/metahq.tar.gz"
-        assert config.version == "v1.0.0-alpha"
+        assert config.doi == doi_cur
+        assert config.filename == filename_cur
+        assert config.url == url_cur
+        assert config.version == version_cur
         assert config.outdir == tmp_path
         assert config.filesize is None
 
@@ -70,10 +75,10 @@ class TestFileConfig:
     def test_filename_stemmed_multiple_extensions(self, tmp_path):
         """Test filename_stemmed handles multiple extensions."""
         config = FileConfig(
-            doi="17663087",
+            doi=doi_cur,
             filename="metahq_data.tar.gz",
-            url="https://zenodo.org/records/17663087/files/metahq_data.tar.gz",
-            version="v1.0.0-alpha",
+            url=url_cur,
+            version=version_cur,
             outdir=tmp_path,
         )
 
@@ -81,7 +86,7 @@ class TestFileConfig:
 
     def test_outfile(self, file_config, tmp_path):
         """Test outfile returns correct path."""
-        expected = tmp_path / "metahq.tar.gz"
+        expected = tmp_path / filename_cur
         assert file_config.outfile == expected
 
     def test_size_mb(self, file_config):
@@ -92,10 +97,10 @@ class TestFileConfig:
     def test_size_mb_rounds_correctly(self, tmp_path):
         """Test size_mb rounds to 2 decimal places."""
         config = FileConfig(
-            doi="17663087",
-            filename="metahq.tar.gz",
-            url="https://zenodo.org/records/17663087/files/metahq.tar.gz",
-            version="v1.0.0-alpha",
+            doi=doi_cur,
+            filename=filename_cur,
+            url=url_cur,
+            version=version_cur,
             outdir=tmp_path,
             filesize=1500000,  # ~1.43 MB
         )
@@ -105,10 +110,10 @@ class TestFileConfig:
     def test_size_mb_raises_when_filesize_not_set(self, tmp_path):
         """Test size_mb raises AttributeError when filesize is None."""
         config = FileConfig(
-            doi="17663087",
-            filename="metahq.tar.gz",
-            url="https://zenodo.org/records/17663087/files/metahq.tar.gz",
-            version="v1.0.0-alpha",
+            doi=doi_cur,
+            filename=filename_cur,
+            url=url_cur,
+            version=version_cur,
             outdir=tmp_path,
         )
 
@@ -136,10 +141,10 @@ class TestDownloader:
             patch("metahq_cli.setup.downloader.get_console") as mock_get_console,
         ):
             mock_dois.return_value = {
-                "version": "v1.0.0-alpha",
-                "filename": "metahq.tar.gz",
+                "version": version_cur,
+                "filename": filename_cur,
             }
-            mock_records_url.return_value = "https://zenodo.org/records"
+            mock_records_url.return_value = "https://zenodo.org/api/records"
             mock_files_dir.return_value = "files"
             mock_checkdir.side_effect = lambda x: x
             mock_setup_logger.return_value = Mock()
@@ -157,7 +162,7 @@ class TestDownloader:
     def downloader(self, mock_logger, tmp_path):
         """Fixture for Downloader instance."""
         return Downloader(
-            doi="17663087",
+            doi=doi_cur,
             outdir=tmp_path,
             logger=mock_logger,
             verbose=False,
@@ -167,7 +172,7 @@ class TestDownloader:
     def verbose_downloader(self, mock_logger, tmp_path):
         """Fixture for verbose Downloader instance."""
         return Downloader(
-            doi="17663087",
+            doi=doi_cur,
             outdir=tmp_path,
             logger=mock_logger,
             verbose=True,
@@ -176,15 +181,15 @@ class TestDownloader:
     def test_downloader_initialization(self, mock_logger, tmp_path):
         """Test Downloader initialization creates config correctly."""
         downloader = Downloader(
-            doi="17663087",
+            doi=doi_cur,
             outdir=tmp_path,
             logger=mock_logger,
             verbose=True,
         )
 
-        assert downloader.config.doi == "17663087"
-        assert downloader.config.filename == "metahq.tar.gz"
-        assert downloader.config.version == "v1.0.0-alpha"
+        assert downloader.config.doi == doi_cur
+        assert downloader.config.filename == filename_cur
+        assert downloader.config.version == version_cur
         assert downloader.logger == mock_logger
         assert downloader.verbose is True
         assert downloader._use_progress is True
@@ -194,7 +199,7 @@ class TestDownloader:
     ):
         """Test Downloader creates logger when none provided."""
         downloader = Downloader(
-            doi="17663087",
+            doi=doi_cur,
             outdir=tmp_path,
         )
 
@@ -203,25 +208,25 @@ class TestDownloader:
 
     def test_make_url(self, downloader):
         """Test _make_url generates correct URL."""
-        url = downloader._make_url("17663087", "metahq.tar.gz")
+        url = downloader._make_url(doi_cur, filename_cur)
 
-        assert url == "https://zenodo.org/records/17663087/files/metahq.tar.gz"
+        assert url == url_cur
 
     def test_make_config(self, mock_logger, tmp_path):
         """Test _make_config creates FileConfig with correct values."""
         downloader = Downloader(
-            doi="17663087",
+            doi=doi_cur,
             outdir=tmp_path,
             logger=mock_logger,
         )
 
-        assert downloader.config.doi == "17663087"
-        assert downloader.config.filename == "metahq.tar.gz"
+        assert downloader.config.doi == doi_cur
+        assert downloader.config.filename == filename_cur
         assert (
             downloader.config.url
-            == "https://zenodo.org/records/17663087/files/metahq.tar.gz"
+            == url_cur
         )
-        assert downloader.config.version == "v1.0.0-alpha"
+        assert downloader.config.version == version_cur
         assert downloader.config.outdir == tmp_path
 
     # ========================================
@@ -634,7 +639,7 @@ class TestDownloader:
         test_file = tar_content_dir / "test.txt"
         test_file.write_text("test content")
 
-        tar_path = tmp_path / "metahq.tar.gz"
+        tar_path = tmp_path / filename_cur
         with tarfile.open(tar_path, "w:gz") as tar:
             tar.add(test_file, arcname="test.txt")
 
@@ -653,7 +658,7 @@ class TestDownloader:
         (tar_dir / "file2.txt").write_text("content2")
 
         # Create fake tar file
-        tar_file = tmp_path / "metahq.tar.gz"
+        tar_file = tmp_path / filename_cur
         tar_file.write_text("fake tar")
 
         verbose_downloader._move_tar_contents(base_dir=tmp_path, tar_dir=tar_dir)

@@ -256,7 +256,11 @@ class Downloader:
 
     def _download_with_progress(self):
         response = requests.get(
-            self.config.url, stream=True, allow_redirects=True, timeout=30
+            self.config.url,
+            stream=True,
+            allow_redirects=True,
+            timeout=30,
+            headers={"User-Agent": "<meta-hq>/v1 (https://github.com/krishnanlab/meta-hq)"},
         )
         with progress_bar(padding="    ") as progress:
             task = progress.add_task("Downloading", total=self.config.filesize)
@@ -268,7 +272,11 @@ class Downloader:
 
     def _download_no_progress(self):
         response = requests.get(
-            self.config.url, stream=True, allow_redirects=True, timeout=30
+            self.config.url,
+            stream=True,
+            allow_redirects=True,
+            timeout=30,
+            headers={"User-Agent": "<meta-hq>/v1 (https://github.com/krishnanlab/meta-hq)"},
         )
         with open(self.config.outfile, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
@@ -321,7 +329,7 @@ class Downloader:
         base_url = zenodo_records_url()
         files_dir = zenodo_files_dir()
 
-        return f"{base_url}/{doi}/{files_dir}/{filename}"
+        return f"{base_url}/{doi}/{files_dir}/{filename}/content"
 
     # ========================================
     # ======  error messages
