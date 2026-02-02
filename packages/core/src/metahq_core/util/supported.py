@@ -122,7 +122,7 @@ def _age_groups() -> list[str]:
         "adolescent",
         "adult",
         "older_adult",
-        "eldery_adult",
+        "elderly_adult",
     ]
 
 
