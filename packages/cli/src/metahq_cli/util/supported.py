@@ -38,7 +38,7 @@ def sample_ids() -> list[str]:
 
 def zenodo_records_url() -> str:
     """Return the url to Zenodo records."""
-    return "https://zenodo.org/records"
+    return "https://zenodo.org/api/records"
 
 
 def zenodo_files_dir() -> str:

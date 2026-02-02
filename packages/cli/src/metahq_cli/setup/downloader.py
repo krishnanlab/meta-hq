@@ -162,7 +162,7 @@ class Downloader:
         if self.verbose:
             self.logger.info("Saved the MetaHQ database to %s.", self.config.outdir)
 
-    def get(self):
+    def get(self, num_retries = 10):
         """Downloads the database .tar.gz file from Zenodo.
 
         Raises:
@@ -170,32 +170,48 @@ class Downloader:
         """
         self.check_outdir_exists()
 
-        try:
-            self.get_stats()
-            self._download()
+        num_tries = 0
+        one_more_try = True
+        while num_tries <= num_retries - 2:
+            num_tries += 1
+            self.logger.info(f"On download attempt {num_tries} out of {num_retries}")
+            try:
+                self.get_stats()
+                self._download()
+                one_more_try = False
+                break
+            except:
+                continue
 
-        except requests.exceptions.ConnectionError:
-            self._raise_connection_error()
+        # try one more time in needed  to find the last error and report it
+        if one_more_try:
+            self.logger.info(f"On download attempt {num_retries} out of {num_retries}")
+            try: 
+                self.get_stats()
+                self._download()
+            
+            except requests.exceptions.ConnectionError:
+                self._raise_connection_error()
 
-        except requests.exceptions.Timeout:
-            self._raise_timeout_error()
+            except requests.exceptions.Timeout:
+                self._raise_timeout_error()
 
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 404:
-                self._raise_404_error()
-            elif e.response.status_code == 403:
-                self._raise_403_error()
-            else:
-                self._raise_http_error(e)
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 404:
+                    self._raise_404_error()
+                elif e.response.status_code == 403:
+                    self._raise_403_error()
+                else:
+                    self._raise_http_error(e)
 
-        except PermissionError:
-            self._raise_permissions_error()
+            except PermissionError:
+                self._raise_permissions_error()
 
-        except KeyboardInterrupt:
-            self._raise_keyboard_interrupt()
+            except KeyboardInterrupt:
+                self._raise_keyboard_interrupt()
 
-        except Exception as e:
-            self._raise_general_exception(e)
+            except Exception as e:
+                self._raise_general_exception(e)
 
     def get_stats(self):
         """Check if file exists and retrieve file stats."""
@@ -240,7 +256,11 @@ class Downloader:
 
     def _download_with_progress(self):
         response = requests.get(
-            self.config.url, stream=True, allow_redirects=True, timeout=30
+            self.config.url,
+            stream=True,
+            allow_redirects=True,
+            timeout=30,
+            headers={"User-Agent": "<meta-hq>/v1 (https://github.com/krishnanlab/meta-hq)"},
         )
         with progress_bar(padding="    ") as progress:
             task = progress.add_task("Downloading", total=self.config.filesize)
@@ -252,7 +272,11 @@ class Downloader:
 
     def _download_no_progress(self):
         response = requests.get(
-            self.config.url, stream=True, allow_redirects=True, timeout=30
+            self.config.url,
+            stream=True,
+            allow_redirects=True,
+            timeout=30,
+            headers={"User-Agent": "<meta-hq>/v1 (https://github.com/krishnanlab/meta-hq)"},
         )
         with open(self.config.outfile, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
@@ -305,7 +329,7 @@ class Downloader:
         base_url = zenodo_records_url()
         files_dir = zenodo_files_dir()
 
-        return f"{base_url}/{doi}/{files_dir}/{filename}"
+        return f"{base_url}/{doi}/{files_dir}/{filename}/content"
 
     # ========================================
     # ======  error messages
