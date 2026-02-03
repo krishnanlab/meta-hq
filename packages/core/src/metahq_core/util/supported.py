@@ -141,8 +141,6 @@ def species_map() -> dict[str, str]:
     return {
         "human": "homo sapiens",
         "mouse": "mus musculus",
-        "worm": "caenorhabditis elegans",
-        "fly": "drosophila melanogaster",
         "zebrafish": "danio rerio",
         "rat": "rattus norvegicus",
     }
