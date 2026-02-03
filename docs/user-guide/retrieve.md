@@ -24,18 +24,18 @@ All retrieve commands share the following common options:
 
 - `--level TEXT`: Annotation level to retrieve (`sample` or `series`). Default: `sample`
 - `--filters TEXT`: Comma-separated filters in format `key=value`. Available filters:
-  - `species`: Filter by species (e.g., `human`, `mouse`)
-  - `ecode`: Evidence code (e.g., `expert`, `semi`, `crowd`, `any`)
-  - `tech`: Technology type (e.g., `rnaseq`, `microarray`)
-  - Combine multiple filters like so: `'species=human,ecode=expert,tech=rnaseq'`
+    - `species`: Filter by species (e.g., `human`, `mouse`)
+    - `ecode`: Evidence code (e.g., `expert`, `semi`, `crowd`, `any`)
+    - `tech`: Technology type (e.g., `rnaseq`, `microarray`)
+    - Combine multiple filters like so: `'species=human,ecode=expert,tech=rnaseq'`
 
 ### Output Options
 
 - `--output PATH`: Output file path. Default: `annotations`
 - `--fmt TEXT`: Output format (`tsv`, `csv`, or `json`). Default: `parquet`
 - `--metadata TEXT`: Metadata level to include (`sample`, `series`, etc.). Default: `default` (matches `--level`)
-  - Run `metahq supported` for all metadata fields.
-  - Combine multiple filters like so: `'sample,series,description,srp'`
+    - Run `metahq supported` for all metadata fields.
+    - Combine multiple filters like so: `'sample,series,description,srp'`
 
 ### Logging Options
 
@@ -52,8 +52,8 @@ Retrieve tissue annotations and labels using UBERON ontology terms.
 
 - `--terms TEXT`: Comma-separated UBERON ontology IDs.
 - `--mode MODE`: Annotation mode (`annotate` or `label`). Default: `annotate`
-  - `annotate`: Returns inferred annotations using the ontology hierarchy
-  - `label`: Returns +1, 0, and -1 labels indicating what a sample is, what it is not, or if it is unknown
+    - `annotate`: Returns inferred annotations using the ontology hierarchy
+    - `label`: Returns +1, 0, and -1 labels indicating what a sample is, what it is not, or if it is unknown
 
 ### Usage
 
@@ -126,7 +126,7 @@ Retrieve sex annotations.
 ### Additional Options
 
 - `--terms TEXT`: Comma-separated sex terms.
-  - Available terms: `male`, `female`
+    - Available terms: `male`, `female`
 
 ### Examples
 
@@ -169,7 +169,7 @@ metahq retrieve age --terms "all" \
 **Retrieve all microarray age-annotated datasets with SRA metadata:**
 
 ```bash
-metahq retrieve sex --terms "infant,adolescent,elderly" \
+metahq retrieve sex --terms "infant,adolescent,elderly_adult" \
     --level series --filters "species=human,ecode=expert,tech=microarray" \
     --metadata "series,srp,description"
 ```
