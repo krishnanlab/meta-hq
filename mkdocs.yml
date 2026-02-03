@@ -115,7 +115,9 @@ nav:
                 - Labels: packages/core/api/curations/labels.md
                 - Ids: packages/core/api/curations/ids.md
                 - Propagator: packages/core/api/curations/propagator.md
-              - Export: packages/core/api/export.md
+              - Export: 
+                - Annotations: packages/core/api/export/annotations.md
+                - Labels: packages/core/api/export/labels.md
               - Search: packages/core/api/search.md
               - Utilities:
                 - IO: packages/core/api/util/io.md
