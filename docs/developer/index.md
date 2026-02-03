@@ -17,4 +17,4 @@ A command-line interface built on top of MetaHQ Core, providing easy-to-use comm
 | core    | ![metahq-core pypi](https://img.shields.io/pypi/v/metahq-core.svg) | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg) |
 | cli     | ![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)   | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)  |
 
-Open an issue on [GitHub](https://github.com/krishnan/meta-hq/issues) if you encounter any issues or have questions:
+Open an issue on [GitHub](https://github.com/krishnan/meta-hq/issues) if you encounter any issues or have questions.
