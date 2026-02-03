@@ -311,11 +311,11 @@ class UnParsedEntry:
         # add attribute annotations across sources
         ids: set[str] = set()
         values: set[str] = set()
-        for source, annotations in self.entry[self.attribute].items():
-            if annotations["ecode"] not in self.ecodes:
+        for source in self.entry[self.attribute].values():
+            if source["ecode"] not in self.ecodes:
                 continue
 
-            id_, value = self.get_id_value(annotations)
+            id_, value = self.get_id_value(source)
             ids.add(id_)
             values.add(value)
 
