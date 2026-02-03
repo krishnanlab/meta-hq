@@ -4,7 +4,7 @@ Class to query the annotations dictionary.
 Author: Parker Hicks
 Date: 2025-03
 
-Last updated: 2025-12-19 by Parker Hicks
+Last updated: 2026-02-02 by Parker Hicks
 """
 
 from pathlib import Path
