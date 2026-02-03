@@ -4,7 +4,7 @@ Unit tests for Builder class.
 Author: Parker Hicks
 Date: 2025-11-06
 
-Last updated: 2025-11-06 by Parker Hicks
+Last updated: 2026-02-02 by Parker Hicks
 """
 
 from unittest.mock import Mock, patch
@@ -166,7 +166,9 @@ class TestBuilder:
         self, mock_outfile, mock_format, mock_metadata, builder
     ):
         """test output_config creates OutputConfig with correct parameters"""
-        result = builder.output_config("output.parquet", "parquet", "sample", "sample", "test_attr")
+        result = builder.output_config(
+            "output.parquet", "parquet", "sample", "sample", "test_attr"
+        )
 
         assert isinstance(result, OutputConfig)
         assert result.outfile == "output.parquet"

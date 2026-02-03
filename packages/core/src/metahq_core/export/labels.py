@@ -4,7 +4,7 @@ Class for Labels export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2026-02-02 by Parker Hicks
 """
 
 from __future__ import annotations

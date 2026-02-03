@@ -4,7 +4,7 @@ Class for storing and mutating annotation collections.
 Author: Parker Hicks
 Date: 2025-04-14
 
-Last updated: 2025-11-27 by Parker Hicks
+Last updated: 2026-02-02 by Parker Hicks
 """
 
 from __future__ import annotations
