@@ -186,7 +186,12 @@ class Builder:
         return CurationConfig(mode, _terms, ontology)
 
     def output_config(
-        self, outfile: str, fmt: str, metadata: str, level: str
+        self,
+        outfile: str,
+        fmt: str,
+        metadata: str,
+        level: str,
+        attribute: str,
     ) -> OutputConfig:
         """Construct an output configuration.
 
@@ -211,7 +216,7 @@ class Builder:
         check_format(fmt)
         check_outfile(outfile)
 
-        return OutputConfig(outfile, fmt, metadata)
+        return OutputConfig(outfile, fmt, metadata, attribute, level)
 
     def make_age_curation(self, terms: str, mode: str) -> CurationConfig:
         """Makes an age-specific CurationConfig."""

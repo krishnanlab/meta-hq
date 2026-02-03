@@ -4,7 +4,7 @@ Class for Labels export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2026-02-02 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -39,12 +39,44 @@ LABEL_KEY = {"1": "positive", "-1": "negative", "2": "control"}
 class LabelsExporter(BaseExporter):
     """Base abstract class for Exporter children."""
 
-    def __init__(self, logger=None, loglevel=20, logdir=Path("."), verbose=True):
+    def __init__(
+        self,
+        attribute: str,
+        level: str,
+        logger=None,
+        loglevel=20,
+        logdir=Path("."),
+        verbose=True,
+    ):
+        self.attribute = attribute
+        self._database = self._load_annotations(level)
 
         if logger is None:
             logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
+
+    def add_sources(self, labels: Labels) -> Labels:
+        """Add the sources that contributed to the lables of each sample or dataset.
+
+        Arguments:
+            labels (Labels):
+                A populated Labels curation object.
+
+        Returns:
+            The Labels object with additional source IDs for each index.
+
+        """
+        sources = {labels.index_col: [], "sources": []}
+        for idx in labels.index:
+            sources[labels.index_col].append(idx)
+
+            # get sources for a particular index for the specified attribute
+            sources["sources"].append(
+                "|".join(list(self._database[idx][self.attribute].keys()))
+            )
+
+        return labels.add_ids(pl.DataFrame(sources))
 
     def get_sra(self, labels: Labels, fields: list[str]) -> Labels:
         """
@@ -164,13 +196,14 @@ class LabelsExporter(BaseExporter):
             isinstance(metadata, str)
             & (metadata.strip().replace(",", "") == curation.index_col)
         ):
-            # save with just index IDs
-            stacked = curation.data.hstack(curation.ids)
-            for row in stacked.iter_rows(named=True):
-                self._write_row(row, _labels, curation.index_col)
+            metadata = curation.index_col
 
-        elif isinstance(metadata, str):
+        if isinstance(metadata, str):
+            # add sources
+            curation = self.add_sources(curation)
+
             _metadata = self._parse_metafields(curation.index_col, metadata)
+            _metadata.extend(["sources"])
 
             if self._sra_in_metadata(_metadata):
                 curation = self.get_sra(
@@ -358,6 +391,11 @@ class LabelsExporter(BaseExporter):
             curation = self.get_sra(
                 curation, [field for field in _metadata if field in database_ids("sra")]
             )
+
+        # add sources
+        curation = self.add_sources(curation)
+        _metadata = _metadata + ["sources"]
+
         if "description" in _metadata:
             self._save_table_with_description(
                 file, curation, _metadata, fmt=fmt, **kwargs
@@ -394,13 +432,7 @@ class LabelsExporter(BaseExporter):
         for entity in labels:
             label = str(row[entity])
             if label in LABEL_KEY:
-                try:
-                    labels[entity][LABEL_KEY[label]].append(idx)
-                except KeyError:
-                    print(labels[entity])
-                    print(LABEL_KEY[label])
-                    print(idx)
-                    exit()
+                labels[entity][LABEL_KEY[label]].append(idx)
 
     def _write_row_with_metadata(
         self,

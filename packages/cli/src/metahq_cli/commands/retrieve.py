@@ -88,7 +88,9 @@ def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet)
     # make configs
     query_config = builder.query_config("geo", "age", level, filters)
     curation_config = builder.curation_config(terms, "direct", "age")
-    output_config = builder.output_config(output, fmt, metadata, level=level)
+    output_config = builder.output_config(
+        output, fmt, metadata, level=level, attribute="age"
+    )
 
     # retrieve
     retriever = Retriever(
@@ -124,7 +126,9 @@ def retrieve_diseases(
     # make configs
     query_config = builder.query_config("geo", "disease", level, filters)
     curation_config = builder.curation_config(terms, mode, "mondo")
-    output_config = builder.output_config(output, fmt, metadata, level=level)
+    output_config = builder.output_config(
+        output, fmt, metadata, level=level, attribute="disease"
+    )
 
     # retrieve
     retriever = Retriever(
@@ -155,7 +159,9 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet)
     # make configs
     query_config = builder.query_config("geo", "sex", level, filters)
     curation_config = builder.curation_config(terms, "direct", "sex")
-    output_config = builder.output_config(output, fmt, metadata, level=level)
+    output_config = builder.output_config(
+        output, fmt, metadata, level=level, attribute="sex"
+    )
 
     # retrieve
     retriever = Retriever(
@@ -191,7 +197,9 @@ def retrieve_tissues(
     # make configs
     query_config = builder.query_config("geo", "tissue", level, filters)
     curation_config = builder.curation_config(terms, mode, "uberon")
-    output_config = builder.output_config(output, fmt, metadata, level=level)
+    output_config = builder.output_config(
+        output, fmt, metadata, level=level, attribute="tissue"
+    )
 
     # retrieve
     retriever = Retriever(
