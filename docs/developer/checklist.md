@@ -1,6 +1,6 @@
 # Publishing Checklist
 
-Before you publish this repo to PyPI, make sure all statements below are satisfied.
+Before a MetaHQ package is published to PyPI, make sure all statements below are satisfied.
 
 1. Updated package version in:
     - `/packages/core/src/metahq_core/__init__.py` for `metahq_core`.
