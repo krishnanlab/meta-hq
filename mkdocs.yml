@@ -93,6 +93,8 @@ nav:
       - Setup: user-guide/setup.md
       - Search: user-guide/search.md
       - Retrieve: user-guide/retrieve.md
+      - Validate: user-guide/validate.md
+      - Delete: user-guide/delete.md
   - Contribute:
     - Overview: contribute/index.md
     - Annotations: contribute/annotations.md
@@ -127,6 +129,8 @@ nav:
               - Setup: packages/cli/commands/setup.md
               - Search: packages/cli/commands/search.md
               - Retrieve: packages/cli/commands/retrieve.md
+              - Validate: packages/cli/commands/validate.md
+              - Delete: packages/cli/commands/delete.md
             - Builder: packages/cli/api/builder.md
             - Retriever: packages/cli/api/retriever.md
             - Retrieval Configs: 
