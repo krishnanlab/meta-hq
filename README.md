@@ -32,7 +32,7 @@ metahq setup
 
 ## Demo
 
-We provide a demo for the CLI [here](demo/README.md)
+We provide a demo for the CLI [here](demo/README.md).
 
 ## Development
 
