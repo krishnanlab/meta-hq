@@ -4,84 +4,33 @@ MetaHQ is a Python package and CLI for querying tissue, disease, sex, and age an
 
 ## Setup
 
-MetaHQ is not yet on PyPI, so we will install the dev version locally. This requires a couple extra steps, but needs to be tested anyways.
-
-1. Clone the repo
-
-For SSH (recommended):
+1. Install the CLI Python package:
 
 ```bash
-git clone git@github.com:krishnanlab/meta-hq.git
-cd meta-hq
+pip install metahq-cli
 ```
 
-For HTTPS:
+2. Download the lastest database and configure the CLI:
 
 ```bash
-git clone https://github.com/krishnanlab/meta-hq.git
-cd meta-hq
-```
-
-2. Install `uv tools`
-
-`uv tools` is a modern, fast Python dependency and environment manager that is well-suited for deploying Python packages stored in monorepos (e.g., repos that have a core package and a CLI package like MetaHQ).
-
-To install on macOS and Linux:
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-To install on windows:
-
-```bash
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-3. Install MetaHQ (dev)
-
-Create a compute environment
-
-```bash
-conda create -n metahq python=3.12 -y
-conda activate metahq
-```
-
-Run the following:
-
-```bash
-uv pip install -e . ".[dev]"
-```
-
-4. Extract MetaHQ database
-
-Currently this is stored in `tar.gz` file in the repo. This will be posted on Zenodo.
-
-```bash
-tar -xvf metahq.tar.gz -C ~/
-```
-
-5. Configure MetaHQ
-
-```bash
-metahq setup --zenodo_doi xxx --data_dir ~/metahq/data
+metahq setup
 ```
 
 ## Search ([docs](../docs/SEARCH.md))
 
-Great, we should be ready to go now. Let's retrieve some annotations. We want to search for heart and brain annotations, but don't know what the ontology term IDs are for these anatomical systems.
+Great, we should be ready to go now. Let's retrieve some annotations. We want to search for heart and liver annotations, but don't know what the ontology term IDs are for these anatomical entities.
 So, we can run `metahq search` to figure this out.
 
 Heart:
 
 ```bash
-metahq search --query heart --type tissue --ontology UBERON -k 3
+metahq search --query heart --type tissue --ontology UBERON
 ```
 
-Brain:
+Liver showing top 10 terms:
 
 ```bash
-metahq search --query brain --type tissue --ontology UBERON -k 10
+metahq search --query liver --type tissue --ontology UBERON -k 10
 ```
 
 ## Supported
@@ -93,38 +42,58 @@ So, let's run `metahq supported` to see what's offered by MetaHQ.
 metahq supported
 ```
 
-## Retrieve tissues ([docs](../docs/RETRIEVE.md))
+## Retrieve tissues
 
-Alright now we're ready to go. Let's retrieve our tissue annotations.
+Alright now we're ready to go. Let's retrieve our tissue annotations. The default annotations are sample-level. To retrieve study-level annotations,
+simply pass `--level series` for any retrieve command ('studies' are called 'series' in GEO).
 
 ```bash
-metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" --level sample --mode direct --filters "species=human,ecode=expert,technology=microarray" --metadata "sample,series,platform" --fmt tsv --output annotations.tsv
+metahq retrieve tissues \
+--terms "UBERON:0000948,UBERON:0002107" \
+--filters "species=human,ecode=expert,tech=rnaseq" \
+--metadata "series,platform" \
+--fmt tsv --output annotations.tsv
 ```
 
-Alright that doesn't satisfy my needs though. I also need to know which samples are not heart and brain. Let's change the mode to `--mode label`
+If you need to know which samples are not heart and liver, change the mode to `--mode label` (defualt is `annotate`):
 
 ```bash
-metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" --level sample --mode label --filters "species=human,ecode=expert,technology=microarray" --metadata "sample,series,platform" --fmt tsv --output annotations.tsv
+metahq retrieve tissues \
+--terms "UBERON:0000948,UBERON:0002107" \
+--filters "species=human,ecode=expert,tech=rnaseq" \
+--metadata "series,platform" --mode label \
+--fmt tsv --output annotations.tsv
 ```
 
-Microarray is so last decade though, so I want some fancy RNA-Seq data. We can change the `technolgy` filter to `rnaseq` and even include metadata from the Sequence Read Archive (SRA).
+## Retrieve diseases
+
+We can also perform a large query for all RNA-Seq samples annotated to all diseases in MONDO. This operation requires anywhere from 10 seconds to 3 minutes to complete depending on your compute capacity.
+This also results in a larger file (58MB as a `parquet`; 1.8G as a `.tsv`) so we recommend saving to `.parquet` for compression. We do not recommend saving to `.json` for large queries.
 
 ```bash
-metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" --level sample --mode label --filters "species=human,ecode=expert,technology=rnaseq" --metadata "sample,series,platform,srx,srp" --fmt tsv --output annotations.tsv
+metahq retrieve diseases \
+--terms "all" \
+--filters "species=human,ecode=expert,tech=rnaseq" \
+--metadata "series,platform" --mode label \
+--fmt parquet --output annotations.parquet
 ```
 
 ## Retrieve sex
 
-Yeah yeah ok we have the tissue labels, but my reviewer yelled at me for not controlling for sex in my analysis. I need to retrieve sex annotations for these samples so I can add the proper controls.
+We can also query sex annotations:
 
 ```bash
-metahq retrieve sex --terms "M,F" --level sample --filters "species=human,ecode=expert,technology=rnaseq" --metadata "sample" --fmt tsv --output annotations.tsv
+metahq retrieve sex --terms "M,F" \
+--filters "species=human,ecode=expert,tech=rnaseq" \
+--fmt tsv --output annotations.tsv
 ```
 
 ## Retrieve age
 
-(3 months later...) Turns out they want age information for these samples now too. You know what to do.
+... and age annotations:
 
 ```bash
-metahq retrieve age --terms "all" --level sample --filters "species=human,ecode=expert,technology=rnaseq" --metadata "sample" --fmt tsv --output annotations.tsv
+metahq retrieve age --terms "all" \
+--filters "species=human,ecode=expert,tech=rnaseq" \
+--fmt tsv --output annotations.tsv
 ```
