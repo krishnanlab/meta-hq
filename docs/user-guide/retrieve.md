@@ -137,7 +137,7 @@ metahq retrieve sex --terms "male,female" \
     --level sample --filters "species=human,ecode=expert,tech=rnaseq"
 ```
 
-**Retrieve all RNA-Seq sex-annotated datasets with SRA metadata:**
+**Retrieve all RNA-Seq sex-annotated studies with SRA metadata:**
 
 ```bash
 metahq retrieve sex --terms "male,female" \
@@ -166,7 +166,7 @@ metahq retrieve age --terms "all" \
     --fmt csv --output ages.csv
 ```
 
-**Retrieve all microarray age-annotated datasets with SRA metadata:**
+**Retrieve all microarray age-annotated studies with SRA metadata:**
 
 ```bash
 metahq retrieve sex --terms "infant,adolescent,elderly_adult" \
