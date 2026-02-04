@@ -4,11 +4,10 @@ Logger setup.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-11-28 by Parker Hicks
+Last updated: 2026-02-04 by Parker Hicks
 """
 
 import logging
-from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
 
@@ -17,21 +16,21 @@ def setup_logger(
     log_dir: str | Path,
     level: int = logging.INFO,
 ) -> logging.Logger:
-    """
-    Sets up a logger.
+    """Sets up a logger.
 
     Arguments:
         name (str):
             Logger name.
 
         log_dir (str | Path):
-            Path to logging directory. Default is ~/metahq/logs
+            Path to logging directory. Default is `/path/to/home/MetaHQ`.
 
         level (int):
             Logging level.
 
     Returns:
         Configured logger.
+
     """
     logger = logging.getLogger(name)
 
@@ -53,11 +52,8 @@ def setup_logger(
     logger.addHandler(console_handler)
 
     # file handler
-    file_handler = TimedRotatingFileHandler(
+    file_handler = logging.FileHandler(
         Path(log_dir) / "log.log",
-        when="midnight",
-        interval=1,
-        backupCount=30,
         encoding="utf-8",
     )
     file_handler.setFormatter(formatter)
