@@ -16,10 +16,10 @@ pip install metahq-cli
 metahq setup
 ```
 
-## Search ([docs](../docs/SEARCH.md))
+## Search
 
-Great, we should be ready to go now. Let's retrieve some annotations. We want to search for heart and liver annotations, but don't know what the ontology term IDs are for these anatomical entities.
-So, we can run `metahq search` to figure this out.
+Great, you should be ready to go now. Let's retrieve some annotations. Say you want to search for heart and liver annotations, but don't know what the ontology term IDs are for these anatomical entities.
+You can run `metahq search` to figure this out.
 
 Heart:
 
@@ -35,8 +35,8 @@ metahq search --query liver --type tissue --ontology UBERON -k 10
 
 ## Supported
 
-Now that we have our terms, we can retrieve annotations from the MetaHQ database. However, there are lots of filters to include in the query and we know none of them.
-So, let's run `metahq supported` to see what's offered by MetaHQ.
+Now that you have ontology term IDs, you can retrieve annotations from the MetaHQ database. However, there are lots of filters to include in the query and we know none of them.
+Run `metahq supported` to see what's offered by MetaHQ.
 
 ```bash
 metahq supported
@@ -44,7 +44,7 @@ metahq supported
 
 ## Retrieve tissues
 
-Alright now we're ready to go. Let's retrieve our tissue annotations. The default annotations are sample-level. To retrieve study-level annotations,
+Alright now you're ready to go. Let's retrieve our tissue annotations. The default annotations are sample-level. To retrieve study-level annotations,
 simply pass `--level series` for any retrieve command ('studies' are called 'series' in GEO).
 
 ```bash
@@ -67,7 +67,7 @@ metahq retrieve tissues \
 
 ## Retrieve diseases
 
-We can also perform a large query for all RNA-Seq samples annotated to all diseases in MONDO. This operation requires anywhere from 10 seconds to 3 minutes to complete depending on your compute capacity.
+You can also perform a large query for all RNA-Seq samples annotated to all diseases in MONDO. This operation requires anywhere from 10 seconds to 3 minutes to complete depending on your compute capacity.
 This also results in a larger file (58MB as a `parquet`; 1.8G as a `.tsv`) so we recommend saving to `.parquet` for compression. We do not recommend saving to `.json` for large queries.
 
 ```bash
@@ -80,7 +80,7 @@ metahq retrieve diseases \
 
 ## Retrieve sex
 
-We can also query sex annotations:
+You can also query sex annotations:
 
 ```bash
 metahq retrieve sex --terms "M,F" \
