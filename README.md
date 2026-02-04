@@ -30,6 +30,10 @@ pip install metahq-cli
 metahq setup
 ```
 
+## Demo
+
+We provide a demo for the CLI [here](demo/README.md)
+
 ## Development
 
 See dev install instructions [here](https://github.com/krishnanlab/meta-hq/blob/gh-pages/docs/getting-started/installation.md#development-installation).
