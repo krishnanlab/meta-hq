@@ -20,6 +20,7 @@ from metahq_core.util.supported import (
     _ecodes,
     attributes,
     get_annotations,
+    get_default_log_dir,
     get_technologies,
     na_entities,
     species_map,
@@ -448,7 +449,7 @@ class Query:
         technology,
         logger=None,
         loglevel=20,
-        logdir=Path("."),
+        logdir=get_default_log_dir(),
         verbose=True,
     ):
         self.database: str = database

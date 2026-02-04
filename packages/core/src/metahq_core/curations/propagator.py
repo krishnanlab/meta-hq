@@ -31,7 +31,7 @@ import polars as pl
 from metahq_core.curations._multiprocess_propagator import MultiprocessPropagator
 from metahq_core.logger import setup_logger
 from metahq_core.util.alltypes import NpIntMatrix, NpStringArray
-from metahq_core.util.supported import onto_relations
+from metahq_core.util.supported import get_default_log_dir, onto_relations
 
 if TYPE_CHECKING:
     import logging
@@ -67,7 +67,7 @@ class Propagator:
         relatives,
         logger=None,
         loglevel=20,
-        logdir=Path("."),
+        logdir=get_default_log_dir(),
         verbose=True,
     ):
         self.ontology: str = ontology

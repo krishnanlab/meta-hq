@@ -20,7 +20,7 @@ from metahq_core.logger import setup_logger
 from metahq_core.relations_loader import RelationsLoader
 from metahq_core.util.helpers import merge_list_values
 from metahq_core.util.progress import progress_wrapper
-from metahq_core.util.supported import get_ontology_families
+from metahq_core.util.supported import get_default_log_dir, get_ontology_families
 
 if TYPE_CHECKING:
     import logging
@@ -69,7 +69,7 @@ class AnnotationsConverter:
         control_col="MONDO:0000000",
         logger=None,
         loglevel=20,
-        logdir=Path("."),
+        logdir=get_default_log_dir(),
         verbose=False,
     ):
         self.anno: Annotations = anno

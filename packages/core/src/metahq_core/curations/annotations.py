@@ -20,6 +20,7 @@ from metahq_core.curations.index import Ids
 from metahq_core.curations.labels import Labels
 from metahq_core.export.annotations import AnnotationsExporter
 from metahq_core.logger import setup_logger
+from metahq_core.util.supported import get_default_log_dir
 
 if TYPE_CHECKING:
     import logging
@@ -59,7 +60,7 @@ class Annotations(BaseCuration):
         collapsed: bool = False,
         logger=None,
         loglevel=20,
-        logdir=Path("."),
+        logdir=get_default_log_dir(),
         verbose=True,
     ):
         self.data = data
