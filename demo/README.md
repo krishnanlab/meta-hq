@@ -18,7 +18,7 @@ metahq setup
 
 ## Search
 
-Great, you should be ready to go now. Let's retrieve some annotations. Say you want to search for heart and liver annotations, but don't know what the ontology term IDs are for these anatomical entities.
+Now you're ready to start using MetaHQ. Let's retrieve some annotations. Say you want to search for heart and liver annotations, but don't know what the ontology term IDs are for these anatomical entities.
 You can run `metahq search` to figure this out.
 
 Heart:
@@ -68,7 +68,7 @@ metahq retrieve tissues \
 ## Retrieve diseases
 
 You can also perform a large query for all RNA-Seq samples annotated to all diseases in MONDO. This operation requires anywhere from 10 seconds to 3 minutes to complete depending on your compute capacity.
-This also results in a larger file (58MB as a `parquet`; 1.8G as a `.tsv`) so we recommend saving to `.parquet` for compression. We do not recommend saving to `.json` for large queries.
+This also results in a larger file (58MB as a `parquet`; 1.8G as a `tsv`) so we recommend saving to `parquet` for compression. We do not recommend saving to `json` for large queries.
 
 ```bash
 metahq retrieve diseases \
@@ -96,4 +96,20 @@ metahq retrieve sex --terms "M,F" \
 metahq retrieve age --terms "all" \
 --filters "species=human,ecode=expert,tech=rnaseq" \
 --fmt tsv --output annotations.tsv
+```
+
+## Validate
+
+To check the integrity of the MetaHQ data package, run the following command. Warnings will be raised for every file that is altered or corrputed.
+
+```bash
+metahq validate
+```
+
+## Delete
+
+If you wish to remove the MetaHQ data package, run the following. You will have to run `metahq setup` again to use the CLI.
+
+```bash
+metahq delete
 ```
