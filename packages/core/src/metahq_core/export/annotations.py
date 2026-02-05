@@ -77,7 +77,7 @@ class AnnotationsExporter(BaseExporter):
         self.verbose: bool = verbose
 
     def add_sources(self, anno: Annotations) -> Annotations:
-        """Add the sources that contributed to the lables of each sample or dataset.
+        """Add the sources that contributed to the labels of each sample or dataset.
 
         Arguments:
             anno (Annotations):
