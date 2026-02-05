@@ -23,7 +23,7 @@ def setup_logger(
             Logger name.
 
         log_dir (str | Path):
-            Path to logging directory. Default is `/path/to/home/MetaHQ`.
+            Path to logging directory.
 
         level (int):
             Logging level.
