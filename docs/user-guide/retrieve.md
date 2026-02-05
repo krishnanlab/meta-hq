@@ -169,7 +169,7 @@ metahq retrieve age --terms "all" \
 **Retrieve all microarray age-annotated studies with SRA metadata:**
 
 ```bash
-metahq retrieve sex --terms "infant,adolescent,elderly_adult" \
+metahq retrieve age --terms "infant,adolescent,elderly_adult" \
     --level series --filters "species=human,ecode=expert,tech=microarray" \
     --metadata "series,srp,description"
 ```
