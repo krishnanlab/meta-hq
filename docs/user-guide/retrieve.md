@@ -14,7 +14,7 @@ There is a command for each retrievable attribute:
 The MetaHQ database contains annotations gathered from searchable databases, static project websites, GitHub repositories, data repositories (Zenodo, Figshare), and publication supplementary files.
 Output files from `metahq retrieve` include which resources the retrieved annotations came from. We encourage users to cite these sources.
 
-Please see our [citation documentation](../../about/citation.md) for instructions on how to cite MetaHQ and its annotation sources.
+Please see our [citation documentation](../about/citation.md) for instructions on how to cite MetaHQ and its annotation sources.
 
 ## Common Options
 
