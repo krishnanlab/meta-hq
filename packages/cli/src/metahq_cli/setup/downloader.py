@@ -5,7 +5,7 @@ Implemented in the `metahq setup` CLI command.
 Author: Parker Hicks
 Date: 2025-11-20
 
-Last updated: 2025-12-05 by Parker Hicks
+Last updated: 2026-02-05 by Parker Hicks
 """
 
 import shutil
@@ -162,12 +162,8 @@ class Downloader:
         if self.verbose:
             self.logger.info("Saved the MetaHQ database to %s.", self.config.outdir)
 
-    def get(self, num_retries = 10):
-        """Downloads the database .tar.gz file from Zenodo.
-
-        Raises:
-            You name it, this function will raise it.
-        """
+    def get(self, num_retries=10):
+        """Downloads the database .tar.gz file from Zenodo."""
         self.check_outdir_exists()
 
         num_tries = 0
@@ -186,10 +182,10 @@ class Downloader:
         # try one more time in needed  to find the last error and report it
         if one_more_try:
             self.logger.info(f"On download attempt {num_retries} out of {num_retries}")
-            try: 
+            try:
                 self.get_stats()
                 self._download()
-            
+
             except requests.exceptions.ConnectionError:
                 self._raise_connection_error()
 
@@ -260,7 +256,9 @@ class Downloader:
             stream=True,
             allow_redirects=True,
             timeout=30,
-            headers={"User-Agent": "<meta-hq>/v1 (https://github.com/krishnanlab/meta-hq)"},
+            headers={
+                "User-Agent": "<meta-hq>/v1 (https://github.com/krishnanlab/meta-hq)"
+            },
         )
         with progress_bar(padding="    ") as progress:
             task = progress.add_task("Downloading", total=self.config.filesize)
@@ -276,7 +274,9 @@ class Downloader:
             stream=True,
             allow_redirects=True,
             timeout=30,
-            headers={"User-Agent": "<meta-hq>/v1 (https://github.com/krishnanlab/meta-hq)"},
+            headers={
+                "User-Agent": "<meta-hq>/v1 (https://github.com/krishnanlab/meta-hq)"
+            },
         )
         with open(self.config.outfile, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
