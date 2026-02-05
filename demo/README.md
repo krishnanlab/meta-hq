@@ -55,7 +55,7 @@ metahq retrieve tissues \
 --fmt tsv --output annotations.tsv
 ```
 
-If you need to know which samples are not heart and liver, change the mode to `--mode label` (defualt is `annotate`):
+If you need to know which samples are not heart and liver, change the mode to `--mode label` (default is `annotate`):
 
 ```bash
 metahq retrieve tissues \
