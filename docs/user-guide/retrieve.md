@@ -169,7 +169,7 @@ metahq retrieve age --terms "all" \
 **Retrieve all microarray age-annotated studies with SRA metadata:**
 
 ```bash
-metahq retrieve sex --terms "infant,adolescent,elderly_adult" \
+metahq retrieve age --terms "infant,adolescent,elderly_adult" \
     --level series --filters "species=human,ecode=expert,tech=microarray" \
     --metadata "series,srp,description"
 ```
@@ -207,7 +207,7 @@ The output from this would look like so:
 
 A 1 means the entry is annotated to the term, a 0 means it was not annotated to that term. Note that annotations
 of 0 do not mean an entry is definitely not that term. It only means the entry was never annotated to it.
-To get declarations of what an entry is, what is definitely is not, and what is unknown, use `--mode=label`.
+To get declarations of what an entry is, what it definitely is not, and what is unknown, use `--mode=label`.
 
 Metadata associated with each annotation are included as their own column.
 
