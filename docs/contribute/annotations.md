@@ -33,7 +33,7 @@ Please submit a pull request to [github.com/krishnanlab/meta-hq](https://github.
 
 ### Dataset Details
 - **Number of samples or studies:**
-- **Data type(s):** [RNA-Seq, microarray, histopatholgy images, Hi-C, long-read sequencing, etc.]
+- **Data type(s):** [RNA-Seq, microarray, histopathology images, Hi-C, long-read sequencing, etc.]
 - **Evidence code:** [expert-curated, semi-curated, crowd-sourced]
 - **Source:** [GEO, SRA, TCGA, PRIDE, MetaboLites, etc.]
 - **Relevant publication(s):** [Not required. Include DOI if applicable]
