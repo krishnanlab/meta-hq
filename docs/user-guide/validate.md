@@ -7,7 +7,7 @@ recommend running `metahq setup` to reset the configuration.
 ## Options
 - `--log-dir`: Path to directory to send log files.
 - `--log-level`: Logging level (`debug`, `info`, `warning`, `error`). Default: `info`.
-- `--quiet`: Supress console output (flag)
+- `--quiet`: Suppress console output (flag)
 
 ## Usage
 ```bash
