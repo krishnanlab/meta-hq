@@ -10,7 +10,7 @@ MetaHQ is a Python package and CLI for querying tissue, disease, sex, and age an
 pip install metahq-cli
 ```
 
-2. Download the lastest database and configure the CLI:
+2. Download the latest database and configure the CLI:
 
 ```bash
 metahq setup
