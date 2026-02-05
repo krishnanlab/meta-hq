@@ -51,6 +51,9 @@ def setup_logger(
         name (str):
             Logger name.
 
+        console (rich.Console):
+            Console object to send logging information to.
+
         log_dir (str | Path):
             Path to logging directory.
 
