@@ -4,7 +4,7 @@ Class for Labels export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-02-03 by Parker Hicks
+Last updated: 2026-02-05 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -143,7 +143,7 @@ class LabelsExporter(BaseExporter):
         **kwargs,
     ):
         """Save labels curation to json. Keys are terms and values are
-        positively labelstated indices.
+        positively, negative, netral, and control labeled entries.
 
         Arguments:
             labels (Labels):
