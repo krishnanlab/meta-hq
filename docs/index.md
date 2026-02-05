@@ -17,4 +17,4 @@ Welcome to the MetaHQ documentation!
 
 ## Getting Help
 
-Open an issue on [GitHub](https://github.com/krishnan/meta-hq/issues) if you encounter any issues or have questions:
+Open an issue on [GitHub](https://github.com/krishnanlab/meta-hq) if you encounter any issues or have questions:
