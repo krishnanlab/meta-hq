@@ -100,7 +100,7 @@ metahq retrieve age --terms "all" \
 
 ## Validate
 
-To check the integrity of the MetaHQ data package, run the following command. Warnings will be raised for every file that is altered or corrputed.
+To check the integrity of the MetaHQ data package, run the following command. Warnings will be raised for every file that is altered or corrupted.
 
 ```bash
 metahq validate
