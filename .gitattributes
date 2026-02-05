@@ -1,2 +1,0 @@
-metahq.tar.gz filter=lfs diff=lfs merge=lfs -text
-metahq_data.tar.gz filter=lfs diff=lfs merge=lfs -text
