@@ -75,7 +75,7 @@ class Builder:
             Any terms that are supported within MetaHQ.
 
         Raises:
-            `NoResultsFound` if none of the terms are in the MetaHQ database.
+            NoResultsFound: If none of the terms are in the MetaHQ database.
         """
         available = (
             pl.scan_parquet(get_ontology_families(reference)["relations"])

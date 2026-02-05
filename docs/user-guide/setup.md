@@ -18,14 +18,14 @@ metahq setup [OPTIONS]
 
 ## Examples
 
-Download the latest MetaHQ database and save to a custom directory.
+Download the latest MetaHQ database and save to a custom directory:
 
 ```bash
 metahq setup --data-dir "/path/to/custom_dir"
 ```
 
-Download MetaHQ database v1.0.0
+Download MetaHQ database v1.0.1:
 
 ```bash
-metahq setup --doi 17666183
+metahq setup --doi 18462463
 ```

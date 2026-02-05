@@ -6,7 +6,7 @@ Thank you for contributing to MetaHQ!
 
 There are two main ways to contribute to MetaHQ.
 
-1. Add new standardized sample and/or dataset annotations to the database. [See instructions](./annotations.md).
+1. Add new standardized sample and/or study annotations to the database. [See instructions](./annotations.md).
 2. Add to the codebase. [See instructions](./code.md).
 
 Substantial contributions through these means will result in authorship on future MetaHQ releases and publications.

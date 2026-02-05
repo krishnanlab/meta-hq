@@ -4,7 +4,7 @@ Class for Labels export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-02-02 by Parker Hicks
+Last updated: 2026-02-05 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -38,12 +38,33 @@ LABEL_KEY = {"1": "positive", "-1": "negative", "2": "control"}
 
 
 class LabelsExporter(BaseExporter):
-    """Base abstract class for Exporter children."""
+    """Exporter for Labels curations.
+
+    Attributes:
+        attribute (Literal["tissue", "disease", "sex", "age"]):
+            Attribute of the annotations to save.
+
+        level (Literal["sample", "series"]):
+            Level of the annotations.
+
+        logger (logging.Logger):
+            Python builtin Logger.
+
+        loglevel (int):
+            Logging level.
+
+        logdir (str | Path):
+            Path to directory storing logs.
+
+        verbose (bool):
+            Controls logging outputs.
+
+    """
 
     def __init__(
         self,
-        attribute: str,
-        level: str,
+        attribute: Literal["tissue", "disease", "sex", "age"],
+        level: Literal["sample", "series"],
         logger=None,
         loglevel=20,
         logdir=get_default_log_dir(),
@@ -80,23 +101,21 @@ class LabelsExporter(BaseExporter):
         return labels.add_ids(pl.DataFrame(sources))
 
     def get_sra(self, labels: Labels, fields: list[str]) -> Labels:
-        """
-        Retrieve SRA IDs from the annotations if they exist.
+        """Retrieve SRA IDs from the annotations if they exist.
 
-        Parameters
-        ----------
-        labels: Labels
-            A Labels curation containing samples and terms matching user-specified
-            filters.
+        Arguments:
+            labels (Labels):
+                A Labels curation containing samples and terms matching user-specified
+                filters.
 
-        fields: list[str]
-            SRA ID levels (i.e., srr, srx, srs, or srp)
+            fields (list[str]):
+                SRA ID levels (i.e., srr, srx, srs, or srp)
 
-        Returns
-        -------
-        A new Annotations curation with merged SRA IDs.
+        Returns:
+            A new Annotations curation with merged SRA IDs.
 
         """
+
         _labels = self._load_annotations(
             level=labels.index_col
         )  # all MetaHQ annotations
@@ -124,18 +143,22 @@ class LabelsExporter(BaseExporter):
         metadata: str | None = None,
         **kwargs,
     ):
-        """
+        """Save labels curation to json. Keys are terms and values are
+        positively, negative, netral, and control labeled entries.
 
-        Save labels curation to json. Keys are terms and values are
-        positively labelstated indices.
+        Arguments:
+            labels (Labels):
+                A populated Labels curation object.
 
-        Parameters
-        ----------
-        outfile: FilePath
-            Path to outfile.json.
+            fmt (Literal["json", "parquet", "csv", "tsv"]):
+                File format to save to.
 
-        metadata: str
-            Metadata fields to include.
+            file (FilePath):
+                Path to outfile.json.
+
+            metadata (str):
+                Metadata fields to include.
+
         """
         _ = checkdir(file, is_file=True)
         opt = {
@@ -152,34 +175,37 @@ class LabelsExporter(BaseExporter):
     def to_csv(
         self, curation: Labels, file: FilePath, metadata: str | None = None, **kwargs
     ):
-        """
-        Save labels to csv.
+        """Save labels to csv.
 
-        Parameters
-        ----------
-        outfile: FilePath
-            Path to outfile.csv.
+        Arguments:
+            curation (Labels):
+                A populated Labels curation object.
 
-        metadata: str
-            Metadata fields to include.
+            file (FilePath):
+                Path to outfile.csv.
+
+            metadata (str):
+                Metadata fields to include.
 
         """
         self._save_tabular("csv", curation, file, metadata, **kwargs)
 
     def to_json(self, curation: Labels, file: FilePath, metadata: str | None = None):
-        """
-        Save labels curation to json. Keys are terms and values are
+        """Save labels curation to json. Keys are terms and values are
         positively labelstated indices.
 
-        Parameters
-        ----------
-        file: FilePath
-            Path to outfile.json.
+        Arguments:
+            curation (Labels):
+                A populated Labels curation object.
 
-        metadata: str
-            Metadata fields to include.
+            file (FilePath):
+                Path to outfile.json.
+
+            metadata (str):
+                Metadata fields to include.
 
         """
+
         has_controls = any(
             term.startswith(disease_ontologies()) for term in curation.entities
         )
@@ -243,19 +269,17 @@ class LabelsExporter(BaseExporter):
         metadata: str | None = None,
         **kwargs,
     ):
-        """
-        Save labels to parquet.
+        """Save labels to parquet.
 
-        Parameters
-        ----------
-        curation: Labels
-            Labels curation object to save.
+        Arguments:
+            curation (Labels):
+                Labels curation object to save.
 
-        file: FilePath
-            Path to outfile.parquet.
+            file (FilePath):
+                Path to outfile.parquet.
 
-        metadata: str | None
-            Metadata fields to include.
+            metadata (str | None):
+                Metadata fields to include.
 
         """
         self._save_tabular("parquet", curation, file, metadata, **kwargs)
@@ -263,16 +287,17 @@ class LabelsExporter(BaseExporter):
     def to_tsv(
         self, curation: Labels, file: FilePath, metadata: str | None = None, **kwargs
     ):
-        """
-        Save labels to tsv.
+        """Save labels to tsv.
 
-        Parameters
-        ----------
-        outfile: FilePath
-            Path to outfile.tsv.
+        Arguments:
+            curation (Labels):
+                A populated Labels curation object.
 
-        metadata: str
-            Metadata fields to include.
+            file (FilePath):
+                Path to outfile.tsv.
+
+            metadata (str):
+                Metadata fields to include.
 
         """
         self._save_tabular("tsv", curation, file, metadata, **kwargs)

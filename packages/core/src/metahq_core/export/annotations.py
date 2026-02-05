@@ -4,7 +4,7 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-02-02 by Parker Hicks
+Last updated: 2026-02-03 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -37,7 +37,28 @@ ANNOTATION_KEY = {"1": True, "0": False}
 
 
 class AnnotationsExporter(BaseExporter):
-    """Base abstract class for Exporter children."""
+    """Exporter for Annotations curations.
+
+    Attributes:
+        attribute (Literal["tissue", "disease", "sex", "age"]):
+            Attribute of the annotations to save.
+
+        level (Literal["sample", "series"]):
+            Level of the annotations.
+
+        logger (logging.Logger):
+            Python builtin Logger.
+
+        loglevel (int):
+            Logging level.
+
+        logdir (str | Path):
+            Path to directory storing logs.
+
+        verbose (bool):
+            Controls logging outputs.
+
+    """
 
     def __init__(
         self,
@@ -57,10 +78,10 @@ class AnnotationsExporter(BaseExporter):
         self.verbose: bool = verbose
 
     def add_sources(self, anno: Annotations) -> Annotations:
-        """Add the sources that contributed to the lables of each sample or dataset.
+        """Add the sources that contributed to the labels of each sample or dataset.
 
         Arguments:
-            labels (Labels):
+            anno (Annotations):
                 A populated Labels curation object.
 
         Returns:
@@ -82,18 +103,16 @@ class AnnotationsExporter(BaseExporter):
         """
         Retrieve SRA IDs from the annotations if they exist.
 
-        Parameters
-        ----------
-        anno: Annotations
-            An Annotations curation containing samples and terms matching user-specified
-            filters.
+        Arguments:
+            anno (Annotations):
+                An Annotations curation containing samples and terms matching user-specified
+                filters.
 
-        fields: list[str]
-            SRA ID levels (i.e., srr, srx, srs, or srp)
+            fields (list[str]):
+                SRA ID levels (i.e., srr, srx, srs, or srp)
 
-        Returns
-        -------
-        A new Annotations curation with merged SRA IDs.
+        Returns:
+            A new Annotations curation with merged SRA IDs.
 
         """
         _anno = self._load_annotations(level=anno.index_col)  # all MetaHQ annotations
@@ -121,18 +140,22 @@ class AnnotationsExporter(BaseExporter):
         metadata: str | None = None,
         **kwargs,
     ):
-        """
-
-        Save annotations curation to json. Keys are terms and values are
+        """Save annotations curation to json. Keys are terms and values are
         positively annotated indices.
 
-        Parameters
-        ----------
-        outfile: FilePath
-            Path to outfile.json.
+        Arguments:
+            anno (Annotations):
+                A populated Annotations object.
 
-        metadata: str
-            Metadata fields to include.
+            fmt (Literal["json", "parquet", "csv", "tsv"]):
+                File format to save to.
+
+            file (FilePath):
+                Path to outfile.json.
+
+            metadata (str):
+                Metadata fields to include.
+
         """
         _ = checkdir(file, is_file=True)
         opt = {
@@ -150,32 +173,34 @@ class AnnotationsExporter(BaseExporter):
     def to_csv(
         self, anno: Annotations, file: FilePath, metadata: str | None = None, **kwargs
     ):
-        """
-        Save annotations to csv.
+        """Save annotations to csv.
 
-        Parameters
-        ----------
-        outfile: FilePath
-            Path to outfile.csv.
+        Arguments:
+            anno (Annotations):
+                A populated Annotations object.
 
-        metadata: str
-            Metadata fields to include.
+            file (FilePath):
+                Path to outfile.csv.
+
+            metadata (str):
+                Metadata fields to include.
 
         """
         self._save_tabular("csv", anno, file, metadata, **kwargs)
 
     def to_json(self, anno: Annotations, file: FilePath, metadata: str | None = None):
-        """
-        Save annotations curation to json. Keys are terms and values are
+        """Save annotations curation to json. Keys are terms and values are
         positively annotated indices.
 
-        Parameters
-        ----------
-        file: FilePath
-            Path to outfile.json.
+        Arguments:
+            anno (Annotations):
+                A populated Annotations object.
 
-        metadata: str
-            Metadata fields to include.
+            file (FilePath):
+                Path to outfile.json.
+
+            metadata (str):
+                Metadata fields to include.
 
         """
 
@@ -202,19 +227,17 @@ class AnnotationsExporter(BaseExporter):
         metadata: str | None = None,
         **kwargs,
     ):
-        """
-        Save annotations to parquet.
+        """Save annotations to parquet.
 
-        Parameters
-        ----------
-        anno: Annotations
-            Annotations curation object to save.
+        Arguments:
+            anno (Annotations):
+                Annotations curation object to save.
 
-        file: FilePath
-            Path to outfile.parquet.
+            file (FilePath):
+                Path to outfile.parquet.
 
-        metadata: str | None
-            Metadata fields to include.
+            metadata (str | None):
+                Metadata fields to include.
 
         """
         self._save_tabular("parquet", anno, file, metadata, **kwargs)
@@ -222,15 +245,17 @@ class AnnotationsExporter(BaseExporter):
     def to_tsv(
         self, anno: Annotations, file: FilePath, metadata: str | None = None, **kwargs
     ):
-        """
-        Save annotations to tsv.
-        Parameters
-        ----------
-        outfile: FilePath
-            Path to outfile.tsv.
+        """Save annotations to tsv.
 
-        metadata: str
-            Metadata fields to include.
+        Arguments:
+            anno (Annotations):
+                A populated Annotations object.
+
+            file (FilePath):
+                Path to outfile.tsv.
+
+            metadata (str):
+                Metadata fields to include.
 
         """
         self._save_tabular("tsv", anno, file, metadata, **kwargs)
@@ -310,8 +335,7 @@ class AnnotationsExporter(BaseExporter):
     def _save_table_with_description(
         self, file: FilePath, anno: Annotations, metadata: list[str], fmt: str, **kwargs
     ):
-        """
-        Fetches corresponding sample/study descriptions and saves the annotations
+        """Fetches corresponding sample/study descriptions and saves the annotations
         curation in tabular format (parquet, csv, tsv).
         """
 

@@ -7,5 +7,5 @@ research community. All of our annotations come from fellow researchers interest
 available biomedical data that understand the difficulty in finding samples and studies of interest.
 
 We encourage researchers to submit their high-quality, manually curated annotations to be included in
-the MetaHQ database! See our [Contributing](../developer/contributing.md) docs for information on how
+the MetaHQ database! See our [Contributing](../contribute/index.md) docs for information on how
 to contribute.

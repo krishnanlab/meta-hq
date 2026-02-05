@@ -51,3 +51,11 @@ Download the database and configure both packages.
 ```bash
 metahq setup
 ```
+
+## Local documentation build
+
+To build and render the documentation page locally run:
+
+```bash
+mkdocs serve
+```

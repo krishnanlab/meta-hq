@@ -5,7 +5,7 @@ To maintain the quality and scale of the database, we focus on incorporating sub
 
 **Contribution guidelines:**
 
-- **Datasets:** Collections of >100 datasets
+- **Studies:** Collections of >100 studies
 - **Samples:** Collections of >600 samples
 - All entries in the submission must be annotated to terms in a **controlled vocabulary**
 - All entries must be from **publicly available repositories**
@@ -29,11 +29,11 @@ Please submit a pull request to [github.com/krishnanlab/meta-hq](https://github.
 [List all contributors who should receive authorship credit]
 
 ### Description
-[Brief description of what this dataset contains and its scientific/research context]
+[Brief description of what this study contains and its scientific/research context]
 
 ### Dataset Details
-- **Number of samples or datasets:**
-- **Data type(s):** [RNA-Seq, microarray, histopatholgy images, Hi-C, long-read sequencing, etc.]
+- **Number of samples or studies:**
+- **Data type(s):** [RNA-Seq, microarray, histopathology images, Hi-C, long-read sequencing, etc.]
 - **Evidence code:** [expert-curated, semi-curated, crowd-sourced]
 - **Source:** [GEO, SRA, TCGA, PRIDE, MetaboLites, etc.]
 - **Relevant publication(s):** [Not required. Include DOI if applicable]
