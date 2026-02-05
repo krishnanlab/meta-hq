@@ -30,6 +30,10 @@ pip install metahq-cli
 metahq setup
 ```
 
+## Documentation
+
+Visit the MetaHQ documentation page at [meta-hq.readthedocs.io/en/latest](https://meta-hq.readthedocs.io/en/latest/).
+
 ## Demo
 
 We provide a demo for the CLI [here](demo/README.md).
