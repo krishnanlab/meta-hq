@@ -19,6 +19,7 @@ import click
 import requests
 from metahq_core.util.io import checkdir
 from metahq_core.util.progress import get_console, progress_bar
+from metahq_core.util.supported import get_default_log_dir
 
 from metahq_cli.logger import setup_logger
 from metahq_cli.util.supported import (
@@ -119,7 +120,7 @@ class Downloader:
         outdir: str | Path = DEFAULT_OUTDIR,
         logger=None,
         loglevel=20,
-        logdir=Path("."),
+        logdir=get_default_log_dir(),
         verbose=True,
     ):
         self.config: FileConfig = self._make_config(doi, outdir)

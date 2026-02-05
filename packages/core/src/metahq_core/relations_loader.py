@@ -20,6 +20,7 @@ from pathlib import Path
 import polars as pl
 
 from metahq_core.logger import setup_logger
+from metahq_core.util.supported import get_default_log_dir
 
 # these are used a lot so defining them as constants to
 # make them easy to change later.
@@ -35,7 +36,7 @@ class RelationsLoader:
 
     """
 
-    def __init__(self, file, logger=None, loglevel=20, logdir=Path(".")):
+    def __init__(self, file, logger=None, loglevel=20, logdir=get_default_log_dir()):
         self.relations: pl.LazyFrame = self.setup(file)
 
         if logger is None:

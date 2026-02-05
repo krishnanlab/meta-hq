@@ -22,6 +22,7 @@ from metahq_core.util.supported import (
     disease_ontologies,
     geo_metadata,
     get_annotations,
+    get_default_log_dir,
     metadata_fields,
     supported,
 )
@@ -45,7 +46,7 @@ class LabelsExporter(BaseExporter):
         level: str,
         logger=None,
         loglevel=20,
-        logdir=Path("."),
+        logdir=get_default_log_dir(),
         verbose=True,
     ):
         self.attribute = attribute

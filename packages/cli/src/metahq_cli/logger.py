@@ -4,13 +4,12 @@ Logger setup.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2026-02-04 by Parker Hicks
 """
 
 from __future__ import annotations
 
 import logging
-from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -46,22 +45,22 @@ def setup_logger(
     log_dir: str | Path,
     level: int | str = logging.INFO,
 ) -> logging.Logger:
-    """
-    Sets up a logger.
+    """Sets up a logger.
 
-    Parameters
-    ----------
-    name: str
-        Logger name.
+    Arguments:
+        name (str):
+            Logger name.
 
-    log_dir: str | Path
-        Path to logging directory. Default is ~/metahq/logs
+        console (rich.Console):
+            Console object to send logging information to.
 
-    level: int
-        Logging level.
+        log_dir (str | Path):
+            Path to logging directory.
 
-    Returns
-    -------
+        level (int):
+            Logging level.
+
+    Returns:
         Configured logger.
 
     """
@@ -94,11 +93,8 @@ def setup_logger(
     logger.addHandler(console_handler)
 
     # file handler
-    file_handler = TimedRotatingFileHandler(
+    file_handler = logging.FileHandler(
         Path(log_dir) / "log.log",
-        when="midnight",
-        interval=1,
-        backupCount=30,
         encoding="utf-8",
     )
     # file formatter
