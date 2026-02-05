@@ -8,7 +8,7 @@ This command deletes the MetaHQ data package.
 - `--log-level`: Logging level (`debug`, `info`, `warning`, `error`). Default: `info`.
 
 
-# Usage
+## Usage
 
 To only delete the MetaHQ data package:
 
