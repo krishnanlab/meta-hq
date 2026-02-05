@@ -32,4 +32,4 @@ metahq setup
 
 ## Development
 
-See dev install instructions [here](https://github.com/krishnanlab/meta-hq/blob/gh-pages/docs/getting-started/installation.md#development-installation).
+See dev install instructions [here](docs/developer/setup.md).
