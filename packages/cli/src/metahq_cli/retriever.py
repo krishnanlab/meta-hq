@@ -141,7 +141,7 @@ class Retriever:
                 self.output_config,
             )
 
-    def curate(self, annotations: Annotations):
+    def curate(self, annotations: Annotations) -> Annotations:
         """Mutate curations by specified mode.
 
         Arguments:
@@ -152,7 +152,7 @@ class Retriever:
             A populated Annotations or Labels object given the specified curation mode.
 
         Raises:
-            `NoResultsFound` if there are no annotations for a set of query parameters.
+            NoResultsFound: If there are no annotations for a set of query parameters.
         """
         if annotations.n_indices == 0:
             msg = "No annotations for any terms. Try using different conditions."
