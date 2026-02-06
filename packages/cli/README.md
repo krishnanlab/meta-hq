@@ -1,5 +1,5 @@
 <div align="left">
-    <img src="https://raw.githubusercontent.com/krishnanlab/meta-hq/main/media/metahq_cli_logo.png" alt="CLI Logo" width="400" height="200" />
+    <img src="https://raw.githubusercontent.com/krishnanlab/meta-hq/main/media/metahq_cli_logo.png" alt="CLI Logo" width="400" />
 </div>
 
 ![CLI Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)
@@ -20,6 +20,8 @@ A command line interface to query the MetaHQ database.
 - Contribute new annotation sets to the database
 
 ## Docs
+
+Documentation: [https://meta-hq.readthedocs.io/en/latest](https://meta-hq.readthedocs.io/en/latest/)
 
 Source Code: [https://github.com/krishnanlab/meta-hq/tree/main/packages/cli](https://github.com/krishnanlab/meta-hq/tree/main/packages/cli)
 

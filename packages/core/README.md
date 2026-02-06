@@ -6,8 +6,14 @@
 ![pypi](https://img.shields.io/pypi/v/metahq-core.svg)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-Backend package for `metahq-cli` also available on PyPI. Currently this package
+Backend package for `metahq-cli` which is also available on PyPI. Currently this package
 is solely intended to be used through the MetaHQ CLI.
+
+## Docs
+
+Documentation: [https://meta-hq.readthedocs.io/en/latest](https://meta-hq.readthedocs.io/en/latest/)
+
+Source Code: [https://github.com/krishnanlab/meta-hq/tree/main/packages/core](https://github.com/krishnanlab/meta-hq/tree/main/packages/core)
 
 ## Install
 

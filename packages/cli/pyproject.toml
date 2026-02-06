@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 readme = "README.md"
 authors = [
     {name = "Parker Hicks", email = "parker.hicks@cuanschutz.edu"},
+    {name = "Christopher A Mancuso", email = "christopher.a.mancuso@cuanschutz.edu"},
     {name = "Faisal Alquaddoomi", email = "faisal.alquaddoomi@cuanschutz.edu"},
 ]
 keywords = ["CLI", "Database", "Data Curation", "Public Biomedical Data"]
@@ -17,11 +18,12 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [
     "click>=8.3.0",
-    "metahq-core>=0.1.0",
+    "metahq-core==1.0.0",
     "rich>=13.0.0",
     "requests>=2.30.0",
 ]

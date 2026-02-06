@@ -530,6 +530,7 @@ dependencies = [
     { name = "pymongo" },
     { name = "pyyaml" },
     { name = "rank-bm25" },
+    { name = "rich" },
 ]
 
 [package.optional-dependencies]
@@ -578,6 +579,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'test'" },
     { name = "pyyaml", specifier = ">=5.1" },
     { name = "rank-bm25", specifier = ">=0.2.2" },
+    { name = "rich", specifier = ">=13.0.0" },
     { name = "vulture", marker = "extra == 'dev'" },
 ]
 provides-extras = ["dev", "test"]
