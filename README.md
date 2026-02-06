@@ -3,7 +3,7 @@
 </div>
 
 ![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
-[![Documentation Status](https://app.readthedocs.org/projects/meta-hq/badge/?version=latest](https://app.readthedocs.org/projects/meta-hq/badge/?version=latest)
+[![Documentation Status](https://app.readthedocs.org/projects/meta-hq/badge/?version=latest)](https://app.readthedocs.org/projects/meta-hq/badge/?version=latest)
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Latest database: 17663086](https://zenodo.org/badge/DOI/10.5281/zenodo.17663086.svg)](https://doi.org/10.5281/zenodo.17663086)
