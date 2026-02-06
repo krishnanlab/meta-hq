@@ -1,5 +1,5 @@
 <div align="left">
-    <img src="https://raw.githubusercontent.com/krishnanlab/meta-hq/main/media/metahq_logo.png" alt="MetaHQ Logo" />
+    <img src="https://raw.githubusercontent.com/krishnanlab/meta-hq/main/media/metahq_logo.png" alt="MetaHQ Logo" width="400" />
 </div>
 
 ![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
