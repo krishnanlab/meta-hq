@@ -56,7 +56,7 @@ Or with `pip`:
 === "pip (from tar)"
 
     ```bash
-    pip install dist/metahq_core-0.1.2.tar.gz dist/metahq_cli-0.1.1.tar.gz
+    pip install metahq_core-1.0.0.tar.gz metahq_cli-1.0.0.tar.gz
     ```
 
 ## 2) Download the Database
