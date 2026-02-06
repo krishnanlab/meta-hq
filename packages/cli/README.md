@@ -21,6 +21,8 @@ A command line interface to query the MetaHQ database.
 
 ## Docs
 
+Documentation: [https://meta-hq.readthedocs.io/en/latest](https://meta-hq.readthedocs.io/en/latest/)
+
 Source Code: [https://github.com/krishnanlab/meta-hq/tree/main/packages/cli](https://github.com/krishnanlab/meta-hq/tree/main/packages/cli)
 
 ## Installation and setup
