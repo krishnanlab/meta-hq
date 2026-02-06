@@ -1,5 +1,5 @@
 <div align="left">
-    <img src="https://raw.githubusercontent.com/krishnanlab/meta-hq/main/media/metahq_cli_logo.png" alt="CLI Logo" width="400" height="200" />
+    <img src="https://raw.githubusercontent.com/krishnanlab/meta-hq/main/media/metahq_cli_logo.png" alt="CLI Logo" width="400" />
 </div>
 
 ![CLI Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)
