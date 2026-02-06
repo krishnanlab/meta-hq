@@ -23,7 +23,7 @@ classifiers = [
 
 dependencies = [
     "click>=8.3.0",
-    "metahq-core>=1.0.0",
+    "metahq-core==1.0.0",
     "rich>=13.0.0",
     "requests>=2.30.0",
 ]
