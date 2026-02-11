@@ -24,7 +24,7 @@ metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
 
 See the [retrieve documentation](../packages/cli/commands/retrieve.md) for more details.
 
-## Search
+## Ontology term ID search
 
 Tissue and disease queries require standardized ontology term ID inputs. The following command will identify the top five most similar
 MONDO disease ontology term IDs to "heart attack".
