@@ -1,8 +1,19 @@
 # Citing MetaHQ
 
+The preprint for MetaHQ can be found at [https://arxiv.org/abs/2602.07805](https://arxiv.org/abs/2602.07805).
 To cite MetaHQ please use the following reference:
 
-`tmp reference`
+```
+@misc{hicks2026metahqharmonizedhighqualitymetadata,
+      title={MetaHQ: Harmonized, high-quality metadata annotations of public omics samples and studies},
+      author={Parker Hicks and Lydia E Valtadoros and Christopher A Mancuso and Faisal Alquadoomi and Kayla A Johnson and Sneha Sundar and Arjun Krishnan},
+      year={2026},
+      eprint={2602.07805},
+      archivePrefix={arXiv},
+      primaryClass={q-bio.GN},
+      url={https://arxiv.org/abs/2602.07805},
+}
+```
 
 ## Citing individual annotation sets
 

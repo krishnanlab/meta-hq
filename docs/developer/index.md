@@ -8,7 +8,7 @@ The foundational library for the CLI providing data structures and utilities for
 
 ### metahq-cli
 
-A command-line interface built on top of MetaHQ Core, providing easy-to-use commands for retrieving biomedical sample and study annotations.
+A command-line interface built on top of `metahq-core`, providing easy-to-use commands for retrieving biomedical sample and study annotations.
 
 ## Project Status
 
