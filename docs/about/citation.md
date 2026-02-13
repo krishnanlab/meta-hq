@@ -1,5 +1,6 @@
 # Citing MetaHQ
 
+The preprint for MetaHQ can be found at [https://arxiv.org/abs/2602.07805](https://arxiv.org/abs/2602.07805).
 To cite MetaHQ please use the following reference:
 
 ```

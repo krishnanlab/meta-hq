@@ -15,6 +15,10 @@ Welcome to the MetaHQ documentation!
 - [CLI User Guide](user-guide/setup.md)
 - [Contributing](contribute/index.md)
 
+## Paper
+
+The preprint for MetaHQ can be found at [https://arxiv.org/abs/2602.07805](https://arxiv.org/abs/2602.07805).
+
 ## Getting Help
 
 Open an issue on [GitHub](https://github.com/krishnanlab/meta-hq) if you encounter any issues or have questions:
