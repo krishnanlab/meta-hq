@@ -29,5 +29,3 @@ Please cite these sources along with:
 
 $metahq_reference
 
-
-Individual source 
