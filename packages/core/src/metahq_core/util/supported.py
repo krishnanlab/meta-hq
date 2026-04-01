@@ -21,6 +21,11 @@ ROOT: Path = Path(__file__).resolve().parents[5]
 # Root dir of config
 HOME = Path.home()
 
+# Root dir of metahq_core
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+
+CITATION_TEMPLATE = PACKAGE_ROOT / "export/citation_template.txt"
+
 
 # =======================================================
 # ==== hard-coded supported items
