@@ -406,8 +406,11 @@ class AnnotationsExporter(BaseExporter):
         save_citations(
             anno.ids["sources"].str.split("|").explode().value_counts(sort=True),
             citation_config,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
+        self.log.info("Saving retrieval result to %s", file)
         if "description" in _metadata:
             self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
 
@@ -436,6 +439,7 @@ class AnnotationsExporter(BaseExporter):
 
     def _save_json_only_index(self, anno: Annotations, file: FilePath):
         """Save annotations as JSON with only the index."""
+        self.log.info("Saving retrieval result to %s", file)
         _anno: dict[str, list[str]] = {}
         stacked = anno.data.hstack(anno.ids)
         for col in anno.entities:
@@ -457,8 +461,10 @@ class AnnotationsExporter(BaseExporter):
         save_citations(
             anno.ids["sources"].str.split("|").explode().value_counts(sort=True),
             citation_config,
+            logger=self.log,
         )
 
+        self.log.info("Saving retrieval result to %s", file)
         _anno: dict[str, dict[str, dict[str, str]]] = {
             term: {} for term in anno.entities
         }

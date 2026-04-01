@@ -249,8 +249,11 @@ class LabelsExporter(BaseExporter):
                 .explode()
                 .value_counts(sort=True),
                 citation_config,
+                logger=self.log,
+                verbose=self.verbose,
             )
 
+            self.log.info("Saving retrieval result to %s", file)
             _metadata = self._parse_metafields(curation.index_col, metadata)
             _metadata.extend(["sources"])
 
@@ -457,8 +460,11 @@ class LabelsExporter(BaseExporter):
         save_citations(
             curation.ids["sources"].str.split("|").explode().value_counts(sort=True),
             citation_config,
+            logger=self.log,
+            verbose=self.verbose,
         )
 
+        self.log.info("Saving retrieval result to %s", file)
         if "description" in _metadata:
             self._save_table_with_description(
                 file, curation, _metadata, fmt=fmt, **kwargs

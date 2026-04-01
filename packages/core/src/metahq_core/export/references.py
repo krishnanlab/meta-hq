@@ -8,16 +8,22 @@ Date: 2026-03-31
 Last updated: 2026-04-01 by Parker Hicks
 """
 
+from __future__ import annotations
+
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 from string import Template
+from typing import TYPE_CHECKING
 
 import polars as pl
 
 from metahq_core.sources import REFERENCE_MAP, Reference
 from metahq_core.util.io import save_plain_text
 from metahq_core.util.supported import CITATION_TEMPLATE
+
+if TYPE_CHECKING:
+    from logging import Logger
 
 
 @dataclass
@@ -167,7 +173,12 @@ def format_references(references: list[Reference]) -> str:
     )
 
 
-def save_citations(source_counts: pl.DataFrame, config: CitationConfig):
+def save_citations(
+    source_counts: pl.DataFrame,
+    config: CitationConfig,
+    logger: Logger,
+    verbose: bool = True,
+):
     """Build and save citations from a polars.DataFrame of source counts."""
     refs = build_reference_list(source_counts)
     refs = format_references(refs)
@@ -175,3 +186,14 @@ def save_citations(source_counts: pl.DataFrame, config: CitationConfig):
     text = build_citation_file(refs, config)
 
     save_plain_text(text, config.outfile)
+
+    if verbose:
+        logger.info(
+            "The retrieval result contains entries from %s sources: %s.",
+            source_counts.height,
+            ", ".join(source_counts["sources"].to_list()),
+        )
+        logger.info(
+            "Citation information saved to %s. Use this to cite the original sources.",
+            Path(config.outfile).name,
+        )
