@@ -4,7 +4,7 @@ Class for storing and mutating annotation collections.
 Author: Parker Hicks
 Date: 2025-04-14
 
-Last updated: 2026-02-02 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -24,6 +24,8 @@ from metahq_core.util.supported import get_default_log_dir
 
 if TYPE_CHECKING:
     import logging
+
+    from metahq_core.export.references import CitationConfig
 
 
 class Annotations(BaseCuration):
@@ -188,6 +190,7 @@ class Annotations(BaseCuration):
         fmt: Literal["json", "parquet", "csv", "tsv"],
         attribute: str,
         level: str,
+        citation_config: CitationConfig,
         metadata: str | None = None,
     ):
         """Save the annotations curation.
@@ -205,12 +208,38 @@ class Annotations(BaseCuration):
             level (str):
                 An index level supported by MetaHQ.
 
+            citation_config (CitationConfig):
+                Parameters for saving citations.
+
             metadata (bool):
                 If True, will add index titles to each entry.
+
+        Examples:
+
+            If `metadata` is None, will only save the index column
+            with the remaining annotations.
+
+            >>> from metahq_core.curations.annotations import Annotations
+            >>> from metahq_core.export.references import CitationConfig
+            >>> config = CitationConfig(
+                    '1.0.1', 'tissue', 'sample', 'human', 'expert', 'rnaseq', 'annotate', '2026-04-20'
+                )
+            >>> anno = {
+                    'sample': ['GSM1', 'GSM2', 'GSM3'],
+                    'series': ['GSE1', 'GSE1', 'GSE2'],
+                    'UBERON:0000948': [1, 0, 0],
+                    'UBERON:0002113': [0, 1, 0],
+                    'UBERON:0000955': [0, 0, 1],
+                }
+            >>> anno = Annotations.from_df(anno, index_col='sample', group_cols=['series'])
+            >>> anno.save(
+                    '/path/to/out.parquet', fmt='parquet', attribute='tissue', level='sample'
+                )
+
         """
         AnnotationsExporter(
             attribute, level, logger=self.log, verbose=self.verbose
-        ).save(self, fmt, outfile, metadata)
+        ).save(self, fmt, outfile, citation_config, metadata)
 
     def sort_columns(self):
         """Sorts term columns.

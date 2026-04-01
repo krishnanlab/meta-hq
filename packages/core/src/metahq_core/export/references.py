@@ -5,245 +5,144 @@ A new Reference must be created for every new annotation set added to MetaHQ.
 Author: Parker Hicks
 Date: 2026-03-31
 
-Last updated: 2026-03-31 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
 import textwrap
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
+from string import Template
+
+import polars as pl
+
+from metahq_core.sources import REFERENCE_MAP, Reference
+from metahq_core.util.io import save_plain_text
+from metahq_core.util.supported import CITATION_TEMPLATE
 
 
 @dataclass
-class Reference(ABC):
-    """Abstract Reference scaffold"""
+class CitationConfig:
+    """Storage for attributes required to property format a reference.
 
-    source: str
-    citation: str
-    doi: str
-    url: str
-    rights: str
-    notes: str | None
+    Attributes:
+        version (str):
+            Version of the MetaHQ database.
+        attribute (str):
+            Attribute of the queried database entries.
+        level (str):
+            Curation level.
+        species (str):
+            Species of the quereied database entries.
+        ecode (str):
+            Evidence code of the quereied database entries.
+        tech (str):
+            Technology of the quereied database entries.
+        mode (str):
+            Query mode (e.g, annotate, label).
+        date (str):
+            Date formatted as 'YYYY-MM-DD HR:MIN:SEC'.
+        outfile (str | Path):
+            Outfile to save the reference to.
 
-    @abstractmethod
-    def __post_init__(self):
-        pass
+    """
+
+    version: str
+    attribute: str
+    level: str
+    species: str
+    ecode: str
+    tech: str
+    mode: str
+    date: str
+    outfile: str | Path = "CITATION.txt"
 
 
-@dataclass
-class Ale(Reference):
-    """Reference information for ALE."""
-
-    source: str = "ALE"
-    citation: str = """Giles, C. B. et al. ALE: automated label extraction from GEO metadata. BMC
-    bioinformatics 18, 509 (2017)."""
-    doi: str = "10.1186/s12859-017-1888-1"
-    url: str = (
-        "https://github.com/wrenlab/label-extraction/blob/master/data/manual/geo_manual_labels_jdw.tsv"
+def build_citation_file(
+    references: str,
+    config: CitationConfig,
+    indent: str = "",
+):
+    """Build the final citation file substituting placeholder variables in the citation template."""
+    metahq_reference = textwrap.fill(
+        format_citation(REFERENCE_MAP["KrishnanLab"](0)),
+        width=80,
+        subsequent_indent=indent,
     )
-    rights: str = "CC0 1.0"
-    notes: str | None = None
 
-    def __post_init__(self):
-        pass
+    with open(CITATION_TEMPLATE, "r", encoding="utf-8") as f:
+        template = f.read()
 
-
-@dataclass
-class Bgee(Reference):
-    """Reference information for Bgee."""
-
-    source: str = "BGEE"
-    citation: str = """Bastian, F. B. et al. The Bgee suite: integrated curated expression atlas
-    and comparative transcriptomics in animals. Nucleic acids research 49, D831–D847 (2021)."""
-    doi: str = "10.1093/nar/gkaa793"
-    url: str = "https://www.bgee.org"
-    rights: str = "CC0 1.0"
-    notes: str | None = None
-
-    def __post_init__(self):
-        pass
-
-
-@dataclass
-class CellO(Reference):
-    """Reference information for CellO."""
-
-    source: str = "CellO"
-    citation: str = """Bernstein, M. N., Ma, Z., Gleicher, M. & Dewey, C. N. CellO: Comprehensive and
-    hierarchical cell type classification of human cells with the Cell Ontology. Iscience 24
-    (2021)."""
-    doi: str = "10.1016/j.isci.2020.101913"
-    url: str = "https://zenodo.org/records/4609473"
-    rights: str = "CC BY 4.0"
-    notes: str | None = None
-
-    def __post_init__(self):
-        pass
-
-
-@dataclass
-class Creeds(Reference):
-    """Reference information for CREEDS."""
-
-    source: str = "CREEDS"
-    citation: str = """Wang, Z. et al. Extraction and analysis of signatures from the Gene Expression
-    Omnibus by the crowd. Nature communications 7, 12846 (2016)."""
-    doi: str = "10.1038/ncomms12846"
-    url: str = "https://maayanlab.cloud/CREEDS/"
-    rights: str = "CC BY 4.0"
-    notes: str | None = None
-
-    def __post_init__(self):
-        pass
-
-
-@dataclass
-class DiSignAtlas(Reference):
-    """Reference information for DiSignAtlas."""
-
-    source: str = "DiSignAtlas"
-    citation: str = """Zhai, Z. et al. DiSignAtlas: an atlas of human and mouse disease signatures
-    based on bulk and single-cell transcriptomics. Nucleic Acids Research 52, D1236–D1245 (2024)."""
-    doi: str = "10.1093/nar/gkad961"
-    url: str = "http://www.inbirg.com/disignatlas/"
-    rights: str = """DiSignAtlas is free only for academic usage. For commercial usage, please contact
-    Prof. Jianbo Pan at panjianbo@cqmu.edu.cn"""
-    notes: str | None = "CC BY-NC implied"
-
-    def __post_init__(self):
-        pass
-
-
-@dataclass
-class Gemma(Reference):
-    """Reference information for Gemma."""
-
-    source: str = "Gemma"
-    citation: str = """Lim, N. et al. Curation of over 10 000 transcriptomic studies to
-    enable data reuse. Database 2021, baab006 (2021)."""
-    doi: str = "10.1093/database/baab006"
-    url: str = "https://gemma.msl.ubc.ca/home.html"
-    rights: str = "CC BY-NC 4.0"
-    notes: str | None = None
-
-    def __post_init__(self):
-        pass
-
-
-@dataclass
-class Golightly(Reference):
-    """Reference information for Golightly_2018."""
-
-    source: str = "Golightly_2018"
-    citation: str = """Golightly, N. P., Bell, A., Bischoff, A. I., Hollingsworth, P. D. & Piccolo, S. R.
-    Curated compendium of human transcriptional biomarker data. Scientific data 5, 1–8 (2018)."""
-    doi: str = "10.1038/sdata.2018.66"
-    url: str = "https://osf.io/ssk3t/overview"
-    rights: str = "CC0 1.0"
-    notes: str | None = None
-
-    def __post_init__(self):
-        pass
-
-
-@dataclass
-class Gu(Reference):
-    """Reference information for Gu_2023."""
-
-    source: str = "Gu_2023"
-    citation: str = """Gu, J., Dai, J., Lu, H. & Zhao, H. Comprehensive analysis of ubiquitously
-    expressed genes in humans from a data-driven perspective. Genomics, Proteomics & Bioinformatics
-    21, 164–176 (2023)."""
-    doi: str = "10.1016/j.gpb.2021.08.017"
-    url: str = "https://academic.oup.com/gpb/article/21/1/164/7274179"
-    rights: str = ""
-    notes: str | None = "Table S3"
-
-    def __post_init__(self):
-        pass
-
-
-@dataclass
-class Johnson(Reference):
-    """Reference information for Johnson_2023."""
-
-    source: str = "Johnson_2023"
-    citation: str = """ Johnson, K. A. & Krishnan, A. Human pan-body age-and sex-specific molecular
-    phenomena inferred from public transcriptome data using machine learning. bioRxiv,
-    2023–01 (2023)."""
-    doi: str = "10.1101/2023.01.12.523796"
-    url: str = (
-        "https://github.com/krishnanlab/Age-sex_signatures_in_humans_code/tree/master/data/labels/full"
+    return Template(template).safe_substitute(
+        references=references,
+        version=config.version,
+        attribute=config.attribute,
+        level=config.level,
+        species=config.species,
+        ecode=config.ecode,
+        tech=config.tech,
+        mode=config.mode,
+        date=config.date,
+        metahq_reference=metahq_reference,
     )
-    rights: str = "CC0 1.0"
-    notes: str | None = None
-
-    def __post_init__(self):
-        pass
 
 
-# TODO: Add url
-@dataclass
-class Sirota(Reference):
-    """Reference information for Sirota_2011."""
+def build_reference_list(value_counts: pl.DataFrame) -> list[Reference]:
+    """Build a list of initialized references from a polars.DataFrame of counts for each source."""
+    refs = []
+    for row in value_counts.iter_rows():
+        source = row[0]
+        count = row[1]
 
-    source: str = "Sirota_2011"
-    citation: str = """Sirota, M. et al. Discovery and preclinical validation of drug indications using
-    compendia of public gene expression data. Science translational medicine 3, 96ra77–96ra77
-    (2011)."""
-    doi: str = "10.1126/scitranslmed.3001318"
-    url: str = ""
-    rights: str = "CC BY-NC"
-    notes: str | None = None
+        refs.append(REFERENCE_MAP[source](count))
 
-    def __post_init__(self):
-        pass
+    return refs
 
 
-# TODO: Check url
-@dataclass
-class Ursa(Reference):
-    """Reference information for URSA."""
+def format_citation(reference: Reference) -> str:
+    """Within this script, citations are written with newline characters to maintain
+    readibility. This function removes the newline characters and reformats as a single
+    stipped line.
 
-    source: str = "URSA"
-    citation: str = """Lee, Y., Krishnan, A., Zhu, Q. & Troyanskaya, O. G. Ontology-aware classification
-    of tissue and cell-type signals in gene expression profiles across platforms and technologies.
-    Bioinformatics 29, 3036–3044 (2013)."""
-    doi: str = "10.1093/bioinformatics/btt529"
-    url: str = "ursa.princeton.edu"
-    rights: str = "CC BY-NC 3.0"
-    notes: str | None = None
-
-    def __post_init__(self):
-        pass
+    Arguments:
+        reference (Reference):
+            A populated Reference object.
+    """
+    return " ".join(reference.citation.split())
 
 
-# TODO: Check url
-@dataclass
-class UrsaHD(Reference):
-    """Reference information for URSA_HD."""
+def format_reference(reference: Reference, index: int, indent: str = "    ") -> str:
+    """Format a reference for export to CITATION.txt.
 
-    source: str = "URSA_HD"
-    citation: str = """Lee, Y. et al. A computational framework for genome-wide characterization of the
-    human disease landscape. Cell systems 8, 152–162 (2019)."""
-    doi: str = "10.1016/j.cels.2018.12.010"
-    url: str = "ursahd.princeton.edu"
-    rights: str = "CC BY-NC 3.0"
-    notes: str | None = None
+    Arguments:
+        reference (Reference):
+            A populated Reference object.
+        index (int):
+            Index of the reference in a list. Used for ordered display of references.
+        indent (str):
+            Indentation for formatting.
 
-    def __post_init__(self):
-        pass
+    Returns:
+        (str): A formatted reference.
 
+    Examples:
 
-def format_reference(
-    reference: Reference, index: int, annotation_count: int, indent: str = "    "
-) -> str:
-    """Format a reference for export to CITATION.txt."""
-    citation_text = " ".join(reference.citation.split())
+    >>> from metahq_core.sources import KrishnanLab
+    >>> from metahq_core.export.references import format_reference
+    >>> format_reference(KrishnanLab(5), 1)
+    [1] KrishnanLab
+        Hicks, P. et al. MetaHQ: Harmonized, high-quality metadata annotations of public
+        omics samples and studies. arXiv, (2026).
+        url: https://doi.org/10.5281/zenodo.17663086
+        Annotations: 5
+        License: CC BY-NC 4.0
+    """
+    citation_text = format_citation(reference)
     formatted = (
         f"[{index}] {reference.source}\n"
         f"{indent}{textwrap.fill(citation_text, width=80, subsequent_indent=indent)}\n"
-        f"{indent}License: {reference.rights}\n"
-        f"{indent}Annotations: {annotation_count}"
+        f"{indent}url: {reference.url}\n"
+        f"{indent}Annotations: {reference.n}\n"
+        f"{indent}License: {reference.rights}"
     )
 
     if isinstance(reference.notes, str):
@@ -252,7 +151,7 @@ def format_reference(
     return formatted
 
 
-def format_references(references: list[tuple[Reference, int]]) -> str:
+def format_references(references: list[Reference]) -> str:
     """
     Format a list of (reference, annotation_count) tuples.
 
@@ -264,10 +163,15 @@ def format_references(references: list[tuple[Reference, int]]) -> str:
         (str): Formatted string with all references numbered sequentially.
     """
     return "\n\n".join(
-        format_reference(ref, index=i + 1, annotation_count=count)
-        for i, (ref, count) in enumerate(references)
+        format_reference(ref, index=i + 1) for i, ref in enumerate(references)
     )
 
 
-def build_citation_file():
-    pass
+def save_citations(source_counts: pl.DataFrame, config: CitationConfig):
+    """Build and save citations from a polars.DataFrame of source counts."""
+    refs = build_reference_list(source_counts)
+    refs = format_references(refs)
+
+    text = build_citation_file(refs, config)
+
+    save_plain_text(text, config.outfile)

@@ -4,17 +4,17 @@ Class for Labels export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-02-05 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 
 from metahq_core.export.base import BaseExporter
+from metahq_core.export.references import CitationConfig, save_citations
 from metahq_core.logger import setup_logger
 from metahq_core.util.io import checkdir, load_bson, save_json
 from metahq_core.util.supported import (
@@ -140,6 +140,7 @@ class LabelsExporter(BaseExporter):
         labels: Labels,
         fmt: Literal["json", "parquet", "csv", "tsv"],
         file: FilePath,
+        citation_config: CitationConfig,
         metadata: str | None = None,
         **kwargs,
     ):
@@ -156,6 +157,9 @@ class LabelsExporter(BaseExporter):
             file (FilePath):
                 Path to outfile.json.
 
+            citation_config (CitationConfig):
+                Parameters for saving citations.
+
             metadata (str):
                 Metadata fields to include.
 
@@ -167,13 +171,18 @@ class LabelsExporter(BaseExporter):
             "csv": self.to_csv,
             "tsv": self.to_tsv,
         }
-        opt[fmt](labels, file, metadata, **kwargs)
+        opt[fmt](labels, file, citation_config, metadata, **kwargs)
 
         if self.verbose:
             self.log.info("Saved!")
 
     def to_csv(
-        self, curation: Labels, file: FilePath, metadata: str | None = None, **kwargs
+        self,
+        curation: Labels,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+        **kwargs,
     ):
         """Save labels to csv.
 
@@ -188,9 +197,15 @@ class LabelsExporter(BaseExporter):
                 Metadata fields to include.
 
         """
-        self._save_tabular("csv", curation, file, metadata, **kwargs)
+        self._save_tabular("csv", curation, file, citation_config, metadata, **kwargs)
 
-    def to_json(self, curation: Labels, file: FilePath, metadata: str | None = None):
+    def to_json(
+        self,
+        curation: Labels,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+    ):
         """Save labels curation to json. Keys are terms and values are
         positively labelstated indices.
 
@@ -228,6 +243,13 @@ class LabelsExporter(BaseExporter):
         if isinstance(metadata, str):
             # add sources
             curation = self.add_sources(curation)
+            save_citations(
+                curation.ids["sources"]
+                .str.split("|")
+                .explode()
+                .value_counts(sort=True),
+                citation_config,
+            )
 
             _metadata = self._parse_metafields(curation.index_col, metadata)
             _metadata.extend(["sources"])
@@ -266,6 +288,7 @@ class LabelsExporter(BaseExporter):
         self,
         curation: Labels,
         file: FilePath,
+        citation_config: CitationConfig,
         metadata: str | None = None,
         **kwargs,
     ):
@@ -282,10 +305,17 @@ class LabelsExporter(BaseExporter):
                 Metadata fields to include.
 
         """
-        self._save_tabular("parquet", curation, file, metadata, **kwargs)
+        self._save_tabular(
+            "parquet", curation, file, citation_config, metadata, **kwargs
+        )
 
     def to_tsv(
-        self, curation: Labels, file: FilePath, metadata: str | None = None, **kwargs
+        self,
+        curation: Labels,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+        **kwargs,
     ):
         """Save labels to tsv.
 
@@ -300,7 +330,7 @@ class LabelsExporter(BaseExporter):
                 Metadata fields to include.
 
         """
-        self._save_tabular("tsv", curation, file, metadata, **kwargs)
+        self._save_tabular("tsv", curation, file, citation_config, metadata, **kwargs)
 
     def _get_descriptions(self, labels: Labels):
         """Collect descriptions to add the final output."""
@@ -404,6 +434,7 @@ class LabelsExporter(BaseExporter):
         fmt: str,
         curation: Labels,
         file: FilePath,
+        citation_config: CitationConfig,
         metadata: str | None = None,
         **kwargs,
     ):
@@ -421,6 +452,12 @@ class LabelsExporter(BaseExporter):
         # add sources
         curation = self.add_sources(curation)
         _metadata = _metadata + ["sources"]
+
+        # save sources to citation file
+        save_citations(
+            curation.ids["sources"].str.split("|").explode().value_counts(sort=True),
+            citation_config,
+        )
 
         if "description" in _metadata:
             self._save_table_with_description(

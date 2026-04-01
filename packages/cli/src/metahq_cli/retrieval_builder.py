@@ -4,13 +4,16 @@ Class to take retrieval arguments, check them, and build the retrieval query.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-12-05 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import polars as pl
+from metahq_core.export.references import CitationConfig
 from metahq_core.util.exceptions import NoResultsFound
+from metahq_core.util.io import checkdir
 from metahq_core.util.supported import get_ontology_families
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig
@@ -217,6 +220,62 @@ class Builder:
         check_outfile(outfile)
 
         return OutputConfig(outfile, fmt, metadata, attribute, level)
+
+    def citation_config(
+        self,
+        version: str,
+        attribute: str,
+        level: str,
+        filters: dict[str, str],
+        mode: str,
+        date: str,
+        outdir: str | Path,
+    ) -> CitationConfig:
+        """Construct a citation configuration.
+
+        Attributes:
+            version (str):
+                Version of the MetaHQ databse.
+
+            attribute (str):
+                A supported attribute within MetaHQ.
+
+            level (str):
+                A level of annotations (e.g., `'sample'` or `'series'`).
+
+            filters (dict[str, str]):
+                Filters parsed by `Builder.get_filters`.
+
+            mode (Literal['direct', 'annotate', 'label']):
+                Retrieve direct, propagated annotations, or labels.
+
+            date (str):
+                Date and time of the query.
+
+            outdir (Path):
+                Path to the output directory for the citation file.
+
+        Returns:
+            A populated `CitationConfig`.
+        """
+        check_filter("ecodes", filters["ecode"])
+        check_filter("species", filters["species"])
+        check_filter("technologies", filters["tech"])
+
+        outdir = checkdir(outdir)
+        outfile = outdir / f"CITATION__{'__'.join(date.split())}.txt"
+
+        return CitationConfig(
+            version=version,
+            attribute=attribute,
+            level=level,
+            species=filters["species"],
+            ecode=filters["ecode"],
+            tech=filters["tech"],
+            mode=mode,
+            date=date,
+            outfile=outfile,
+        )
 
     def make_age_curation(self, terms: str, mode: str) -> CurationConfig:
         """Makes an age-specific CurationConfig."""

@@ -4,7 +4,7 @@ Facilitates argument and curation parsing for metaHQ retrieval commands.
 Author: Parker Hicks
 Date: 2025-09-25
 
-Last updated: 2025-12-05 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import polars as pl
+from metahq_core.export.references import CitationConfig
 from metahq_core.query import Query
 from metahq_core.util.exceptions import NoResultsFound
 from metahq_core.util.supported import supported
@@ -121,14 +122,24 @@ class Retriever:
 
         output_config: OutputConfig
             Parameters for saving curations.
+
+        citation_config: CitationConfig
+            Parameters for saving citations.
     """
 
     def __init__(
-        self, query_config, curation_config, output_config, logger, verbose=True
+        self,
+        query_config,
+        curation_config,
+        output_config,
+        citation_config,
+        logger,
+        verbose=True,
     ):
         self.query_config: QueryConfig = query_config
         self.curation_config: CurationConfig = curation_config
         self.output_config: OutputConfig = output_config
+        self.citation_config: CitationConfig = citation_config
 
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
@@ -285,4 +296,5 @@ class Retriever:
             metadata=self.output_config.metadata,
             attribute=self.output_config.attribute,
             level=self.output_config.level,
+            citation_config=self.citation_config,
         )

@@ -4,7 +4,7 @@ Class for mutating and operating on sets of labels.
 Author: Parker Hicks
 Date: 2025-08-13
 
-Last updated: 2026-02-02 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -23,6 +23,8 @@ from metahq_core.util.supported import get_default_log_dir
 
 if TYPE_CHECKING:
     import logging
+
+    from metahq_core.export.references import CitationConfig
 
 
 # TODO: Add method to remove redundant terms
@@ -155,6 +157,7 @@ class Labels(BaseCuration):
         fmt: Literal["json", "parquet", "csv", "tsv"],
         attribute: str,
         level: str,
+        citation_config: CitationConfig,
         metadata: str | None = None,
     ):
         """Save the labels curation.
@@ -172,6 +175,9 @@ class Labels(BaseCuration):
             level (str):
                 An index level supported by MetaHQ.
 
+            citation_config (CitationConfig):
+                Parameters for saving citations.
+
             metadata (str | None):
                 Metadata fields to inlcude formatted as a comma
                 delimited string.
@@ -182,6 +188,10 @@ class Labels(BaseCuration):
             with the remaining labels.
 
             >>> from metahq_core.curations.labels import Labels
+            >>> from metahq_core.export.references import CitationConfig
+            >>> config = CitationConfig(
+                    '1.0.1', 'tissue', 'sample', 'human', 'expert', 'rnaseq', 'label', '2026-04-20'
+                )
             >>> labels = {
                     'sample': ['GSM1', 'GSM2', 'GSM3'],
                     'series': ['GSE1', 'GSE1', 'GSE2'],
@@ -189,14 +199,14 @@ class Labels(BaseCuration):
                     'UBERON:0002113': [-1, 1, -1],
                     'UBERON:0000955': [-1, -1, 1],
                 }
-            >>> labels = Labels.from_df(anno, index_col='sample', group_cols=['series'])
+            >>> labels = Labels.from_df(labels, index_col='sample', group_cols=['series'])
             >>> labels.save(
                     '/path/to/out.parquet', fmt="parquet", attribute="tissue", level="sample"
                 )
 
         """
         LabelsExporter(attribute, level, logger=self.log, verbose=self.verbose).save(
-            self, fmt, outfile, metadata
+            self, fmt, outfile, citation_config, metadata
         )
 
     def select(self, *args, **kwargs) -> Labels:

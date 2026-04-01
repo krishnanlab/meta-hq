@@ -4,12 +4,15 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-12-01 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
+
+from datetime import datetime
+from pathlib import Path
 
 import click
 from metahq_core.util.progress import get_console
-from metahq_core.util.supported import get_log_dir, supported
+from metahq_core.util.supported import get_config, get_log_dir, supported
 
 from metahq_cli.logger import setup_logger
 from metahq_cli.retrieval_builder import Builder
@@ -22,6 +25,8 @@ from metahq_cli.util.common_args import (
 from metahq_cli.util.helpers import set_verbosity
 
 AGE_GROUP_OPT = click.Choice(supported("age_groups") + ["all"])
+DATABASE_VERSION = get_config()["version"]
+NOW = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def check_direct(mode: str, direct: bool, verbose: bool, logger) -> str:
@@ -86,15 +91,30 @@ def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet)
     filters = builder.get_filters(filters)
 
     # make configs
+    attribute = "age"
     query_config = builder.query_config("geo", "age", level, filters)
-    curation_config = builder.curation_config(terms, "direct", "age")
+    curation_config = builder.curation_config(terms, "direct", attribute)
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute="age"
+        output, fmt, metadata, level=level, attribute=attribute
+    )
+    citation_config = builder.citation_config(
+        version=DATABASE_VERSION,
+        attribute=attribute,
+        level=level,
+        filters=filters,
+        mode="annotate",  # show annotate instead of direct for interpretability
+        date=NOW,
+        outdir=Path(output).resolve().parents[0],
     )
 
     # retrieve
     retriever = Retriever(
-        query_config, curation_config, output_config, logger=log, verbose=verbose
+        query_config=query_config,
+        curation_config=curation_config,
+        output_config=output_config,
+        citation_config=citation_config,
+        logger=log,
+        verbose=verbose,
     )
     retriever.retrieve()
 
@@ -124,15 +144,30 @@ def retrieve_diseases(
     filters = builder.get_filters(filters)
 
     # make configs
-    query_config = builder.query_config("geo", "disease", level, filters)
+    attribute = "disease"
+    query_config = builder.query_config("geo", attribute, level, filters)
     curation_config = builder.curation_config(terms, mode, "mondo")
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute="disease"
+        output, fmt, metadata, level=level, attribute=attribute
+    )
+    citation_config = builder.citation_config(
+        version=DATABASE_VERSION,
+        attribute=attribute,
+        level=level,
+        filters=filters,
+        mode=mode,
+        date=NOW,
+        outdir=Path(output).resolve().parents[0],
     )
 
     # retrieve
     retriever = Retriever(
-        query_config, curation_config, output_config, logger=log, verbose=verbose
+        query_config=query_config,
+        curation_config=curation_config,
+        output_config=output_config,
+        citation_config=citation_config,
+        logger=log,
+        verbose=verbose,
     )
     retriever.retrieve()
 
@@ -157,15 +192,30 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet)
     filters = builder.get_filters(filters)
 
     # make configs
-    query_config = builder.query_config("geo", "sex", level, filters)
-    curation_config = builder.curation_config(terms, "direct", "sex")
+    attribute = "sex"
+    query_config = builder.query_config("geo", attribute, level, filters)
+    curation_config = builder.curation_config(terms, "direct", attribute)
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute="sex"
+        output, fmt, metadata, level=level, attribute=attribute
+    )
+    citation_config = builder.citation_config(
+        version=DATABASE_VERSION,
+        attribute=attribute,
+        level=level,
+        filters=filters,
+        mode="annotate",  # show annotate instead of direct for interpretability
+        date=NOW,
+        outdir=Path(output).resolve().parents[0],
     )
 
     # retrieve
     retriever = Retriever(
-        query_config, curation_config, output_config, logger=log, verbose=verbose
+        query_config=query_config,
+        curation_config=curation_config,
+        output_config=output_config,
+        citation_config=citation_config,
+        logger=log,
+        verbose=verbose,
     )
     retriever.retrieve()
 
@@ -195,14 +245,29 @@ def retrieve_tissues(
     filters = builder.get_filters(filters)
 
     # make configs
-    query_config = builder.query_config("geo", "tissue", level, filters)
+    attribute = "tissue"
+    query_config = builder.query_config("geo", attribute, level, filters)
     curation_config = builder.curation_config(terms, mode, "uberon")
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute="tissue"
+        output, fmt, metadata, level=level, attribute=attribute
+    )
+    citation_config = builder.citation_config(
+        version=DATABASE_VERSION,
+        attribute=attribute,
+        level=level,
+        filters=filters,
+        mode=mode,
+        date=NOW,
+        outdir=Path(output).resolve().parents[0],
     )
 
     # retrieve
     retriever = Retriever(
-        query_config, curation_config, output_config, logger=log, verbose=verbose
+        query_config=query_config,
+        curation_config=curation_config,
+        output_config=output_config,
+        citation_config=citation_config,
+        logger=log,
+        verbose=verbose,
     )
     retriever.retrieve()
