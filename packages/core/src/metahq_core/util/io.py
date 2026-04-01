@@ -4,7 +4,7 @@ Input/output functions.
 Author: Parker Hicks
 Date: 2025-04
 
-Last updated: 2025-11-28 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
 import json
@@ -188,3 +188,19 @@ def save_txt(
     with open(file, "w", encoding=encoding) as f:
         for entry in data:
             f.write(f"{entry}\n")
+
+
+def save_plain_text(data: str, file: str | Path, encoding="utf-8"):
+    """Save an array or list to a `.txt` file.
+
+    Arguments:
+        data (str):
+            Any string.
+        file (str | Path):
+            Path to file.txt to save `data`.
+        encoding (str):
+            Text encoding format.
+    """
+
+    with open(file, "w", encoding=encoding) as f:
+        f.write(data)
