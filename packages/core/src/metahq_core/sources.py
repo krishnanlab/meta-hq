@@ -7,7 +7,7 @@ and add it to the REFERENCE_MAP at the bottom of this script.
 Author: Parker Hicks
 Date: 2026-04-01
 
-Last updated: 2026-04-01 by Parker Hicks
+Last updated: 2026-04-02 by Parker Hicks
 """
 
 from abc import ABC, abstractmethod
@@ -229,7 +229,7 @@ class KrishnanLab(Reference):
     public omics samples and studies. arXiv, (2026)."""
     doi: str = "10.48550/arXiv.2602.07805"
     url: str = "https://doi.org/10.5281/zenodo.17663086"
-    rights: str = "CC BY-NC 4.0"
+    rights: str = "CC BY 4.0"
     notes: str | None = None
 
     def __init__(self, n: int):
