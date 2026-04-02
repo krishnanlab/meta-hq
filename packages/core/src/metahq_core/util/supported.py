@@ -75,6 +75,13 @@ def _log_levels() -> list[str]:
     return ["notset", "debug", "info", "warning", "error", "critical"]
 
 
+def _license_categories() -> list[str]:
+    """Return supported license filter categories."""
+    from metahq_core.sources import _license_categories as _src_license_categories
+
+    return _src_license_categories()
+
+
 def _modes() -> list[str]:
     return ["annotate", "label"]
 
@@ -397,6 +404,7 @@ def _supported() -> dict[str, list[str]]:
         "ecodes": list(_ecodes().keys()),
         "formats": _formats(),
         "levels": _levels(),
+        "licenses": _license_categories(),
         "modes": _modes(),
         "ontologies": _ontologies(),
         "sample_metadata": _sample_metadata(),

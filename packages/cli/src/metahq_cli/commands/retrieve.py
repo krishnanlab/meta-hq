@@ -75,7 +75,7 @@ def retrieve_commands():
 )
 @retrieval_args
 @logging_args
-def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet):
+def retrieve_age(terms, level, fmt, metadata, filters, license, output, log_level, quiet):
     """Retrieval command for age group annotations."""
     if metadata == "default":
         metadata = level
@@ -92,7 +92,7 @@ def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet)
 
     # make configs
     attribute = "age"
-    query_config = builder.query_config("geo", "age", level, filters)
+    query_config = builder.query_config("geo", "age", level, filters, license)
     curation_config = builder.curation_config(terms, "direct", attribute)
     output_config = builder.output_config(
         output, fmt, metadata, level=level, attribute=attribute
@@ -125,7 +125,7 @@ def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet)
 @ontology_retrieval_args
 @logging_args
 def retrieve_diseases(
-    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
+    terms, level, mode, fmt, metadata, filters, license, output, log_level, quiet, direct
 ):
     """Retrieval command for disease ontology terms."""
     if metadata == "default":
@@ -145,7 +145,7 @@ def retrieve_diseases(
 
     # make configs
     attribute = "disease"
-    query_config = builder.query_config("geo", attribute, level, filters)
+    query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, mode, "mondo")
     output_config = builder.output_config(
         output, fmt, metadata, level=level, attribute=attribute
@@ -176,7 +176,7 @@ def retrieve_diseases(
 @click.option("--terms", type=str, default="male,female")
 @retrieval_args
 @logging_args
-def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet):
+def retrieve_sex(terms, level, fmt, metadata, filters, license, output, log_level, quiet):
     """Retrieval command for sex annotations."""
     if metadata == "default":
         metadata = level
@@ -193,7 +193,7 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet)
 
     # make configs
     attribute = "sex"
-    query_config = builder.query_config("geo", attribute, level, filters)
+    query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, "direct", attribute)
     output_config = builder.output_config(
         output, fmt, metadata, level=level, attribute=attribute
@@ -226,7 +226,7 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet)
 @ontology_retrieval_args
 @logging_args
 def retrieve_tissues(
-    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
+    terms, level, mode, fmt, metadata, filters, license, output, log_level, quiet, direct
 ):
     """Retrieval command for tissue ontology terms."""
     if metadata == "default":
@@ -246,7 +246,7 @@ def retrieve_tissues(
 
     # make configs
     attribute = "tissue"
-    query_config = builder.query_config("geo", attribute, level, filters)
+    query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, mode, "uberon")
     output_config = builder.output_config(
         output, fmt, metadata, level=level, attribute=attribute

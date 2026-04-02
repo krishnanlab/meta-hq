@@ -14,6 +14,7 @@ import polars as pl
 
 from metahq_core.curations.annotations import Annotations
 from metahq_core.logger import setup_logger
+from metahq_core.sources import get_allowed_sources
 from metahq_core.util.exceptions import NoResultsFound
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import (
@@ -249,6 +250,10 @@ class UnParsedEntry:
         species (str):
             Species for which to extract annotations for.
 
+        allowed_sources (set[str] | None):
+            Lowercase source names permitted by the license filter. None means all sources
+            are allowed.
+
     Examples:
         >>> from metahq_core.query import UnParsedEntry
         >>> entry = {
@@ -265,15 +270,17 @@ class UnParsedEntry:
                 entry,
                 attribute='tissue',
                 ecodes=['expert-curated'],
-                'homo sapiens'
+                species='homo sapiens',
+                allowed_sources=None,
             )
     """
 
-    def __init__(self, entry, attribute, ecodes, species):
+    def __init__(self, entry, attribute, ecodes, species, allowed_sources=None):
         self.entry: dict[str, dict[str, dict[str, str]]] = entry
         self.attribute: str = attribute
         self.ecodes: list[str] = ecodes
         self.species: str = species
+        self.allowed_sources: set[str] | None = allowed_sources
 
     def get_annotations(self) -> tuple[str, str]:
         """
@@ -312,8 +319,11 @@ class UnParsedEntry:
         # add attribute annotations across sources
         ids: set[str] = set()
         values: set[str] = set()
-        for source in self.entry[self.attribute].values():
+        for source_name, source in self.entry[self.attribute].items():
             if source["ecode"] not in self.ecodes:
+                continue
+
+            if self.allowed_sources is not None and source_name.lower() not in self.allowed_sources:
                 continue
 
             id_, value = self.get_id_value(source)
@@ -425,6 +435,11 @@ class Query:
         technology (str):
             Technology of the queried samples.
 
+        license (str):
+            License filter category. One of 'permissive', 'nc', or 'any' (default).
+            Controls which annotation sources are included based on their license.
+            See `metahq_core.sources.get_allowed_sources` for details.
+
         _annotations (dict):
             Nested dictionary of annotations.
 
@@ -447,6 +462,7 @@ class Query:
         ecode,
         species,
         technology,
+        license="any",
         logger=None,
         loglevel=20,
         logdir=get_default_log_dir(),
@@ -458,6 +474,11 @@ class Query:
         self.ecodes: list[str] = self._load_ecode(ecode)
         self.species: str = self._load_species(species)
         self.technology: str = technologies(technology)
+
+        _allowed = get_allowed_sources(license)
+        self.allowed_sources: set[str] | None = (
+            {s.lower() for s in _allowed} if _allowed is not None else None
+        )
 
         self._annotations: dict[str, Any] = self._load_annotations()
 
@@ -500,13 +521,15 @@ class Query:
 
         na_cols = list(set(attr_anno.columns) & set(na_entities()))
 
-        return Annotations.from_df(
+        result = Annotations.from_df(
             attr_anno.drop(na_cols),
             index_col=index,
             group_cols=groups,
             logger=self.log,
             verbose=self.verbose,
         )
+        result.allowed_sources = self.allowed_sources
+        return result
 
     def compile_annotations(self, id_cols: list[str]) -> pl.DataFrame:
         """Extract attribute annotations and accession IDs from the database.
@@ -603,6 +626,7 @@ class Query:
             self.attribute,
             self.ecodes,
             self.species,
+            self.allowed_sources,
         ).get_annotations()
 
     def _assign_index_groups(self):

@@ -100,6 +100,13 @@ def check_filter(_filter: str, query: str):
         error(f"Expected {_filter} in {_supported}, got {query}.")
 
 
+def check_license(license: str):
+    """Checks if the requested license category is supported."""
+    _supported = supported("licenses")
+    if license not in _supported:
+        error(f"Expected license in {_supported}, got {license}.")
+
+
 def report_bad_entries(field: str, _supported: list[str], entries: list[str]):
     bad = []
     for entry in entries:

@@ -22,6 +22,7 @@ from metahq_cli.util.checkers import (
     check_filter_keys,
     check_format,
     check_if_txt,
+    check_license,
     check_metadata,
     check_mode,
     check_outfile,
@@ -119,7 +120,7 @@ class Builder:
         return parsed
 
     def query_config(
-        self, db: str, attribute: str, level: str, filters: dict[str, str]
+        self, db: str, attribute: str, level: str, filters: dict[str, str], license: str = "any"
     ) -> QueryConfig:
         """Construct a query configuration.
 
@@ -138,12 +139,16 @@ class Builder:
             filters (dict[str, str]):
                 Filters parsed by `Builder.get_filters`.
 
+            license (str):
+                License filter category. One of 'permissive', 'nc', or 'any' (default).
+
         Returns:
             A populated `QueryConfig`.
         """
         check_filter("ecodes", filters["ecode"])
         check_filter("species", filters["species"])
         check_filter("technologies", filters["tech"])
+        check_license(license)
 
         return QueryConfig(
             database=db,
@@ -152,6 +157,7 @@ class Builder:
             ecode=filters["ecode"],
             species=filters["species"],
             tech=filters["tech"],
+            license=license,
         )
 
     def curation_config(self, terms: str, mode: str, ontology: str) -> CurationConfig:

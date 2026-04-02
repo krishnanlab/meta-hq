@@ -364,7 +364,7 @@ class Annotations(BaseCuration):
 
         if mode == 0:
             propagated, ids = converter.propagate_up()
-            return self.__class__(
+            result = self.__class__(
                 data=propagated,
                 ids=ids,
                 index_col=self.index_col,
@@ -372,9 +372,13 @@ class Annotations(BaseCuration):
                 logger=self.log,
                 verbose=self.verbose,
             )
+            result.allowed_sources = getattr(self, "allowed_sources", None)
+            return result
 
         if mode == 1:
-            return converter.to_labels()
+            result = converter.to_labels()
+            result.allowed_sources = getattr(self, "allowed_sources", None)
+            return result
 
         msg = ("Mode %s not available.", mode)
         if self.verbose:

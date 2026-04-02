@@ -58,6 +58,7 @@ class QueryConfig:
     ecode: str
     species: str
     tech: str
+    license: str = "any"
 
 
 @dataclass
@@ -252,6 +253,7 @@ class Retriever:
             ecode=self.query_config.ecode,
             species=self.query_config.species,
             technology=self.query_config.tech,
+            license=self.query_config.license,
             logger=self.log,
             verbose=self.verbose,
         ).annotations()

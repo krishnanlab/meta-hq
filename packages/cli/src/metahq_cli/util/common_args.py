@@ -16,6 +16,7 @@ from metahq_core.util.supported import supported
 
 FMT_OPT = click.Choice(supported("formats"))
 LEVEL_OPT = click.Choice(supported("levels"))
+LICENSE_OPT = click.Choice(supported("licenses"))
 LOGLEVEL_OPT = click.Choice(supported("log_levels"))
 MODE_OPT = click.Choice(supported("modes"))
 
@@ -50,6 +51,17 @@ def retrieval_args(command):
         type=str,
         default="species=human,ecode=expert,tech=rnaseq",
         help="Filters for species, ecode, and technology. Run `metahq supported` for options.",
+    )
+    @click.option(
+        "--license",
+        type=LICENSE_OPT,
+        default="any",
+        help=(
+            "License filter for annotation sources. "
+            "'permissive' includes only CC0/CC BY sources; "
+            "'nc' adds non-commercial sources; "
+            "'any' includes all sources (default)."
+        ),
     )
     @click.option(
         "--output",

@@ -89,14 +89,17 @@ class LabelsExporter(BaseExporter):
             The Labels object with additional source IDs for each index.
 
         """
+        allowed_sources = getattr(labels, "allowed_sources", None)
         sources = {labels.index_col: [], "sources": []}
         for idx in labels.index:
             sources[labels.index_col].append(idx)
 
-            # get sources for a particular index for the specified attribute
-            sources["sources"].append(
-                "|".join(list(self._database[idx][self.attribute].keys()))
-            )
+            # get sources for a particular index for the specified attribute,
+            # filtering by license if a license filter was applied during querying
+            source_keys = list(self._database[idx][self.attribute].keys())
+            if allowed_sources is not None:
+                source_keys = [s for s in source_keys if s.lower() in allowed_sources]
+            sources["sources"].append("|".join(source_keys))
 
         return labels.add_ids(pl.DataFrame(sources))
 

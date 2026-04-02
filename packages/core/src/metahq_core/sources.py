@@ -49,6 +49,7 @@ class Ale(Reference):
     """Reference information for ALE."""
 
     source: str = "ALE"
+    license_category: str = "permissive"
     citation: str = """Giles, C. B. et al. ALE: automated label extraction from GEO metadata. BMC
     bioinformatics 18, 509 (2017)."""
     doi: str = "10.1186/s12859-017-1888-1"
@@ -66,6 +67,7 @@ class Bgee(Reference):
     """Reference information for Bgee."""
 
     source: str = "BGee"
+    license_category: str = "permissive"
     citation: str = """Bastian, F. B. et al. The Bgee suite: integrated curated expression atlas
     and comparative transcriptomics in animals. Nucleic acids research 49, D831–D847 (2021)."""
     doi: str = "10.1093/nar/gkaa793"
@@ -80,7 +82,8 @@ class Bgee(Reference):
 class CellO(Reference):
     """Reference information for CellO."""
 
-    source: str = "CellO"
+    source: str = "Cello"
+    license_category: str = "permissive"
     citation: str = """Bernstein, M. N., Ma, Z., Gleicher, M. & Dewey, C. N. CellO: Comprehensive and
     hierarchical cell type classification of human cells with the Cell Ontology. Iscience 24
     (2021)."""
@@ -97,6 +100,7 @@ class Creeds(Reference):
     """Reference information for CREEDS."""
 
     source: str = "CREEDS"
+    license_category: str = "permissive"
     citation: str = """Wang, Z. et al. Extraction and analysis of signatures from the Gene Expression
     Omnibus by the crowd. Nature communications 7, 12846 (2016)."""
     doi: str = "10.1038/ncomms12846"
@@ -112,6 +116,7 @@ class DiSignAtlas(Reference):
     """Reference information for DiSignAtlas."""
 
     source: str = "DiSignAtlas"
+    license_category: str = "nc"
     citation: str = """Zhai, Z. et al. DiSignAtlas: an atlas of human and mouse disease signatures
     based on bulk and single-cell transcriptomics. Nucleic Acids Research 52, D1236–D1245 (2024)."""
     doi: str = "10.1093/nar/gkad961"
@@ -130,6 +135,7 @@ class Gemma(Reference):
     """Reference information for Gemma."""
 
     source: str = "Gemma"
+    license_category: str = "nc"
     citation: str = """Lim, N. et al. Curation of over 10 000 transcriptomic studies to
     enable data reuse. Database 2021, baab006 (2021)."""
     doi: str = "10.1093/database/baab006"
@@ -145,6 +151,7 @@ class Golightly(Reference):
     """Reference information for Golightly_2018."""
 
     source: str = "Golightly_2018"
+    license_category: str = "permissive"
     citation: str = """Golightly, N. P., Bell, A., Bischoff, A. I., Hollingsworth, P. D. & Piccolo, S. R.
     Curated compendium of human transcriptional biomarker data. Scientific data 5, 1–8 (2018)."""
     doi: str = "10.1038/sdata.2018.66"
@@ -160,6 +167,7 @@ class Gu(Reference):
     """Reference information for Gu_2023."""
 
     source: str = "Gu_2023"
+    license_category: str = "permissive"
     citation: str = """Gu, J., Dai, J., Lu, H. & Zhao, H. Comprehensive analysis of ubiquitously
     expressed genes in humans from a data-driven perspective. Genomics, Proteomics & Bioinformatics
     21, 164–176 (2023)."""
@@ -176,6 +184,7 @@ class Johnson(Reference):
     """Reference information for Johnson_2023."""
 
     source: str = "Johnson_2023"
+    license_category: str = "permissive"
     citation: str = """ Johnson, K. A. & Krishnan, A. Human pan-body age-and sex-specific molecular
     phenomena inferred from public transcriptome data using machine learning. bioRxiv,
     2023–01 (2023)."""
@@ -194,6 +203,7 @@ class Sirota(Reference):
     """Reference information for Sirota_2011."""
 
     source: str = "Sirota_2011"
+    license_category: str = "nc"
     citation: str = """Sirota, M. et al. Discovery and preclinical validation of drug indications using
     compendia of public gene expression data. Science translational medicine 3, 96ra77–96ra77
     (2011)."""
@@ -210,6 +220,7 @@ class Ursa(Reference):
     """Reference information for URSA."""
 
     source: str = "URSA"
+    license_category: str = "nc"
     citation: str = """Lee, Y., Krishnan, A., Zhu, Q. & Troyanskaya, O. G. Ontology-aware classification
     of tissue and cell-type signals in gene expression profiles across platforms and technologies.
     Bioinformatics 29, 3036–3044 (2013)."""
@@ -226,6 +237,7 @@ class UrsaHD(Reference):
     """Reference information for URSA_HD."""
 
     source: str = "URSA_HD"
+    license_category: str = "nc"
     citation: str = """Lee, Y. et al. A computational framework for genome-wide characterization of the
     human disease landscape. Cell systems 8, 152–162 (2019)."""
     doi: str = "10.1016/j.cels.2018.12.010"
@@ -241,6 +253,7 @@ class KrishnanLab(Reference):
     """Reference information for KrishnanLab."""
 
     source: str = "KrishnanLab"
+    license_category: str = "permissive"
     citation: str = """Hicks, P. et al. MetaHQ: Harmonized, high-quality metadata annotations of
     public omics samples and studies. arXiv, (2026)."""
     doi: str = "10.48550/arXiv.2602.07805"
@@ -267,3 +280,79 @@ REFERENCE_MAP = {
     "URSA": Ursa,
     "URSA_HD": UrsaHD,
 }
+
+# Maps REFERENCE_MAP source names to their license category.
+# Matching against BSON source keys is done case-insensitively since the database
+# uses inconsistent casing (e.g., 'ursa' vs 'URSA').
+# Categories: 'permissive' (CC0/CC BY), 'nc' (CC BY-NC or academic-only non-commercial).
+SOURCE_LICENSE_CATEGORY: dict[str, str] = {
+    "ALE": "permissive",
+    "BGee": "permissive",
+    "Cello": "permissive",
+    "CREEDS": "permissive",
+    "DiSignAtlas": "nc",
+    "Gemma": "nc",
+    "Golightly_2018": "permissive",
+    "Gu_2023": "permissive",
+    "Johnson_2023": "permissive",
+    "KrishnanLab": "permissive",
+    "Sirota_2011": "nc",
+    "URSA": "nc",
+    "URSA_HD": "nc",
+}
+
+
+def _license_categories() -> list[str]:
+    """Returns supported license filter categories.
+
+    Categories:
+        permissive:
+            Only CC0 and CC BY sources. Safe for commercial use with no additional restrictions.
+        nc:
+            Permissive sources plus non-commercial sources (CC BY-NC and academic-only).
+        any:
+            All sources regardless of license (default).
+    """
+    return ["permissive", "nc", "any"]
+
+
+def get_allowed_sources(license_query: str) -> set[str] | None:
+    """Returns the set of source names permitted by a license filter.
+
+    Arguments:
+        license_query (str):
+            A supported license category. One of 'permissive', 'nc', or 'any'.
+
+    Returns:
+        A set of source names (matching REFERENCE_MAP keys) whose license falls within
+            the requested filter, or None if all sources are allowed (license_query='any').
+            Matching against BSON source keys should be done case-insensitively.
+
+    Raises:
+        ValueError: If license_query is not a supported category.
+
+    Examples:
+        >>> from metahq_core.sources import get_allowed_sources
+        >>> get_allowed_sources('permissive')
+        {'ALE', 'BGee', 'Cello', 'CREEDS', 'Golightly_2018', 'Gu_2023', 'Johnson_2023', 'KrishnanLab'}
+        >>> get_allowed_sources('any') is None
+        True
+    """
+    valid = _license_categories()
+    if license_query not in valid:
+        raise ValueError(
+            f"Invalid license query: {license_query!r}. Expected one of {valid}."
+        )
+
+    if license_query == "any":
+        return None
+
+    allowed_categories: set[str]
+    if license_query == "permissive":
+        allowed_categories = {"permissive"}
+    else:  # nc
+        allowed_categories = {"permissive", "nc"}
+
+    return {
+        src for src, cat in SOURCE_LICENSE_CATEGORY.items() if cat in allowed_categories
+    }
