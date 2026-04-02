@@ -121,7 +121,7 @@ Our software is released under the [BSD 3-Clause](license.md).
 - **Source:** MetaHQ in-house curation
 - [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 - **Citation:** Hicks, P. et al. MetaHQ: Harmonized, high-quality metadata annotations of public omics samples and studies. arXiv, (2026).
-- **Access:** Supplementary materials from open access article on PubMed Central
+- **Access:** Published with MetaHQ. Access through the MetaHQ database at [https://doi.org/10.5281/zenodo.17663086](https://doi.org/10.5281/zenodo.17663086)
 - **Sample annotations in MetaHQ:** 27,319
 - **Study annotations in MetaHQ:** 1,357
 
@@ -130,7 +130,7 @@ Our software is released under the [BSD 3-Clause](license.md).
 - **Source:** Sirota, _et al_. (2011) Science translational medicine
 - [![License: CC BY-NC 3.0](https://img.shields.io/badge/License-CC%20BY--NC%203.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/3.0/)
 - **Citation:** Sirota, M. et al. Discovery and preclinical validation of drug indications using compendia of public gene expression data. Science translational medicine 3, 96ra77–96ra77 (2011).
-- **Access:** Supplementary materials from open access article on PubMed Central
+- **Access:** Table S1 in [https://www.science.org/doi/10.1126/scitranslmed.3001318](https://www.science.org/doi/10.1126/scitranslmed.3001318)
 - **Note:** No explicit license declaration was found. However, this source is published under the Science Translational Medicine AAAS Open Access program that allows for CC BY and CC BY-NC licenses. We assume the strictest.
 - **Sample annotations in MetaHQ:** 2,276
 - **Study annotations in MetaHQ:** 153

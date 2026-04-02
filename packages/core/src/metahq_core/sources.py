@@ -99,9 +99,11 @@ class DiSignAtlas(Reference):
     based on bulk and single-cell transcriptomics. Nucleic Acids Research 52, D1236–D1245 (2024)."""
     doi: str = "10.1093/nar/gkad961"
     url: str = "http://www.inbirg.com/disignatlas/"
-    rights: str = """DiSignAtlas is free only for academic usage. For commercial usage,
+    rights: str = "NC"
+    notes: (
+        str | None
+    ) = """DiSignAtlas is free only for academic usage. For commercial usage,
     please contact Prof. Jianbo Pan at panjianbo@cqmu.edu.cn"""
-    notes: str | None = "CC BY-NC implied"
 
     def __init__(self, n: int):
         self.n = n
@@ -171,7 +173,6 @@ class Johnson(Reference):
         self.n = n
 
 
-# TODO: Add url
 class Sirota(Reference):
     """Reference information for Sirota_2011."""
 
@@ -180,15 +181,14 @@ class Sirota(Reference):
     compendia of public gene expression data. Science translational medicine 3, 96ra77–96ra77
     (2011)."""
     doi: str = "10.1126/scitranslmed.3001318"
-    url: str = ""
+    url: str = "https://www.science.org/doi/10.1126/scitranslmed.3001318"
     rights: str = "CC BY-NC"
-    notes: str | None = None
+    notes: str | None = "Table S1"
 
     def __init__(self, n: int):
         self.n = n
 
 
-# TODO: Check url
 class Ursa(Reference):
     """Reference information for URSA."""
 
@@ -199,13 +199,12 @@ class Ursa(Reference):
     doi: str = "10.1093/bioinformatics/btt529"
     url: str = "ursa.princeton.edu"
     rights: str = "CC BY-NC 3.0"
-    notes: str | None = None
+    notes: str | None = "url is no longer accessible."
 
     def __init__(self, n: int):
         self.n = n
 
 
-# TODO: Check url
 class UrsaHD(Reference):
     """Reference information for URSA_HD."""
 
@@ -215,7 +214,7 @@ class UrsaHD(Reference):
     doi: str = "10.1016/j.cels.2018.12.010"
     url: str = "ursahd.princeton.edu"
     rights: str = "CC BY-NC 3.0"
-    notes: str | None = None
+    notes: str | None = "url is no longer accessible."
 
     def __init__(self, n: int):
         self.n = n
