@@ -130,7 +130,8 @@ class TestBuilder:
         assert len(result) == 3
 
     @patch("metahq_cli.retrieval_builder.check_filter")
-    def test_query_config_creates_config(self, mock_check, builder):
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_creates_config(self, mock_check_license, mock_check, builder):
         """test query_config creates QueryConfig with correct parameters"""
         filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
@@ -143,12 +144,14 @@ class TestBuilder:
         assert result.species == "human"
         assert result.ecode == "expert"
         assert result.tech == "rnaseq"
+        assert result.license == "any"  # default
 
         # Check that filters were validated
         assert mock_check.call_count == 3
 
     @patch("metahq_cli.retrieval_builder.check_filter")
-    def test_query_config_validates_filters(self, mock_check, builder):
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_validates_filters(self, mock_check_license, mock_check, builder):
         """test query_config validates all filter parameters"""
         filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
@@ -158,6 +161,38 @@ class TestBuilder:
         mock_check.assert_any_call("ecodes", "expert")
         mock_check.assert_any_call("species", "human")
         mock_check.assert_any_call("technologies", "rnaseq")
+
+    @patch("metahq_cli.retrieval_builder.check_filter")
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_default_license(self, mock_check_license, mock_check, builder):
+        """test query_config defaults license to 'any'"""
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
+
+        result = builder.query_config("geo", "tissue", "sample", filters)
+
+        assert result.license == "any"
+        mock_check_license.assert_called_once_with("any")
+
+    @patch("metahq_cli.retrieval_builder.check_filter")
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_passes_license(self, mock_check_license, mock_check, builder):
+        """test query_config stores the supplied license in QueryConfig"""
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
+
+        result = builder.query_config("geo", "tissue", "sample", filters, license="permissive")
+
+        assert result.license == "permissive"
+        mock_check_license.assert_called_once_with("permissive")
+
+    @patch("metahq_cli.retrieval_builder.check_filter")
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_calls_check_license(self, mock_check_license, mock_check, builder):
+        """test query_config calls check_license with the supplied value"""
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
+
+        builder.query_config("geo", "disease", "series", filters, license="nc")
+
+        mock_check_license.assert_called_once_with("nc")
 
     @patch("metahq_cli.retrieval_builder.check_metadata")
     @patch("metahq_cli.retrieval_builder.check_format")

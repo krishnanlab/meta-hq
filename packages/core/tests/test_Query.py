@@ -496,6 +496,82 @@ class TestUnParsedEntry:
         assert ids == "NA"
         assert values == "NA"
 
+    def test_allowed_sources_none_includes_all(self):
+        """allowed_sources=None should not filter any sources."""
+        entry_data = {
+            "organism": "homo sapiens",
+            "tissue": {
+                "ursa": {"id": "UBERON:0001", "value": "brain", "ecode": "expert-curated"},
+                "gemma": {"id": "UBERON:0002", "value": "liver", "ecode": "expert-curated"},
+            },
+        }
+        entry = UnParsedEntry(
+            entry_data, "tissue", ["expert-curated"], "homo sapiens", allowed_sources=None
+        )
+        ids, values = entry.get_annotations()
+        assert "UBERON:0001" in ids
+        assert "UBERON:0002" in ids
+
+    def test_allowed_sources_filters_disallowed_source(self):
+        """Sources whose lowercase name is not in allowed_sources should be skipped."""
+        entry_data = {
+            "organism": "homo sapiens",
+            "tissue": {
+                "ursa": {"id": "UBERON:0001", "value": "brain", "ecode": "expert-curated"},
+                "gemma": {"id": "UBERON:0002", "value": "liver", "ecode": "expert-curated"},
+            },
+        }
+        # Only allow 'ursa'; 'gemma' should be excluded
+        entry = UnParsedEntry(
+            entry_data,
+            "tissue",
+            ["expert-curated"],
+            "homo sapiens",
+            allowed_sources={"ursa"},
+        )
+        ids, values = entry.get_annotations()
+        assert ids == "UBERON:0001"
+        assert values == "brain"
+        assert "UBERON:0002" not in ids
+
+    def test_allowed_sources_case_insensitive(self):
+        """Matching against allowed_sources should be case-insensitive."""
+        entry_data = {
+            "organism": "homo sapiens",
+            "tissue": {
+                "URSA": {"id": "UBERON:0001", "value": "brain", "ecode": "expert-curated"},
+            },
+        }
+        # allowed_sources stored as lowercase (as Query does)
+        entry = UnParsedEntry(
+            entry_data,
+            "tissue",
+            ["expert-curated"],
+            "homo sapiens",
+            allowed_sources={"ursa"},
+        )
+        ids, values = entry.get_annotations()
+        assert ids == "UBERON:0001"
+
+    def test_allowed_sources_all_filtered_returns_empty_strings(self):
+        """When all sources are filtered out, get_annotations returns empty strings."""
+        entry_data = {
+            "organism": "homo sapiens",
+            "tissue": {
+                "gemma": {"id": "UBERON:0002", "value": "liver", "ecode": "expert-curated"},
+            },
+        }
+        entry = UnParsedEntry(
+            entry_data,
+            "tissue",
+            ["expert-curated"],
+            "homo sapiens",
+            allowed_sources={"ursa"},  # gemma not in allowed set
+        )
+        ids, values = entry.get_annotations()
+        assert ids == ""
+        assert values == ""
+
 
 # =======================================================
 # ==== Query Class Tests
@@ -708,4 +784,80 @@ class TestQueryMethods:
         ids, values = query.get_valid_annotations("entry3")
 
         assert ids == "NA"
-        assert values == "NA"
+
+
+# =======================================================
+# ==== Query License Tests
+# =======================================================
+
+
+class TestQueryLicense:
+    """Test license parameter on Query."""
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_default_license_is_any(self, mock_get_annotations, mock_load_bson):
+        """Query defaults to license='any', which sets allowed_sources to None."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        query = Query("geo", "tissue", "sample", "expert", "human", "rnaseq")
+        assert query.allowed_sources is None
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_permissive_license_sets_allowed_sources(
+        self, mock_get_annotations, mock_load_bson
+    ):
+        """license='permissive' populates allowed_sources with lowercase permissive names."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        query = Query("geo", "tissue", "sample", "expert", "human", "rnaseq", license="permissive")
+        assert query.allowed_sources is not None
+        assert isinstance(query.allowed_sources, set)
+        # All entries should be lowercase
+        assert all(s == s.lower() for s in query.allowed_sources)
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_permissive_license_excludes_nc_sources(
+        self, mock_get_annotations, mock_load_bson
+    ):
+        """NC sources should not appear in allowed_sources for 'permissive'."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        query = Query("geo", "tissue", "sample", "expert", "human", "rnaseq", license="permissive")
+        assert "gemma" not in query.allowed_sources
+        assert "ursa" not in query.allowed_sources
+        assert "ursa_hd" not in query.allowed_sources
+        assert "disignatlas" not in query.allowed_sources
+        assert "sirota_2011" not in query.allowed_sources
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_nc_license_includes_nc_and_permissive_sources(
+        self, mock_get_annotations, mock_load_bson
+    ):
+        """license='nc' should allow both permissive and nc sources."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        query = Query("geo", "tissue", "sample", "expert", "human", "rnaseq", license="nc")
+        assert "gemma" in query.allowed_sources
+        assert "ursa" in query.allowed_sources
+        assert "krishnanlab" in query.allowed_sources
+        assert "ale" in query.allowed_sources
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_invalid_license_raises_value_error(
+        self, mock_get_annotations, mock_load_bson
+    ):
+        """An unrecognised license value should raise ValueError."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        with pytest.raises(ValueError):
+            Query("geo", "tissue", "sample", "expert", "human", "rnaseq", license="commercial")

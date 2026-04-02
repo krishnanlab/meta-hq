@@ -39,6 +39,45 @@ class TestQueryConfig:
         assert config.ecode == "test_ecode"
         assert config.species == "test_species"
         assert config.tech == "test_tech"
+        assert config.license == "any"  # default
+
+    def test_query_config_license_default(self):
+        """license should default to 'any'."""
+        config = QueryConfig(
+            database="geo",
+            attribute="tissue",
+            level="sample",
+            ecode="expert",
+            species="human",
+            tech="rnaseq",
+        )
+        assert config.license == "any"
+
+    def test_query_config_license_permissive(self):
+        """license field should accept 'permissive'."""
+        config = QueryConfig(
+            database="geo",
+            attribute="tissue",
+            level="sample",
+            ecode="expert",
+            species="human",
+            tech="rnaseq",
+            license="permissive",
+        )
+        assert config.license == "permissive"
+
+    def test_query_config_license_nc(self):
+        """license field should accept 'nc'."""
+        config = QueryConfig(
+            database="geo",
+            attribute="disease",
+            level="series",
+            ecode="any",
+            species="human",
+            tech="rnaseq",
+            license="nc",
+        )
+        assert config.license == "nc"
 
 
 class TestCurationConfig:
@@ -215,6 +254,7 @@ class TestRetriever:
             ecode="test_ecode",
             species="test_species",
             technology="test_tech",
+            license="any",
             logger=retriever.log,
             verbose=False,
         )
@@ -238,11 +278,36 @@ class TestRetriever:
             ecode="test_ecode",
             species="test_species",
             technology="test_tech",
+            license="any",
             logger=verbose_retriever.log,
             verbose=True,
         )
         assert result == mock_annotations
         verbose_retriever.log.info.assert_called_with("Querying...")
+
+    @patch("metahq_cli.retriever.Query")
+    def test_query_passes_license_to_core(self, mock_query_class, sample_configs, mock_logger):
+        """license from QueryConfig is forwarded to the core Query."""
+        query_config, curation_config, output_config, citation_config = sample_configs
+        query_config.license = "permissive"
+
+        retriever = Retriever(
+            query_config,
+            curation_config,
+            output_config,
+            citation_config,
+            logger=mock_logger,
+            verbose=False,
+        )
+
+        mock_query = Mock()
+        mock_query.annotations.return_value = Mock()
+        mock_query_class.return_value = mock_query
+
+        retriever.query()
+
+        _, kwargs = mock_query_class.call_args
+        assert kwargs["license"] == "permissive"
 
     def test_curate_raises_error_when_no_annotations(self, retriever):
         """test curate raises NoResultsFound when there are no annotations"""
