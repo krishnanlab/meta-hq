@@ -145,7 +145,7 @@ nav:
               - Config: packages/cli/api/setup/config.md
               - Downloader: packages/cli/api/setup/download.md
   - About:
-      - Cite Us: about/citation.md 
+      - Citations: about/citation.md 
       - Mission: about/mission.md
       - Software License: about/license.md
       - Terms and Conditions: about/terms_conditions.md
