@@ -309,7 +309,7 @@ def _license_categories() -> list[str]:
         permissive:
             Only CC0 and CC BY sources. Safe for commercial use with no additional restrictions.
         nc:
-            Permissive sources plus non-commercial sources (CC BY-NC and academic-only).
+            Only non-commercial sources (CC BY-NC and academic-only).
         any:
             All sources regardless of license (default).
     """
@@ -335,6 +335,8 @@ def get_allowed_sources(license_query: str) -> set[str] | None:
         >>> from metahq_core.sources import get_allowed_sources
         >>> get_allowed_sources('permissive')
         {'ALE', 'BGee', 'Cello', 'CREEDS', 'Golightly_2018', 'Gu_2023', 'Johnson_2023', 'KrishnanLab'}
+        >>> get_allowed_sources('nc')
+        {'DiSignAtlas', 'Gemma', 'Sirota_2011', 'URSA', 'URSA_HD'}
         >>> get_allowed_sources('any') is None
         True
     """
@@ -351,7 +353,7 @@ def get_allowed_sources(license_query: str) -> set[str] | None:
     if license_query == "permissive":
         allowed_categories = {"permissive"}
     else:  # nc
-        allowed_categories = {"permissive", "nc"}
+        allowed_categories = {"nc"}
 
     return {
         src for src, cat in SOURCE_LICENSE_CATEGORY.items() if cat in allowed_categories

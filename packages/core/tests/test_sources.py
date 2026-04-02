@@ -171,30 +171,23 @@ class TestGetAllowedSources:
         }
         assert permissive_sources == result
 
-    def test_nc_includes_permissive_sources(self):
+    def test_nc_excludes_permissive_sources(self):
         result = get_allowed_sources("nc")
         permissive_sources = {
             name for name, cat in SOURCE_LICENSE_CATEGORY.items() if cat == "permissive"
         }
         for source in permissive_sources:
-            assert source in result
+            assert source not in result
 
-    def test_nc_includes_nc_sources(self):
+    def test_nc_includes_only_nc_sources(self):
         result = get_allowed_sources("nc")
         nc_sources = {name for name, cat in SOURCE_LICENSE_CATEGORY.items() if cat == "nc"}
-        for source in nc_sources:
-            assert source in result
+        assert result == nc_sources
 
-    def test_nc_is_superset_of_permissive(self):
+    def test_nc_and_permissive_are_disjoint(self):
         permissive = get_allowed_sources("permissive")
         nc = get_allowed_sources("nc")
-        assert permissive.issubset(nc)
-
-    def test_nc_excludes_nothing_in_current_schema(self):
-        """nc should cover all current sources since there are no 'restricted' sources."""
-        nc = get_allowed_sources("nc")
-        all_sources = set(SOURCE_LICENSE_CATEGORY.keys())
-        assert nc == all_sources
+        assert permissive.isdisjoint(nc)
 
     def test_invalid_license_raises_value_error(self):
         with pytest.raises(ValueError, match="Invalid license query"):

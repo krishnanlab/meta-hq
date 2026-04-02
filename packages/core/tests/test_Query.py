@@ -837,18 +837,18 @@ class TestQueryLicense:
 
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
-    def test_nc_license_includes_nc_and_permissive_sources(
+    def test_nc_license_includes_only_nc_sources(
         self, mock_get_annotations, mock_load_bson
     ):
-        """license='nc' should allow both permissive and nc sources."""
+        """license='nc' should allow only nc sources, not permissive ones."""
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
         query = Query("geo", "tissue", "sample", "expert", "human", "rnaseq", license="nc")
         assert "gemma" in query.allowed_sources
         assert "ursa" in query.allowed_sources
-        assert "krishnanlab" in query.allowed_sources
-        assert "ale" in query.allowed_sources
+        assert "krishnanlab" not in query.allowed_sources
+        assert "ale" not in query.allowed_sources
 
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
