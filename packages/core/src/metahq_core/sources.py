@@ -239,7 +239,7 @@ class KrishnanLab(Reference):
 REFERENCE_MAP = {
     "ALE": Ale,
     "BGee": Bgee,
-    "CellO": CellO,
+    "Cello": CellO,
     "CREEDS": Creeds,
     "DiSignAtlas": DiSignAtlas,
     "Gemma": Gemma,
