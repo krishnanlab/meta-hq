@@ -100,7 +100,7 @@ Retrieve disease annotations and labels using MONDO ontology terms.
   - Use `'all'` to query all disease terms.
 - `--mode MODE`: Annotation mode (`annotate` or `label`). Default: `annotate`
   - `annotate`: Returns inferred annotations using the ontology hierarchy
-  - `label`: Returns +1, 0, -1, and 2 labels indicating what a sample is, what it is not, or if it is unknown. Labels of 2 indicate is a sample is a healthy control for that disease.
+  - `label`: Returns +1, 0, -1, and 2 labels indicating what a sample is, what it is not, or if it is unknown. Labels of 2 indicate is a sample was a control for a particular disease in the study that the sample came from.
 
 ### Examples
 
@@ -244,5 +244,6 @@ They would retrieve the following:
 ```
 
 The sources of the annotations are also included in their own `sources` column or key.
-We strongly encourage users to cite these sources if they use MetaHQ annotations in their research.
-See the [About](../about/citation.md) page for a source-to-citation map.
+We require users to cite these sources if they use MetaHQ annotations in their research.
+See the [About](../about/citation.md) page for a source-to-citation map. See our [Terms and Conditions](../about/terms_conditions.md)
+for more information.
