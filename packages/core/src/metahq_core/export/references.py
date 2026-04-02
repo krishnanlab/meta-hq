@@ -2,7 +2,7 @@
 Create a file including citations for each source in a MetaHQ query result.
 A new Reference must be created for every new annotation set added to MetaHQ.
 
-Author: Parker Hicks
+Author: Parker Hicks <br>
 Date: 2026-03-31
 
 Last updated: 2026-04-01 by Parker Hicks
