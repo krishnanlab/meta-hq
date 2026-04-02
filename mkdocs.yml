@@ -145,6 +145,7 @@ nav:
   - About:
       - Cite Us: about/citation.md 
       - Mission: about/mission.md
+      - Software License: about/license.md
       - Terms and Conditions: about/terms_conditions.md
 
 extra:
