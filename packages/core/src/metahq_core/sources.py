@@ -4,7 +4,7 @@ Reference information for annotation sources in MetaHQ.
 To add a new reference, build a new class with a Reference structure
 and add it to the REFERENCE_MAP at the bottom of this script.
 
-Author: Parker Hicks
+Author: Parker Hicks <br>
 Date: 2026-04-01
 
 Last updated: 2026-04-02 by Parker Hicks
@@ -14,7 +14,24 @@ from abc import ABC, abstractmethod
 
 
 class Reference(ABC):
-    """Abstract Reference scaffold"""
+    """Reference scaffold.
+
+    Attributes:
+        source (str):
+            The name of a source to reference.
+        citation (str):
+            The citation for the source.
+        doi (str):
+            DOI for the source.
+        url (str):
+            URL to access the source.
+        rights (str):
+            License code (e.g., CC0 1.0, CC BY-NC 4.0).
+        notes (str):
+            Any notes on the source to include.
+        n (int):
+            Number of annotations/labels the source provided for a query.
+    """
 
     source: str
     citation: str
