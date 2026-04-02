@@ -21,7 +21,7 @@ The preprint for MetaHQ can be found at [https://arxiv.org/abs/2602.07805](https
 
 ## Terms and Conditions
 
-Before using MetaHQ, please read our [Terms and Conditions](about/terms_conditions.md).
+Before using MetaHQ, please read our full [Terms and Conditions](about/terms_conditions.md).
 
 The MetaHQ database is released under **CC BY-NC 4.0** ([Creative Commons Attribution-NonCommercial 4.0 International](https://creativecommons.org/licenses/by-nc/4.0/))
 because several source datasets carry NonCommercial restrictions.
