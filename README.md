@@ -12,8 +12,8 @@ See our preprint at [https://arxiv.org/abs/2602.07805](https://arxiv.org/abs/260
 
 ## License and Attribution
 
-- **Database:** [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) ![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)
-- **Software:** [BSD 3-Clause License](LICENSE-CODE) ![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)
+- **Database:** [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+- **Software:** [![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
 
 The MetaHQ annotation database is licensed under CC BY-NC 4.0 because it integrates
 community-curated annotations from multiple sources with NonCommercial restrictions.
