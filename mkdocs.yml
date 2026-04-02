@@ -118,6 +118,7 @@ nav:
               - Export: 
                 - Annotations: packages/core/api/export/annotations.md
                 - Labels: packages/core/api/export/labels.md
+                - References: packages/core/api/export/references.md
               - Search: packages/core/api/search.md
               - Utilities:
                 - IO: packages/core/api/util/io.md
