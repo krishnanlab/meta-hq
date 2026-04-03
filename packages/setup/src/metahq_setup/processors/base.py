@@ -10,6 +10,7 @@ from pathlib import Path
 
 import polars as pl
 
+from metahq_setup.config.config import PROCESSED_DIR
 from metahq_setup.util.logging import setup_logger
 
 
@@ -61,26 +62,7 @@ class BaseProcessor(ABC):
         self.logger = setup_logger(f"metahq_setup.processors.{self.source_name}")
 
     @abstractmethod
-    def download(self, output_dir: Path, **kwargs) -> Path:
-        """
-        Download raw data from the source.
-
-        Arguments:
-            output_dir (Path):
-                Directory to save downloaded files
-            **kwargs:
-                Additional processor-specific arguments
-
-        Returns:
-            (Path): Path to downloaded data file or directory
-
-        Raises:
-            ProcessorError: If download fails
-        """
-        pass
-
-    @abstractmethod
-    def process(self, input_path: Path, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
         """
         Process raw data into standardized annotation format.
 
@@ -89,13 +71,9 @@ class BaseProcessor(ABC):
         - annotation_type: str - Type of annotation (tissue, disease, cell_type, sex, age)
         - term_id: str - Ontology term ID (e.g., MONDO:0004994, UBERON:0000948)
         - term_label: str - Human-readable term label
-        - confidence: float - Confidence score (0.0-1.0, optional)
-        - source: str - Data source name
-        - metadata: dict - Additional source-specific metadata (optional)
+        - ecode: str - Evidence code (expert, semi, crowd, automated)
 
         Arguments:
-            input_path (Path):
-                Path to raw input data file or directory
             output_dir (Path):
                 Directory to write processed output
             **kwargs:
@@ -145,19 +123,16 @@ class BaseProcessor(ABC):
 
     def run(
         self,
-        output_dir: Path,
-        download_data: bool = True,
+        output_dir: Path = PROCESSED_DIR,
         validate_output: bool = True,
         **kwargs,
     ) -> pl.DataFrame:
         """
-        Run the complete processor workflow: download, process, validate.
+        Run the complete processor workflow: process, validate.
 
         Arguments:
             output_dir (Path):
                 Directory for outputs
-            download_data (bool):
-                Whether to download raw data
             validate_output (bool):
                 Whether to validate processed data
             **kwargs:
@@ -172,20 +147,12 @@ class BaseProcessor(ABC):
         """
         self.logger.info(f"Starting {self.source_name} processor (v{self.version})")
 
-        # Download
-        if download_data:
-            self.logger.info("Downloading data...")
-            input_path = self.download(output_dir, **kwargs)
-        else:
-            input_path = output_dir / "raw"
-            if not input_path.exists():
-                raise ProcessorError(
-                    f"Input path does not exist and download_data=False: {input_path}"
-                )
-
         # Process
         self.logger.info("Processing data...")
-        data = self.process(input_path, output_dir, **kwargs)
+        data = self.process(output_dir, **kwargs)
+
+        # Sort
+        data = data.sort(["sample_id", "annotation_type", "term_id"])
 
         # Validate
         if validate_output:
@@ -213,7 +180,6 @@ class BaseProcessor(ABC):
             "annotation_type",
             "term_id",
             "term_label",
-            "source",
         ]
 
         missing_columns = [col for col in required_columns if col not in data.columns]
