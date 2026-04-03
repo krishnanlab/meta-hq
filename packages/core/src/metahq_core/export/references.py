@@ -5,7 +5,7 @@ A new Reference must be created for every new annotation set added to MetaHQ.
 Author: Parker Hicks <br>
 Date: 2026-03-31
 
-Last updated: 2026-04-01 by Parker Hicks
+Last updated: 2026-04-03 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -33,6 +33,8 @@ class CitationConfig:
     Attributes:
         version (str):
             Version of the MetaHQ database.
+        terms: (str):
+            Query terms.
         attribute (str):
             Attribute of the queried database entries.
         level (str):
@@ -53,6 +55,7 @@ class CitationConfig:
     """
 
     version: str
+    terms: str
     attribute: str
     level: str
     species: str
@@ -94,6 +97,7 @@ def build_citation_file(
         references=references,
         version=config.version,
         attribute=config.attribute,
+        terms=config.terms,
         level=config.level,
         species=config.species,
         ecode=config.ecode,

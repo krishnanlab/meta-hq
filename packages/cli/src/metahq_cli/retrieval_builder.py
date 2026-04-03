@@ -120,7 +120,12 @@ class Builder:
         return parsed
 
     def query_config(
-        self, db: str, attribute: str, level: str, filters: dict[str, str], license: str = "any"
+        self,
+        db: str,
+        attribute: str,
+        level: str,
+        filters: dict[str, str],
+        license: str = "any",
     ) -> QueryConfig:
         """Construct a query configuration.
 
@@ -230,6 +235,7 @@ class Builder:
     def citation_config(
         self,
         version: str,
+        terms: str,
         attribute: str,
         level: str,
         filters: dict[str, str],
@@ -273,6 +279,7 @@ class Builder:
 
         return CitationConfig(
             version=version,
+            terms=terms,
             attribute=attribute,
             level=level,
             species=filters["species"],
