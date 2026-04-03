@@ -12,6 +12,10 @@ extra_css:
 
 theme:
   name: readthedocs
+  highlightjs: true
+  hljs_languages:
+    - python
+    - bash
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
