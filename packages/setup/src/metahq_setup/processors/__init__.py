@@ -39,6 +39,7 @@ from metahq_setup.processors.golightly import GolightlyProcessor
 from metahq_setup.processors.gu import GuProcessor
 from metahq_setup.processors.sampleclass_zoo import SampleClassZooProcessor
 from metahq_setup.processors.ursa import URSAProcessor
+from metahq_setup.processors.ursahd import URSAHDProcessor
 
 __all__ = [
     # Base classes
@@ -56,4 +57,5 @@ __all__ = [
     "GuProcessor",
     "SampleClassZooProcessor",
     "URSAProcessor",
+    "URSAHDProcessor",
 ]

@@ -1,0 +1,400 @@
+"""
+URSA-HD annotation processor.
+
+Processes expert-curated disease, tissue, age, and sex annotations from
+URSA-HD. Disease IDs are mapped from MESH to MONDO. Tissue IDs are resolved
+via a GSE-level mapping file and, for GSE3526, via raw tissue name extraction
+from the sample description. Age and sex are extracted from the free-text
+GEO Sample Description using regex.
+"""
+
+from pathlib import Path
+
+import polars as pl
+
+from metahq_setup.config.config import (
+    MONDO_OBO,
+    MONDO_SYSTEMS,
+    UBERON_OBO,
+    UBERON_SYSTEMS,
+    URSAHD_CSV,
+    URSAHD_GSE_UBERON,
+    URSAHD_RAW_TISSUE,
+)
+from metahq_setup.ontology import Ontology, get_system_descendants
+from metahq_setup.processors.base import BaseProcessor
+from metahq_setup.processors.registry import ProcessorRegistry
+
+_FEMALE_KEYWORDS = [
+    "placenta", "cervix", "trimester", "myometrium", "hysterectomy",
+    "ovarian", "ovary", "vagina", "vulva",
+]
+_MALE_KEYWORDS = ["prostate"]
+_MALE_LABELS = {"male", "m", " m", " male", "m "}
+_FEMALE_LABELS = {"female", "f", " f", " female", "f "}
+
+
+@ProcessorRegistry.register
+class URSAHDProcessor(BaseProcessor):
+    """
+    Processor for URSA-HD annotations.
+
+    URSA-HD provides expert-curated annotations for GEO samples including
+    disease (MESH → MONDO), tissue (GSE-level + description-based), age,
+    and sex extracted from the GEO Sample Description field.
+    """
+
+    source_name = "ursahd"
+    version = "1.0.0"
+    description = "URSA-HD expert-curated disease, tissue, age, and sex annotations"
+
+    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+        """
+        Process the URSA-HD CSV into standardized sample annotations.
+
+        Arguments:
+            output_dir (Path):
+                Directory where the processed parquet file will be written.
+            **kwargs:
+                ``input_path`` (Path | str) — override the default URSA-HD CSV
+                input path (defaults to ``URSAHD_CSV`` from config).
+
+        Returns:
+            (pl.DataFrame): Standardized annotations with columns
+                ``sample_id``, ``annotation_type``, ``term_id``,
+                ``term_label``, and ``ecode``.
+        """
+        input_path = Path(kwargs.get("input_path", URSAHD_CSV))
+        self.logger.info("Processing URSA-HD CSV file: %s", input_path)
+
+        df = pl.read_csv(
+            input_path,
+            columns=["GSMID", "UID", "GSEID", "GEO Sample Description"],
+        )
+        self.logger.info("Read %s rows from URSA-HD CSV.", df.height)
+
+        base_df = df.select(["GSMID", "GSEID", "GEO Sample Description"])
+
+        disease_records = self._build_disease(df, base_df)
+        tissue_records = self._build_tissue(base_df)
+        age_records = self._build_age(base_df)
+        sex_records = self._build_sex(base_df)
+
+        result_df = pl.concat(
+            [disease_records, tissue_records, age_records, sex_records],
+            how="vertical",
+        )
+
+        self.logger.info("Produced %s total annotations from URSA-HD.", result_df.height)
+
+        output_file = output_dir / "ursahd_processed.parquet"
+        result_df.write_parquet(output_file)
+        self.logger.info("Wrote processed data to %s", output_file)
+
+        return result_df
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _build_disease(self, df: pl.DataFrame, base_df: pl.DataFrame) -> pl.DataFrame:
+        """Map MESH disease IDs to MONDO and filter to system descendants."""
+        disease_df = (
+            df.with_columns(pl.col("UID").str.split("|").alias("mesh_ids"))
+            .explode("mesh_ids")
+            .rename({"GSMID": "sample_id", "mesh_ids": "mesh_id"})
+            .drop(["UID", "GSEID", "GEO Sample Description"])
+            .filter(pl.col("mesh_id") != "")
+        )
+        self.logger.info(
+            "Loading MONDO ontology for MESH -> MONDO mapping..."
+        )
+        mondo = Ontology.from_obo(MONDO_OBO)
+        mesh_ids = disease_df["mesh_id"].unique().to_list()
+        prefixed = ["MESH:" + mid for mid in mesh_ids]
+        mesh_to_mondo = mondo.map_terms(
+            prefixed, ontology="MONDO", _from="MESH", _to="MONDO"
+        )
+        bare_to_mondo = {
+            mid.removeprefix("MESH:"): (
+                "MONDO:0000000" if mondo_id == "control" else mondo_id
+            )
+            for mid, mondo_id in mesh_to_mondo.items()
+        }
+
+        disease_df = disease_df.with_columns(
+            pl.col("mesh_id").replace(bare_to_mondo).alias("term_id")
+        )
+
+        unmapped = disease_df.filter(pl.col("term_id") == "NA").height
+        if unmapped > 0:
+            self.logger.warning(
+                "%s disease rows could not be mapped to MONDO and will be dropped.",
+                unmapped,
+            )
+        disease_df = disease_df.filter(pl.col("term_id") != "NA")
+
+        self.logger.info("Loading MONDO system descendants for filtering...")
+        valid_mondo = get_system_descendants(MONDO_SYSTEMS, MONDO_OBO)
+        before = disease_df.height
+        disease_df = disease_df.filter(
+            pl.col("term_id").is_in(valid_mondo) | (pl.col("term_id") == "MONDO:0000000")
+        )
+        self.logger.info(
+            "Filtered disease from %s to %s rows using MONDO system descendants.",
+            before,
+            disease_df.height,
+        )
+
+        mondo_names = mondo.class_dict
+        disease_df = disease_df.with_columns(
+            pl.when(pl.col("term_id") == "MONDO:0000000")
+            .then(pl.lit("control"))
+            .otherwise(pl.col("term_id").replace(mondo_names, default="NA"))
+            .alias("term_label")
+        )
+
+        records = disease_df.select(
+            pl.col("sample_id"),
+            pl.lit("disease").alias("annotation_type"),
+            pl.col("term_id"),
+            pl.col("term_label"),
+            pl.lit("expert").alias("ecode"),
+        )
+        self.logger.info(
+            "Produced %s disease annotations across %s unique samples.",
+            records.height,
+            records["sample_id"].n_unique(),
+        )
+        return records
+
+    def _build_tissue(self, base_df: pl.DataFrame) -> pl.DataFrame:
+        """Resolve tissue UBERON IDs via GSE-level mapping and GSE3526 description extraction."""
+        self.logger.info("Building tissue annotations...")
+        gse_map = pl.read_csv(URSAHD_GSE_UBERON)
+
+        gse_tissue = (
+            base_df
+            .with_columns(pl.col("GSEID").str.split("|").alias("gse_list"))
+            .explode("gse_list")
+            .join(
+                gse_map.rename({
+                    "GSE": "gse_list",
+                    "UBERON_ID": "term_id",
+                    "tissue_name": "term_label",
+                }),
+                on="gse_list",
+                how="left",
+            )
+            .group_by("GSMID")
+            .agg(
+                pl.col("term_id").drop_nulls().first(),
+                pl.col("term_label").drop_nulls().first(),
+                pl.col("GSEID").first(),
+                pl.col("GEO Sample Description").first(),
+            )
+        )
+
+        raw_map = pl.read_csv(URSAHD_RAW_TISSUE)
+        gse3526_tissue = (
+            gse_tissue
+            .filter(
+                pl.col("term_id").is_null() & pl.col("GSEID").str.contains("GSE3526")
+            )
+            .with_columns(
+                pl.col("GEO Sample Description")
+                .str.split("|")
+                .list.get(1)
+                .str.strip_chars()
+                .alias("raw_tissue")
+            )
+            .join(
+                raw_map.rename({
+                    "uberon_id": "term_id_raw",
+                    "tissue_uberon": "term_label_raw",
+                }),
+                left_on="raw_tissue",
+                right_on="raw_tissue",
+                how="left",
+            )
+            .with_columns(
+                pl.col("term_id_raw").alias("term_id"),
+                pl.col("term_label_raw").alias("term_label"),
+            )
+            .drop(["raw_tissue", "term_id_raw", "term_label_raw"])
+        )
+
+        tissue_df = pl.concat([
+            gse_tissue.filter(
+                ~(pl.col("term_id").is_null() & pl.col("GSEID").str.contains("GSE3526"))
+            ),
+            gse3526_tissue,
+        ]).filter(pl.col("term_id").is_not_null())
+
+        self.logger.info("Loading UBERON system descendants for tissue filtering...")
+        valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
+        before = tissue_df.height
+        tissue_df = tissue_df.filter(pl.col("term_id").is_in(valid_uberon))
+        self.logger.info(
+            "Filtered tissue from %s to %s rows using UBERON system descendants.",
+            before,
+            tissue_df.height,
+        )
+
+        records = tissue_df.select(
+            pl.col("GSMID").alias("sample_id"),
+            pl.lit("tissue").alias("annotation_type"),
+            pl.col("term_id"),
+            pl.col("term_label"),
+            pl.lit("expert").alias("ecode"),
+        )
+        self.logger.info(
+            "Produced %s tissue annotations across %s unique samples.",
+            records.height,
+            records["sample_id"].n_unique(),
+        )
+        return records
+
+    def _build_age(self, base_df: pl.DataFrame) -> pl.DataFrame:
+        """Extract age from GEO Sample Description and return standardized records."""
+        self.logger.info("Extracting age annotations...")
+
+        desc = pl.col("GEO Sample Description").str.to_lowercase() + "|"
+
+        age_raw = (
+            pl.when(desc.str.contains(r"\bage: "))
+            .then(desc.str.extract(r"\bage: (.*?)\|"))
+            .when(desc.str.contains(r"age \(y\): "))
+            .then(desc.str.extract(r"age \(y\): (.*?)\|").str.strip_chars() + " years")
+            .when(desc.str.contains(r"block age \(at extraction in years\): "))
+            .then(desc.str.extract(r"block age \(at extraction in years\): (.*?)\|").str.strip_chars() + " years")
+            .when(desc.str.contains(r"age \(months\): "))
+            .then(desc.str.extract(r"age \(months\): (.*?)\|").str.strip_chars() + " months")
+            .when(desc.str.contains(r"age_years: "))
+            .then(desc.str.extract(r"age_years: (.*?)\|").str.strip_chars() + " years")
+            .when(desc.str.contains(r"age\.at\.surgery: "))
+            .then(desc.str.extract(r"age\.at\.surgery: (.*?)\|").str.strip_chars())
+            .otherwise(None)
+        )
+
+        # Normalize to numeric years then back to a clean label string.
+        age_years = (
+            pl.when(age_raw.str.contains("months"))
+            .then(age_raw.str.extract(r"(\d+\.?\d*)").cast(pl.Float64, strict=False) / 12)
+            .when(age_raw.str.contains("years"))
+            .then(age_raw.str.extract(r"(\d+\.?\d*)").cast(pl.Float64, strict=False))
+            .when(age_raw.str.contains(r"\d"))
+            .then(age_raw.str.extract(r"(\d+\.?\d*)").cast(pl.Float64, strict=False))
+            .otherwise(None)
+        )
+
+        age_df = (
+            base_df
+            .with_columns(age_years.alias("age_years"))
+            .filter(pl.col("age_years").is_not_null())
+            .select(
+                pl.col("GSMID").alias("sample_id"),
+                pl.lit("age").alias("annotation_type"),
+                pl.lit("na").alias("term_id"),
+                pl.col("age_years").cast(pl.String).alias("term_label"),
+                pl.lit("expert").alias("ecode"),
+            )
+        )
+
+        self.logger.info(
+            "Produced %s age annotations across %s unique samples.",
+            age_df.height,
+            age_df["sample_id"].n_unique(),
+        )
+        return age_df
+
+    def _build_sex(self, base_df: pl.DataFrame) -> pl.DataFrame:
+        """Extract sex from GEO Sample Description and return standardized records."""
+        self.logger.info("Extracting sex annotations...")
+
+        desc = pl.col("GEO Sample Description").str.to_lowercase() + "|"
+
+        # Regex-based extraction.
+        sex_raw = (
+            pl.when(desc.str.contains(r"sex:"))
+            .then(desc.str.extract(r"sex:\s*(.*?)\|"))
+            .when(desc.str.contains(r"sex="))
+            .then(desc.str.extract(r"sex=\s*(.*?)\|"))
+            .when(desc.str.contains(r"gender:\s*(female|male|f\b|m\b)"))
+            .then(desc.str.extract(r"gender:\s*(female|male|f\b|m\b)"))
+            .otherwise(None)
+        )
+
+        # Keyword fallbacks where regex found nothing.
+        has_female = pl.any_horizontal(
+            [desc.str.contains(r"\|female\|")]
+            + [desc.str.contains(kw) for kw in _FEMALE_KEYWORDS]
+        )
+        has_male = pl.any_horizontal(
+            [desc.str.contains(r"\|male\|")]
+            + [desc.str.contains(kw) for kw in _MALE_KEYWORDS]
+        )
+
+        sex_with_fallback = (
+            pl.when(sex_raw.is_not_null())
+            .then(sex_raw)
+            .when(has_female)
+            .then(pl.lit("female"))
+            .when(has_male)
+            .then(pl.lit("male"))
+            .otherwise(None)
+        )
+
+        # Normalize to "M" / "F".
+        sex_normalized = (
+            pl.when(sex_with_fallback.str.strip_chars().is_in(_MALE_LABELS))
+            .then(pl.lit("M"))
+            .when(sex_with_fallback.str.strip_chars().is_in(_FEMALE_LABELS))
+            .then(pl.lit("F"))
+            .otherwise(None)
+        )
+
+        sex_df = (
+            base_df
+            .with_columns(sex_normalized.alias("sex"))
+            .filter(pl.col("sex").is_not_null())
+            .select(
+                pl.col("GSMID").alias("sample_id"),
+                pl.lit("sex").alias("annotation_type"),
+                pl.lit("na").alias("term_id"),
+                pl.col("sex").alias("term_label"),
+                pl.lit("expert").alias("ecode"),
+            )
+        )
+
+        self.logger.info(
+            "Produced %s sex annotations across %s unique samples.",
+            sex_df.height,
+            sex_df["sample_id"].n_unique(),
+        )
+        return sex_df
+
+    def validate(self, data: pl.DataFrame) -> bool:
+        """
+        Validate processed URSA-HD data.
+
+        Arguments:
+            data (pl.DataFrame):
+                Processed annotations DataFrame to validate.
+
+        Returns:
+            (bool): True if validation passes.
+
+        Raises:
+            ValidationError: If required columns are missing.
+        """
+        self._validate_required_columns(data)
+
+        types = data["annotation_type"].unique().to_list()
+        for expected in ["disease", "tissue", "age", "sex"]:
+            if expected not in types:
+                self.logger.warning(
+                    "No %s annotations found in URSA-HD output.", expected
+                )
+
+        return True
