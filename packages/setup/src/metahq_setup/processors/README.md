@@ -127,6 +127,82 @@ df = processor.run()
 df = processor.run(input_path=Path("./data/unprocessed/ursa.csv"))
 ```
 
+### URSA-HD (`ursahd`)
+
+Expert-curated disease, tissue, age, and sex annotations from URSA-HD for GEO samples.
+
+- **Input:** `data/unprocessed/ursahd.csv`
+- **Annotations:** `disease`, `tissue`, `age`, `sex`
+- **ecode:** `expert`
+- **Output:** `ursahd_processed.parquet`
+- **Notes:**
+  - Disease IDs are mapped from MESH to MONDO; control samples receive `term_id = "MONDO:0000000"`.
+  - Tissue is resolved from a GSE-level mapping file; GSE3526 samples are resolved via raw tissue names from the GEO Sample Description.
+  - Age is extracted from the GEO Sample Description and binned into age groups: `fetus`, `infant`, `child`, `adolescent`, `adult`, `older_adult`, `elderly_adult`.
+  - Sex is extracted via regex and keyword fallback, normalized to `M` or `F`.
+
+```bash
+metahq-setup process ursahd
+```
+
+```python
+processor = ProcessorRegistry.get("ursahd")
+df = processor.run()
+
+# Override input path
+df = processor.run(input_path=Path("./data/unprocessed/ursahd.csv"))
+```
+
+### Sirota 2011 (`sirota_2011`)
+
+Expert-curated disease and tissue annotations from Sirota et al. 2011 (doi:10.1126/scitranslmed.3001318). Each row in the source CSV describes a GEO DataSet with comma-separated lists of control and disease GSM IDs.
+
+- **Input:** `data/unprocessed/sirota_2011.csv`
+- **Annotations:** `disease`, `tissue`
+- **ecode:** `expert`
+- **Output:** `sirota_2011_processed.parquet`
+- **Notes:**
+  - UMLS disease CUIs are mapped to MONDO via `data/helpers/sirota_2011_umls_mondo_manual_mappings.csv`.
+  - UMLS tissue CUIs are mapped to UBERON via `data/helpers/sirota_2011_umls_uberon_manual_mappings.csv`.
+  - Control samples receive `term_id = "MONDO:0000000"` and `term_label = "control"`.
+  - GDS accession prefixes and GSM prefixes are added during processing.
+
+```bash
+metahq-setup process sirota_2011
+```
+
+```python
+processor = ProcessorRegistry.get("sirota_2011")
+df = processor.run()
+
+# Override input path
+df = processor.run(input_path=Path("./data/unprocessed/sirota_2011.csv"))
+```
+
+---
+
+### KrishnanLab (`krishnanlab`)
+
+Expert-curated tissue and disease annotations for GEO samples.
+
+- **Input:** `data/unprocessed/krishnanlab.tsv`
+- **Annotations:** `tissue`, `disease`
+- **ecode:** `expert`
+- **Output:** `krishnanlab_processed.parquet`
+- **Note:** Disease IDs are mapped from DOID to MONDO. Tissue IDs are already in UBERON/CL format. Both are filtered to system-level ontology descendants.
+
+```bash
+metahq-setup process krishnanlab
+```
+
+```python
+processor = ProcessorRegistry.get("krishnanlab")
+df = processor.run()
+
+# Override input path
+df = processor.run(input_path=Path("./data/unprocessed/krishnanlab.tsv"))
+```
+
 ---
 
 ## Adding a new processor
