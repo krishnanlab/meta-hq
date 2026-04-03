@@ -277,7 +277,7 @@ class URSAHDProcessor(BaseProcessor):
             .otherwise(None)
         )
 
-        # Normalize to numeric years then back to a clean label string.
+        # Normalize to numeric years.
         age_years = (
             pl.when(age_raw.str.contains("months"))
             .then(age_raw.str.extract(r"(\d+\.?\d*)").cast(pl.Float64, strict=False) / 12)
@@ -288,15 +288,36 @@ class URSAHDProcessor(BaseProcessor):
             .otherwise(None)
         )
 
+        # Bin numeric age into age group labels.
+        age_group = (
+            pl.when(pl.col("age_years").is_between(-1, 0))
+            .then(pl.lit("fetus"))
+            .when(pl.col("age_years").is_between(0, 2))
+            .then(pl.lit("infant"))
+            .when(pl.col("age_years").is_between(2, 10))
+            .then(pl.lit("child"))
+            .when(pl.col("age_years").is_between(10, 20))
+            .then(pl.lit("adolescent"))
+            .when(pl.col("age_years").is_between(20, 50))
+            .then(pl.lit("adult"))
+            .when(pl.col("age_years").is_between(50, 80))
+            .then(pl.lit("older_adult"))
+            .when(pl.col("age_years").is_between(80, 150))
+            .then(pl.lit("elderly_adult"))
+            .otherwise(None)
+        )
+
         age_df = (
             base_df
             .with_columns(age_years.alias("age_years"))
             .filter(pl.col("age_years").is_not_null())
+            .with_columns(age_group.alias("age_group"))
+            .filter(pl.col("age_group").is_not_null())
             .select(
                 pl.col("GSMID").alias("sample_id"),
                 pl.lit("age").alias("annotation_type"),
                 pl.lit("na").alias("term_id"),
-                pl.col("age_years").cast(pl.String).alias("term_label"),
+                pl.col("age_group").alias("term_label"),
                 pl.lit("expert").alias("ecode"),
             )
         )
