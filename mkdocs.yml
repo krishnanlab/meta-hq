@@ -11,7 +11,7 @@ extra_css:
   - stylesheets/extra.css
 
 theme:
-  name: material
+  name: readthedocs
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
@@ -98,7 +98,7 @@ nav:
   - Contribute:
     - Overview: contribute/index.md
     - Annotations: contribute/annotations.md
-    - Code: contribute/code.md
+    - Codebase: contribute/code.md
   - Developer Guide:
       - Packages Overview: developer/index.md
       - Development Setup: developer/setup.md
@@ -146,7 +146,6 @@ nav:
               - Downloader: packages/cli/api/setup/download.md
   - About:
       - Citations: about/citation.md 
-      - Mission: about/mission.md
       - Software License: about/license.md
       - Terms and Conditions: about/terms_conditions.md
 

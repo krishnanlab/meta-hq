@@ -1,3 +1,5 @@
+# Installation
+
 ## Prerequisites
 
 - `python>=3.12`

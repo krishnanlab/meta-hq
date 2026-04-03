@@ -1,4 +1,4 @@
-# CLI Quickstart
+# Quick Start
 
 Every installation of the MetaHQ CLI requires the `setup` command to be run. This will download the MetaHQ database from Zenodo
 and configure the package.
