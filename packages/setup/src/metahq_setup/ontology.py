@@ -242,6 +242,37 @@ class Ontology:
         return entries
 
     @staticmethod
+    def doid_to_mondo(doid: str, _map: dict) -> str:
+        """Maps a single DOID to MONDO id.
+
+        Arguments:
+            mesh (str):
+                DOID id (e.g. DOID:0050700).
+
+            _map (dict[str, str]):
+                Dict with DOID keys and MONDO values.
+
+        Returns:
+            _id (str)
+                Mapped id.
+
+        Example:
+            >>> from txt2onto.ontology import Ontology
+            >>> op = Ontology.from_obo("mondo.obo")
+            >>> _map = op.xref("DOID")
+            >>> op.mesh_to_mondo("DOID:0050700", _map)
+            MONDO:0004994
+        """
+        if doid == "DOID:0000000":
+            _id = "MONDO:0000000"
+        elif doid in _map.keys():
+            _id = _map[doid]
+        else:
+            _id = "NA"
+
+        return _id
+
+    @staticmethod
     def mesh_to_mondo(mesh: str, _map: dict) -> str:
         """Maps a single MESH to MONDO id.
 
@@ -264,7 +295,7 @@ class Ontology:
             MONDO:0002367
         """
         if mesh == "MESH:D000000":
-            _id = "control"
+            _id = "MONDO:0000000"
         elif mesh in _map.keys():
             _id = _map[mesh]
         else:
@@ -345,12 +376,17 @@ class Ontology:
         """Assigns the correct mapping function for mapping xref terms."""
         if _from == "MESH" and _to == "MONDO" and ontology == "MONDO":
             return cls.mesh_to_mondo
-        elif _from == "UMLS" and _to == "MONDO" and ontology == "MONDO":
+
+        if _from == "UMLS" and _to == "MONDO" and ontology == "MONDO":
             return cls.umls_to_mondo
-        elif _from == "MONDO" and _to == "MESH" and ontology == "MONDO":
+
+        if _from == "DOID" and _to == "MONDO" and ontology == "MONDO":
+            return cls.doid_to_mondo
+
+        if _from == "MONDO" and _to == "MESH" and ontology == "MONDO":
             return cls.select_from_xref
-        else:
-            raise NotImplementedError("Mapping only supports MESH -> MONDO.")
+
+        raise NotImplementedError("No mapping function for {_from}->{_to}.")
 
 
 class Graph(Ontology):
