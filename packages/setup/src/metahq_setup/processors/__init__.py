@@ -37,7 +37,8 @@ from metahq_setup.processors.disign_atlas import DiSignAtlasProcessor
 from metahq_setup.processors.gemma import GemmaProcessor
 from metahq_setup.processors.golightly import GolightlyProcessor
 from metahq_setup.processors.gu import GuProcessor
-from metahq_setup.processors.sampleclass_zoo import SampleClassZooProcessor
+from metahq_setup.processors.krishnanlab import KrishnanLabProcessor
+from metahq_setup.processors.sirota_2011 import Sirota2011Processor
 from metahq_setup.processors.ursa import URSAProcessor
 from metahq_setup.processors.ursahd import URSAHDProcessor
 
@@ -55,7 +56,8 @@ __all__ = [
     "GemmaProcessor",
     "GolightlyProcessor",
     "GuProcessor",
-    "SampleClassZooProcessor",
+    "KrishnanLabProcessor",
+    "Sirota2011Processor",
     "URSAProcessor",
     "URSAHDProcessor",
 ]
