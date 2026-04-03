@@ -1,8 +1,10 @@
 """
 CellO cell type annotation processor.
 
-Processes cell type annotations from CellO, which provides automated
-cell type predictions for bulk RNA-seq samples.
+Processes automated cell type annotations from CellO, which provides Cell
+Ontology (CL) term predictions for bulk RNA-seq samples. The source file is a
+JSON object mapping SRX accession IDs to lists of CL term IDs that have already
+been formatted as ``"CL:XXXXXXX"`` strings.
 """
 
 import json
@@ -10,118 +12,144 @@ from pathlib import Path
 
 import polars as pl
 
-from metahq_setup.processors.base import BaseProcessor, ProcessorError
+from metahq_setup.config.config import CELLO_JSON, CL_OBO, UBERON_OBO, UBERON_SYSTEMS
+from metahq_setup.ontology import Ontology, get_system_descendants
+from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
 
 
 @ProcessorRegistry.register
 class CellOProcessor(BaseProcessor):
     """
-    Processor for CellO cell type annotations.
+    Processor for CellO automated cell type annotations.
 
-    CellO provides automated cell type predictions using the Cell Ontology (CL).
+    CellO provides automated cell type predictions using the Cell Ontology (CL)
+    for bulk RNA-seq samples. The raw source is a JSON object keyed by SRX
+    accession with a list of CL term IDs as the value for each sample.
+
+    The processor explodes the per-sample term lists into one row per
+    (sample, CL term), resolves each CL ID to a human-readable name via the
+    CL OBO file, and drops any terms that cannot be resolved.
     """
 
     source_name = "cello"
     version = "1.0.0"
-    description = "CellO cell type annotations for bulk RNA-seq"
+    description = "CellO automated cell type annotations for bulk RNA-seq"
 
-    def download(self, output_dir: Path, **kwargs) -> Path:
-        """
-        Download CellO data.
+    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+        """Process the CellO JSON file into standardized sample annotations.
 
-        Note: CellO data is typically pre-processed from CellO predictions.
+        Reads the JSON source, builds one row per (sample, CL term), maps each
+        CL ID to its human-readable label via the CL OBO, drops unmapped terms,
+        and writes the result to a parquet file.
 
         Arguments:
             output_dir (Path):
-                Directory to save data
+                Directory where the processed parquet file will be written.
             **kwargs:
-                Additional arguments
+                ``input_path`` (Path | str) — override the default CellO JSON
+                input path (defaults to ``CELLO_JSON`` from config).
 
         Returns:
-            (Path): Path to CellO data file
+            (pl.DataFrame): Standardized annotations with columns
+                ``sample_id``, ``annotation_type``, ``term_id``,
+                ``term_label``, and ``ecode``.
         """
-        data_file = kwargs.get("data_file", output_dir / "cello_bulk_labels.json")
+        input_path = Path(kwargs.get("input_path", CELLO_JSON))
+        self.logger.info("Processing CellO JSON file: %s", input_path)
 
-        if not data_file.exists():
+        with input_path.open("r") as fh:
+            raw: dict[str, list[str]] = json.load(fh)
+
+        self.logger.info("Loaded %s sample entries from CellO JSON.", len(raw))
+
+        # Build a DataFrame with one row per sample, term_ids as a list column.
+        sample_ids: list[str] = []
+        term_id_lists: list[list[str]] = []
+        for sample_id, term_ids in raw.items():
+            sample_ids.append(sample_id)
+            term_id_lists.append(term_ids if isinstance(term_ids, list) else [])
+
+        df = (
+            pl.DataFrame(
+                {"sample_id": sample_ids, "term_ids": term_id_lists},
+                schema={"sample_id": pl.String, "term_ids": pl.List(pl.String)},
+            )
+            .explode("term_ids")
+            .rename({"term_ids": "term_id"})
+        )
+
+        self.logger.info(
+            "Exploded to %s (sample, term) rows before ontology mapping.", df.height
+        )
+
+        # Map CL IDs to human-readable names.
+        self.logger.info("Loading CL ontology for ID -> name mapping: %s", CL_OBO)
+        cl_class_dict: dict[str, str] = Ontology.from_obo(CL_OBO).class_dict
+
+        df = df.with_columns(
+            pl.col("term_id")
+            .replace(cl_class_dict, default="NA")
+            .alias("term_label")
+        )
+
+        unmapped = df.filter(pl.col("term_label") == "NA").height
+        if unmapped > 0:
             self.logger.warning(
-                f"CellO data file not found: {data_file}. "
-                "Please provide the file path via data_file kwarg."
+                "%s (sample, term) rows could not be mapped to a CL name and will be dropped.",
+                unmapped,
             )
 
-        return data_file
+        df = df.filter(pl.col("term_label") != "NA")
 
-    def process(self, input_path: Path, output_dir: Path, **kwargs) -> pl.DataFrame:
-        """
-        Process CellO annotations into standardized format.
+        # Filter to descendants of UBERON/CL system-level terms.
+        self.logger.info("Loading UBERON system descendants for filtering...")
+        valid_terms = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
+        before = df.height
+        df = df.filter(pl.col("term_id").is_in(valid_terms))
+        self.logger.info(
+            "Filtered annotations from %s to %s using UBERON/CL system descendants.",
+            before,
+            df.height,
+        )
 
-        Arguments:
-            input_path (Path):
-                Path to CellO JSON file
-            output_dir (Path):
-                Directory for processed output
-            **kwargs:
-                Additional arguments
+        result_df = df.select(
+            pl.col("sample_id"),
+            pl.lit("tissue").alias("annotation_type"),
+            pl.col("term_id"),
+            pl.col("term_label"),
+            pl.lit("expert").alias("ecode"),
+        )
 
-        Returns:
-            (pl.DataFrame): Standardized annotations
-        """
-        self.logger.info("Processing CellO annotations...")
+        self.logger.info(
+            "Produced %s tissue annotations across %s unique samples.",
+            result_df.height,
+            result_df["sample_id"].n_unique(),
+        )
 
-        # Read CellO data
-        with open(input_path, "r") as f:
-            cello_data = json.load(f)
-
-        records = []
-
-        for sample_id, annotations in cello_data.items():
-            if isinstance(annotations, dict):
-                # Extract cell type predictions
-                cell_types = annotations.get("cell_types", [])
-                if isinstance(cell_types, list):
-                    for cell_type in cell_types:
-                        if isinstance(cell_type, dict):
-                            term_id = cell_type.get("term_id", "")
-                            term_label = cell_type.get("term_label", "")
-                            confidence = cell_type.get("confidence", 0.5)
-
-                            if term_id and term_label:
-                                records.append(
-                                    {
-                                        "sample_id": sample_id,
-                                        "annotation_type": "cell_type",
-                                        "term_id": term_id,
-                                        "term_label": term_label,
-                                        "confidence": float(confidence),
-                                        "source": self.source_name,
-                                    }
-                                )
-
-        result_df = pl.DataFrame(records)
-        self.logger.info(f"Processed {len(result_df)} annotations from CellO")
-
-        # Save processed data
         output_file = output_dir / "cello_processed.parquet"
         result_df.write_parquet(output_file)
+        self.logger.info("Wrote processed data to %s", output_file)
 
         return result_df
 
     def validate(self, data: pl.DataFrame) -> bool:
-        """
-        Validate processed CellO data.
+        """Validate that processed CellO data meets minimum requirements.
 
         Arguments:
             data (pl.DataFrame):
-                Processed data to validate
+                Processed annotations DataFrame to validate.
 
         Returns:
-            (bool): True if valid
+            (bool): True if validation passes.
+
+        Raises:
+            ValidationError: If required columns are missing.
         """
         self._validate_required_columns(data)
 
-        # Check that all annotations are cell_type
-        types = data["annotation_type"].unique().to_list()
-        if types != ["cell_type"]:
-            self.logger.warning(f"Expected only cell_type annotations, got: {types}")
+        has_tissue = "tissue" in data["annotation_type"].unique().to_list()
+        if not has_tissue:
+            self.logger.warning("No tissue annotations found in CellO output.")
 
         return True

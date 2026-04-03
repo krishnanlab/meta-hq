@@ -1,14 +1,16 @@
 """
-URSA annotation processor.
+URSA tissue annotation processor.
 
-Processes annotations from URSA (Uniform RNA-Seq Archive), which provides
-tissue annotations for gene expression samples.
+Processes expert-curated tissue annotations from URSA, which provides
+UBERON/CL term IDs for GEO samples.
 """
 
 from pathlib import Path
 
 import polars as pl
 
+from metahq_setup.config.config import UBERON_OBO, UBERON_SYSTEMS, URSA_CSV
+from metahq_setup.ontology import Ontology, get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
 
@@ -16,95 +18,88 @@ from metahq_setup.processors.registry import ProcessorRegistry
 @ProcessorRegistry.register
 class URSAProcessor(BaseProcessor):
     """
-    Processor for URSA annotations.
+    Processor for URSA tissue annotations.
 
-    URSA provides tissue annotations for RNA-seq samples.
+    URSA provides expert-curated UBERON/CL tissue term IDs for GEO samples.
+    The source file is a headerless CSV with columns: sample_id, study_id,
+    term_id.
     """
 
     source_name = "ursa"
     version = "1.0.0"
-    description = "URSA tissue annotations for RNA-seq samples"
+    description = "URSA expert-curated tissue annotations"
 
-    def download(self, output_dir: Path, **kwargs) -> Path:
+    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
         """
-        Download URSA data.
+        Process the URSA CSV into standardized sample annotations.
 
         Arguments:
             output_dir (Path):
-                Directory to save data
+                Directory where the processed parquet file will be written.
             **kwargs:
-                Additional arguments
+                ``input_path`` (Path | str) — override the default URSA CSV
+                input path (defaults to ``URSA_CSV`` from config).
 
         Returns:
-            (Path): Path to URSA data file
+            (pl.DataFrame): Standardized annotations with columns
+                ``sample_id``, ``annotation_type``, ``term_id``,
+                ``term_label``, and ``ecode``.
         """
-        data_file = kwargs.get("data_file", output_dir / "ursa_processed.tsv")
+        input_path = Path(kwargs.get("input_path", URSA_CSV))
+        self.logger.info("Processing URSA CSV file: %s", input_path)
 
-        if not data_file.exists():
-            # Try parquet alternative
-            data_file = output_dir / "ursahd.parquet"
+        df = pl.read_csv(
+            input_path,
+            has_header=False,
+            new_columns=["sample_id", "study_id", "term_id"],
+            schema={"sample_id": pl.String, "study_id": pl.String, "term_id": pl.String},
+        )
 
-        if not data_file.exists():
+        self.logger.info("Read %s rows from URSA CSV.", df.height)
+
+        # Map term IDs to human-readable names via UBERON OBO.
+        self.logger.info("Loading UBERON ontology for ID -> name mapping: %s", UBERON_OBO)
+        class_dict = Ontology.from_obo(UBERON_OBO).class_dict
+
+        df = df.with_columns(
+            pl.col("term_id").replace(class_dict, default="NA").alias("term_label")
+        )
+
+        unmapped = df.filter(pl.col("term_label") == "NA").height
+        if unmapped > 0:
             self.logger.warning(
-                f"URSA data file not found. "
-                "Please provide the file path via data_file kwarg."
+                "%s rows could not be mapped to a term name and will be dropped.", unmapped
             )
+        df = df.filter(pl.col("term_label") != "NA")
 
-        return data_file
+        # Filter to descendants of UBERON/CL system-level terms.
+        self.logger.info("Loading UBERON system descendants for filtering...")
+        valid_terms = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
+        before = df.height
+        df = df.filter(pl.col("term_id").is_in(valid_terms))
+        self.logger.info(
+            "Filtered annotations from %s to %s using UBERON/CL system descendants.",
+            before,
+            df.height,
+        )
 
-    def process(self, input_path: Path, output_dir: Path, **kwargs) -> pl.DataFrame:
-        """
-        Process URSA annotations into standardized format.
+        result_df = df.select(
+            pl.col("sample_id"),
+            pl.lit("tissue").alias("annotation_type"),
+            pl.col("term_id"),
+            pl.col("term_label"),
+            pl.lit("expert").alias("ecode"),
+        )
 
-        Arguments:
-            input_path (Path):
-                Path to URSA data file (TSV or Parquet)
-            output_dir (Path):
-                Directory for processed output
-            **kwargs:
-                Additional arguments
+        self.logger.info(
+            "Produced %s tissue annotations across %s unique samples.",
+            result_df.height,
+            result_df["sample_id"].n_unique(),
+        )
 
-        Returns:
-            (pl.DataFrame): Standardized annotations
-        """
-        self.logger.info("Processing URSA annotations...")
-
-        # Read URSA data (handle both TSV and Parquet)
-        if input_path.suffix == ".parquet":
-            df = pl.read_parquet(input_path)
-        else:
-            df = pl.read_csv(input_path, separator="\t")
-
-        records = []
-
-        for row in df.iter_rows(named=True):
-            sample_id = row.get("sample_id", row.get("SRR", row.get("SRS", "")))
-
-            if not sample_id:
-                continue
-
-            # Extract tissue annotations
-            tissue_id = row.get("tissue_id", row.get("uberon_id", "na"))
-            tissue_label = row.get("tissue", row.get("tissue_name", ""))
-
-            if tissue_label and tissue_label not in ["na", "", "unknown"]:
-                records.append(
-                    {
-                        "sample_id": sample_id,
-                        "annotation_type": "tissue",
-                        "term_id": tissue_id,
-                        "term_label": tissue_label,
-                        "confidence": 0.85,
-                        "source": self.source_name,
-                    }
-                )
-
-        result_df = pl.DataFrame(records)
-        self.logger.info(f"Processed {len(result_df)} annotations from URSA")
-
-        # Save processed data
         output_file = output_dir / "ursa_processed.parquet"
         result_df.write_parquet(output_file)
+        self.logger.info("Wrote processed data to %s", output_file)
 
         return result_df
 
@@ -114,16 +109,18 @@ class URSAProcessor(BaseProcessor):
 
         Arguments:
             data (pl.DataFrame):
-                Processed data to validate
+                Processed annotations DataFrame to validate.
 
         Returns:
-            (bool): True if valid
+            (bool): True if validation passes.
+
+        Raises:
+            ValidationError: If required columns are missing.
         """
         self._validate_required_columns(data)
 
-        # Check that all annotations are tissue
-        types = data["annotation_type"].unique().to_list()
-        if types != ["tissue"]:
-            self.logger.warning(f"Expected only tissue annotations, got: {types}")
+        has_tissue = "tissue" in data["annotation_type"].unique().to_list()
+        if not has_tissue:
+            self.logger.warning("No tissue annotations found in URSA output.")
 
         return True
