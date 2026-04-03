@@ -210,4 +210,5 @@ __marimo__/
 # Mac
 .DS_Store
 
-
+# Agents
+.claude/
