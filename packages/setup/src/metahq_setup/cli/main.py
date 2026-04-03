@@ -125,31 +125,26 @@ def build(config, data_dir, output_dir, start_from, end_at, num_workers, verbose
     "--output-dir",
     "-o",
     type=click.Path(path_type=Path),
-    required=True,
-    help="Output directory for processed data",
-)
-@click.option(
-    "--no-download",
-    is_flag=True,
-    help="Skip downloading, use existing data",
+    default=None,
+    help="Output directory for processed data (default: data/processed/)",
 )
 @click.option(
     "--no-validate",
     is_flag=True,
     help="Skip validation of processed data",
 )
-def process(source_name, output_dir, no_download, no_validate):
+def process(source_name, output_dir, no_validate):
     """
     Process a single data source.
 
     SOURCE_NAME is the name of the data source processor (e.g., gemma, ale, cello).
 
     Examples:
-        # Process Gemma data
-        metahq-setup process gemma --output-dir ./data/gemma
+        # Process with default output directory (data/processed/)
+        metahq-setup process disign_atlas
 
-        # Process without downloading
-        metahq-setup process ale --output-dir ./data/ale --no-download
+        # Override output directory
+        metahq-setup process disign_atlas --output-dir /custom/output
     """
     try:
         # Get processor
@@ -160,18 +155,16 @@ def process(source_name, output_dir, no_download, no_validate):
 
         processor = ProcessorRegistry.get(source_name)
 
-        output_dir.mkdir(parents=True, exist_ok=True)
+        run_kwargs = {"validate_output": not no_validate}
+        if output_dir is not None:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            run_kwargs["output_dir"] = output_dir
 
         click.echo(f"Processing {source_name} (version {processor.version})")
-        click.echo(f"Output directory: {output_dir}")
+        click.echo(f"Output directory: {output_dir or 'data/processed/'}")
         click.echo("")
 
-        # Run processor
-        data = processor.run(
-            output_dir=output_dir,
-            download_data=not no_download,
-            validate_output=not no_validate,
-        )
+        data = processor.run(**run_kwargs)
 
         click.secho(f"✓ Successfully processed {len(data)} annotations", fg="green")
 
