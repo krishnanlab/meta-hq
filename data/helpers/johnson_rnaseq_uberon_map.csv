@@ -1,0 +1,338 @@
+original_label,uber_id,uber_name
+primordial germ cells,CL:0000670,primordial germ cell
+"human embryonic retinal cells, neural retina",CL:0009004|UBERON:0003902,retinal cell|retinal neural layer
+"human embryonic retinal cells, retinal pigment epithelium",CL:0009004|CL:0002586,retinal cell|retinal pigment epithelial cell
+blood,UBERON:0000178,brain
+ovary,UBERON:0000992,ovary
+chondrocytes,CL:0000138,chondrocyte
+chorionic villus,UBERON:0007106,chorionic villus
+UBERON:0000922,UBERON:0000922,embryo
+UBERON:0001950,UBERON:0001950,neocortex
+"UBERON:0012168, UBERON:0000178",UBERON:0012168|UBERON:0000178,umbilical cord blood|blood
+UBERON:0002363,UBERON:0002363,dura mater
+UBERON:0000403,UBERON:0000403,scalp
+UBERON:0000014,UBERON:0000014,zone of skin
+UBERON:0000955,UBERON:0000955,brain
+UBERON:0000473,UBERON:0000473,testis
+UBERON:0002107,UBERON:0002107,liver
+UBERON:0000948,UBERON:0000948,heart
+UBERON:0000178,UBERON:0000178,blood
+"UBERON:0002082, UBERON:0002084, UBERON:0000948",UBERON:0002082|UBERON:0002084|UBERON:0000948,cardiac ventricle|heart left ventricle|heart
+"UBERON:0002385, UBERON:0001015, UBERON:0001630",UBERON:0002385|UBERON:0001015|UBERON:0001630,muscle tissue|musculature|muscle organ
+UBERON:0002371,UBERON:0002371,bone marrow
+"UBERON:0002661, UBERON:0000955",UBERON:0002661|UBERON:0000955,superior frontal gyrus|brain
+UBERON:0001977,UBERON:0001977,blood serum
+"UBERON:0000955, UBERON:0009834",UBERON:0000955|UBERON:0009834,brain|dorsolateral prefrontal cortex
+UBERON:0000916,UBERON:0000916,abdomen
+UBERON:0001708,UBERON:0001708,jaw skeleton
+UBERON:0002113,UBERON:0002113,kidney
+UBERON:0000974,UBERON:0000974,neck
+UBERON:0001828,UBERON:0001828,gingiva
+UBERON:0002372,UBERON:0002372,tonsil
+"UBERON:0001159, UBERON:0034919, UBERON:0001155, UBERON:0001277",UBERON:0001159|UBERON:0034919|UBERON:0001155|UBERON:0001277,sigmoid colon|juvenile stage|colon|intestinal epithelium
+"UBERON:0001155, UBERON:0001159, UBERON:0001277",UBERON:0001155|UBERON:0001159|UBERON:0001277,colon|sigmoid colon|intestinal epithelium
+UBERON:0003104,UBERON:0003104,mesenchyme
+UBERON:0001277,UBERON:0001277,intestinal epithelium
+"UBERON:0001156, UBERON:0001155, UBERON:0001277",UBERON:0001156|UBERON:0001155|UBERON:0001277,ascending colon|colon|intestinal epithelium
+"UBERON:0002481, UBERON:0001474",UBERON:0002481|UBERON:0001474,bone tissue|bone element
+"UBERON:0001828, UBERON:0001091, UBERON:0003672",UBERON:0001828|UBERON:0001091|UBERON:0003672,gingiva|calcareous tooth|dentition
+"UBERON:0034919, UBERON:0001159, UBERON:0001155, UBERON:0001277",UBERON:0034919|UBERON:0001159|UBERON:0001155|UBERON:0001277,juvenile stage|sigmoid colon|colon|intestinal epithelium
+UBERON:0001155,UBERON:0001155,colon
+UBERON:0000451,UBERON:0000451,prefrontal cortex
+"UBERON:0001630, UBERON:0001015, UBERON:0005090",UBERON:0001630|UBERON:0001015|UBERON:0005090,muscle organ|musculature|muscle structure
+"UBERON:0009834, UBERON:0000955",UBERON:0009834|UBERON:0000955,dorsolateral prefrontal cortex|brain
+"UBERON:0001015, UBERON:0005090, UBERON:0001630",UBERON:0001015|UBERON:0005090|UBERON:0001630,musculature|muscle structure|muscle organ
+UBERON:0000006,UBERON:0000006,islet of Langerhans
+"UBERON:0011002, UBERON:0010996",UBERON:0011002|UBERON:0010996,articular cartilage element|articular cartilage of joint
+UBERON:0007811,UBERON:0007811,craniocervical region
+"UBERON:0000955, UBERON:0001851",UBERON:0000955|UBERON:0001851,brain|cortex
+"UBERON:0016538, UBERON:0000955",UBERON:0016538|UBERON:0000955,temporal cortex|brain
+UBERON:0002116,UBERON:0002116,ileum
+UBERON:0009856,UBERON:0009856,sac
+UBERON:0007616,UBERON:0007616,layer of synovial tissue
+UBERON:0007023,UBERON:0007023,adult organism
+"UBERON:0000014, UBERON:0001460",UBERON:0000014|UBERON:0001460,zone of skin|arm
+"UBERON:0013528, UBERON:0035944, UBERON:0000071, UBERON:0000955",UBERON:0013528|UBERON:0035944|UBERON:0000071|UBERON:0000955,Brodmann (1909) area 11|life-death temporal boundary|death stage|brain
+UBERON:0000309,UBERON:0000309,body wall
+UBERON:0001013,UBERON:0001013,adipose tissue
+UBERON:0002114,UBERON:0002114,duodenum
+"UBERON:0007023, UBERON:0009834",UBERON:0007023|UBERON:0009834,adult organism|dorsolateral prefrontal cortex
+"UBERON:0013528, UBERON:0035944, UBERON:0000071, UBERON:0000955, UBERON:0002645",UBERON:0013528|UBERON:0035944|UBERON:0000071|UBERON:0000955|UBERON:0002645,Brodmann (1909) area 11|life-death temporal boundary|death stage|brain|densocellular part of medial dorsal nucleus
+"UBERON:0035944, UBERON:0009834, UBERON:0000071, UBERON:0000955, UBERON:0013539",UBERON:0035944|UBERON:0009834|UBERON:0000071|UBERON:0000955|UBERON:0013539,life-death temporal boundary|dorsolateral prefrontal cortex|death stage|brain|Brodmann (1909) area 9
+"UBERON:0035944, UBERON:0000071, UBERON:0000955, UBERON:0002022",UBERON:0035944|UBERON:0000071|UBERON:0000955|UBERON:0002022,life-death temporal boundary|death stage|brain|insula
+"UBERON:0035944, UBERON:0000071, UBERON:0000955, UBERON:0002022, UBERON:0002645",UBERON:0035944|UBERON:0000071|UBERON:0000955|UBERON:0002022|UBERON:0002645,life-death temporal boundary|death stage|brain|insula|densocellular part of medial dorsal nucleus
+"UBERON:0002101, UBERON:0002103",UBERON:0002101|UBERON:0002103,limb|hindlimb
+UBERON:0001295,UBERON:0001295,endometrium
+"UBERON:0001136, UBERON:0007023",UBERON:0001136|UBERON:0007023,mesothelium|adult organism
+"UBERON:0000955, UBERON:0007023, UBERON:0001851",UBERON:0000955|UBERON:0007023|UBERON:0001851,brain|adult organism|cortex
+"UBERON:0000955, UBERON:0016538, UBERON:0007023",UBERON:0000955|UBERON:0016538|UBERON:0007023,brain|temporal cortex|adult organism
+"UBERON:0000029, UBERON:0007023",UBERON:0000029|UBERON:0007023,lymph node|adult organism
+"UBERON:0035944, UBERON:0000071, UBERON:0000955, UBERON:0002191, UBERON:0002645",UBERON:0035944|UBERON:0000071|UBERON:0000955|UBERON:0002191|UBERON:0002645,life-death temporal boundary|death stage|brain|subiculum|densocellular part of medial dorsal nucleus
+"UBERON:0002022, UBERON:0035944, UBERON:0000071, UBERON:0000955, UBERON:0002645",UBERON:0002022|UBERON:0035944|UBERON:0000071|UBERON:0000955|UBERON:0002645,insula|life-death temporal boundary|death stage|brain|densocellular part of medial dorsal nucleus
+"UBERON:0001882, UBERON:0035944, UBERON:0000071, UBERON:0000955, UBERON:0002645",UBERON:0001882|UBERON:0035944|UBERON:0000071|UBERON:0000955|UBERON:0002645,nucleus accumbens|life-death temporal boundary|death stage|brain|densocellular part of medial dorsal nucleus
+"UBERON:0000955, UBERON:0007023",UBERON:0000955|UBERON:0007023,brain|adult organism
+"UBERON:0007023, UBERON:0001301",UBERON:0007023|UBERON:0001301,adult organism|epididymis
+"UBERON:0001066, UBERON:0002242",UBERON:0001066|UBERON:0002242,intervertebral disk|nucleus pulposus
+"UBERON:0035946, UBERON:0000006",UBERON:0035946|UBERON:0000006,start of neonate stage|islet of Langerhans
+"UBERON:0001598, UBERON:0011305",UBERON:0001598|UBERON:0011305,temporalis muscle|superficial part of temporalis
+UBERON:0002100,UBERON:0002100,trunk
+"UBERON:0000014, UBERON:0007023",UBERON:0000014|UBERON:0007023,zone of skin|adult organism
+"UBERON:0035944, UBERON:0009834, UBERON:0000071, UBERON:0000955, UBERON:0013539, UBERON:0002645",UBERON:0035944|UBERON:0009834|UBERON:0000071|UBERON:0000955|UBERON:0013539|UBERON:0002645,life-death temporal boundary|dorsolateral prefrontal cortex|death stage|brain|Brodmann (1909) area 8
+"UBERON:0000955, UBERON:0035944, UBERON:0001882, UBERON:0000071",UBERON:0000955|UBERON:0035944|UBERON:0001882|UBERON:0000071,brain|life-death temporal boundary|nucleus accumbens|death stage
+"UBERON:0000955, UBERON:0001870",UBERON:0000955|UBERON:0001870,brain|frontal cortex
+"UBERON:0013702, UBERON:0000178",UBERON:0013702|UBERON:0000178,body proper|blood
+"UBERON:0007023, UBERON:0002107",UBERON:0007023|UBERON:0002107,adult organism|liver
+UBERON:0001359,UBERON:0001359,cerebrospinal fluid
+"UBERON:0000955, UBERON:0002688",UBERON:0000955|UBERON:0002688,brain|supramarginal gyrus
+"UBERON:0000955, UBERON:0006480",UBERON:0000955|UBERON:0006480,brain|Brodmann (1909) area 39
+"UBERON:0000955, UBERON:0013553",UBERON:0000955|UBERON:0013553,brain|Brodmann (1909) area 22
+"UBERON:0000955, UBERON:0013540",UBERON:0000955|UBERON:0013540,brain|Brodmann (1909) area 9
+"UBERON:0000955, UBERON:0006483",UBERON:0000955|UBERON:0006483,brain|Brodmann (1909) area 46
+"UBERON:0000955, UBERON:0006481",UBERON:0000955|UBERON:0006481,brain|Brodmann (1909) area 44
+"UBERON:0000955, UBERON:0006472",UBERON:0000955|UBERON:0006472,brain|Brodmann (1909) area 6
+"UBERON:0000955, UBERON:0006482",UBERON:0000955|UBERON:0006482,brain|Brodmann (1909) area 45
+"UBERON:0000955, UBERON:0006484",UBERON:0000955|UBERON:0006484,brain|Brodmann (1909) area 47
+"UBERON:0000955, UBERON:0013552",UBERON:0000955|UBERON:0013552,brain|Brodmann (1909) area 21
+UBERON:0002046,UBERON:0002046,thyroid gland
+UBERON:0000483,UBERON:0000483,epithelium
+UBERON:0000002,UBERON:0000002,uterine certix
+"UBERON:0013702, UBERON:0000002",UBERON:0013702|UBERON:0000002,body proper|uterine cervix
+"UBERON:0000209, UBERON:0004866",UBERON:0000209|UBERON:0004866,tetrapod frontal bone|actinopterygian frontal bone
+"UBERON:0000170, UBERON:0002048",UBERON:0000170|UBERON:0002048,pair of lungs|lung
+"UBERON:0035944, UBERON:0002967, UBERON:0000071, UBERON:0000955, UBERON:0002645",UBERON:0035944|UBERON:0002967|UBERON:0000071|UBERON:0000955|UBERON:0002645,life-death temporal boundary|cingulate gyrus|death stage|brain|Brodmann (1909) area 8
+UBERON:0035612,UBERON:0035612,nasal turbinal
+"UBERON:0002022, UBERON:0035944, UBERON:0000071, UBERON:0000955",UBERON:0002022|UBERON:0035944|UBERON:0000071|UBERON:0000955,insula|life-death temporal boundary|death stage|brain
+"UBERON:0000344, UBERON:0006956",UBERON:0000344|UBERON:0006956,mucosa|buccal mucosa
+"UBERON:0001638, UBERON:0002017",UBERON:0001638|UBERON:0002017,vein|portal vein
+"UBERON:0002101, UBERON:0002102",UBERON:0002101|UBERON:0002102,limb|forelimb
+UBERON:0001876,UBERON:0001876,amygdala
+"UBERON:0004865, UBERON:0000210",UBERON:0004865|UBERON:0000210,actinopterygian parietal bone|tetrapod parietal bone
+UBERON:0005409,UBERON:0005409,alimentary part of gastrointestinal system
+UBERON:0008200,UBERON:0008200,forehead
+UBERON:0001723,UBERON:0001723,tongue
+"UBERON:0000310, UBERON:0007023",UBERON:0000310|UBERON:0007023,breast|adult organism
+"UBERON:0007023, UBERON:0000451, UBERON:0013540",UBERON:0007023|UBERON:0000451|UBERON:0013540,adult organism|prefrontal cortex|Brodmann (1909) area 9
+UBERON:0001255,UBERON:0001255,urinary bladder
+UBERON:0000029,UBERON:0000029,lymph node
+"UBERON:0000009, UBERON:0001155",UBERON:0000009|UBERON:0001155,submucosa|colon
+"UBERON:0001379, UBERON:0001015, UBERON:0001630",UBERON:0001379|UBERON:0001015|UBERON:0001630,vastus lateralis|musculature|muscle organ
+"UBERON:0035944, UBERON:0002967, UBERON:0000071, UBERON:0000955",UBERON:0035944|UBERON:0002967|UBERON:0000071|UBERON:0000955,life-death temporal boundary|cingulate gyrus|death stage|brain
+"UBERON:0001630, UBERON:0001385, UBERON:0001015",UBERON:0001630|UBERON:0001385|UBERON:0001015,muscle organ|tibialis anterior|musculature
+"UBERON:0002012, UBERON:0007023, UBERON:0001637",UBERON:0002012|UBERON:0007023|UBERON:0001637,pulmonary artery|adult organism|artery
+"UBERON:0006481, UBERON:0000955",UBERON:0006481|UBERON:0000955,Brodmann (1909) area 44|brain
+"UBERON:0002031, UBERON:0007023",UBERON:0002031|UBERON:0007023,epithelium of bronchus|adult organism
+UBERON:0013691,UBERON:0013691,buttock
+"UBERON:0000982, UBERON:0016884, UBERON:0001467",UBERON:0000982|UBERON:0016884|UBERON:0001467,skeletal joint|shoulder joint|shoulder
+"UBERON:0001013, UBERON:0002695, UBERON:0002190",UBERON:0001013|UBERON:0002695|UBERON:0002190,adipose tissue|parieto-occipital sulcus|subcutaneous adipose tissue
+"UBERON:0001013, UBERON:0002190",UBERON:0001013|UBERON:0002190,adipose tissue|subcutaneous adipose tissue
+"UBERON:0001156, UBERON:0001155",UBERON:0001156|UBERON:0001155,ascending colon|colon
+"UBERON:0001976, UBERON:0001043",UBERON:0001976|UBERON:0001043,epithelium of esophagus|esophagus
+UBERON:0001043,UBERON:0001043,esophagus
+"UBERON:0011305, UBERON:0001598",UBERON:0011305|UBERON:0001598,superficial part of temporalis|temporalis muscle
+UBERON:0003216,UBERON:0003216,hard palate
+"UBERON:0000344, UBERON:0000004, UBERON:0007843, UBERON:0007023, UBERON:0010372, UBERON:0010373",UBERON:0000344|UBERON:0000004|UBERON:0007843|UBERON:0007023|UBERON:0010372|UBERON:0010373,mucosa|nose|uncinate process of ribs|adult organism|uncinate process of ethmoid|uncinate process of pancreas
+"UBERON:0007023, UBERON:0000004",UBERON:0007023|UBERON:0000004,adult organism|nose
+"UBERON:0007023, UBERON:0022272",UBERON:0007023|UBERON:0022272,adult organism|corticobulbar tract
+"UBERON:0035944, UBERON:0000071, UBERON:0000955, UBERON:0002191",UBERON:0035944|UBERON:0000071|UBERON:0000955|UBERON:0002191,life-death temporal boundary|death stage|brain|subiculum
+"UBERON:0000992, UBERON:0007023",UBERON:0000992|UBERON:0007023,ovary|adult organism
+"UBERON:0001465, UBERON:0007844, UBERON:0002418",UBERON:0001465|UBERON:0007844|UBERON:0002418,knee|cartilage element|cartilage tissue
+"UBERON:0001870, UBERON:0000955, UBERON:0007023",UBERON:0001870|UBERON:0000955|UBERON:0007023,frontal cortex|brain|adult organism
+"UBERON:0000209, UBERON:3000368, UBERON:0001598, UBERON:0000210, UBERON:0011305, UBERON:0004865, UBERON:0004866",UBERON:0000209|UBERON:3000368|UBERON:0001598|UBERON:0000210|UBERON:0011305|UBERON:0004865|UBERON:0004866,tetrapod frontal bone|otoccipital|temporalis muscle|tetrapod parietal bone|superficial part of temporalis|actinopterygian parietal bone|actinopterygian frontal bone
+UBERON:0001052,UBERON:0001052,rectum
+"UBERON:0003679, UBERON:0000165",UBERON:0003679|UBERON:0000165,mouth floor|mouth
+"UBERON:0000170, UBERON:0007023, UBERON:0002048",UBERON:0000170|UBERON:0007023|UBERON:0002048,pair of lungs|adult organism|lung
+UBERON:0001764,UBERON:0001764,maxillary sinus
+UBERON:0010947,UBERON:0010947,accipitalis
+"UBERON:0000473, UBERON:0007023",UBERON:0000473|UBERON:0007023,testis|adult organism
+"UBERON:0002103, UBERON:0002101",UBERON:0002103|UBERON:0002101,hindlimb|limb
+"UBERON:0001882, UBERON:0035944, UBERON:0000071, UBERON:0000955",UBERON:0001882|UBERON:0035944|UBERON:0000071|UBERON:0000955,nucleus accumbens|life-death temporal boundary|death stage|brain
+"UBERON:0002530, UBERON:0000310, UBERON:0001911",UBERON:0002530|UBERON:0000310|UBERON:0001911,gland|breast|mammary gland
+"UBERON:0002386, UBERON:0000014",UBERON:0002386|UBERON:0000014,forelimb zeugopod|zone of skin
+"UBERON:0000955, UBERON:0035944, UBERON:0002967, UBERON:0000071",UBERON:0000955|UBERON:0035944|UBERON:0002967|UBERON:0000071,brain|life-death temporal boundary|cingulate gyrus|death stage
+"UBERON:0000178, UBERON:0007023",UBERON:0000178|UBERON:0007023,blood|adult organism
+UBERON:0000376,UBERON:0000376,hindlimb stylopod
+"UBERON:0011742, UBERON:0002134, UBERON:0002137",UBERON:0011742|UBERON:0002134|UBERON:0002137,aortic valve leaflet|tricuspid valve|aortic valve
+"UBERON:0000947, UBERON:0007023",UBERON:0000947|UBERON:0007023,aorta|adult organism
+"UBERON:0001460, UBERON:0007023",UBERON:0001460|UBERON:0007023,arm|adult organism
+UBERON:0000945,UBERON:0000945,stomach
+"UBERON:0000982, UBERON:0010996, UBERON:0001353, UBERON:0009985",UBERON:0000982|UBERON:0010996|UBERON:0001353|UBERON:0009985,skeletal joint|articular cartilage of joint|anal region|lateral condyle of femur
+"UBERON:0000978, UBERON:0007023",UBERON:0000978|UBERON:0007023,leg|adult organism
+"UBERON:0001385, UBERON:0001630, UBERON:0001015",UBERON:0001385|UBERON:0001630|UBERON:0001015,tibialis anterior|muscle organ|musculature
+"UBERON:0001464, UBERON:0007844, UBERON:0002418",UBERON:0001464|UBERON:0007844|UBERON:0002418,hip|cartilage element|cartilage tissue
+"UBERON:0011742, UBERON:0002137, UBERON:0007120",UBERON:0011742|UBERON:0002137|UBERON:0007120,aortic valve leaflet|aortic valve|premolar tooth
+"UBERON:0011742, UBERON:0002137",UBERON:0011742|UBERON:0002137,aortic valve leaflet|aortic valve
+"UBERON:0008260, UBERON:0001130, UBERON:0004529, UBERON:0013496",UBERON:0008260|UBERON:0001130|UBERON:0004529|UBERON:0013496,spine appendage|vertebral column|anatomical projection|unbarbed keratin-coated spine
+"UBERON:0000209, UBERON:0010011, UBERON:0002420, UBERON:0004866",UBERON:0000209|UBERON:0010011|UBERON:0002420|UBERON:0004866,tetrapod frontal bone|collection of basal ganglia|basal ganglion|actinopterygian frontal bone
+UBERON:0012376,UBERON:0012376,retromolar triangle
+"UBERON:0002048, UBERON:0000170",UBERON:0002048|UBERON:0000170,lung|pair of lungs
+UBERON:0001997,UBERON:0001997,olfactory epithelium
+UBERON:0002048,UBERON:0002048,lung
+"UBERON:0007023, UBERON:0002367",UBERON:0007023|UBERON:0002367,adult organism|prostate gland
+"UBERON:0002453, UBERON:0001764",UBERON:0002453|UBERON:0001764,ethmoid sinus|maxillary sinus
+"UBERON:0000451, UBERON:0007023, UBERON:0013540",UBERON:0000451|UBERON:0007023|UBERON:0013540,prefrontal cortex|adult organism|Brodmann (1909) area 9
+UBERON:0010210,UBERON:0010210,blood clot
+"UBERON:0002961, UBERON:0001954, UBERON:0002421",UBERON:0002961|UBERON:0001954|UBERON:0002421,archicortex|Ammon's horn|hippocampal formation
+"UBERON:0000403, UBERON:0000014",UBERON:0000403|UBERON:0000014,scalp|zone of skin
+"UBERON:0007023, UBERON:0002369",UBERON:0007023|UBERON:0002369,adult organism|adrenal gland
+"UBERON:0007023, UBERON:0001155",UBERON:0007023|UBERON:0001155,adult organism|colon
+"UBERON:0001776, UBERON:0001782, UBERON:0001773",UBERON:0001776|UBERON:0001782|UBERON:0001773,optic choroid|pigmented layer of retina|sclera
+"UBERON:0000966, UBERON:0013682",UBERON:0000966|UBERON:0013682,retina|peripheral region of retina
+"UBERON:0000053, UBERON:0000966",UBERON:0000053|UBERON:0000966,macula lutea|retina
+"UBERON:0000982, UBERON:0009985, UBERON:0010996, UBERON:0001465, UBERON:0001353",UBERON:0000982|UBERON:0009985|UBERON:0010996|UBERON:0001465|UBERON:0001353,skeletal joint|lateral condyle of femur|articular cartilage of joint|knee|anal region
+"UBERON:0000982, UBERON:0009985, UBERON:0010996, UBERON:0001465, UBERON:0000981, UBERON:0001353",UBERON:0000982|UBERON:0009985|UBERON:0010996|UBERON:0001465|UBERON:0000981|UBERON:0001353,skeletal joint|lateral condyle of femur|articular cartilage of joint|knee|femur|anal region
+"UBERON:0007023, UBERON:0001870",UBERON:0007023|UBERON:0001870,adult organism|frontal cortex
+"UBERON:0000170, UBERON:0000062, UBERON:0002048",UBERON:0000170|UBERON:0000062|UBERON:0002048,pair of lungs|organ|lung
+"UBERON:0000982, UBERON:0009985, UBERON:0000981, UBERON:0010996, UBERON:0001465, UBERON:0001353",UBERON:0000982|UBERON:0009985|UBERON:0000981|UBERON:0010996|UBERON:0001465|UBERON:0001353,skeletal joint|lateral condyle of femur|femur|articular cartilage of joint|knee|anal region
+UBERON:0005921,UBERON:0005921,middle nasal concha
+"UBERON:0001418, UBERON:0000376, UBERON:0000014, UBERON:0001460",UBERON:0001418|UBERON:0000376|UBERON:0000014|UBERON:0001460,skin of thorax|hindlimb stylopod|zone of skin|arm
+"UBERON:0002185, UBERON:0003126",UBERON:0002185|UBERON:0003126,bronchus|trachea
+"UBERON:0004865, UBERON:0001598, UBERON:0000210, UBERON:0011305",UBERON:0004865|UBERON:0001598|UBERON:0000210|UBERON:0011305,actinopterygian parietal bone|temporalis muscle|tetrapod parietal bone|superficial part of temporalis
+"UBERON:0001456, UBERON:0000014",UBERON:0001456|UBERON:0000014,face|zone of skin
+UBERON:0007795,UBERON:0007795,ascitic fluid
+"UBERON:0007220, UBERON:0000323",UBERON:0007220|UBERON:0000323,late embryonic stage|late embryo
+"UBERON:0000982, UBERON:0009985, UBERON:0010996, UBERON:0000981, UBERON:0001465, UBERON:0001353",UBERON:0000982|UBERON:0009985|UBERON:0010996|UBERON:0000981|UBERON:0001465|UBERON:0001353,skeletal joint|lateral condyle of femur|articular cartilage of joint|femur|knee|anal region
+"UBERON:0002037, UBERON:0007023",UBERON:0002037|UBERON:0007023,cerebellum|adult organism
+"UBERON:0007023, UBERON:0000310",UBERON:0007023|UBERON:0000310,adult organism|breast
+"UBERON:0000978, UBERON:0000014",UBERON:0000978|UBERON:0000014,leg|zone of skin
+"UBERON:0002371, UBERON:0000310",UBERON:0002371|UBERON:0000310,bone marrow|breast
+"UBERON:0002530, UBERON:0001905, UBERON:0007023",UBERON:0002530|UBERON:0001905|UBERON:0007023,gland|pineal body|adult organism
+UBERON:0002038,UBERON:0002038,substantia nigra
+"UBERON:0004356, UBERON:0007023, UBERON:0000014",UBERON:0004356|UBERON:0007023|UBERON:0000014,apical ectodermal ridge|adult organism|zone of skin
+UBERON:0002037,UBERON:0002037,cerebellum
+"UBERON:0007023, UBERON:0000007, UBERON:0002530",UBERON:0007023|UBERON:0000007|UBERON:0002530,adult organism|pituitary gland|gland
+"UBERON:0001460, UBERON:0000014",UBERON:0001460|UBERON:0000014,arm|zone of skin
+"UBERON:0001155, UBERON:0036007",UBERON:0001155|UBERON:0036007,colon|A13 dopaminergic cell group
+"UBERON:0007023, UBERON:0002113",UBERON:0007023|UBERON:0002113,adult organism|kidney
+"UBERON:0002046, UBERON:0007023",UBERON:0002046|UBERON:0007023,thyroid gland|adult organism
+"UBERON:0002369, UBERON:0007023",UBERON:0002369|UBERON:0007023,adrenal gland|adult organism
+"UBERON:0001013, UBERON:0007023",UBERON:0001013|UBERON:0007023,adipose tissue|adult organism
+"UBERON:0007023, UBERON:0000948",UBERON:0007023|UBERON:0000948,adult organism|heart
+"UBERON:0014895, UBERON:0014892, UBERON:0001134, UBERON:0007023, UBERON:0001015, UBERON:0001630",UBERON:0014895|UBERON:0014892|UBERON:0001134|UBERON:0007023|UBERON:0001015|UBERON:0001630,somatic muscle|skeletal muscle organ|skeletal muscle tissue|adult organism|musculature|muscle organ
+"UBERON:0007023, UBERON:0000955",UBERON:0007023|UBERON:0000955,adult organism|brain
+lung,UBERON:0002048,lung
+bladder,UBERON:0018707,bladder organ
+reproductive,UBERON:0003133,reproductive organ
+neocortex,UBERON:0001950,neocortex
+testis,UBERON:0000473,testis
+brain,UBERON:0000955,brain
+tcells,CL:0000084,T cell
+monocytes,CL:0000576,monocyte
+rectal mucosal biopsy,UBERON:0003346,mucosa of rectum
+whole blood,UBERON:0000178,blood
+bone marrow,UBERON:0002371,bone marrow
+granulocytic precursors(gra),CL:0002191,granulocytopoietic cell
+mesenchymal stem/stromal cells(msc),CL:0000499,stromal cell
+erythroid precursors(erp),CL:0002156,erythroid lineage cell
+monocytes/macrophages and precursors(mon),CL:0000557,granulocyte monocyte progenitor cell
+haematopoietic stem and progenitor cells(hpc),CL:0008001,hematopoietic precursor cell
+lymphocytes and precursors(lym),CL:0000044,common lymphoid progenitor
+cd138 selected bone marrow cells,CL:0002092,bone marrow cell
+retina punch,UBERON:0000966,retina
+tumour associated macrophages,CL:0000235,macrophage
+synovial fluid,UBERON:0001090,synovial fluid
+peripheral blood derived mononuclear cells,CL:2000001,peripheral blood mononuclear cell
+skeletal muscle,UBERON:0001134,skeletal muscle tissue
+kidney,UBERON:0002113,kidney
+lung tissue biopsy,UBERON:0002048,lung
+liver,UBERON:0002107,liver
+T cell,CL:0000084,T cell
+cancer,na,na
+endometrium,UBERON:0001295,endometrium
+tumor,na,na
+salivary gland,UBERON:0001044,saliva-secreting gland
+normal,na,na
+idiopathic pulmonary fibrosis,UBERON:0002048,lung
+gingiva,UBERON:0001828,gingiva
+fat,UBERON:0003916,fat pad
+duodenum - immune,UBERON:0002114,duodenum
+duodenum - epithelial,UBERON:0002115,duodenum
+duodenum,UBERON:0002116,duodenum
+endometrial gland,UBERON:0002451,endometrial gland
+lung tumor,UBERON:0002048,lung
+leukocytyes,CL:0000738,leukocyte
+B cell,CL:0000236,B cell
+ileum,UBERON:0002116,ileum
+periodontal ligament,UBERON:0008266,periodontal ligament
+nucleus pulposus,UBERON:0002242,nucleus pulposus
+stomach,UBERON:0000945,stomach
+muscle,UBERON:0005090,muscle structure
+prefrontal cortex,UBERON:0000451,prefrontal cortex
+synovial tissue - knee,UBERON:0003577,knee connective tissue
+thyroid,UBERON:0002046,thyroid gland
+breast tumor,UBERON:0000310,breast
+ovaraian tumor,UBERON:0000992,ovary
+nerve - trigeminal ganglion,UBERON:0001675,trigeminal ganglion
+brain - cerebellum,UBERON:0002037,cerebellum
+fallopian tube,UBERON:0003889,fallopian tube
+skin - keratinocytes,CL:0000312,keratinocyte
+prostate,UBERON:0002367,prostate gland
+neutrophils,CL:0000775,neutrophil
+skin,UBERON:0002097,skin of body
+hip cartilage,UBERON:0003576,hip connective tissue
+blood - monocyte,CL:0000576,monocyte
+blood - PBMC,CL:2000001,peripheral blood mononuclear cell
+heart - left ventricle endocardium,UBERON:0009713,endocardium of left ventricle
+plasma,UBERON:0001969,blood plasma
+macrophages in lung,CL:1001603,lung macrophage
+colon,UBERON:0001155,colon
+blood ,UBERON:0000178,blood
+blood - neutrophils,CL:0000775,neutrophil
+nasal cavity,UBERON:0001707,nasal cavity
+esophagus,UBERON:0001043,esophagus
+heart,UBERON:0000948,heart
+blood - T cell,CL:0000084,T cell
+cervix,UBERON:0000002,uterine cervix
+cartilage - knee,UBERON:0003577,knee connective tissue
+smooth muscle,UBERON:0001135,smooth muscle tissue
+carotid tumor,UBERON:0001530,common carotid artery plus branches
+blood - neutrophil,CL:0000775,neutrophil
+blood - pDC,CL:0000784,plasmacytoid dendritic cell
+breast,UBERON:0000310,breast
+liver tumor,UBERON:0002107,liver
+liver macrophages,UBERON:0002107|CL:0000235,liver|macrophage
+bone marrow - mononuclear cells,CL:0000842,mononuclear cell
+cerebrospinal fluid,UBERON:0001359,cerebrospinal fluid
+pancreas - beta cells,CL:0000169,type B pancreatic cell
+blood vessel - intracranial cortical artery,UBERON:0001627,middle cerebral artery
+parathyroid,UBERON:0001132,parathyroid gland
+retinoblastoma,UBERON:0000966,retina
+retina,UBERON:0000966,retina
+blood vessel,UBERON:0001981,blood vessel
+brain - frontal cortex,UBERON:0001870,frontal cortex
+brain - vermis,UBERON:0004720,cerebellar vermis
+corneal endothelium,UBERON:0001985,corneal endothelium
+kidney tumor,UBERON:0002113,kidney
+inner ear macrophages,UBERON:0006937|CL:0000235,inner ear epithelium|macrophage
+cartilage,UBERON:0002418,cartilage tissue
+brain - basal ganglion,UBERON:0002420,basal ganglon
+brain - brain fragment,UBERON:0000955,brain
+brain - choroid plexus,UBERON:0001886,choroid plexus
+brain - cerebral cortex,UBERON:0000956,cerebral cortex
+brain - diencephalon,UBERON:0001894,dicencephalon
+brain - forebrain,UBERON:0001890,forebrain
+brain - forebrain fragment,UBERON:0001891,forebrain
+brain - forebrain- frontal,UBERON:0001892,forebrain
+brain - hindbrain,UBERON:0002028,hindbrain
+brain - hindbrain without cerebellum,UBERON:0002240|UBERON:0002298,spinal cord|brain stem
+brain - hippocampus,UBERON:0002421,hippocampal formation
+brain - medulla oblongata,UBERON:0001896,medulla oblongata
+brain - midbrain,UBERON:0001891,midbrain
+brain - pituitary and diencephalon,UBERON:0000007|UBERON:0001894,pituitary gland|diencephalon
+brain - pons,UBERON:0000988,pons
+brain - spinal cord,UBERON:0002240,spinal cord
+brain - telencephalon,UBERON:0001893,telencephalon
+brain - temporal lobe,UBERON:0001871,temporal lobe
+brain - diencephalon and midbrain,UBERON:0001894|UBERON:0001891,diencephalon|midbrain
+brain - forebrain and midbrain,UBERON:0001890|UBERON:0001891,forebrain|midbrain
+brain - Hindbrain,UBERON:0002028,hindbrain
+brain - hindbrain fragmenet,UBERON:0002028,hindbrain
+brain - stomach,UBERON:0000955|UBERON:0000945,brain|stomach
+small intestine - ileum,UBERON:0002116,ileum
+brain - BA9 prefrontal cortex,UBERON:0013540|UBERON:0000451,Brodmann (1909) area 9|prefrontal cortex
+brain - AnCg,UBERON:0009835,anterior cingulate cortex
+brain - nAcc,UBERON:0001882,nucleus accumbens
+brain - DLPFC,UBERON:0009834,dorsolateral prefrontal cortex
+hindbrain,UBERON:0002028,hindbrain
+spinal cord,UBERON:0002240,spinal cord
+brain - microglia,CL:0000129,microglial cell
+brain - brain,UBERON:0000955,brain

@@ -1,0 +1,82 @@
+﻿mesh_id,mesh_name,uber_id,uber_name
+D041981,Gastrointestinal Tract,UBERON:0001555,digestive tract
+D003238,Connective Tissue,UBERON:0002384,connective tissue
+D005854,Germ Cells,CL:0000586,germ cell
+D012491,Salt Gland,UBERON:0004758,salt gland
+D006257,Head,UBERON:0000033,head
+D012679,Sense Organs,UBERON:0000020,sense organs
+D060726,Torso,UBERON:0002100,trunk
+D014024,Tissues,UBERON:0000479,tissue
+D001808,Blood Vessels,UBERON:0004537,blood vasculature
+D014551,Urinary Tract,UBERON:0001008,renal system
+D004622,"Embryo, Mammalian",UBERON:0000922,embryo
+D022082,Cellular Structures,UBERON:0005162,multi cell part structure
+D019737,Transplants,UBERON:0000479,tissue
+D005205,Fascia,UBERON:0008982,fascia
+D001829,Body Regions,UBERON:0000475,organism subdivision
+D001659,Biliary Tract,UBERON:0002294,biliary system
+D004847,Epithelial Cells,CL:0000066,epithelial cell
+D010994,Pleura,UBERON:0000977,pleura
+D004702,Endocrine Glands,UBERON:0002368,endocrine gland
+D002319,Cardiovascular System,UBERON:0004535,cardiovascular system
+D007830,Larynx,UBERON:0001737,larynx
+D000921,Antibody-Producing Cells,CL:0000946,antibody secreting cell
+D004703,Endocrine System,UBERON:0000949,endocrine system
+D019858,Enteroendocrine Cells,CL:0000164,enteroendocrine cell
+D005088,Exocrine Glands,UBERON:0002365,exocrine gland
+D006413,Hematopoietic System,UBERON:0002390,hematopoietic system
+D010179,Pancreas,UBERON:0001264,pancreas
+D010920,Placenta,UBERON:0001987,placenta
+D004848,Epithelium,UBERON:0000483,epithelium
+D002356,Cartilage,UBERON:0002418,cartilage tissue
+D022423,Myeloid Cells,CL:0000763,myeloid cell
+D005835,Genitalia,UBERON:0003133,reproductive organ
+D001773,Blood Cells,CL:0000081,blood cell
+D008022,Ligaments,UBERON:0000211,ligament
+D004625,"Embryo, Nonmammalian",UBERON:0000922,embryo
+D001826,Body Fluids,UBERON:0006314,bodily fluid
+D009141,Musculoskeletal System,UBERON:0002204,musculoskeletal system
+D010614,Pharynx,UBERON:0006562,pharynx
+D009474,Neurons,CL:0000540,neuron
+D010586,Phagocytes,CL:0000234,phagocyte
+D012867,Skin,UBERON:0002097,skin of body
+D034582,Integumentary System,UBERON:0013754,integumentary system layer
+D014566,Urogenital System,UBERON:0001008|UBERON:0000990,renal system|reproductive system
+D013284,Stomatognathic System,UBERON:0001728,nasopharynx
+D013234,Stem Cells,CL:0000034,stem cell
+D002490,Central Nervous System,UBERON:0001017,central nervous system
+D009333,Neck,UBERON:0000974,neck
+D000825,Animal Structures,CL:0000548,animal cell
+D008221,Lymphoid Tissue,UBERON:0001744,lymphoid tissue
+D005441,Fluids and Secretions,UBERON:0006314,bodily fluid
+D007107,Immune System,UBERON:0002405,immune system
+D005121,Extremities,UBERON:0002101,limb
+D009132,Muscles,UBERON:0005090,muscle structure
+D006424,Hemic and Immune Systems,UBERON:0002390,hematopoietic system
+D010057,Oviducts,UBERON:0000993,oviduct
+D004628,Embryonic Structures,UBERON:0002050,embryonic structure
+D013710,Tendons,UBERON:0000043,tendon
+D009420,Nervous System,UBERON:0001016,nervous system
+D000938,Antigen-Presenting Cells,CL:0000145,professional antigen presenting cell
+D009055,Mouth,UBERON:0000165,mouth
+D001769,Blood,UBERON:0000178,blood
+D005333,Fetus,UBERON:0000323,late embryo
+D008168,Lung,UBERON:0002048,lung
+D005724,Ganglia,UBERON:0000045,ganglion
+D003239,Connective Tissue Cells,CL:0002320,connective tissue cell
+D012137,Respiratory System,UBERON:0001004,respiratory system
+D012863,Skeleton,UBERON:0004288,skeleton
+D005123,Eye,UBERON:0000970,eye
+D012634,Bodily Secretions,UBERON:0006314,bodily fluid
+D008099,Liver,UBERON:0002107,liver
+D008566,Membranes,UBERON:0000094,membrane organ
+D032342,Muscle Cells,CL:0000187,muscle cell
+D006321,Heart,UBERON:0000948,heart
+D055098,Endocrine Cells,CL:0000163,endocrine cell
+D004064,Digestive System,UBERON:0001007,digestive system
+D001940,Breast,UBERON:0000310,breast
+D009457,Neuroglia,CL:0000125,glial cell
+D002477,Cells,CL:0000000,cell
+D001934,Branchial Region,UBERON:2002172,branchial mesenchyme
+D002478,"Cells, Cultured",CL:0000010,cultured cell
+D001854,Bone Marrow Cells,CL:0002092,bone marrow cell

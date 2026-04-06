@@ -1,0 +1,44 @@
+﻿mesh_id,mesh_name,mondo_id,mondo_name
+D009385,Neoplastic Processes,MONDO:0021058,neoplastic syndrome
+D015835,Ocular Motility Disorders,MONDO:0001584,ocular motility disease
+D005261,Female Urogenital Diseases and Pregnancy Complications,MONDO:0024575|MONDO:0015620,pregnancy disorder|syndromic urogenital tract malformation
+D009370,Neoplasms by Histologic Type,MONDO:0005070,neoplasm
+D009378,"Neoplasms, Multiple Primary",MONDO:0005071,neoplasm
+D003229,Conjunctival Diseases,MONDO:0006170,conjunctival disorder
+D012816,Signs and Symptoms,MONDO:0000001,disease or disorder
+D009104,Multiple Trauma,MONDO:0021178,injury
+D012130,Respiratory Hypersensitivity,MONDO:0021113,respiratory failure
+D004427,Ear Diseases,MONDO:0021205,disorder of ear
+D013568,"Pathological Conditions, Signs and Symptoms",MONDO:0000001,disease or disorder
+D004067,Digestive System Neoplasms,MONDO:0004335,digestive system disorder
+D007239,Infection,MONDO:0005550,infectious disease
+D000013,Congenital Abnormalities,MONDO:0021140,congenital
+D017437,Skin and Connective Tissue Diseases,MONDO:0005854,mixed connective tissue disease
+D019952,Mental Disorders Diagnosed in Childhood,MONDO:0005084,mental disorder
+D009358,"Congenital, Hereditary, and Neonatal Diseases and Abnormalities",MONDO:0021140,congenital
+D010335,Pathologic Processes,MONDO:0021125,disease characteristic
+D012327,RNA Virus Infections,MONDO:0005550,infectious disease
+D004066,Digestive System Diseases,MONDO:0004335,digestive system disorder
+D010608,Pharyngeal Diseases,MONDO:0020592,disorder of pharynx
+D018376,Cardiovascular Abnormalities,MONDO:0004995,cardiovascular disorder
+D006425,Hemic and Lymphatic Diseases,MONDO:0005570|MONDO:0005833,hematologic disorder|lymphatic system disorder
+D003560,Cysts,MONDO:0012328,trichilemmal cyst
+D052801,Male Urogenital Diseases,MONDO:0015620,syndromic urogenital tract malformation
+D011603,Psychophysiology,MONDO:0024316,physiological malfunction arising from mental factor
+D009371,Neoplasms by Site,MONDO:0005071,neoplasm
+D052776,Female Urogenital Diseases,MONDO:0015620,syndromic urogenital tract malformation
+D011579,Psychological Phenomena and Processes,MONDO:0005084,mental disorder
+D001520,Behavior and Behavior Mechanisms,MONDO:0800106,disruptive behavior disorder
+D012897,Slow Virus Diseases,MONDO:0005108,viral infectious disease
+D019954,Neurobehavioral Manifestations,MONDO:0005071,nervous system disorder
+D009750,Nutritional and Metabolic Diseases,MONDO:0006873,nutritional deficiency disease
+D001068,Eating Disorders,MONDO:0005451,eating disorder
+D064419,Chemically-Induced Disorders,MONDO:0002494,substance-related disorder
+D019967,Schizophrenia and Disorders with Psychotic Features,MONDO:0002025,psychiatric disorder
+D020763,"Pathological Conditions, Anatomical",MONDO:0000001,disease or disorder
+D009057,Stomatognathic Diseases,MONDO:0004821,nasopharyngeal disorder
+D042822,Genomic Instability,MONDO:0021190,DNA repair disease
+D009461,Neurologic Manifestations,MONDO:0005071,nervous system disorder
+D001423,Bacterial Infections and Mycoses,MONDO:0005113,bacterial infectious disease
+D005315,Fetal Diseases,MONDO:0009013,"convulsive disorder, familial, with prenatal or early onset"
+D014565,Urogenital Neoplasms,MONDO:0006295|MONDO:0002149,malignant urinary system neoplasm|reproductive system cancer
