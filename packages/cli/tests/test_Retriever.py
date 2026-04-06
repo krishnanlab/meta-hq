@@ -146,6 +146,7 @@ class TestRetriever:
 
         citation_config = CitationConfig(
             version="test_version",
+            terms="term1, term2",
             attribute="test_attr",
             level="test_level",
             species="test_species",
