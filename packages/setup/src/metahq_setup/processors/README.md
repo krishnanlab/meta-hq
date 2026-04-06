@@ -106,6 +106,30 @@ df = processor.run(input_path=Path("./data/unprocessed/cello.json"))
 
 ---
 
+### CREEDS (`creeds`)
+
+Crowd-sourced disease annotations from CREEDS (CRowd Extracted Expression of Differential Signatures).
+
+- **Input:** `data/unprocessed/creeds.json`
+- **Annotations:** `disease`
+- **ecode:** `crowd`
+- **Output:** `creeds_processed.parquet`
+- **Note:** Filters for human organism entries with valid DOID terms. Disease IDs are mapped from DOID to MONDO. Control samples receive `term_id = "MONDO:0000000"` and `term_label = "control"`.
+
+```bash
+metahq-setup process creeds
+```
+
+```python
+processor = ProcessorRegistry.get("creeds")
+df = processor.run()
+
+# Override input path
+df = processor.run(input_path=Path("./data/unprocessed/creeds.json"))
+```
+
+---
+
 ### URSA (`ursa`)
 
 Expert-curated tissue annotations from URSA, providing UBERON/CL term IDs for GEO samples.
@@ -201,6 +225,37 @@ df = processor.run()
 
 # Override input path
 df = processor.run(input_path=Path("./data/unprocessed/krishnanlab.tsv"))
+```
+
+---
+
+### Johnson 2023 (`johnson_2023`)
+
+Manually curated annotations from Johnson et al. 2023 for both microarray (GPL570/GEO) and RNA-seq (refine.bio/SRA) datasets.
+
+- **Input:** `data/unprocessed/johnson_2023__microarray.tsv`, `data/unprocessed/johnson_2023__rnaseq.tsv`
+- **Annotations:** `disease`, `tissue`, `sex`, `age`
+- **ecode:** `expert`
+- **Output:** `johnson_2023_processed.parquet`
+- **Notes:**
+  - Microarray: Disease and tissue are pipe-delimited MESH terms mapped to MONDO and UBERON/CL
+  - RNA-seq: Disease uses DOID→MONDO mapping; tissue uses free-text→UBERON/CL mapping
+  - Sex is normalized to M/F with PATO terms (PATO:0000384 male, PATO:0000383 female)
+  - Age uses age_group bins from the input data
+
+```bash
+metahq-setup process johnson_2023
+```
+
+```python
+processor = ProcessorRegistry.get("johnson_2023")
+df = processor.run()
+
+# Override input paths
+df = processor.run(
+    microarray_input_path=Path("./data/unprocessed/johnson_2023__microarray.tsv"),
+    rnaseq_input_path=Path("./data/unprocessed/johnson_2023__rnaseq.tsv")
+)
 ```
 
 ---
