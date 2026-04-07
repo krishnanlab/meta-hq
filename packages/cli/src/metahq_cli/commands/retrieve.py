@@ -8,8 +8,6 @@ Last updated: 2026-04-01 by Parker Hicks
 """
 
 from datetime import datetime
-from pathlib import Path
-
 import click
 from metahq_core.util.progress import get_console
 from metahq_core.util.supported import get_config, get_log_dir, supported
@@ -17,6 +15,7 @@ from metahq_core.util.supported import get_config, get_log_dir, supported
 from metahq_cli.logger import setup_logger
 from metahq_cli.retrieval_builder import Builder
 from metahq_cli.retriever import Retriever
+from metahq_cli.util.checkers import resolve_outdir
 from metahq_cli.util.common_args import (
     logging_args,
     ontology_retrieval_args,
@@ -92,12 +91,15 @@ def retrieve_age(
     # parse and check filters
     filters = builder.get_filters(filters)
 
+    # resolve output directory (creates it, incrementing suffix if it exists)
+    resolved_dir = resolve_outdir(output)
+
     # make configs
     attribute = "age"
     query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, "direct", attribute)
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute=attribute
+        resolved_dir, fmt, metadata, level=level, attribute=attribute
     )
     citation_config = builder.citation_config(
         version=DATABASE_VERSION,
@@ -107,7 +109,7 @@ def retrieve_age(
         filters=filters,
         mode="annotate",  # show annotate instead of direct for interpretability
         date=NOW,
-        outdir=Path(output).resolve().parents[0],
+        outdir=resolved_dir,
     )
 
     # retrieve
@@ -156,12 +158,15 @@ def retrieve_diseases(
     # parse and check filters
     filters = builder.get_filters(filters)
 
+    # resolve output directory (creates it, incrementing suffix if it exists)
+    resolved_dir = resolve_outdir(output)
+
     # make configs
     attribute = "disease"
     query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, mode, "mondo")
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute=attribute
+        resolved_dir, fmt, metadata, level=level, attribute=attribute
     )
     citation_config = builder.citation_config(
         version=DATABASE_VERSION,
@@ -171,7 +176,7 @@ def retrieve_diseases(
         filters=filters,
         mode=mode,
         date=NOW,
-        outdir=Path(output).resolve().parents[0],
+        outdir=resolved_dir,
     )
 
     # retrieve
@@ -207,12 +212,15 @@ def retrieve_sex(
     # parse and check filters
     filters = builder.get_filters(filters)
 
+    # resolve output directory (creates it, incrementing suffix if it exists)
+    resolved_dir = resolve_outdir(output)
+
     # make configs
     attribute = "sex"
     query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, "direct", attribute)
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute=attribute
+        resolved_dir, fmt, metadata, level=level, attribute=attribute
     )
     citation_config = builder.citation_config(
         version=DATABASE_VERSION,
@@ -222,7 +230,7 @@ def retrieve_sex(
         filters=filters,
         mode="annotate",  # show annotate instead of direct for interpretability
         date=NOW,
-        outdir=Path(output).resolve().parents[0],
+        outdir=resolved_dir,
     )
 
     # retrieve
@@ -271,12 +279,15 @@ def retrieve_tissues(
     # parse and check filters
     filters = builder.get_filters(filters)
 
+    # resolve output directory (creates it, incrementing suffix if it exists)
+    resolved_dir = resolve_outdir(output)
+
     # make configs
     attribute = "tissue"
     query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, mode, "uberon")
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute=attribute
+        resolved_dir, fmt, metadata, level=level, attribute=attribute
     )
     citation_config = builder.citation_config(
         version=DATABASE_VERSION,
@@ -286,7 +297,7 @@ def retrieve_tissues(
         filters=filters,
         mode=mode,
         date=NOW,
-        outdir=Path(output).resolve().parents[0],
+        outdir=resolved_dir,
     )
 
     # retrieve

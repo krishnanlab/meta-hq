@@ -4,11 +4,12 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-04-01 by Parker Hicks
+Last updated: 2026-04-07 by Parker Hicks
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import polars as pl
@@ -413,7 +414,7 @@ class AnnotationsExporter(BaseExporter):
             verbose=self.verbose,
         )
 
-        self.log.info("Saving retrieval result to %s", file)
+        self.log.info("Saving retrieval result to %s", Path(file).parent)
         if "description" in _metadata:
             self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
 
@@ -467,7 +468,7 @@ class AnnotationsExporter(BaseExporter):
             logger=self.log,
         )
 
-        self.log.info("Saving retrieval result to %s", file)
+        self.log.info("Saving retrieval result to %s", Path(file).parent)
         _anno: dict[str, dict[str, dict[str, str]]] = {
             term: {} for term in anno.entities
         }

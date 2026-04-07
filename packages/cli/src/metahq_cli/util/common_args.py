@@ -66,8 +66,8 @@ def retrieval_args(command):
     @click.option(
         "--output",
         type=click.Path(),
-        default="annotations.parquet",
-        help="Path to outfile.",
+        default="metahq_results",
+        help="Path to output directory. Created if it does not exist; a numeric suffix is appended if it does.",
     )
     @click.option("--fmt", type=FMT_OPT, default="parquet")
     @click.option("--metadata", type=str, default="default")

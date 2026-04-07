@@ -235,6 +235,5 @@ def save_citations(
             ", ".join(source_counts["sources"].to_list()),
         )
         logger.info(
-            "Citation information saved to %s. Use this to cite the original sources.",
-            Path(config.outfile).name,
+            "A CITATION.txt file is included in the output. Use this to cite the original sources.",
         )

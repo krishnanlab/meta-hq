@@ -4,11 +4,12 @@ Class for Labels export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-04-01 by Parker Hicks
+Last updated: 2026-04-07 by Parker Hicks
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import polars as pl
@@ -256,7 +257,7 @@ class LabelsExporter(BaseExporter):
                 verbose=self.verbose,
             )
 
-            self.log.info("Saving retrieval result to %s", file)
+            self.log.info("Saving retrieval result to %s", Path(file).parent)
             _metadata = self._parse_metafields(curation.index_col, metadata)
             _metadata.extend(["sources"])
 
@@ -467,7 +468,7 @@ class LabelsExporter(BaseExporter):
             verbose=self.verbose,
         )
 
-        self.log.info("Saving retrieval result to %s", file)
+        self.log.info("Saving retrieval result to %s", Path(file).parent)
         if "description" in _metadata:
             self._save_table_with_description(
                 file, curation, _metadata, fmt=fmt, **kwargs

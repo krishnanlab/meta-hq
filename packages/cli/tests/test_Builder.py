@@ -196,17 +196,15 @@ class TestBuilder:
 
     @patch("metahq_cli.retrieval_builder.check_metadata")
     @patch("metahq_cli.retrieval_builder.check_format")
-    @patch("metahq_cli.retrieval_builder.check_outfile")
-    def test_output_config_creates_config(
-        self, mock_outfile, mock_format, mock_metadata, builder
-    ):
+    def test_output_config_creates_config(self, mock_format, mock_metadata, builder):
         """test output_config creates OutputConfig with correct parameters"""
-        result = builder.output_config(
-            "output.parquet", "parquet", "sample", "sample", "test_attr"
-        )
+        from pathlib import Path
+
+        outdir = Path("/tmp/my_results")
+        result = builder.output_config(outdir, "parquet", "sample", "sample", "test_attr")
 
         assert isinstance(result, OutputConfig)
-        assert result.outfile == "output.parquet"
+        assert result.outfile == outdir / "result.parquet"
         assert result.fmt == "parquet"
         assert result.metadata == "sample"
         assert result.attribute == "test_attr"
@@ -214,7 +212,6 @@ class TestBuilder:
 
         mock_metadata.assert_called_once_with("sample", "sample")
         mock_format.assert_called_once_with("parquet")
-        mock_outfile.assert_called_once_with("output.parquet")
 
     def test_map_sex_to_id_maps_male_and_female(self, builder):
         """test map_sex_to_id converts male/female to M/F"""

@@ -52,6 +52,7 @@ def sample_citation_config():
     """Create a sample CitationConfig for testing."""
     return CitationConfig(
         version="1.0.0",
+        terms="UBERON:0000948,UBERON:0000955",
         attribute="tissue",
         level="sample",
         species="human",
@@ -311,6 +312,7 @@ class TestCitationConfig:
         """Test basic instantiation of CitationConfig."""
         config = CitationConfig(
             version="1.0.0",
+            terms="UBERON:0000948,UBERON:0000955",
             attribute="tissue",
             level="sample",
             species="human",
@@ -334,6 +336,7 @@ class TestCitationConfig:
         """Test CitationConfig with custom outfile."""
         config = CitationConfig(
             version="1.0.0",
+            terms="MONDO:0004994",
             attribute="disease",
             level="series",
             species="mouse",
@@ -350,6 +353,7 @@ class TestCitationConfig:
         """Test that outfile can be a Path object."""
         config = CitationConfig(
             version="1.0.0",
+            terms="UBERON:0000948",
             attribute="tissue",
             level="sample",
             species="human",
@@ -365,6 +369,7 @@ class TestCitationConfig:
     def test_all_fields_accessible(self, sample_citation_config):
         """Test that all fields are accessible."""
         assert hasattr(sample_citation_config, "version")
+        assert hasattr(sample_citation_config, "terms")
         assert hasattr(sample_citation_config, "attribute")
         assert hasattr(sample_citation_config, "level")
         assert hasattr(sample_citation_config, "species")

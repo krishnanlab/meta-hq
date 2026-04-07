@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 import polars as pl
 from metahq_core.export.references import CitationConfig
 from metahq_core.util.exceptions import NoResultsFound
-from metahq_core.util.io import checkdir
 from metahq_core.util.supported import get_ontology_families
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig
@@ -25,7 +24,6 @@ from metahq_cli.util.checkers import (
     check_license,
     check_metadata,
     check_mode,
-    check_outfile,
 )
 from metahq_cli.util.messages import TruncatedList
 from metahq_cli.util.supported import required_filters
@@ -201,7 +199,7 @@ class Builder:
 
     def output_config(
         self,
-        outfile: str,
+        outdir: Path,
         fmt: str,
         metadata: str,
         level: str,
@@ -210,8 +208,8 @@ class Builder:
         """Construct an output configuration.
 
         Attributes:
-            outfile (str | Path):
-                Path to file to store annotations.
+            outdir (Path):
+                Resolved output directory (created by `resolve_outdir`).
 
             fmt (Literal["json", "parquet", "csv", "tsv"]):
                 Format of the output file.
@@ -228,8 +226,8 @@ class Builder:
         """
         check_metadata(level, metadata)
         check_format(fmt)
-        check_outfile(outfile)
 
+        outfile = outdir / f"result.{fmt}"
         return OutputConfig(outfile, fmt, metadata, attribute, level)
 
     def citation_config(
@@ -274,8 +272,7 @@ class Builder:
         check_filter("species", filters["species"])
         check_filter("technologies", filters["tech"])
 
-        outdir = checkdir(outdir)
-        outfile = outdir / f"CITATION__{'__'.join(date.split())}.txt"
+        outfile = Path(outdir) / "CITATION.txt"
 
         return CitationConfig(
             version=version,

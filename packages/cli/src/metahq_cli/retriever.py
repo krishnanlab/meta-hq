@@ -289,6 +289,12 @@ class Retriever:
 
     def _save(self, curation):
 
+        if self.verbose:
+            self.log.info(
+                "Saving results to %s",
+                Path(self.output_config.outfile).parent,
+            )
+
         curation.save(
             outfile=self.output_config.outfile,
             fmt=self.output_config.fmt,
