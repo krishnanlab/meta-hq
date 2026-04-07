@@ -33,33 +33,28 @@ Some `make` commands require `uv` (e.g., `make uv_install` or `make uv_dev`). Th
 We recommend using the `uv` package manager to install MetaHQ. It is a modern, simple, and fast Rust-based package manager.
 See the following link to install `uv`: [https://docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation)
 
-Using `make`:
 
-=== "make (uv)"
+**With make:**
 
-    ```bash
-    make uv_install
-    ```
+Install through `uv`:
+```bash
+make uv_install
+```
 
-=== "make"
+Install through `pip`:
+```bash
+make install
+```
 
-    ```bash
-    make install
-    ```
+**Manually:**
 
-Or with `pip`:
+Install through `pip`:
+```bash
+pip install packages/core packages/cli
 
-=== "pip"
-
-    ```bash
-    pip install packages/core packages/cli
-    ```
-
-=== "pip (from tar)"
-
-    ```bash
-    pip install metahq_core-1.0.0.tar.gz metahq_cli-1.0.0.tar.gz
-    ```
+# or from a tar build
+pip install metahq_core-1.0.0.tar.gz metahq_cli-1.0.0.tar.gz
+```
 
 ## 2) Download the Database
 
