@@ -49,3 +49,6 @@ JOHNSON_MICROARRAY_MESH_MONDO: Path = HELPERS_DIR / "johnson_microarray_mesh_mon
 JOHNSON_MICROARRAY_MESH_UBERON: Path = HELPERS_DIR / "johnson_microarray_mesh_uberon_map.csv"
 JOHNSON_RNASEQ_DOID_MONDO: Path = HELPERS_DIR / "johnson_rnaseq_doid_mondo_map.csv"
 JOHNSON_RNASEQ_UBERON: Path = HELPERS_DIR / "johnson_rnaseq_uberon_map.csv"
+GU_2023_CSV: Path = UNPROCESSED_DIR / "gu_2023.csv"
+GU_DISEASE_MONDO: Path = HELPERS_DIR / "gu_disease_name_to_mondo.csv"
+GU_TISSUE_UBERON: Path = HELPERS_DIR / "gu_tissue_name_to_uberon.csv"

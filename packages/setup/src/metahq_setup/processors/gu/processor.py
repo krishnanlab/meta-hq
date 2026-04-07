@@ -1,15 +1,24 @@
 """
-Gu et al. annotation processor.
+Gu 2023 annotation processor.
 
-Processes annotations from Gu et al. study, which provides tissue and
-disease annotations for gene expression samples.
+Processes expert-curated tissue and disease annotations from Gu et al. 2023,
+which provides manual annotations for SRA samples.
 """
 
-import json
 from pathlib import Path
 
 import polars as pl
 
+from metahq_setup.config.config import (
+    GU_2023_CSV,
+    GU_DISEASE_MONDO,
+    GU_TISSUE_UBERON,
+    MONDO_OBO,
+    MONDO_SYSTEMS,
+    UBERON_OBO,
+    UBERON_SYSTEMS,
+)
+from metahq_setup.ontology import get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
 
@@ -17,124 +26,207 @@ from metahq_setup.processors.registry import ProcessorRegistry
 @ProcessorRegistry.register
 class GuProcessor(BaseProcessor):
     """
-    Processor for Gu et al. annotations.
+    Processor for Gu 2023 expert-curated annotations.
 
-    Gu et al. provides tissue and disease annotations for gene expression samples.
+    Provides manually curated tissue and disease annotations for SRA samples.
     """
 
     source_name = "gu"
     version = "1.0.0"
     description = "Gu et al. tissue and disease annotations"
 
-    def download(self, output_dir: Path, **kwargs) -> Path:
-        """
-        Download Gu et al. data.
+    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+        """Process Gu 2023 annotations into standardized format.
 
         Arguments:
             output_dir (Path):
-                Directory to save data
+                Directory where the processed parquet file will be written.
             **kwargs:
-                Additional arguments
+                ``input_path`` (Path) - override Gu 2023 CSV input file
 
         Returns:
-            (Path): Path to Gu data file
+            (pl.DataFrame): Standardized annotations with columns
+                ``sample_id``, ``annotation_type``, ``term_id``,
+                ``term_label``, and ``ecode``.
         """
-        data_file = kwargs.get("data_file", output_dir / "gu_etal__ids-GSM.bson")
+        input_path = Path(kwargs.get("input_path", GU_2023_CSV))
+        self.logger.info("Processing Gu 2023 annotations from %s", input_path)
 
-        if not data_file.exists():
-            # Try JSON alternative
-            data_file = output_dir / "gu_etal__ids-GSM.json"
-
-        if not data_file.exists():
-            self.logger.warning(
-                f"Gu et al. data file not found. "
-                "Please provide the file path via data_file kwarg."
+        # Load data, skipping first header line
+        df = (
+            pl.read_csv(input_path, skip_rows=1, null_values=["NA", "na"])
+            .select(
+                [
+                    "Sample ID",
+                    "Manual annotation",
+                    "Sample info #manual annotation",
+                ]
             )
+            .rename(
+                {
+                    "Sample ID": "sample_id",
+                    "Manual annotation": "tissue_name",
+                    "Sample info #manual annotation": "disease_name",
+                }
+            )
+            # Filter to rows with at least one annotation (tissue or disease)
+            .filter(
+                ~pl.all_horizontal(
+                    pl.col(["tissue_name", "disease_name"]).is_null()
+                )
+            )
+        )
 
-        return data_file
+        self.logger.info("Loaded %s samples with annotations", df.height)
 
-    def process(self, input_path: Path, output_dir: Path, **kwargs) -> pl.DataFrame:
-        """
-        Process Gu et al. annotations into standardized format.
+        # Process disease annotations
+        disease_records = self._process_disease(df)
 
-        Arguments:
-            input_path (Path):
-                Path to Gu data file (BSON or JSON)
-            output_dir (Path):
-                Directory for processed output
-            **kwargs:
-                Additional arguments
+        # Process tissue annotations
+        tissue_records = self._process_tissue(df)
 
-        Returns:
-            (pl.DataFrame): Standardized annotations
-        """
-        self.logger.info("Processing Gu et al. annotations...")
+        # Combine all annotation types
+        result_df = pl.concat([disease_records, tissue_records], how="vertical")
 
-        # Read Gu data
-        with open(input_path, "r") as f:
-            gu_data = json.load(f)
-
-        records = []
-
-        for sample_id, annotations in gu_data.items():
-            if isinstance(annotations, dict):
-                # Extract tissue annotations
-                if "tissue" in annotations:
-                    tissue_info = annotations["tissue"]
-                    if isinstance(tissue_info, dict):
-                        term_id = tissue_info.get("id", "na")
-                        term_label = tissue_info.get("value", tissue_info.get("label", ""))
-
-                        if term_label:
-                            records.append(
-                                {
-                                    "sample_id": sample_id,
-                                    "annotation_type": "tissue",
-                                    "term_id": term_id,
-                                    "term_label": term_label,
-                                    "confidence": 0.8,
-                                    "source": self.source_name,
-                                }
-                            )
-
-                # Extract disease annotations
-                if "disease" in annotations:
-                    disease_info = annotations["disease"]
-                    if isinstance(disease_info, dict):
-                        term_id = disease_info.get("id", "na")
-                        term_label = disease_info.get("value", disease_info.get("label", ""))
-
-                        if term_label:
-                            records.append(
-                                {
-                                    "sample_id": sample_id,
-                                    "annotation_type": "disease",
-                                    "term_id": term_id,
-                                    "term_label": term_label,
-                                    "confidence": 0.8,
-                                    "source": self.source_name,
-                                }
-                            )
-
-        result_df = pl.DataFrame(records)
-        self.logger.info(f"Processed {len(result_df)} annotations from Gu et al.")
+        self.logger.info(
+            "Produced %s total annotations (%s disease, %s tissue)",
+            result_df.height,
+            disease_records.height,
+            tissue_records.height,
+        )
 
         # Save processed data
         output_file = output_dir / "gu_processed.parquet"
         result_df.write_parquet(output_file)
+        self.logger.info("Wrote processed data to %s", output_file)
 
         return result_df
 
-    def validate(self, data: pl.DataFrame) -> bool:
+    def _process_disease(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Process disease annotations.
+
+        Arguments:
+            df (pl.DataFrame):
+                Data with 'sample_id' and 'disease_name' columns.
+
+        Returns:
+            (pl.DataFrame): Disease annotation records.
         """
-        Validate processed Gu et al. data.
+        # Load disease name → MONDO mapping
+        disease_map = pl.read_csv(GU_DISEASE_MONDO).rename(
+            {"disease_name": "disease_name"}
+        )
+
+        # Join with mapping
+        mapped = (
+            df.filter(pl.col("disease_name").is_not_null())
+            .select(["sample_id", "disease_name"])
+            .join(disease_map, on="disease_name", how="left")
+            .filter(
+                pl.col("mondo_id").is_not_null() & (pl.col("mondo_id") != "na")
+            )
+        )
+
+        # Load MONDO system descendants for filtering
+        self.logger.info("Loading MONDO system descendants for disease filtering...")
+        valid_mondo = get_system_descendants(MONDO_SYSTEMS, MONDO_OBO)
+
+        # Filter to valid MONDO descendants
+        before = mapped.height
+        mapped_filtered = mapped.filter(pl.col("mondo_id").is_in(valid_mondo))
+
+        self.logger.info(
+            "Filtered disease from %s to %s rows using MONDO system descendants.",
+            before,
+            mapped_filtered.height,
+        )
+
+        # Create disease annotation records
+        disease_records = mapped_filtered.select(
+            pl.col("sample_id"),
+            pl.lit("disease").alias("annotation_type"),
+            pl.col("mondo_id").alias("term_id"),
+            pl.col("disease_name").alias("term_label"),
+            pl.lit("expert").alias("ecode"),
+        )
+
+        self.logger.info("Processed %s disease annotations", disease_records.height)
+        return disease_records
+
+    def _process_tissue(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Process tissue annotations.
+
+        Arguments:
+            df (pl.DataFrame):
+                Data with 'sample_id' and 'tissue_name' columns.
+
+        Returns:
+            (pl.DataFrame): Tissue annotation records.
+        """
+        # Load tissue name → UBERON mapping
+        tissue_map = pl.read_csv(GU_TISSUE_UBERON).rename(
+            {"tissue_name": "tissue_name"}
+        )
+
+        # Join with mapping
+        mapped = (
+            df.filter(pl.col("tissue_name").is_not_null())
+            .select(["sample_id", "tissue_name"])
+            .join(tissue_map, on="tissue_name", how="left")
+            .filter(
+                pl.col("uberon_id").is_not_null() & (pl.col("uberon_id") != "na")
+            )
+        )
+
+        # Load UBERON system descendants for filtering
+        self.logger.info("Loading UBERON system descendants for tissue filtering...")
+        valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
+
+        # Filter to valid UBERON descendants
+        before = mapped.height
+        mapped_filtered = mapped.filter(pl.col("uberon_id").is_in(valid_uberon))
+
+        self.logger.info(
+            "Filtered tissue from %s to %s rows using UBERON system descendants.",
+            before,
+            mapped_filtered.height,
+        )
+
+        # Create tissue annotation records
+        tissue_records = mapped_filtered.select(
+            pl.col("sample_id"),
+            pl.lit("tissue").alias("annotation_type"),
+            pl.col("uberon_id").alias("term_id"),
+            pl.col("tissue_name").alias("term_label"),
+            pl.lit("expert").alias("ecode"),
+        )
+
+        self.logger.info("Processed %s tissue annotations", tissue_records.height)
+        return tissue_records
+
+    def validate(self, data: pl.DataFrame) -> bool:
+        """Validate processed Gu 2023 data.
 
         Arguments:
             data (pl.DataFrame):
-                Processed data to validate
+                Processed annotations DataFrame to validate.
 
         Returns:
-            (bool): True if valid
+            (bool): True if validation passes.
+
+        Raises:
+            ValidationError: If required columns are missing.
         """
         self._validate_required_columns(data)
+
+        # Check that expected annotation types are present
+        annotation_types = data["annotation_type"].unique().to_list()
+
+        if "disease" not in annotation_types and "tissue" not in annotation_types:
+            self.logger.warning("No disease or tissue annotations found in Gu 2023 output.")
+
+        # Verify all records have ecode='expert'
+        if not all(e == "expert" for e in data["ecode"].unique().to_list()):
+            self.logger.warning("Found non-expert ecode values in Gu 2023 data.")
+
         return True

@@ -260,6 +260,30 @@ df = processor.run(
 
 ---
 
+### Gu 2023 (`gu`)
+
+Expert-curated tissue and disease annotations from Gu et al. 2023 for SRA samples.
+
+- **Input:** `data/unprocessed/gu_2023.csv`
+- **Annotations:** `disease`, `tissue`
+- **ecode:** `expert`
+- **Output:** `gu_processed.parquet`
+- **Note:** Disease names are mapped to MONDO and tissue names are mapped to UBERON via helper mapping files. Filtered to system-level descendants.
+
+```bash
+metahq-setup process gu
+```
+
+```python
+processor = ProcessorRegistry.get("gu")
+df = processor.run()
+
+# Override input path
+df = processor.run(input_path=Path("./data/unprocessed/gu_2023.csv"))
+```
+
+---
+
 ## Adding a new processor
 
 1. Create `processors/<source_name>/` with `__init__.py` and `processor.py`.

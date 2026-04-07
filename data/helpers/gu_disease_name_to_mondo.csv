@@ -1,0 +1,162 @@
+﻿disease_name,mondo_id
+adjacent normal tissue of hepatocellular carcinoma,na
+hepatocellular carcinoma,MONDO:0007257
+prostate adenocarcinoma,MONDO:0005159
+adjacent normal tissue of prostate adenocarcinoma,na
+adjacent normal tissue of kidney cancer,na
+kidney cancer,MONDO:0002367
+breast cancer,MONDO:0007254
+diffuse large B-cell lymphoma,MONDO:0018905
+follicular lymphoma,MONDO:0018906
+triple-receptor negative breast cancer,MONDO:0005494
+non-triple-receptor negative breast cancer,na
+Her2-receptor positive breast cancer,MONDO:0006244
+in situ pulmonary adenocarcinoma,MONDO:0000503
+lung carcinoma,MONDO:0005138
+adjacent normal tissue of in situ pulmonary adenocarcinoma,na
+oral cavity cancer,MONDO:0005515
+acute myeloid leukemia,MONDO:0018874
+overt gastrointestinal stromal tumor,MONDO:0011719
+mini gastrointestinal stromal tumor,MONDO:0011719
+familial amyotrophic lateral sclerosis,MONDO:0005144
+dilated cardiomyopathy,MONDO:0005021
+bipolar disorder,MONDO:0004985
+Merkel cell carcinoma,MONDO:0002120
+squamous cell carcinoma,MONDO:0005096
+melanoma,MONDO:0005105
+basal cell carcinoma,MONDO:0020804
+pleomorphic carcinoma ,MONDO:0003573
+early onset Alzheimer's disease,MONDO:0004975
+late onset Alzheimer's disease,MONDO:0004976
+psoriasis,MONDO:0005083
+leiomyoma,MONDO:0001572
+alveolar soft part sarcoma,MONDO:0011655
+prostate cancer,MONDO:0008315
+obesity,MONDO:0011122
+calcific aortic valve stenosis,MONDO:0042981
+hepatosplenic T-cell lymphoma,MONDO:0019474
+peripheral T-cell lymphoma,MONDO:0004964
+adrenal gland cancer,MONDO:0002817
+adjacent normal tissue of endometrial carcinoma,na
+endometrial carcinoma,MONDO:0002447
+metastatic castration resistant prostate cancer,MONDO:0004956
+chronic obstructive pulmonary disease,MONDO:0005002
+functionless pituitary adenoma,MONDO:0019613
+acromegaly,MONDO:0019933
+glioblastoma multiforme,MONDO:0018177
+thymoma,MONDO:0006456
+thymic carcinoma,MONDO:0006451
+idiopathic pulmonary fibrosis,MONDO:0002771
+estrogen-receptor positive breast cancer,MONDO:0006512
+adjacent normal tissue of estrogen-receptor positive breast cancer,na
+adjacent normal tissue of triple-receptor negative breast cancer,na
+coronary artery calcification,MONDO:0005010
+adjacent normal tissue of psoriasis,na
+pterygium,MONDO:0005085
+facioscapulohumeral muscular dystrophy 1,MONDO:0008030
+facioscapulohumeral muscular dystrophy 2,MONDO:0008031
+metastatic of breast cancer,MONDO:0007254
+high grade dysplastic Barrett's esophagus,MONDO:0013662
+low grade dysplastic Barrett's esophagus,MONDO:0013663
+non-dysplastic Barrett's esophagus,MONDO:0013664
+non-sarcomatoid clear cell renal cell carcinoma,MONDO:0005005
+sarcomatoid clear cell renal cell carcinoma,MONDO:0003012
+epithelioid clear cell renal cell carcinoma,MONDO:0005005
+rhabdoid clear cell renal cell carcinoma,MONDO:0005006
+malignant glioma,MONDO:0100342
+type 1 diabetes mellitus,MONDO:0005147
+amyotrophic lateral sclerosis,MONDO:0004976
+myotonic dystrophy,MONDO:0016107
+multiple sclerosis,MONDO:0005301
+fetal,na
+autism spectrum disorder,MONDO:0005258
+pediatric Crohn's disease,MONDO:0005011
+leiomyosarcoma,MONDO:0005058
+epilepsy,MONDO:0005027
+nasopharynx carcinoma,MONDO:0015459
+adjacent normal tissue of intrahepatic cholangiocarcinoma,na
+intrahepatic cholangiocarcinoma,MONDO:0003210
+eosinophilic esophagitis,MONDO:0005361
+thyroid gland papillary carcinoma,MONDO:0005075
+myelodysplastic syndrome,MONDO:0018881
+necrotizing enterocolitis,MONDO:0005313
+Huntington's disease,MONDO:0007739
+lymphocytic colitis,MONDO:0000704
+ulcerative colitis,MONDO:0005101
+atopic dermatitis,MONDO:0011292
+adjacent normal tissue of atopic dermatitis,na
+adjacent normal tissue of thyroid gland follicular carcinoma,na
+thyroid gland follicular carcinoma,MONDO:0005034
+Crohn's disease,MONDO:0005011
+pituitary-dependent Cushing's disease,MONDO:0009050
+relapsing-remitting multiple sclerosis,MONDO:0005314
+invasive ductal carcinoma,MONDO:0004953
+lung adenocarcinoma,MONDO:0005061
+colon adenocarcinoma,MONDO:0002271
+lung squamous cell carcinoma,MONDO:0005097
+endometrial stromal sarcoma,MONDO:0006745
+Ewing sarcoma,MONDO:0012817
+extraskeletal myxoid chondrosarcoma,MONDO:0012825
+synovial sarcoma,MONDO:0010434
+myxoid liposarcoma,MONDO:0013280
+dedifferentiated liposarcoma,MONDO:0020563
+c9orf72-associated amyotrophic lateral sclerosis,MONDO:0004976
+sporadic amyotrophic lateral sclerosis,MONDO:0005145
+myotonic dystrophy type 1,MONDO:0008056
+Parkinson's disease,MONDO:0005180
+myotonic dystrophy type 2,MONDO:0011266
+breast ductal carcinoma,MONDO:0004953
+ovarian serous carcinoma,MONDO:0004032
+adjacent normal tissue of colorectal cancer,na
+colorectal cancer,MONDO:0005575
+chronic lymphocytic leukemia,MONDO:0003864
+nonspecific interstitial pneumonia,MONDO:0019622
+adjacent normal tissue of lung benign neoplasm,na
+adjacent normal tissue of esophagus squamous cell carcinoma,na
+esophagus squamous cell carcinoma,MONDO:0004827
+lung non-small cell carcinoma,MONDO:0005233
+ovarian endometrial cancer,MONDO:0003812
+metastatic prostate cancer,MONDO:0004956
+transitional cell carcinomas of bladder,MONDO:0005611
+adjacent normal tissue of transitional cell carcinomas of bladder,na
+testicular germ cell cancer,MONDO:0010108
+adjacent normal tissue of testicular germ cell cancer,na
+adjacent normal tissue of glioblastoma multiforme,na
+cutaneous leishmaniasis,MONDO:0005446
+mucocutaneous leishmaniasis,MONDO:0005859
+adjacent normal tissue of lung squamous cell carcinoma,na
+adjacent normal tissue of lung adenocarcinoma,na
+tetralogy of Fallot,MONDO:0008542
+parathyroid adenoma,MONDO:0006890
+embryonal cancer,MONDO:0005440
+germ cell cancer,MONDO:0005040
+Down syndrome,MONDO:0008608
+progressive supranuclear palsy,MONDO:0019037
+Lewy body dementia,MONDO:0007488
+Alzheimer's disease,MONDO:0004975
+ischemic cardiomyopathy,MONDO:0004994
+non-ischemic cardiomyopathy,MONDO:0004995
+sessile serrated colon polyps,MONDO:0006156
+adjacent normal tissue of sessile serrated colon polyps,na
+ductal carcinoma in situ,MONDO:0005023
+thyroid gland cancer,MONDO:0002108
+adrenocortical carcinoma,MONDO:0006639
+adrenal cortical adenoma,MONDO:0003924
+acute lymphocytic leukemia,MONDO:0004967
+pregnancy state_term not in labour,na
+pregnancy state_term in labour,na
+metastatic of colorectal cancer,MONDO:0005575
+adjacent normal tissue of hemangioma of liver,na
+endometriosis,MONDO:0005133
+adjacent normal tissue of endometriosis,na
+breast metaplastic carcinoma,MONDO:0006043
+atypical breast medullary carcinoma,MONDO:0005063
+breast apocrine carcinoma,MONDO:0003934
+renal cell carcinoma,MONDO:0005086
+liposarcoma,MONDO:0005060
+metastatic of melanoma,MONDO:0005191
+epidermal nevus,MONDO:0008093
+clear cell renal cell carcinoma,MONDO:0005005
+adjacent normal tissue of breast cancer,na
+frontotemporal dementia,MONDO:0017276
+breast adenoid carcinoma,MONDO:0003185
