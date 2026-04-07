@@ -8,7 +8,7 @@ Users of MetaHQ must comply with the terms of all constituent licenses.
 
 ## License Summary
 
-The MetaHQ database is released under **CC BY-NC 4.0** ([Creative Commons Attribution-NonCommercial 4.0 International](https://creativecommons.org/licenses/by-nc/4.0/))
+The MetaHQ database is released under **CC BY-NC 4.0** ([Creative Commons Attribution-NonCommercial 4.0 International](database_license.md))
 because several source datasets carry NonCommercial restrictions.
 
 **For commercial use:** You must either:
@@ -16,7 +16,7 @@ because several source datasets carry NonCommercial restrictions.
 1. Obtain permissions from sources with NonCommercial restrictions
 2. Use only annotations from sources with commercial-compatible licenses (CC0, CC BY)
 
-Our software is released under the [BSD 3-Clause](license.md).
+Our software is released under the [BSD 3-Clause](software_license.md).
 
 ---
 

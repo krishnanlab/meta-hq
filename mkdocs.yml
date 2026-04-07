@@ -19,7 +19,7 @@ theme:
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
-      scheme: default
+      scheme: slate
       primary: indigo
       accent: indigo
       toggle:
@@ -27,7 +27,7 @@ theme:
         name: Switch to dark mode
     # Dark mode
     - media: "(prefers-color-scheme: dark)"
-      scheme: slate
+      scheme: default
       primary: indigo
       accent: indigo
       toggle:
@@ -150,7 +150,8 @@ nav:
               - Downloader: packages/cli/api/setup/download.md
   - About:
       - Citations: about/citation.md 
-      - Software License: about/license.md
+      - Database License: about/database_license.md
+      - Software License: about/software_license.md
       - Terms and Conditions: about/terms_conditions.md
 
 extra:
