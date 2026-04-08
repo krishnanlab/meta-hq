@@ -5,6 +5,7 @@ Provides logging, progress tracking, and checkpointing utilities for
 long-running pipeline operations.
 """
 
+from metahq_setup.util.age_groups import AGE_GROUPS, get_age_group
 from metahq_setup.util.checkpointing import (
     Checkpoint,
     CheckpointManager,
@@ -20,6 +21,9 @@ from metahq_setup.util.progress import (
 )
 
 __all__ = [
+    # Age groups
+    "AGE_GROUPS",
+    "get_age_group",
     # Logging
     "setup_logger",
     "PipelineLogger",

@@ -150,7 +150,9 @@ def process(source_name, output_dir, no_validate):
         # Get processor
         if not ProcessorRegistry.is_registered(source_name):
             click.secho(f"Error: Unknown processor '{source_name}'", fg="red")
-            click.echo(f"Available processors: {', '.join(ProcessorRegistry.list_processors())}")
+            click.echo(
+                f"Available processors: {', '.join(ProcessorRegistry.list_processors())}"
+            )
             sys.exit(1)
 
         processor = ProcessorRegistry.get(source_name)
@@ -195,6 +197,73 @@ def list_sources():
             click.echo(f"    {info['description']}")
 
 
+@main.group()
+def download():
+    """
+    Download raw data from external sources.
+
+    Downloads must be run before processing the corresponding source.
+    """
+    pass
+
+
+@download.command(name="gemma")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override output file path (default: data/unprocessed/gemma.json)",
+)
+@click.option(
+    "--query",
+    "-q",
+    default="sort=-id",
+    show_default=True,
+    help="Gemma API query string",
+)
+@click.option(
+    "--max-studies",
+    "-m",
+    default=30_000,
+    show_default=True,
+    type=int,
+    help="Maximum number of studies to download. Used to tell the GemmaFetcher when to stop fetching.",
+)
+def download_gemma(output, query, max_studies):
+    """
+    Download raw annotations from the Gemma database.
+
+    Fetches study annotations from the Gemma REST API in batches and saves
+    them to a single JSON file. This file is required before running
+    'metahq-setup process gemma'.
+
+    Examples:
+        # Download with defaults
+        metahq-setup download gemma
+
+        # Download to a custom path
+        metahq-setup download gemma --output /data/gemma.json
+
+    """
+    from metahq_setup.config.config import GEMMA_RAW
+    from metahq_setup.fetchers.gemma import GemmaFetcher
+
+    try:
+        fetcher = GemmaFetcher()
+        output_path = Path(output) if output else GEMMA_RAW
+        click.echo(f"Downloading Gemma annotations (max {max_studies} studies)...")
+        click.echo(f"Output: {output_path}")
+        click.echo("")
+        saved = fetcher.fetch(
+            output_path=output_path, query=query, max_studies=max_studies
+        )
+        click.secho(f"✓ Saved to {saved}", fg="green")
+    except Exception as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
 @main.command()
 @click.option(
     "--checkpoint-dir",
@@ -232,9 +301,7 @@ def status(checkpoint_dir):
     type=str,
     help="Clear checkpoints from this stage onwards",
 )
-@click.confirmation_option(
-    prompt="Are you sure you want to clear checkpoints?"
-)
+@click.confirmation_option(prompt="Are you sure you want to clear checkpoints?")
 def clear_checkpoints(checkpoint_dir, from_stage):
     """
     Clear pipeline checkpoints.
@@ -297,7 +364,7 @@ def init_config(output_path, data_dir, output_dir):
         save_config(config, output_path)
 
         click.secho(f"✓ Created configuration file: {output_path}", fg="green")
-        click.echo(f"Edit this file to customize your pipeline settings.")
+        click.echo("Edit this file to customize your pipeline settings.")
 
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)
@@ -326,14 +393,16 @@ def validate_config(config):
         click.secho("✓ Configuration is valid", fg="green")
 
         # Show summary
-        click.echo(f"\nConfiguration summary:")
+        click.echo("\nConfiguration summary:")
         click.echo(f"  Data directory: {pipeline_config.data_dir}")
         click.echo(f"  Output directory: {pipeline_config.output_dir}")
         click.echo(f"  Workers: {pipeline_config.parallel.num_workers}")
-        click.echo(f"  Enabled processors: {sum(1 for p in pipeline_config.processors.values() if p.enabled)}")
+        click.echo(
+            f"  Enabled processors: {sum(1 for p in pipeline_config.processors.values() if p.enabled)}"
+        )
 
     except Exception as e:
-        click.secho(f"Error: Invalid configuration", fg="red", err=True)
+        click.secho("Error: Invalid configuration", fg="red", err=True)
         click.echo(f"{e}")
         sys.exit(1)
 
