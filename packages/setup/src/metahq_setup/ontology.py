@@ -610,7 +610,7 @@ def get_system_descendants(systems_file: Path, obo_file: Path) -> frozenset[str]
 
     Loads the ontology graph from an OBO file, then collects all descendants
     of every term listed in the systems file. The system terms themselves are
-    also included in the returned set.
+    excluded from the returned set (only their descendants are included).
 
     Arguments:
         systems_file (Path):
@@ -620,13 +620,13 @@ def get_system_descendants(systems_file: Path, obo_file: Path) -> frozenset[str]
             Path to the OBO or gzipped OBO file for the ontology.
 
     Returns:
-        (frozenset[str]): All term IDs that are descendants of (or equal to)
-            a system-level term.
+        (frozenset[str]): All term IDs that are descendants of system-level
+            terms (excluding the system-level terms themselves).
     """
     systems = Path(systems_file).read_text().strip().splitlines()
     graph = Graph.from_obo(obo_file)
     descendants_map = graph.descendants_from(systems)
-    valid: set[str] = set(systems)
+    valid: set[str] = set()
     for desc_list in descendants_map.values():
         valid.update(desc_list)
     return frozenset(valid)
