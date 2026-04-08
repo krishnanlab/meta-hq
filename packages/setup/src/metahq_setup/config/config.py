@@ -52,3 +52,11 @@ JOHNSON_RNASEQ_UBERON: Path = HELPERS_DIR / "johnson_rnaseq_uberon_map.csv"
 GU_2023_CSV: Path = UNPROCESSED_DIR / "gu_2023.csv"
 GU_DISEASE_MONDO: Path = HELPERS_DIR / "gu_disease_name_to_mondo.csv"
 GU_TISSUE_UBERON: Path = HELPERS_DIR / "gu_tissue_name_to_uberon.csv"
+
+# Bgee RNA-Seq library files for multiple species
+BGEE_DIR: Path = UNPROCESSED_DIR / "bgee"
+BGEE_MOUSE: Path = BGEE_DIR / "Mus_musculus_Bgee_15_0" / "Mus_musculus_RNA-Seq_libraries.tsv"
+BGEE_HUMAN: Path = BGEE_DIR / "Homo_sapiens_Bgee_15_0" / "Homo_sapiens_RNA-Seq_libraries.tsv"
+BGEE_RAT: Path = BGEE_DIR / "Rattus_norvegicus_Bgee_15_0" / "Rattus_norvegicus_RNA-Seq_libraries.tsv"
+BGEE_WORM: Path = BGEE_DIR / "Caenorhabditis_elegans_Bgee_15_0" / "Caenorhabditis_elegans_RNA-Seq_libraries.tsv"
+BGEE_FISH: Path = BGEE_DIR / "Danio_rerio_Bgee_15_0" / "Danio_rerio_RNA-Seq_libraries.tsv"
