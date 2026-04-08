@@ -1,0 +1,202 @@
+﻿brenda,brenda_name,uberon,uberon_name,average_zscore,relation,expert-curated
+BTO:0000007,HEK-293 cell,CL:0002518,kidney epithelial cell,3.177681628,,
+BTO:0000045,adrenal cortex,UBERON:0001235,adrenal cortex,6.518737533,xref,
+BTO:0000047,adrenal gland,UBERON:0002369,adrenal gland,7.125005519,"RELATED,xref",
+BTO:0000078,microglia,CL:0000129,microglial cell,,,x
+BTO:0000089,blood,UBERON:0000178,blood,7.036529044,"RELATED,xref",
+BTO:0000099,astrocyte,CL:0000127,astrocyte,4.842080402,xref,
+BTO:0000123,bladder,UBERON:0018707,bladder organ,,,x
+BTO:0000125,blast cell,CL:0011115,precursor cell,,,x
+BTO:0000130,neutrophil,CL:0000775,neutrophil,4.678395244,xref,
+BTO:0000131,blood plasma,UBERON:0001969,blood plasma,7.202145254,xref,
+BTO:0000140,bone,UBERON:0002481,bone tissue,,,x
+BTO:0000141,bone marrow,UBERON:0002371,bone marrow,6.576872073,"RELATED,xref",
+BTO:0000142,brain,UBERON:0000955,brain,5.816055461,"RELATED,xref",
+BTO:0000149,breast,UBERON:0000310,breast,4.839395087,xref,
+BTO:0000155,bronchoalveolar lavage fluid,UBERON:0001087,pleural fluid,4.92987273,,
+BTO:0000164,Burkitt lymphoma cell,CL:0011018,lymphoid tissue-inducer cell,,,x
+BTO:0000167,adenocarcinoma cell line,CL:0011108,colon epithelial cell,4.616872604,,
+BTO:0000206,cartilage,UBERON:0002418,cartilage tissue,,,x
+BTO:0000237,cerebrospinal fluid,UBERON:0001359,cerebrospinal fluid,7.174601769,"RELATED,xref",
+BTO:0000249,chondrocyte,CL:0000138,chondrocyte,4.89710626,xref,
+BTO:0000269,colon,UBERON:0001155,colon,5.072414069,xref,
+BTO:0000282,head,UBERON:0000033,head,5.610426357,xref,
+BTO:0000289,cytotoxic T-lymphocyte,UBERON:0010393,T cell domain,4.287458736,,
+BTO:0000294,dermis,UBERON:0002067,dermis,4.563922369,"RELATED,xref",
+BTO:0000304,PANC-1 cell,CL:0002064,pancreatic acinar cell,3.284216544,,
+BTO:0000341,diaphragm,UBERON:0001103,diaphragm,5.206895022,"EXACT,RELATED,xref",
+BTO:0000407,osteosarcoma cell line,CL:0011108,colon epithelial cell,3.82333433,,
+BTO:0000414,epithelial cell,CL:0000066,epithelial cell,6.80640116,xref,
+BTO:0000434,exocrine pancreas,UBERON:0000017,exocrine pancreas,6.305406997,"RELATED,xref",
+BTO:0000443,adipocyte,CL:0000136,fat cell,,,x
+BTO:0000452,fibroblast,CL:0000057,fibroblast,4.989075053,xref,
+BTO:0000526,glioma cell,CL:0000125,glial cell,4.569810445,,
+BTO:0000551,lung cancer cell,CL:1001567,lung endothelial cell,,,x
+BTO:0000553,peripheral blood,UBERON:0013756,venous blood,5.722062359,,
+BTO:0000574,hematopoietic cell,CL:0000988,hematopoietic cell,8.295564468,xref,
+BTO:0000575,hepatocyte,CL:0000182,hepatocyte,5.545807094,xref,
+BTO:0000578,hepatoma cell line,CL:0011108,colon epithelial cell,3.40299444,,
+BTO:0000584,pancreatic cancer cell,UBERON:0001264,pancreas,,,x
+BTO:0000594,liver cancer cell,UBERON:0002107,liver,,,x
+BTO:0000599,Hep-G2 cell,UBERON:0002107,liver,,,x
+BTO:0000648,intestine,UBERON:0000160,intestine,4.756300713,xref,
+BTO:0000651,small intestine,UBERON:0002108,small intestine,7.04631705,xref,
+BTO:0000661,JURKAT cell,CL:0000084,T cell,,,x
+BTO:0000667,keratinocyte,CL:0000312,keratinocyte,5.010902137,xref,
+BTO:0000671,kidney,UBERON:0002113,kidney,5.917627168,xref,
+BTO:0000680,kidney cancer cell,UBERON:0002113,kidney,,,x
+BTO:0000711,glioma cell line,CL:1001579,cerebral cortex glial cell,3.501792962,,
+BTO:0000725,hematopoietic stem cell,CL:0000037,hematopoietic stem cell,8.936515332,xref,
+BTO:0000727,multiple myeloma cell line,CL_0000786,plasma cell,,,x
+BTO:0000731,acute lymphoblastic leukemia cell,CL:0002092,bone marrow cell,4.302672282,,
+BTO:0000738,HL-60 cell,CL:0002191,granulocytopoietic cell,,,x
+BTO:0000751,leukocyte,CL:0000738,leukocyte,6.161757192,xref,
+BTO:0000759,liver,UBERON:0002107,liver,6.182095801,xref,
+BTO:0000763,lung,UBERON:0002048,lung,5.185054479,xref,
+BTO:0000764,lung fibroblast,CL:0002553,fibroblast of lung,,,x
+BTO:0000775,lymphocyte,CL:0000542,lymphocyte,5.70125434,xref,
+BTO:0000776,B-lymphocyte,CL:0000945,lymphocyte of B lineage,5.468897272,,
+BTO:0000782,T-lymphocyte,CL:0000084,T cell,5.322088875,xref,
+BTO:0000783,pancreatic beta cell,CL:0008024,pancreatic endocrine cell,5.727677192,,
+BTO:0000784,lymph node,UBERON:0000029,lymph node,7.08013734,xref,
+BTO:0000801,macrophage,CL:0000235,macrophage,5.628243164,xref,
+BTO:0000802,alveolar macrophage,UBERON:0002173,pulmonary alveolar duct,3.669485788,,
+BTO:0000817,mammary gland,UBERON:0001911,mammary gland,6.56371156,"RELATED,xref",
+BTO:0000823,cerebral gray matter,UBERON:0005401,cerebral hemisphere gray matter,7.193781523,"EXACT,xref",
+BTO:0000848,melanoma cell,CL:0000081,blood cell,4.933956615,,
+BTO:0000876,monocyte,CL:0000576,monocyte,5.248790314,xref,
+BTO:0000878,mononuclear cell,CL:0000842,mononuclear cell,6.850015248,xref,
+BTO:0000887,muscle,UBERON:0014895,somatic muscle,5.603310369,,
+BTO:0000907,myometrium,UBERON:0001296,myometrium,4.565542918,"RELATED,xref",
+BTO:0000953,nurse cell,CL:4029001,gamete-nursing cell,,,x
+BTO:0000962,oligodendrocyte,CL:0000128,oligodendrocyte,4.797909203,xref,
+BTO:0000970,osteosarcoma cell,CL:0000214,synovial cell,4.647195478,,
+BTO:0000971,SAOS-2 cell,CL:0007010,preosteoblast,3.335764918,,
+BTO:0000972,HEP-3B cell,CL:0000182,hepatocyte,,,x
+BTO:0000975,ovary,UBERON:0000992,ovary,5.405403305,xref,
+BTO:0000988,pancreas,UBERON:0001264,pancreas,5.103192842,xref,
+BTO:0000991,pancreatic islet,UBERON:0001263,pancreatic acinus,3.950956829,,
+BTO:0001004,parotid gland,UBERON:0001831,parotid gland,6.67210299,xref,
+BTO:0001006,pelvis,UBERON:0002358,peritoneum,3.813265854,,
+BTO:0001025,peripheral blood mononuclear cell,CL:2000001,peripheral blood mononuclear cell,7.802378981,,
+BTO:0001033,prostate cancer cell line,CL:0002231,epithelial cell of prostate,3.78765686,,
+BTO:0001045,T-lymphocyte cell line,CL:0000084,T cell,3.141735872,,
+BTO:0001055,ovarian epithelial cell,CL:2000064,ovarian surface of epithelial cell,,,x
+BTO:0001103,skeletal muscle,CL:0008002,skeletal muscle fiber,6.658666901,,
+BTO:0001106,T-cell acute lymphoblastic leukemia cell,CL:0000084,T cell,,,x
+BTO:0001107,preadipocyte,CL:0002334,preadipocyte,6.797685069,xref,
+BTO:0001113,prepuce,UBERON:0011374,prepuce,5.39675561,,
+BTO:0001129,prostate gland,UBERON:0002367,prostate gland,6.628098533,xref,
+BTO:0001130,prostate gland cancer cell,UBERON:0002367,prostate gland,,,x
+BTO:0001133,pre-B-lymphocyte,CL:0000817,precursor B cell,5.497688835,xref,
+BTO:0001176,endothelial cell,CL:0000115,endothelial cell,6.378816486,xref,
+BTO:0001202,saliva,UBERON:0001836,saliva,5.345953942,xref,
+BTO:0001203,salivary gland,UBERON:0001829,major salivary gland,5.924270227,,
+BTO:0001234,seminal vesicle,UBERON:0000998,seminal vesicle,6.711045605,"RELATED,xref",
+BTO:0001253,skin,UBERON:0001003,skin epidermis,,,x
+BTO:0001255,skin fibroblast,CL:0002620,skin fibroblast,4.211085518,xref,
+BTO:0001260,smooth muscle,UBERON:0001135,smooth muscle tissue,,,x
+BTO:0001321,LNCaP cell,UBERON:0000428,prostate epithelium,3.429419906,,
+BTO:0001336,synovial fibroblast,CL:0000214,synovial cell,3.966108887,,
+BTO:0001338,synovial tissue,CL:0000214,synovial cell,3.966108887,,
+BTO:0001339,synovia,UBERON:0001090,synovial fluid,4.906956806,xref,
+BTO:0001368,thorax,UBERON:0001443,chest,4.427817497,xref,
+BTO:0001370,THP-1 cell,CL:0000576,monocyte,,,x
+BTO:0001421,uterine cervix,UBERON:0000002,uterine cervix,7.250923027,"RELATED,xref",
+BTO:0001422,uterine endometrium,UBERON:0000459,uterine wall,3.867606663,,
+BTO:0001424,uterus,UBERON:0000995,uterus,4.773744796,xref,
+BTO:0001428,breast epithelium,UBERON:0008367,breast epithelium,3.99322746,xref,
+BTO:0001456,white adipose tissue,UBERON:0001347,white adipose tissue,8.337858239,xref,
+BTO:0001472,peritoneum,UBERON:0002358,peritoneum,4.966516201,xref,
+BTO:0001487,adipose tissue,UBERON:0001013,adipose tissue,6.984495074,"RELATED,xref",
+BTO:0001493,trunk,UBERON:0002100,trunk,5.408069547,"RELATED,xref",
+BTO:0001522,B-lymphocyte cell line,CL:0000945,lymphocyte of B lineage,4.613841693,,
+BTO:0001563,vastus lateralis,UBERON:0001379,vastus lateralis,8.435409568,"RELATED,xref",
+BTO:0001572,articular cartilage,UBERON:0010996,articular cartilage of joint,,,x
+BTO:0001573,brain cancer cell,UBERON:0000955,brain,,,x
+BTO:0001592,meniscus,UBERON:0000387,meniscus,6.022690385,xref,
+BTO:0001593,osteoblast,CL:0000062,osteoblast,4.796544084,xref,
+BTO:0001671,J-82 cell,CL:1001319,bladder cell,,,x
+BTO:0001690,B-cell lymphoma cell,UBERON:0010392,B cell domain,4.310245318,,
+BTO:0001713,dorsum,UBERON:0001137,dorsum,6.764142768,xref,
+BTO:0001724,ependymocyte,CL:0000065,ependymal cell,4.746000292,xref,
+BTO:0001823,synovium,UBERON:0001090,synovial fluid,4.855569662,,
+BTO:0001826,T-lymphoblast,CL:0002420,immature T cell,3.921156287,,
+BTO:0001845,bronchial epithelium,UBERON:0008397,tracheobronchial epithelium,5.309303707,,
+BTO:0001849,urinary bladder smooth muscle,UBERON:0004228,urinary bladder smooth muscle,7.801550945,xref,
+BTO:0001949,HUVEC cell,UBERON:0002066,umbilical vein,,,x
+BTO:0002004,LN-229 cell,UBERON:0002810,right frontal lobe,,,x
+BTO:0002042,dendritic cell,CL:0000451,dendritic cell,7.08990924,xref,
+BTO:0002144,acute lymphoblastic leukemia cell line,CL:0002092,bone marrow cell,,,x
+BTO:0002267,rhabdomyosarcoma cell line,UBERON:0002036,striated muscle tissue,,,x
+BTO:0002278,macrophage cell line,CL:0000235,macrophage,,,x
+BTO:0002346,fibula,UBERON:0001446,fibula,6.458854935,xref,
+BTO:0002347,metatarsal bone,UBERON:0001448,metatarsal bone,4.175376353,"RELATED,xref",
+BTO:0002362,pancreatic duct,UBERON:0007329,pancreatic duct,5.074473562,,
+BTO:0002417,helper T-lymphocyte,CL:0000912,helper T cell,,,x
+BTO:0002504,T-lymphoblastic leukemia cell line,CL:0002420,immature T cell,,,x
+BTO:0002521,diffuse large B-cell lymphoma cell,CL:0000236,B cell,,,x
+BTO:0002600,astrocyte cell line,CL:0000127,astrocyte,,,x
+BTO:0002606,glial cell,CL:0000125,glial cell,7.136111933,xref,
+BTO:0002691,neuroendocrine cell,CL:0000165,neuroendocrine cell,7.022503086,xref,
+BTO:0002850,theca cell,CL:0000503,theca cell,3.854484162,xref,
+BTO:0002900,monocyte-derived dendritic cell,CL:0011031,monocyte-derived dendritic cell,,,x
+BTO:0003104,pro-B-lymphocyte,CL:0000826,pro-B cell,6.467300277,xref,
+BTO:0003125,HBMEC cell,CL:2000044,brain microvascular endothelial cell,,,x
+BTO:0003205,salivary gland cell line,CL:1001596,salivary gland glandular cell,4.684065832,,
+BTO:0003298,mesenchymal stem cell,CL:0000134,mesenchymal stem cell,7.640447506,xref,
+BTO:0003412,rostral migratory stream,UBERON:0008881,rostral migratory stream,8.425472245,xref,
+BTO:0003595,knee,UBERON:0001465,knee,5.709932911,xref,
+BTO:0003645,salivary gland tumor cell line,CL:1001596,salivary gland glandular cell,,,x
+BTO:0003671,germinal center,UBERON:0010754,germinal center,5.929401445,xref,
+BTO:0003742,synoviocyte,CL:0000214,synovial cell,5.015548748,,
+BTO:0004041,abdominal adipose tissue,UBERON:0014454,visceral abdominal adipose tissue,8.197979785,"RELATED,xref",
+BTO:0004042,subcutaneous adipose tissue,UBERON:0002190,subcutaneous adipose tissue,8.133264297,"RELATED,xref",
+BTO:0004043,intramuscular adipose tissue,UBERON:0019143,intramuscular adipose tissue,8.01301981,"RELATED,xref",
+BTO:0004093,endothelial progenitor cell,CL:0000115,endothelial cell,5.366205803,,
+BTO:0004130,IOSE cell,CL:2000064,ovarian surface of epithelial cell,,,x
+BTO:0004201,Ewing's sarcoma cell line,CL:0001035,bone cell,,,x
+BTO:0004520,regulatory T-lymphocyte,UBERON:0010417,lymph node T cell domain,4.169823505,,
+BTO:0004533,respiratory epithelium cell,CL:0002368,respiratory epithelial cell,5.287980651,xref,
+BTO:0004625,plasmacytoid dendritic cell,CL:0000782,myeloid dendritic cell,7.202211269,,
+BTO:0004637,urinary bladder endothelial cell,CL:2000040,bladder microvascular endothelial cell,5.67994607,,
+BTO:0004703,striate cortex,UBERON:0034750,visual association cortex,3.981797217,,
+BTO:0004721,myeloid dendritic cell,CL:0000782,myeloid dendritic cell,8.333662806,xref,
+BTO:0004752,adipose-derived stromal cell,CL:0002570,mesenchymal stem cell of adipose tissue,6.391252896,,
+BTO:0004812,dermal dendritic cell,CL:0001006,dermal dendritic cell,,,x
+BTO:0004850,bone marrow cell,CL:0002092,bone marrow cell,6.812774068,xref,
+BTO:0004881,parotid gland tumor cell,UBERON:0001831,parotid gland,3.899831117,,
+BTO:0005198,adipose-derived stem cell,CL:0002570,mesenchymal stem cell of adipose tissue,,,x
+BTO:0005201,brain endothelial cell,CL:2000044,brain microvascular endothelial cell,5.949218032,,
+BTO:0005607,gamma delta T-lymphocyte,CL:0000798,gamma-delta T cell,,,x
+BTO:0000459,fibrosarcoma cell,CL:1000303,fibroblast of areolar connective tissue,,,x
+BTO:0000460,fibrosarcoma cell line,CL:1000303,fibroblast of areolar connective tissue,,,x
+BTO:0000736,CCRF-CEM cell,CL:0000084,T cell,,,x
+BTO:0000873,MOLT-4 cell,CL:0002092,bone marrow cell,,,x
+BTO:0000948,SKOV-3 cell,CL:2000064,ovarian surface of epithelial cell,,,x
+BTO:0001061,PC-3,CL:0002231,epithelial cell of prostate,,,x
+BTO:0001148,BALL-1 cell,CL:0002092,bone marrow cell,,,x
+BTO:0001154,RAJI cell,CL:0000236,B cell,,,x
+BTO:0001561,DAUDI cell,CL:0000236,B cell,,,x
+BTO:0001590,MRC-5 cell,CL:0002553,fibroblast of lung,,,x
+BTO:0001596,MG-63 cell,CL:0000062,osteoblast,,,x
+BTO:0001938,U2-OS cell,CL:0000062,osteoblast,,,x
+BTO:0001950,HuH-7 cell,CL:0000182,hepatocyte,,,x
+BTO:0001952,HPB-ALL cell,CL:0000084,T cell,,,x
+BTO:0001969,697 cell,CL:0000817,precursor B cell,,,x
+BTO:0002035,U-251MG cell,CL:0000125,glial cell,,,x
+BTO:0002139,HS-683 cell,CL:0000125,glial cell,,,x
+BTO:0002181,HEK-293T cell,CL:0002518,kidney epithelial cell,,,x
+BTO:0002378,pilocytic astrocytoma cell,CL:0000127,astrocyte,,,x
+BTO:0002744,CAPAN-1 cell,UBERON:0001264,pancreas,,,x
+BTO:0002870,RT-4 cell,CL:2000040,bladder microvascular endothelial cell,,,x
+BTO:0003076,,,,,,x
+BTO:0003288,NALM-6 cell,CL:0000817,precursor B cell,,,x
+BTO:0003473,polymorphonuclear neutrophil,CL:0000775,neutrophil,,,x
+BTO:0003739,TALL-1 cell,CL:0000084,T cell,,,x
+BTO:0004964,KOPT-K1 cell,CL:0000084,T cell,,,x
+BTO:0004981,KARPAS-422 cell,CL:0000236,B cell,,,x
+BTO:0005054,macrophage foam cell,CL:0000235,macrophage,,,x
+BTO:0005377,RD cell,UBERON:0002036,striated muscle tissue,,,x
+BTO:0005379,Rh-30 cell,UBERON:0002036,striated muscle tissue,,,x
+BTO:0005380,Rh-18 cel,UBERON:0002036,striated muscle tissue,,,x
