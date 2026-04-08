@@ -31,6 +31,7 @@ from metahq_setup.processors.registry import ProcessorRegistry
 
 # Import all processors to trigger registration
 from metahq_setup.processors.ale import ALEProcessor
+from metahq_setup.processors.bgee import BgeeProcessor
 from metahq_setup.processors.cello import CellOProcessor
 from metahq_setup.processors.creeds import CREEDSProcessor
 from metahq_setup.processors.disign_atlas import DiSignAtlasProcessor
@@ -51,6 +52,7 @@ __all__ = [
     "ValidationError",
     # Processor implementations
     "ALEProcessor",
+    "BgeeProcessor",
     "CellOProcessor",
     "CREEDSProcessor",
     "DiSignAtlasProcessor",
