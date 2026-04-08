@@ -4,4 +4,6 @@ External data fetching utilities.
 Fetches metadata from GEO, SRA, and other external sources.
 """
 
-__all__ = []
+from metahq_setup.fetchers.gemma import GemmaFetcher
+
+__all__ = ["GemmaFetcher"]
