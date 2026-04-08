@@ -264,6 +264,102 @@ def download_gemma(output, query, max_studies):
         sys.exit(1)
 
 
+@main.group()
+def combine():
+    """
+    Combine processed annotations from multiple sources into a BSON file.
+
+    Run 'metahq-setup process' for each source before combining.
+    """
+    pass
+
+
+@combine.command(name="geo")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Output BSON file path (default: data/processed/geo_combined.bson)",
+)
+def combine_geo(output):
+    """
+    Combine all GEO-based source annotations into a single BSON file.
+
+    Reads processed parquets from data/processed/ for each GEO source
+    (ale, cello, creeds, disign_atlas, gemma, golightly, gu, johnson_2023,
+    krishnanlab, sirota_2011, ursa, ursahd). Missing sources are skipped.
+
+    Examples:
+        metahq-setup combine geo
+        metahq-setup combine geo --output /data/geo_combined.bson
+    """
+    from metahq_setup.combiners.geo import GEO_COMBINED_BSON, GeoCombiner
+
+    try:
+        output_path = Path(output) if output else GEO_COMBINED_BSON
+        click.echo("Combining GEO annotations...")
+        click.echo(f"Output: {output_path}")
+        click.echo("")
+
+        combiner = GeoCombiner()
+        combiner.combine().clean().save(output_path)
+
+        click.secho(f"✓ Saved to {output_path}", fg="green")
+
+    except Exception as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
+@combine.command(name="sra")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Output BSON file path (default: data/processed/sra_combined.bson)",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
+)
+def combine_sra(output, metadata_db):
+    """
+    Combine all SRA-based source annotations into a single BSON file.
+
+    Reads processed parquets from data/processed/ for each SRA source
+    (bgee, johnson_2023_rnaseq). SRR/SRX accession IDs are mapped to GSM
+    IDs via the OmicIDX DuckDB database. Missing sources are skipped.
+
+    Examples:
+        metahq-setup combine sra
+        metahq-setup combine sra --output /data/sra_combined.bson
+        metahq-setup combine sra --metadata-db /data/omicidx.duckdb
+    """
+    from metahq_setup.combiners.sra import SRA_COMBINED_BSON, SraCombiner
+    from metahq_setup.config.config import OMICIDX_DB
+
+    try:
+        output_path = Path(output) if output else SRA_COMBINED_BSON
+        db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
+        click.echo("Combining SRA annotations...")
+        click.echo(f"OmicIDX DB: {db_path}")
+        click.echo(f"Output: {output_path}")
+        click.echo("")
+
+        combiner = SraCombiner()
+        combiner.combine(db_path=db_path).clean().save(output_path)
+
+        click.secho(f"✓ Saved to {output_path}", fg="green")
+
+    except Exception as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
 @main.command()
 @click.option(
     "--checkpoint-dir",
