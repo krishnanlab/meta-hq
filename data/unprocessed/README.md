@@ -34,7 +34,7 @@
 
   - Source: Gemma
   - Attributes: sex, age, disease
-  - Access: Programmatic access to [https://gemma.msl.ubc.ca/home.html](https://gemma.msl.ubc.ca/home.html) with [our Gemma downloader]("../../packages/setup/src/metahq_setup/downloaders/gemma.py").
+  - Access: Programmatic access to [https://gemma.msl.ubc.ca/home.html](https://gemma.msl.ubc.ca/home.html) with [our Gemma fetcher]("../../packages/setup/src/metahq_setup/fetchers/gemma.py"). Run `metahq-setup download gemma` to download.
 
 - golightly_2018.zip
 

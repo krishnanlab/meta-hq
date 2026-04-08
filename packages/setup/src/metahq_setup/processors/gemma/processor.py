@@ -1,20 +1,38 @@
 """
 Gemma database annotation processor.
 
-Downloads and processes annotations from the Gemma database
-(https://gemma.msl.ubc.ca).
+Processes annotations downloaded from the Gemma database
+(https://gemma.msl.ubc.ca). Raw annotations must be downloaded first using
+``metahq-setup download gemma``.
 """
 
 import json
-import shutil
 from pathlib import Path
 
 import polars as pl
-import requests
-from tqdm import tqdm
 
+from metahq_setup.config.config import (
+    GEMMA_DEV_STAGE_TO_AGE_GROUP,
+    GEMMA_RAW,
+    MONDO_OBO,
+    MONDO_SYSTEMS,
+    PROCESSED_DIR,
+    UBERON_OBO,
+    UBERON_SYSTEMS,
+)
+from metahq_setup.ontology import get_system_descendants
 from metahq_setup.processors.base import BaseProcessor, ProcessorError
 from metahq_setup.processors.registry import ProcessorRegistry
+
+# Maps Gemma characteristic categories to MetaHQ annotation types.
+CHARACTERISTICS_MAP = {
+    "disease": "disease",
+    "disease model": "disease",
+    "cell type": "tissue",
+    "developmental stage": "age",
+    "organism part": "tissue",
+    "biological sex": "sex",
+}
 
 
 @ProcessorRegistry.register
@@ -23,104 +41,53 @@ class GemmaProcessor(BaseProcessor):
     Processor for Gemma database annotations.
 
     Gemma is a database of gene expression studies with curated annotations
-    for tissues, diseases, and experimental conditions.
+    for tissues, diseases, developmental stages, sex, and age.
+
+    Raw data must be downloaded before processing:
+        metahq-setup download gemma
     """
 
     source_name = "gemma"
     version = "1.0.0"
     description = "Gemma database annotations for gene expression studies"
 
-    QUERY_LIMIT = 100  # Per Gemma API documentation
-    BASE_URL = "https://gemma.msl.ubc.ca/rest/v2/datasets"
-
-    def download(self, output_dir: Path, max_studies: int = 21400, **kwargs) -> Path:
-        """
-        Download annotations from Gemma API.
-
-        Arguments:
-            output_dir (Path):
-                Directory to save downloaded files
-            max_studies (int):
-                Maximum number of studies to download
-            **kwargs:
-                Additional arguments (query string for Gemma API)
-
-        Returns:
-            (Path): Path to downloaded BSON file
-        """
-        output_dir.mkdir(parents=True, exist_ok=True)
-        temp_dir = output_dir / "temp"
-        temp_dir.mkdir(parents=True, exist_ok=True)
-
-        query = kwargs.get("query", "sort=-id")
-
-        try:
-            self.logger.info(f"Downloading up to {max_studies} studies from Gemma...")
-
-            # Download in batches
-            offsets = range(0, max_studies, self.QUERY_LIMIT)
-            for offset in tqdm(
-                offsets, desc="Downloading batches", total=len(offsets)
-            ):
-                url = f"{self.BASE_URL}?{query}&offset={offset}&limit={self.QUERY_LIMIT}"
-                output_file = temp_dir / f"gemma_{offset}.json"
-
-                response = requests.get(
-                    url,
-                    headers={"accept": "application/json"},
-                    timeout=30,
-                )
-                response.raise_for_status()
-
-                with open(output_file, "w") as f:
-                    json.dump(response.json(), f)
-
-            # Combine all downloaded files
-            annotations = {}
-            for idx, file in enumerate(sorted(temp_dir.glob("*.json"))):
-                with open(file, "r") as f:
-                    data = json.load(f)
-                    if "data" in data:
-                        annotations[str(idx)] = data["data"]
-
-            # Save combined annotations
-            raw_file = output_dir / "gemma_raw.json"
-            with open(raw_file, "w") as f:
-                json.dump(annotations, f)
-
-            # Clean up temp directory
-            shutil.rmtree(temp_dir)
-
-            self.logger.info(f"Downloaded {len(annotations)} batches")
-            return raw_file
-
-        except requests.RequestException as e:
-            raise ProcessorError(f"Failed to download Gemma data: {e}")
-
-    def process(self, input_path: Path, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs) -> pl.DataFrame:
         """
         Process Gemma annotations into standardized format.
 
+        Reads from the raw JSON file produced by ``metahq-setup download gemma``
+        (default location: ``data/unprocessed/gemma.json``). Raises
+        ``ProcessorError`` if that file does not exist.
+
         Arguments:
-            input_path (Path):
-                Path to raw Gemma JSON file
             output_dir (Path):
-                Directory for processed output
+                Directory for processed output.
             **kwargs:
-                Additional processing arguments
+                ``input_path`` (Path): override the raw JSON file location.
 
         Returns:
-            (pl.DataFrame): Standardized annotations
-        """
-        self.logger.info("Processing Gemma annotations...")
+            (pl.DataFrame): Standardized annotations with columns
+                ``sample_id``, ``annotation_type``, ``term_id``,
+                ``term_label``, and ``ecode``.
 
-        # Load raw data
-        with open(input_path, "r") as f:
+        Raises:
+            ProcessorError: If the raw Gemma file has not been downloaded.
+        """
+        input_path = Path(kwargs.get("input_path", GEMMA_RAW))
+
+        if not input_path.exists():
+            raise ProcessorError(
+                f"Raw Gemma data not found at {input_path}. "
+                "Run 'metahq-setup download gemma' first."
+            )
+
+        self.logger.info("Processing Gemma annotations from %s...", input_path)
+
+        with open(input_path) as f:
             raw_data = json.load(f)
 
-        # Process annotations
         records = []
-        for batch_id, batch_data in raw_data.items():
+        for batch_data in raw_data.values():
             if not isinstance(batch_data, list):
                 continue
 
@@ -128,40 +95,80 @@ class GemmaProcessor(BaseProcessor):
                 if not isinstance(study, dict):
                     continue
 
-                # Extract study ID (typically GEO series ID)
-                study_id = study.get("accession", {}).get("accession", "")
-                if not study_id:
+                gse = study.get("accession", "")
+                if not gse:
                     continue
 
-                # Process tags/annotations
-                tags = study.get("tags", [])
-                for tag in tags:
-                    if isinstance(tag, dict):
-                        term_uri = tag.get("termUri", "")
-                        term_label = tag.get("term", "")
+                for char in study.get("characteristics", []):
+                    if not isinstance(char, dict):
+                        continue
 
-                        if term_uri and term_label:
-                            # Extract ontology term ID from URI
-                            term_id = self._extract_term_id(term_uri)
-                            annotation_type = self._infer_annotation_type(term_uri)
+                    category = char.get("category", "")
+                    if category not in CHARACTERISTICS_MAP:
+                        continue
 
-                            records.append(
-                                {
-                                    "sample_id": study_id,
-                                    "annotation_type": annotation_type,
-                                    "term_id": term_id,
-                                    "term_label": term_label,
-                                    "confidence": 1.0,  # Gemma annotations are curated
-                                    "source": self.source_name,
-                                }
-                            )
+                    if category == "age":
+                        print(gse, char["valueUri"], char["value"])
 
-        df = pl.DataFrame(records)
-        self.logger.info(f"Processed {len(df)} annotations from Gemma")
+                    uri = char.get("valueUri")
+                    value = char.get("value")
+                    if not uri or not value:
+                        continue
 
-        # Save processed data
+                    term_id = uri.split("/")[-1].replace("_", ":")
+
+                    records.append(
+                        {
+                            "sample_id": gse,
+                            "annotation_type": CHARACTERISTICS_MAP[category],
+                            "term_id": term_id,
+                            "term_label": value.lower(),
+                            "ecode": "expert",
+                        }
+                    )
+
+        df = pl.DataFrame(
+            records,
+            schema={
+                "sample_id": pl.Utf8,
+                "annotation_type": pl.Utf8,
+                "term_id": pl.Utf8,
+                "term_label": pl.Utf8,
+                "ecode": pl.Utf8,
+            },
+        )
+        df = self._map_age_groups(df)
+
+        self.logger.info("Parsed %d annotations from Gemma", len(df))
+
+        # Filter tissue and disease annotations to descendants of system-level terms.
+        self.logger.info("Loading UBERON system descendants for tissue filtering...")
+        valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
+
+        self.logger.info("Loading MONDO system descendants for disease filtering...")
+        valid_mondo = get_system_descendants(MONDO_SYSTEMS, MONDO_OBO)
+
+        before = len(df)
+        df = df.filter(
+            ~pl.col("annotation_type").is_in(["tissue", "disease"])
+            | (
+                (pl.col("annotation_type") == "tissue")
+                & pl.col("term_id").is_in(valid_uberon)
+            )
+            | (
+                (pl.col("annotation_type") == "disease")
+                & pl.col("term_id").is_in(valid_mondo)
+            )
+        )
+        self.logger.info(
+            "Filtered %d system-level or above tissue/disease annotations (kept %d)",
+            before - len(df),
+            len(df),
+        )
+
         output_file = output_dir / "gemma_processed.parquet"
         df.write_parquet(output_file)
+        self.logger.info("Wrote processed data to %s", output_file)
 
         return df
 
@@ -171,55 +178,41 @@ class GemmaProcessor(BaseProcessor):
 
         Arguments:
             data (pl.DataFrame):
-                Processed data to validate
+                Processed annotations to validate.
 
         Returns:
-            (bool): True if valid
+            (bool): True if validation passes.
+
+        Raises:
+            ValidationError: If required columns are missing.
         """
         self._validate_required_columns(data)
 
-        # Additional Gemma-specific validation
         if len(data) == 0:
-            self.logger.warning("No annotations processed from Gemma")
+            self.logger.warning("No annotations processed from Gemma.")
 
         return True
 
-    def _extract_term_id(self, term_uri: str) -> str:
-        """
-        Extract ontology term ID from URI.
+    def _map_age_groups(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Map term IDs to our pre-defined age groups."""
+        age_group_map = (
+            pl.read_csv(GEMMA_DEV_STAGE_TO_AGE_GROUP, null_values="na")
+            .select(["term_id", "age_group"])
+            .filter(pl.all_horizontal(pl.col("*").is_not_null()))
+        )
 
-        Arguments:
-            term_uri (str):
-                URI like "http://purl.obolibrary.org/obo/UBERON_0000948"
-
-        Returns:
-            (str): Term ID like "UBERON:0000948"
-        """
-        if "/" in term_uri:
-            term_part = term_uri.split("/")[-1]
-            return term_part.replace("_", ":")
-        return term_uri
-
-    def _infer_annotation_type(self, term_uri: str) -> str:
-        """
-        Infer annotation type from ontology in URI.
-
-        Arguments:
-            term_uri (str):
-                Ontology term URI
-
-        Returns:
-            (str): Annotation type (tissue, disease, cell_type, etc.)
-        """
-        uri_lower = term_uri.lower()
-
-        if "uberon" in uri_lower or "bto" in uri_lower:
-            return "tissue"
-        elif "mondo" in uri_lower or "doid" in uri_lower:
-            return "disease"
-        elif "cl_" in uri_lower or "cell" in uri_lower:
-            return "cell_type"
-        elif "efo" in uri_lower:
-            return "experimental_factor"
-        else:
-            return "other"
+        return (
+            df.join(age_group_map, on="term_id", how="left")
+            .filter(
+                (pl.col("annotation_type") != "age") | pl.col("age_group").is_not_null()
+            )
+            .with_columns(
+                pl.when(pl.col("annotation_type") == "age")
+                .then(pl.col("age_group"))
+                .otherwise(pl.col("term_id"))
+                .alias("term_id")
+            )
+            .drop("age_group")
+            .unique()
+            .sort("sample_id")
+        )
