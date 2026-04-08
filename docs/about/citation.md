@@ -70,7 +70,7 @@ that contributed to your retrieved annotation set.
 
 - **Source:** DiSignAtlas
 - **License:** Free for academic usage only (NonCommercial)
-- **Citation:** Zhai, Z. et al. DiSignAtlas: an atlas of human and mouse disease signatures based on bulk and single-cell transcriptomics. Nucleic Acids Research 52, D1236–D1245 (2024).
+- **Citation:** Zhai, Z. et al. DiSignAtlas: an atlas of human and mouse disease signatures based on bulk and single-cell transcriptomics. Nucleic acids research 52, D1236–D1245 (2024).
 - **DOI:** [10.1093/nar/gkad961](https://academic.oup.com/nar/article/52/D1/D1236/7335757?login=false)
 - **Rights Statement:** From web server
 - **Access:** [http://www.inbirg.com/disignatlas/](http://www.inbirg.com/disignatlas/)
@@ -167,7 +167,7 @@ that contributed to your retrieved annotation set.
 - **Citation:** Lee, Y. et al. A computational framework for genome-wide characterization of the human disease landscape. Cell systems 8, 152–162 (2019).
 - **DOI:** [10.1016/j.cels.2018.12.010](<https://www.cell.com/cell-systems/fulltext/S2405-4712(18)30509-X>)
 - **Rights Statement:** From Permissions in paper
-- **Access:** [http://ursahd.princeton.edu](http://ursahd.princeton.edu)
+- **Access:** Table S1 in [https://www.cell.com/cell-systems/fulltext/S2405-4712(18)30509-X](https://www.cell.com/cell-systems/fulltext/S2405-4712%2818%2930509-X)
 - **Notes:** The access link above reported in the paper is no longer valid.
 - **Sample annotations in MetaHQ:** 8,359
 - **Study annotations in MetaHQ:** 177
