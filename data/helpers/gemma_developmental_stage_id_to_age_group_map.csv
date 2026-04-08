@@ -1,0 +1,50 @@
+term_id,term_label,age_group
+UBERON:0034919,juvenile stage,na
+GO:0010149,senescence,na
+UBERON:0000451,prefrontal cortex,na
+HsapDv:0000045,prenatal stage,na
+EFO:0002462,foetal structure,na
+EFO:0002563,embryonic day 12.5,fetus
+EFO:0002721,postmenopausal,na
+UBERON:0000068,embryo stage,fetus
+PATO:0000638,apoptotic,na
+UBERON:0007222,late adult stage,na
+UBERON:0009097,gravid organism,na
+HP:0001622,premature birth,na
+PATO:0000383,female,na
+PATO:0001403,pluripotent,na
+UBERON:0007220,late embryonic stage,fetus
+UBERON:0000358,blastocyst,fetus
+EFO:0000606,c57bl/6j,na
+PATO:0000308,old,na
+UBERON:0000112,sexually immature stage,na
+UBERON:0034920,infant stage,infant
+EFO:0005873,embryonic stage 13,fetus
+GO:0060231,mesenchymal to epithelial transition,na
+UBERON:0002407,pericardium,na
+CL:0002322,embryonic stem cell,fetus
+EFO:0002948,postnatal,na
+EFO:0001382,puberty,na
+GO:0042639,telogen,na
+GO:0060207,diestrus,na
+TGEMO:00099,p4,na
+UBERON:0007221,neonate stage,infant
+PATO:0001487,senescent,na
+PATO:0001190,juvenile,na
+UBERON:0000922,embryo,fetus
+UBERON:0000323,late embryo,fetus
+CL:0010017,zygote,fetus
+TGEMO:00204,c57bl/6n,na
+GO:0060208,proestrus,na
+EFO:0002562,embryonic day 11.5,fetus
+PATO:0002099,differentiated,na
+UBERON:0000092,post-embryonic stage,fetus
+CS:0,carnegie stage,fetus
+NCBITaxon:1773,mycobacterium tuberculosis,na
+PATO:0002206,neonatal,infant
+TGEMO:00096,e18,na
+UBERON:0000113,post-juvenile adult stage,na
+UBERON:0018241,prime adult stage,na
+EFO:0002565,embryonic day 14.5,fetus
+PATO:0000384,male,na
+UBERON:0004145,outflow tract,na
