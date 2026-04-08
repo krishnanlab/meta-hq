@@ -1,100 +1,217 @@
 """
-Golightly sex annotation processor.
+Golightly (2018) annotation processor.
 
-Processes sex predictions from Golightly et al. study, which provides
-automated sex predictions for gene expression samples.
+Processes clinical sample annotations from the Golightly 2018 dataset, a
+collection of GEO studies with expert-curated tissue, sex, and age metadata
+stored in per-study clinical text files inside a ZIP archive.
 """
 
+import io
+import zipfile
 from pathlib import Path
 
 import polars as pl
 
-from metahq_setup.processors.base import BaseProcessor
+from metahq_setup.config.config import (
+    GOLIGHTLY_ZIP,
+    PROCESSED_DIR,
+    UBERON_OBO,
+    UBERON_SYSTEMS,
+)
+from metahq_setup.ontology import get_system_descendants
+from metahq_setup.processors.base import BaseProcessor, ProcessorError, ValidationError
 from metahq_setup.processors.registry import ProcessorRegistry
+from metahq_setup.util.age_groups import get_age_group
+
+# PATO term IDs and labels for sex annotations.
+_SEX_MAP = {
+    "F": ("PATO:0000383", "female"),
+    "M": ("PATO:0000384", "male"),
+}
+
+# Normalizes raw sex strings to canonical M/F keys.
+_SEX_NORMALIZE = {
+    "male": "M",
+    "m": "M",
+    "female": "F",
+    "f": "F",
+}
+
+# Per-file metadata derived from cross-referencing zip file headers with the
+# existing processed dataset. Each value is a tuple of:
+#   (uberon_id, uberon_name, age_col, sex_col)
+# age_col and sex_col are empty string when that file lacks the column.
+_FILE_METADATA: dict[str, tuple[str, str, str, str]] = {
+    "GSE10320_Clinical.txt": ("UBERON:0002113", "kidney", "", ""),
+    "GSE1456_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
+    "GSE15296_Clinical.txt": ("CL:2000001", "peripheral blood mononuclear cell", "", ""),
+    "GSE19804_Clinical.txt": ("UBERON:0002048", "lung", "age", ""),
+    "GSE20181_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
+    "GSE20189_Clinical.txt": ("UBERON:0002048", "lung", "", ""),
+    "GSE2109_Breast_Clinical.txt": ("UBERON:0000310", "breast", "Patient_Age", "Gender"),
+    "GSE2109_Colon_Clinical.txt": ("UBERON:0001155", "colon", "Patient_Age", "Gender"),
+    "GSE2109_Endometrium_Clinical.txt": ("UBERON:0001295", "endometrium", "Patient_Age", ""),
+    "GSE2109_Kidney_Clinical.txt": ("UBERON:0002113", "kidney", "Patient_Age", "Gender"),
+    "GSE2109_Lung_Clinical.txt": ("UBERON:0002048", "lung", "Patient_Age", "Gender"),
+    "GSE2109_Ovary_Clinical.txt": ("UBERON:0000992", "ovary", "Patient_Age", ""),
+    "GSE2109_Prostate_Clinical.txt": ("UBERON:0002367", "prostate gland", "Patient_Age", ""),
+    "GSE2109_Uterus_Clinical.txt": ("UBERON:0000995", "uterus", "Patient_Age", ""),
+    "GSE21510_Clinical.txt": ("UBERON:0012652", "colorectum", "", ""),
+    "GSE25507_Clinical.txt": ("CL:0000542", "lymphocyte", "subject_age", ""),
+    "GSE26682_U133A_Clinical.txt": ("UBERON:0012652", "colorectum", "age", "gender"),
+    "GSE26682_U133PLUS2_Clinical.txt": ("UBERON:0012652", "colorectum", "age", "gender"),
+    "GSE27279_Clinical.txt": ("UBERON:0008788", "posterior cranial fossa", "age", "gender"),
+    "GSE27342_Clinical.txt": ("UBERON:0000945", "stomach", "age", "gender"),
+    "GSE27854_Clinical.txt": ("UBERON:0012652", "colorectum", "", ""),
+    "GSE30219_Clinical.txt": ("UBERON:0002048", "lung", "age_at_surgery", "gender"),
+    "GSE30784_Clinical.txt": ("UBERON:0000167", "oral cavity", "age", "Sex"),
+    "GSE32646_Clinical.txt": ("UBERON:0000310", "breast", "age", ""),
+    "GSE37147_Clinical.txt": ("UBERON:0002185", "bronchus", "age_years", "Sex"),
+    "GSE37199_Clinical.txt": ("UBERON:0000178", "blood", "", ""),
+    "GSE37892_Clinical.txt": ("UBERON:0001155", "colon", "age_at_diagnosis", "gender"),
+    "GSE38958_Clinical.txt": ("CL:2000001", "peripheral blood mononuclear cell", "age", "gender"),
+    "GSE39491_Clinical.txt": ("UBERON:0004921", "subdivision of digestive tract", "", ""),
+    "GSE39582_Clinical.txt": ("UBERON:0001155", "colon", "age.at.diagnosis_year", "Sex"),
+    "GSE40292_Clinical.txt": ("UBERON:0002116", "ileum", "", "gender"),
+    "GSE4271_Clinical.txt": ("CL:0000125", "glial cell", "age", "Sex"),
+    "GSE43176_Clinical.txt": ("CL:0000738", "leukocyte", "", ""),
+    "GSE46449_Clinical.txt": ("CL:0000738", "leukocyte", "age", ""),
+    "GSE46691_Clinical.txt": ("UBERON:0002367", "prostate gland", "", ""),
+    "GSE46995_Clinical.txt": ("CL:0000738", "leukocyte", "age_of_biopsy", ""),
+    "GSE48391_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
+    "GSE5460_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
+    "GSE5462_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
+    "GSE58697_Clinical.txt": ("UBERON:0003697", "abdominal wall", "age_at_diagnosis", "Sex"),
+    "GSE63885_Clinical.txt": ("UBERON:0000992", "ovary", "", ""),
+    "GSE6532_U133A_Clinical.txt": ("UBERON:0000310", "breast", "age", ""),
+    "GSE6532_U133PLUS2_Clinical.txt": ("UBERON:0000310", "breast", "age", ""),
+    "GSE67784_Clinical.txt": ("UBERON:0000178", "blood", "age", "gender"),
+}
 
 
 @ProcessorRegistry.register
 class GolightlyProcessor(BaseProcessor):
     """
-    Processor for Golightly sex annotations.
+    Processor for Golightly (2018) clinical sample annotations.
 
-    Golightly provides automated sex predictions based on gene expression patterns.
+    Reads a ZIP archive containing per-study clinical text files. Each file
+    has a fixed tissue assignment (from ``_FILE_METADATA``) and optionally
+    age and sex columns. Age range strings (e.g. ``"40-50"``) are averaged
+    before being converted to an age group.
     """
 
     source_name = "golightly"
     version = "1.0.0"
-    description = "Golightly automated sex predictions"
+    description = "Golightly (2018) expert-curated GEO sample clinical annotations"
 
-    def download(self, output_dir: Path, **kwargs) -> Path:
-        """
-        Download Golightly data.
-
-        Arguments:
-            output_dir (Path):
-                Directory to save data
-            **kwargs:
-                Additional arguments
-
-        Returns:
-            (Path): Path to Golightly data file
-        """
-        data_file = kwargs.get("data_file", output_dir / "golightly.parquet")
-
-        if not data_file.exists():
-            self.logger.warning(
-                f"Golightly data file not found: {data_file}. "
-                "Please provide the file path via data_file kwarg."
-            )
-
-        return data_file
-
-    def process(self, input_path: Path, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs) -> pl.DataFrame:
         """
         Process Golightly annotations into standardized format.
 
         Arguments:
-            input_path (Path):
-                Path to Golightly parquet file
             output_dir (Path):
-                Directory for processed output
+                Directory for processed output.
             **kwargs:
-                Additional arguments
+                ``input_path`` (Path): override the ZIP file location.
 
         Returns:
-            (pl.DataFrame): Standardized annotations
+            (pl.DataFrame): Standardized annotations with columns
+                ``sample_id``, ``annotation_type``, ``term_id``,
+                ``term_label``, and ``ecode``.
+
+        Raises:
+            ProcessorError: If the ZIP file does not exist.
         """
-        self.logger.info("Processing Golightly annotations...")
+        input_path = Path(kwargs.get("input_path", GOLIGHTLY_ZIP))
 
-        # Read Golightly data
-        df = pl.read_parquet(input_path)
+        if not input_path.exists():
+            raise ProcessorError(
+                f"Golightly ZIP not found at {input_path}. "
+                "Download 'golightly_2018.zip' and place it in data/unprocessed/."
+            )
 
-        records = []
+        self.logger.info("Processing Golightly annotations from %s...", input_path)
 
-        for row in df.iter_rows(named=True):
-            sample_id = row.get("sample_id", row.get("GSM", ""))
-            sex = row.get("sex", row.get("predicted_sex", ""))
-            confidence = row.get("confidence", 0.8)
+        self.logger.info("Loading UBERON system descendants for tissue filtering...")
+        valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
 
-            if sample_id and sex and sex not in ["na", "", "unknown"]:
-                records.append(
-                    {
-                        "sample_id": sample_id,
-                        "annotation_type": "sex",
-                        "term_id": "na",
-                        "term_label": sex.lower(),
-                        "confidence": float(confidence),
-                        "source": self.source_name,
-                    }
+        tissue_frames: list[pl.DataFrame] = []
+        sex_frames: list[pl.DataFrame] = []
+        age_frames: list[pl.DataFrame] = []
+
+        with zipfile.ZipFile(input_path) as zf:
+            for filename in zf.namelist():
+                if filename not in _FILE_METADATA:
+                    self.logger.debug("Skipping unrecognized file: %s", filename)
+                    continue
+
+                uberon_id, uberon_name, age_col, sex_col = _FILE_METADATA[filename]
+
+                with zf.open(filename) as f:
+                    raw = f.read()
+
+                df = pl.read_csv(
+                    io.BytesIO(raw),
+                    separator="\t",
+                    null_values=["", "NA", "na", "N/A"],
+                    infer_schema_length=10000,
                 )
 
-        result_df = pl.DataFrame(records)
-        self.logger.info(f"Processed {len(result_df)} annotations from Golightly")
+                if "SampleID" not in df.columns:
+                    self.logger.warning(
+                        "%s: missing 'SampleID' column, skipping.", filename
+                    )
+                    continue
 
-        # Save processed data
+                df = df.rename({"SampleID": "sample_id"})
+
+                # Tissue: fixed per file, one row per sample.
+                if uberon_id in valid_uberon:
+                    tissue_frames.append(
+                        df.select("sample_id").with_columns(
+                            pl.lit("tissue").alias("annotation_type"),
+                            pl.lit(uberon_id).alias("term_id"),
+                            pl.lit(uberon_name).alias("term_label"),
+                            pl.lit("expert").alias("ecode"),
+                        )
+                    )
+                else:
+                    self.logger.debug(
+                        "%s: term %s (%s) not in UBERON system descendants, skipping tissue.",
+                        filename,
+                        uberon_id,
+                        uberon_name,
+                    )
+
+                # Sex annotations.
+                if sex_col and sex_col in df.columns:
+                    sex_frames.append(self._build_sex(df.select(["sample_id", sex_col]), sex_col))
+
+                # Age annotations.
+                if age_col and age_col in df.columns:
+                    age_frames.append(self._build_age(df.select(["sample_id", age_col]), age_col))
+
+        parts = tissue_frames + sex_frames + age_frames
+        if not parts:
+            self.logger.warning("No annotations produced from Golightly.")
+            return pl.DataFrame(
+                schema={
+                    "sample_id": pl.Utf8,
+                    "annotation_type": pl.Utf8,
+                    "term_id": pl.Utf8,
+                    "term_label": pl.Utf8,
+                    "ecode": pl.Utf8,
+                }
+            )
+
+        result = pl.concat(parts, how="diagonal_relaxed").unique()
+        self.logger.info("Processed %d annotations from Golightly", len(result))
+
         output_file = output_dir / "golightly_processed.parquet"
-        result_df.write_parquet(output_file)
+        result.write_parquet(output_file)
+        self.logger.info("Wrote processed data to %s", output_file)
 
-        return result_df
+        return result
 
     def validate(self, data: pl.DataFrame) -> bool:
         """
@@ -102,16 +219,101 @@ class GolightlyProcessor(BaseProcessor):
 
         Arguments:
             data (pl.DataFrame):
-                Processed data to validate
+                Processed annotations to validate.
 
         Returns:
-            (bool): True if valid
+            (bool): True if validation passes.
+
+        Raises:
+            ValidationError: If required columns are missing or tissue
+                annotations are absent.
         """
         self._validate_required_columns(data)
 
-        # Check that all annotations are sex
-        types = data["annotation_type"].unique().to_list()
-        if types != ["sex"]:
-            self.logger.warning(f"Expected only sex annotations, got: {types}")
+        if "tissue" not in data["annotation_type"].unique().to_list():
+            raise ValidationError("No tissue annotations found in Golightly output.")
 
         return True
+
+    @staticmethod
+    def _build_sex(df: pl.DataFrame, sex_col: str) -> pl.DataFrame:
+        """Build sex annotation records from a raw sex column.
+
+        Normalizes ``Male/Female/male/female/M/F`` to PATO terms.
+
+        Arguments:
+            df (pl.DataFrame):
+                DataFrame with ``sample_id`` and ``sex_col`` columns.
+            sex_col (str):
+                Name of the sex column.
+
+        Returns:
+            (pl.DataFrame): Sex annotation records.
+        """
+        return (
+            df.filter(pl.col(sex_col).is_not_null())
+            .with_columns(
+                pl.col(sex_col)
+                .str.to_lowercase()
+                .replace(_SEX_NORMALIZE)
+                .alias("_sex_key")
+            )
+            .filter(pl.col("_sex_key").is_in(list(_SEX_MAP)))
+            .select(
+                pl.col("sample_id"),
+                pl.lit("sex").alias("annotation_type"),
+                pl.col("_sex_key")
+                .replace({k: v[0] for k, v in _SEX_MAP.items()})
+                .alias("term_id"),
+                pl.col("_sex_key")
+                .replace({k: v[1] for k, v in _SEX_MAP.items()})
+                .alias("term_label"),
+                pl.lit("expert").alias("ecode"),
+            )
+        )
+
+    @staticmethod
+    def _build_age(df: pl.DataFrame, age_col: str) -> pl.DataFrame:
+        """Build age annotation records from a raw age column.
+
+        Range strings like ``"40-50"`` are averaged before being passed to
+        ``get_age_group``. Plain numeric strings are cast directly.
+
+        Arguments:
+            df (pl.DataFrame):
+                DataFrame with ``sample_id`` and ``age_col`` columns.
+            age_col (str):
+                Name of the age column.
+
+        Returns:
+            (pl.DataFrame): Age annotation records.
+        """
+        return (
+            df.filter(pl.col(age_col).is_not_null())
+            .with_columns(pl.col(age_col).cast(pl.Utf8).alias("_age_str"))
+            .with_columns(
+                pl.when(pl.col("_age_str").str.contains("-"))
+                .then(
+                    pl.col("_age_str")
+                    .str.split("-")
+                    .list.eval(pl.element().cast(pl.Float64, strict=False))
+                    .list.mean()
+                )
+                .otherwise(pl.col("_age_str").cast(pl.Float64, strict=False))
+                .alias("_age_years")
+            )
+            .filter(pl.col("_age_years").is_not_null())
+            .with_columns(
+                pl.col("_age_years")
+                .map_elements(get_age_group, return_dtype=pl.String)
+                .alias("age_group")
+            )
+            .filter(pl.col("age_group").is_not_null())
+            .select(
+                pl.col("sample_id"),
+                pl.lit("age").alias("annotation_type"),
+                pl.col("age_group").alias("term_id"),
+                pl.col("age_group").alias("term_label"),
+                pl.lit("expert").alias("ecode"),
+            )
+        )

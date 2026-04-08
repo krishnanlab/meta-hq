@@ -56,8 +56,28 @@ JOHNSON_MICROARRAY_MESH_UBERON: Path = (
 JOHNSON_RNASEQ_DOID_MONDO: Path = HELPERS_DIR / "johnson_rnaseq_doid_mondo_map.csv"
 JOHNSON_RNASEQ_UBERON: Path = HELPERS_DIR / "johnson_rnaseq_uberon_map.csv"
 GU_2023_CSV: Path = UNPROCESSED_DIR / "gu_2023.csv"
+GOLIGHTLY_ZIP: Path = UNPROCESSED_DIR / "golightly_2018.zip"
 GU_DISEASE_MONDO: Path = HELPERS_DIR / "gu_disease_name_to_mondo.csv"
 GU_TISSUE_UBERON: Path = HELPERS_DIR / "gu_tissue_name_to_uberon.csv"
+
+# OmicIDX DuckDB database (SRA/GEO accession mappings).
+OMICIDX_DB: Path = DATA_DIR / "omicidx.duckdb"
+
+# Processed output parquets (one per processor).
+ALE_PROCESSED: Path = PROCESSED_DIR / "ale_processed.parquet"
+BGEE_PROCESSED: Path = PROCESSED_DIR / "bgee_processed.parquet"
+CELLO_PROCESSED: Path = PROCESSED_DIR / "cello_processed.parquet"
+CREEDS_PROCESSED: Path = PROCESSED_DIR / "creeds_processed.parquet"
+DISIGN_ATLAS_PROCESSED: Path = PROCESSED_DIR / "disign_atlas_processed.parquet"
+GEMMA_PROCESSED: Path = PROCESSED_DIR / "gemma_processed.parquet"
+GOLIGHTLY_PROCESSED: Path = PROCESSED_DIR / "golightly_processed.parquet"
+GU_PROCESSED: Path = PROCESSED_DIR / "gu_processed.parquet"
+JOHNSON_2023_PROCESSED: Path = PROCESSED_DIR / "johnson_2023_processed.parquet"
+JOHNSON_2023_RNASEQ_PROCESSED: Path = PROCESSED_DIR / "johnson_2023_rnaseq_processed.parquet"
+KRISHNANLAB_PROCESSED: Path = PROCESSED_DIR / "krishnanlab_processed.parquet"
+SIROTA_2011_PROCESSED: Path = PROCESSED_DIR / "sirota_2011_processed.parquet"
+URSA_PROCESSED: Path = PROCESSED_DIR / "ursa_processed.parquet"
+URSAHD_PROCESSED: Path = PROCESSED_DIR / "ursahd_processed.parquet"
 
 # Gemma raw download output
 GEMMA_RAW: Path = UNPROCESSED_DIR / "gemma.json"
