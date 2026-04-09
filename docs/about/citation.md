@@ -154,8 +154,8 @@ that contributed to your retrieved annotation set.
 - **Citation:** Lee, Y., Krishnan, A., Zhu, Q. & Troyanskaya, O. G. Ontology-aware classification of tissue and cell-type signals in gene expression profiles across platforms and technologies. Bioinformatics 29, 3036–3044 (2013).: 152-162.e6. https://doi.org/10.1016/j.cels.2018.12.010
 - **DOI:** [10.1093/bioinformatics/btt529](https://academic.oup.com/bioinformatics/article/29/23/3036/247250)
 - **Rights Statement** From Permissions in paper
-- **Access:** [ursa.princeton.edu](http://ursa.princeton.edu)
-- **Notes:** The access link above reported in the paper is no longer valid.
+- **Access:** Access through the MetaHQ database at [https://doi.org/10.5281/zenodo.17663086](https://doi.org/10.5281/zenodo.17663086).
+- **Notes:** The original web server that housed these annotaitons ([ursa.priceton.edu](ursa.princeton.edu)) is no longer active.
 - **Sample annotations in MetaHQ:** 11,931
 - **Study annotations in MetaHQ:** 389
 - **⚠️ NonCommercial Restriction**
