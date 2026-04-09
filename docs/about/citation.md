@@ -155,7 +155,7 @@ that contributed to your retrieved annotation set.
 - **DOI:** [10.1093/bioinformatics/btt529](https://academic.oup.com/bioinformatics/article/29/23/3036/247250)
 - **Rights Statement** From Permissions in paper
 - **Access:** Access through the MetaHQ database at [https://doi.org/10.5281/zenodo.17663086](https://doi.org/10.5281/zenodo.17663086).
-- **Notes:** The original web server that housed these annotaitons ([ursa.priceton.edu](ursa.princeton.edu)) is no longer active.
+- **Notes:** The original web server that housed these annotaitons (ursa.princeton.edu) is no longer active.
 - **Sample annotations in MetaHQ:** 11,931
 - **Study annotations in MetaHQ:** 389
 - **⚠️ NonCommercial Restriction**
@@ -168,7 +168,6 @@ that contributed to your retrieved annotation set.
 - **DOI:** [10.1016/j.cels.2018.12.010](<https://www.cell.com/cell-systems/fulltext/S2405-4712(18)30509-X>)
 - **Rights Statement:** From Permissions in paper
 - **Access:** Table S1 in [https://www.cell.com/cell-systems/fulltext/S2405-4712(18)30509-X](https://www.cell.com/cell-systems/fulltext/S2405-4712%2818%2930509-X)
-- **Notes:** The access link above reported in the paper is no longer valid.
 - **Sample annotations in MetaHQ:** 8,359
 - **Study annotations in MetaHQ:** 177
 - **⚠️ NonCommercial Restriction**
