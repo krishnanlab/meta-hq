@@ -28,7 +28,7 @@ All retrieve commands share the following common options:
     - `ecode`: Evidence code (e.g., `expert`, `crowd`, `any`)
     - `tech`: Technology type (e.g., `rnaseq`, `microarray`)
     - Combine multiple filters like so: `'species=human,ecode=expert,tech=rnaseq'`
-- `--license TEXT`: The license category of annotations (e.g, `any`, `permissive`, `nc`). Default: `any`
+- `--license TEXT`: The license category of annotations (e.g, `any`, `permissive`, `nc`). Using `permissive` will retrieve annotations from sources with `CC0` and `CC BY` licenses. Using `nc` will retrieve sources with `CC BY-NC` or `Acedemic Only` licenses. Using `any` retrives annotations from any license. See our [citation documentation](../about/citation.md) for source license information. Default: `any`
 
 ### Output Options
 
