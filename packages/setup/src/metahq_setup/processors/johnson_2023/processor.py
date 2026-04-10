@@ -19,10 +19,11 @@ from metahq_setup.config.config import (
     JOHNSON_RNASEQ_UBERON,
     MONDO_OBO,
     MONDO_SYSTEMS,
+    PROCESSED_DIR,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
-from metahq_setup.ontology import get_system_descendants
+from metahq_setup.ontology import get_id_map, get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
 
@@ -43,12 +44,13 @@ class Johnson2023Processor(BaseProcessor):
     version = "1.0.0"
     description = "Johnson 2023 manually curated annotations for microarray and RNA-seq"
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs) -> pl.DataFrame:
         """Process Johnson 2023 datasets into standardized annotations.
 
         Arguments:
             output_dir (Path):
-                Directory where the processed parquet file will be written.
+                Directory where the processed parquet files will be written.
+                Defaults to ``data/processed``.
             **kwargs:
                 ``microarray_input_path`` (Path) - override microarray input file
                 ``rnaseq_input_path`` (Path) - override RNA-seq input file
@@ -61,7 +63,9 @@ class Johnson2023Processor(BaseProcessor):
         self.logger.info("Processing Johnson 2023 microarray and RNA-seq datasets...")
 
         # Get input paths (with optional overrides)
-        microarray_path = Path(kwargs.get("microarray_input_path", JOHNSON_MICROARRAY_TSV))
+        microarray_path = Path(
+            kwargs.get("microarray_input_path", JOHNSON_MICROARRAY_TSV)
+        )
         rnaseq_path = Path(kwargs.get("rnaseq_input_path", JOHNSON_RNASEQ_TSV))
 
         # Process microarray data (GPL570/GEO)
@@ -72,21 +76,21 @@ class Johnson2023Processor(BaseProcessor):
         self.logger.info("Processing RNA-seq dataset...")
         rnaseq_df = self._process_rnaseq(rnaseq_path)
 
-        # Combine both datasets
-        result_df = pl.concat([microarray_df, rnaseq_df], how="vertical")
-
         self.logger.info(
-            "Produced %s total annotations (%s microarray, %s RNA-seq).",
-            result_df.height,
+            "Produced %s microarray and %s RNA-seq annotations.",
             microarray_df.height,
             rnaseq_df.height,
         )
 
-        # Save processed data
-        output_file = output_dir / "johnson_2023_processed.parquet"
-        result_df.write_parquet(output_file)
-        self.logger.info("Wrote processed data to %s", output_file)
+        # Save each dataset separately so geo/sra combiners can consume them
+        microarray_file = output_dir / "johnson_2023__microarray.parquet"
+        rnaseq_file = output_dir / "johnson_2023__rnaseq.parquet"
+        microarray_df.write_parquet(microarray_file)
+        self.logger.info("Wrote microarray data to %s", microarray_file)
+        rnaseq_df.write_parquet(rnaseq_file)
+        self.logger.info("Wrote RNA-seq data to %s", rnaseq_file)
 
+        result_df = pl.concat([microarray_df, rnaseq_df], how="vertical")
         return result_df
 
     def _process_microarray(self, input_path: Path) -> pl.DataFrame:
@@ -187,7 +191,9 @@ class Johnson2023Processor(BaseProcessor):
             pl.lit("expert").alias("ecode"),
         )
 
-        self.logger.info("Processed %s microarray disease annotations", disease_records.height)
+        self.logger.info(
+            "Processed %s microarray disease annotations", disease_records.height
+        )
         return disease_records
 
     def _process_microarray_tissue(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -237,11 +243,13 @@ class Johnson2023Processor(BaseProcessor):
                 pl.col("uber_id").str.split("|").alias("uber_id_list"),
             )
             .explode("uber_id_list")
-            .select([
-                "gsm",
-                pl.col("uber_id_list").alias("uber_id"),
-                pl.lit("na").alias("uber_name"),  # Name not important per user
-            ])
+            .select(
+                [
+                    "gsm",
+                    pl.col("uber_id_list").alias("uber_id"),
+                    pl.lit("na").alias("uber_name"),
+                ]
+            )
         )
 
         # Filter to valid UBERON/CL descendants
@@ -254,6 +262,8 @@ class Johnson2023Processor(BaseProcessor):
             mapped_filtered.height,
         )
 
+        uberon_id_name_map = get_id_map(UBERON_OBO)
+
         # Create tissue annotation records - one row per term
         tissue_records = mapped_filtered.select(
             pl.col("gsm").alias("sample_id"),
@@ -263,7 +273,9 @@ class Johnson2023Processor(BaseProcessor):
             pl.lit("expert").alias("ecode"),
         )
 
-        self.logger.info("Processed %s microarray tissue annotations", tissue_records.height)
+        self.logger.info(
+            "Processed %s microarray tissue annotations", tissue_records.height
+        )
         return tissue_records
 
     def _process_rnaseq(self, input_path: Path) -> pl.DataFrame:
@@ -337,18 +349,18 @@ class Johnson2023Processor(BaseProcessor):
         # Filter to rows with valid MONDO mappings and system descendants
         # Note: MONDO:000000 (control) should be included even if not in descendants
         before = mapped.filter(pl.col("mondo_id").is_not_null()).height
-        disease_records = (
-            mapped.filter(
-                pl.col("mondo_id").is_not_null()
-                & (pl.col("mondo_id").is_in(valid_mondo) | (pl.col("mondo_id") == "MONDO:000000"))
+        disease_records = mapped.filter(
+            pl.col("mondo_id").is_not_null()
+            & (
+                pl.col("mondo_id").is_in(valid_mondo)
+                | (pl.col("mondo_id") == "MONDO:000000")
             )
-            .select(
-                pl.col("run").alias("sample_id"),
-                pl.lit("disease").alias("annotation_type"),
-                pl.col("mondo_id").alias("term_id"),
-                pl.col("mondo_name").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
-            )
+        ).select(
+            pl.col("run").alias("sample_id"),
+            pl.lit("disease").alias("annotation_type"),
+            pl.col("mondo_id").alias("term_id"),
+            pl.col("mondo_name").alias("term_label"),
+            pl.lit("expert").alias("ecode"),
         )
 
         self.logger.info(
@@ -395,24 +407,25 @@ class Johnson2023Processor(BaseProcessor):
                 pl.col("uber_id").str.split("|").alias("uber_id_list"),
             )
             .explode("uber_id_list")
-            .select([
-                "run",
-                pl.col("uber_id_list").alias("uber_id"),
-                pl.lit("na").alias("uber_name"),  # Name not important per user
-            ])
+            .select(
+                [
+                    "run",
+                    pl.col("uber_id_list").alias("uber_id"),
+                    pl.lit("na").alias("uber_name"),  # Name not important per user
+                ]
+            )
         )
 
         # Filter to valid UBERON/CL descendants
         before = mapped_exploded.height
-        tissue_records = (
-            mapped_exploded.filter(pl.col("uber_id").is_in(valid_uberon))
-            .select(
-                pl.col("run").alias("sample_id"),
-                pl.lit("tissue").alias("annotation_type"),
-                pl.col("uber_id").alias("term_id"),
-                pl.col("uber_name").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
-            )
+        tissue_records = mapped_exploded.filter(
+            pl.col("uber_id").is_in(valid_uberon)
+        ).select(
+            pl.col("run").alias("sample_id"),
+            pl.lit("tissue").alias("annotation_type"),
+            pl.col("uber_id").alias("term_id"),
+            pl.col("uber_name").alias("term_label"),
+            pl.lit("expert").alias("ecode"),
         )
 
         self.logger.info(
