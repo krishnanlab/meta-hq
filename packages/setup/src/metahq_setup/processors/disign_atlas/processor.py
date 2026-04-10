@@ -16,7 +16,6 @@ from metahq_setup.ontology import Ontology, get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
 
-
 # Pipe-delimited field indices within the description column.
 _IDX_GSE = 0
 _IDX_GSM_CONTROL = 1
@@ -118,9 +117,7 @@ class DiSignAtlasProcessor(BaseProcessor):
         # Split description on "|" and keep only rows with exactly 11 fields.
         parsed = raw_df.with_columns(
             pl.col("description").str.split("|").alias("parts")
-        ).with_columns(
-            pl.col("parts").list.len().alias("parts_len")
-        )
+        ).with_columns(pl.col("parts").list.len().alias("parts_len"))
 
         valid = parsed.filter(pl.col("parts_len") == _EXPECTED_PARTS)
         skipped = total_rows - valid.height
@@ -174,9 +171,7 @@ class DiSignAtlasProcessor(BaseProcessor):
 
         # Build case rows: explode semicolon-separated GSM IDs, preserve disease fields.
         case_df = (
-            extracted.with_columns(
-                pl.col("gsm_case").str.split(";").alias("sample_id")
-            )
+            extracted.with_columns(pl.col("gsm_case").str.split(";").alias("sample_id"))
             .explode("sample_id")
             .filter(pl.col("sample_id") != "")
             .drop("gsm_control", "gsm_case")
@@ -190,9 +185,14 @@ class DiSignAtlasProcessor(BaseProcessor):
         mondo = Ontology.from_obo(MONDO_OBO)
         umls_ids = all_samples["disease_id"].unique().to_list()
         prefixed = ["UMLS:" + uid for uid in umls_ids]
-        umls_to_mondo = mondo.map_terms(prefixed, ontology="MONDO", _from="UMLS", _to="MONDO")
+        umls_to_mondo = mondo.map_terms(
+            prefixed, ontology="MONDO", _from="UMLS", _to="MONDO"
+        )
         # Strip prefix from keys to match the bare IDs stored in the DataFrame.
-        bare_to_mondo = {uid.removeprefix("UMLS:"): mondo_id for uid, mondo_id in umls_to_mondo.items()}
+        bare_to_mondo = {
+            uid.removeprefix("UMLS:"): mondo_id
+            for uid, mondo_id in umls_to_mondo.items()
+        }
 
         all_samples = all_samples.with_columns(
             pl.col("disease_id").replace(bare_to_mondo).alias("disease_id")
@@ -200,7 +200,9 @@ class DiSignAtlasProcessor(BaseProcessor):
 
         unmapped = all_samples.filter(pl.col("disease_id") == "NA").height
         if unmapped > 0:
-            self.logger.warning("%s sample rows could not be mapped to a MONDO ID.", unmapped)
+            self.logger.warning(
+                "%s sample rows could not be mapped to a MONDO ID.", unmapped
+            )
 
         # Filter to descendants of MONDO system-level terms.
         # Control samples (MONDO:0000000) are retained explicitly.
@@ -208,7 +210,8 @@ class DiSignAtlasProcessor(BaseProcessor):
         valid_mondo = get_system_descendants(MONDO_SYSTEMS, MONDO_OBO)
         before = all_samples.height
         all_samples = all_samples.filter(
-            pl.col("disease_id").is_in(valid_mondo) | (pl.col("disease_id") == "MONDO:0000000")
+            pl.col("disease_id").is_in(valid_mondo)
+            | (pl.col("disease_id") == "MONDO:0000000")
         )
         self.logger.info(
             "Filtered disease rows from %s to %s using MONDO system descendants.",
@@ -226,20 +229,20 @@ class DiSignAtlasProcessor(BaseProcessor):
         )
 
         # Tissue annotations — only for rows with a non-null, non-"None" tissue.
-        tissue_records = (
-            all_samples.filter(
-                pl.col("tissue").is_not_null() & (pl.col("tissue") != "None")
-            )
-            .select(
-                pl.col("sample_id"),
-                pl.lit("tissue").alias("annotation_type"),
-                pl.lit("na").alias("term_id"),
-                pl.col("tissue").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
-            )
+        tissue_records = all_samples.filter(
+            pl.col("tissue").is_not_null() & (pl.col("tissue") != "None")
+        ).select(
+            pl.col("sample_id"),
+            pl.lit("tissue").alias("annotation_type"),
+            pl.lit("na").alias("term_id"),
+            pl.col("tissue").alias("term_label"),
+            pl.lit("expert").alias("ecode"),
         )
 
         result_df = pl.concat([disease_records, tissue_records], how="vertical")
+
+        # only keep GSM sample annotations
+        result_df = result_df.filter(pl.col("sample_id").str.starts_with("GSM"))
 
         self.logger.info(
             "Produced %s annotations (%s disease, %s tissue) from DiSignAtlas.",
