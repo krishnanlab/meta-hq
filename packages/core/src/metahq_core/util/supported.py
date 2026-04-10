@@ -54,7 +54,6 @@ def _ecodes() -> dict[str, str]:
     """Return supported evidence codes."""
     return {
         "expert": "expert-curated",
-        "semi": "semi-curated",
         "crowd": "crowd-sourced",
         "any": "any",
     }
