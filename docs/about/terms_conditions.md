@@ -63,7 +63,7 @@ Filter to use only:
 ```bash
 # Filter for commercial-compatible annotations
 metahq retrieve tissues --terms "UBERON:0000948" \
-  --source-license="permissive"
+  --license="permissive"
 ```
 
 ---
@@ -72,10 +72,10 @@ metahq retrieve tissues --terms "UBERON:0000948" \
 
 MetaHQ tracks annotation source and quality:
 
-**Quality Categories:**
+**Quality Categories (ecodes):**
 
-- Expert-curated: Manual annotation by domain experts
-- Crowd-sourced: Community-curated annotations
+- expert: Manual annotation by domain experts
+- crowd: Community-curated annotations
 
 ---
 
