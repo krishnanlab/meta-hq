@@ -12,7 +12,7 @@ There is a command for each retrievable attribute:
 ## Citing annotation sources
 
 The MetaHQ database contains annotations gathered from searchable databases, static project websites, GitHub repositories, data repositories (Zenodo, Figshare), and publication supplementary files.
-Output files from `metahq retrieve` include which resources the retrieved annotations came from. We encourage users to cite these sources.
+Output files from `metahq retrieve` include which resources the retrieved annotations came from. We require users to cite these sources.
 
 Please see our [citation documentation](../about/citation.md) for instructions on how to cite MetaHQ and its annotation sources.
 
@@ -33,8 +33,8 @@ All retrieve commands share the following common options:
 
 ### Output Options
 
-- `--output PATH`: Output file path. Default: `annotations`
-- `--fmt TEXT`: Output format (`tsv`, `csv`, or `json`). Default: `parquet`
+- `--output PATH`: Path to the output directory containing the retrieval result and source citation information. Default: `./metahq_result`
+- `--fmt TEXT`: Output format (`parquet`, `tsv`, `csv`, or `json`). Default: `parquet`
 - `--metadata TEXT`: Metadata level to include (`sample`, `series`, etc.). Default: `default` (matches `--level`)
     - Run `metahq supported` for all metadata fields.
     - Combine multiple filters like so: `'sample,series,description,srp'`
@@ -69,24 +69,24 @@ metahq retrieve tissues [OPTIONS]
 
 ```bash
 metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
-    --level sample --filters "species=human,ecode=expert,tech=rnaseq" \
-    --fmt tsv --output tissues.tsv --metadata "sample,srx,srp"
+    --filters "species=human,ecode=expert,tech=rnaseq" \
+    --fmt tsv --metadata "sample,srx,srp"
 ```
 
 **Retrieve sample labels for all tissue terms with parquet output:**
 
 ```bash
 metahq retrieve tissues --terms "all" \
-    --level sample --filters "species=human,ecode=expert,tech=rnaseq" \
-    --fmt parquet --output tissues.parquet
+    --filters "species=human,ecode=expert,tech=rnaseq" \
+    --fmt parquet
 ```
 
 **Retrieve series-level annotations with JSON output:**
 
 ```bash
 metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
-    --level series --filters "species=human,ecode=expert,tech=rnaseq" \
-    --fmt json --output tissues.json
+    --filters "species=human,ecode=expert,tech=rnaseq" \
+    --level series --fmt json
 ```
 
 ---
@@ -109,16 +109,16 @@ Retrieve disease annotations and labels using MONDO ontology terms.
 
 ```bash
 metahq retrieve diseases --terms "MONDO:0004994" \
-    --level sample --filters "species=human,ecode=expert,tech=rnaseq" \
-    --fmt csv --output diseases_filtered.csv --metadata "sample,description"
+    --filters "species=human,ecode=expert,tech=rnaseq" \
+    --fmt csv --metadata "sample,description"
 ```
 
 **Retrieve crowd-sourced human microarray samples with descriptions:**
 
 ```bash
 metahq retrieve diseases --terms "all" \
-    --level sample --filters "species=human,ecode=crowd,tech=microarray" \
-    --fmt parquet --output diseases_filtered.parquet --metadata "sample,description"
+    --filters "species=human,ecode=crowd,tech=microarray" \
+    --fmt parquet --metadata "sample,description"
 ```
 
 ## Sex
@@ -136,15 +136,15 @@ Retrieve sex annotations.
 
 ```bash
 metahq retrieve sex --terms "male,female" \
-    --level sample --filters "species=human,ecode=expert,tech=rnaseq"
+    --filters "species=human,ecode=expert,tech=rnaseq"
 ```
 
 **Retrieve all RNA-Seq sex-annotated studies with SRA metadata:**
 
 ```bash
 metahq retrieve sex --terms "male,female" \
-    --level series --filters "species=human,ecode=expert,tech=rnaseq" \
-    --metadata "series,srp,description"
+    --filters "species=human,ecode=expert,tech=rnaseq" \
+    --metadata "series,srp,description" --level series
 ```
 
 ## Age
@@ -164,16 +164,16 @@ Retrieve age group annotations.
 
 ```bash
 metahq retrieve age --terms "all" \
-    --level sample --filters "species=human,ecode=expert,tech=rnaseq" \
-    --fmt csv --output ages.csv
+    --filters "species=human,ecode=expert,tech=rnaseq" \
+    --fmt csv
 ```
 
 **Retrieve all microarray age-annotated studies with SRA metadata:**
 
 ```bash
 metahq retrieve age --terms "infant,adolescent,elderly_adult" \
-    --level series --filters "species=human,ecode=expert,tech=microarray" \
-    --metadata "series,srp,description"
+    --filters "species=human,ecode=expert,tech=microarray" \
+    --metadata "series,srp,description" --level series
 ```
 
 ## Example Output
@@ -182,11 +182,11 @@ If a user queried disease annotations with the following command:
 
 ```bash
 metahq retrieve diseases --terms "MONDO:0002113,MONDO:0004994" \
-    --metadata "platform,srx" --filters="species=human,ecode=expert,tech=rnaseq" \
-    --fmt tsv --output annotations.tsv
+    --filters="species=human,ecode=expert,tech=rnaseq" \
+    --metadata "platform,srx" --fmt tsv --output disease_annotations
 ```
 
-The output from this would look like so:
+This creates a directory called `disease_annotations` storing a file called `result.tsv` that would look like so:
 
 ```
 ┌──────────┬────────────┬────────────┬─────────────────────────┬───────────────┬───────────────┐
@@ -219,7 +219,7 @@ ran the following:
 ```bash
 metahq retrieve diseases --terms "MONDO:0002113,MONDO:0004994" \
     --metadata "platform,srx" --filters="species=human,ecode=expert,tech=rnaseq" \
-    --fmt json --output annotations.json
+    --fmt json --output disease_annotations
 ```
 
 They would retrieve the following:
@@ -244,7 +244,9 @@ They would retrieve the following:
         }, ...
 ```
 
-The sources of the annotations are also included in their own `sources` column or key.
-We require users to cite these sources if they use MetaHQ annotations in their research.
+The sources of the annotations are also included in their own `sources` column or key. Additionally, we include
+a file called `CITATION.txt` in the output directory of a query. This file stores information about the query
+and the sources included in the dataset. We require users to cite these sources if they use MetaHQ annotations in their research.
+
 See the [About](../about/citation.md) page for a source-to-citation map. See our [Terms and Conditions](../about/terms_conditions.md)
 for more information.
