@@ -200,6 +200,9 @@ class BaseAnnotationCombiner:
                 for k, v in source_anno.items()
                 if v is not None and v not in UNDESIRED
             }
+            # Require an 'id' key — annotations without one can't be queried.
+            if "id" not in filtered:
+                continue
             # Keep only if there's more than just the ecode field.
             if len(filtered) > 1:
                 cleaned[source_name] = filtered
