@@ -7,7 +7,7 @@ and add it to the REFERENCE_MAP at the bottom of this script.
 Author: Parker Hicks <br>
 Date: 2026-04-01
 
-Last updated: 2026-04-02 by Parker Hicks
+Last updated: 2026-04-10 by Parker Hicks
 """
 
 from abc import ABC, abstractmethod
@@ -241,9 +241,9 @@ class UrsaHD(Reference):
     citation: str = """Lee, Y. et al. A computational framework for genome-wide characterization of the
     human disease landscape. Cell systems 8, 152–162 (2019)."""
     doi: str = "10.1016/j.cels.2018.12.010"
-    url: str = "ursahd.princeton.edu"
+    url: str = "https://www.cell.com/cell-systems/fulltext/S2405-4712(18)30509-X"
     rights: str = "CC BY-NC 3.0"
-    notes: str | None = "url is no longer accessible."
+    notes: str | None = "Table S1"
 
     def __init__(self, n: int):
         self.n = n
@@ -281,9 +281,9 @@ REFERENCE_MAP = {
     "URSA_HD": UrsaHD,
 }
 
+# TODO: Integrate license category assignment by source class attributes
+# TODO: Construct source information from source config files, removing hardcoded source classes
 # Maps REFERENCE_MAP source names to their license category.
-# Matching against BSON source keys is done case-insensitively since the database
-# uses inconsistent casing (e.g., 'ursa' vs 'URSA').
 # Categories: 'permissive' (CC0/CC BY), 'nc' (CC BY-NC or academic-only non-commercial).
 SOURCE_LICENSE_CATEGORY: dict[str, str] = {
     "ALE": "permissive",
@@ -352,7 +352,7 @@ def get_allowed_sources(license_query: str) -> set[str] | None:
     allowed_categories: set[str]
     if license_query == "permissive":
         allowed_categories = {"permissive"}
-    else:  # nc
+    else:
         allowed_categories = {"nc"}
 
     return {
