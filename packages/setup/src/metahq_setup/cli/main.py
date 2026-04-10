@@ -360,6 +360,75 @@ def combine_sra(output, metadata_db):
         sys.exit(1)
 
 
+@combine.command(name="sample")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Output BSON file path (default: data/processed/combined__level-sample.bson)",
+)
+@click.option(
+    "--geo",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to GEO combined BSON (default: data/processed/geo_combined.bson)",
+)
+@click.option(
+    "--sra",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to SRA combined BSON (default: data/processed/sra_combined.bson)",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
+)
+def combine_sample(output, geo, sra, metadata_db):
+    """
+    Merge GEO and SRA combined annotations into a single sample-level BSON.
+
+    Both GEO and SRA BSONs must already be keyed by GSM. Run
+    'metahq-setup combine geo' and 'metahq-setup combine sra' first.
+
+    Accession IDs (series, platform, srx, srp) are enriched from OmicIDX
+    for every sample in the combined database.
+
+    Examples:
+        metahq-setup combine sample
+        metahq-setup combine sample --output /data/combined__level-sample.bson
+        metahq-setup combine sample --geo /data/geo.bson --sra /data/sra.bson
+        metahq-setup combine sample --metadata-db /data/omicidx.duckdb
+    """
+    from metahq_setup.combiners.geo import GEO_COMBINED_BSON
+    from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON, SampleCombiner
+    from metahq_setup.combiners.sra import SRA_COMBINED_BSON
+    from metahq_setup.config.config import OMICIDX_DB
+
+    try:
+        output_path = Path(output) if output else SAMPLE_COMBINED_BSON
+        geo_path = Path(geo) if geo else GEO_COMBINED_BSON
+        sra_path = Path(sra) if sra else SRA_COMBINED_BSON
+        db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
+        click.echo("Merging GEO and SRA annotations into sample-level database...")
+        click.echo(f"GEO: {geo_path}")
+        click.echo(f"SRA: {sra_path}")
+        click.echo(f"OmicIDX DB: {db_path}")
+        click.echo(f"Output: {output_path}")
+        click.echo("")
+
+        combiner = SampleCombiner()
+        combiner.combine(geo_bson=geo_path, sra_bson=sra_path, db_path=db_path).clean().save(output_path)
+
+        click.secho(f"✓ Saved to {output_path}", fg="green")
+
+    except Exception as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
 @main.command()
 @click.option(
     "--checkpoint-dir",
