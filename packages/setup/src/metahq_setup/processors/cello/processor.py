@@ -88,9 +88,7 @@ class CellOProcessor(BaseProcessor):
         cl_class_dict: dict[str, str] = Ontology.from_obo(CL_OBO).class_dict
 
         df = df.with_columns(
-            pl.col("term_id")
-            .replace(cl_class_dict, default="NA")
-            .alias("term_label")
+            pl.col("term_id").replace(cl_class_dict, default="NA").alias("term_label")
         )
 
         unmapped = df.filter(pl.col("term_label") == "NA").height
