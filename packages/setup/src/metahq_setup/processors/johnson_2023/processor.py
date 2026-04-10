@@ -247,7 +247,7 @@ class Johnson2023Processor(BaseProcessor):
                 [
                     "gsm",
                     pl.col("uber_id_list").alias("uber_id"),
-                    pl.lit("na").alias("uber_name"),
+                    pl.lit(None).alias("uber_name"),
                 ]
             )
         )
@@ -262,7 +262,17 @@ class Johnson2023Processor(BaseProcessor):
             mapped_filtered.height,
         )
 
-        uberon_id_name_map = get_id_map(UBERON_OBO)
+        # add missing UBERON/CL names
+        uberon_id_name_map = get_id_map(UBERON_OBO).rename(
+            {"id": "uber_id", "name": "name_ref"}
+        )
+
+        mapped_filtered = (
+            mapped_filtered.join(uberon_id_name_map, on="uber_id", how="left")
+            .with_columns(pl.coalesce(["uber_name", "name_ref"]).alias("uber_name"))
+            .drop("name_ref")
+            .unique()
+        )
 
         # Create tissue annotation records - one row per term
         tissue_records = mapped_filtered.select(
@@ -411,9 +421,28 @@ class Johnson2023Processor(BaseProcessor):
                 [
                     "run",
                     pl.col("uber_id_list").alias("uber_id"),
-                    pl.lit("na").alias("uber_name"),  # Name not important per user
+                    pl.lit(None).alias("uber_name"),  # Name not important per user
                 ]
             )
+        )
+
+        uberon_id_name_map = get_id_map(UBERON_OBO).rename(
+            {"id": "uber_id", "name": "name_ref"}
+        )
+
+        mapped_exploded = mapped_exploded.with_columns(
+            pl.when(pl.col("uber_id") == "na")
+            .then(None)
+            .otherwise(pl.col("uber_id"))
+            .alias("uber_id")
+        )
+
+        mapped_exploded = (
+            mapped_exploded.join(uberon_id_name_map, on="uber_id", how="left")
+            .with_columns(pl.coalesce(["uber_name", "name_ref"]).alias("uber_name"))
+            .drop("name_ref")
+            .unique()
+            .drop_nulls()
         )
 
         # Filter to valid UBERON/CL descendants
