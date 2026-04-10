@@ -225,7 +225,7 @@ def download():
 @click.option(
     "--max-studies",
     "-m",
-    default=30_000,
+    default=60_000,
     show_default=True,
     type=int,
     help="Maximum number of studies to download. Used to tell the GemmaFetcher when to stop fetching.",
@@ -420,7 +420,9 @@ def combine_sample(output, geo, sra, metadata_db):
         click.echo("")
 
         combiner = SampleCombiner()
-        combiner.combine(geo_bson=geo_path, sra_bson=sra_path, db_path=db_path).clean().save(output_path)
+        combiner.combine(
+            geo_bson=geo_path, sra_bson=sra_path, db_path=db_path
+        ).clean().save(output_path)
 
         click.secho(f"✓ Saved to {output_path}", fg="green")
 

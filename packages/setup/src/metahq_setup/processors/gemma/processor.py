@@ -48,7 +48,7 @@ class GemmaProcessor(BaseProcessor):
     """
 
     source_name = "gemma"
-    version = "1.0.0"
+    version = "1.32.6"
     description = "Gemma database annotations for gene expression studies"
 
     def process(self, output_dir: Path = PROCESSED_DIR, **kwargs) -> pl.DataFrame:
@@ -106,9 +106,6 @@ class GemmaProcessor(BaseProcessor):
                     category = char.get("category", "")
                     if category not in CHARACTERISTICS_MAP:
                         continue
-
-                    if category == "age":
-                        print(gse, char["valueUri"], char["value"])
 
                     uri = char.get("valueUri")
                     value = char.get("value")

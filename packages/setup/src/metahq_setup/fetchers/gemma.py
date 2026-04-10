@@ -41,7 +41,7 @@ class GemmaFetcher:
         self,
         output_path: Path = GEMMA_RAW,
         query: str = "sort=-id",
-        max_studies: int = 21400,
+        max_studies: int = 60_000,
     ) -> Path:
         """
         Download Gemma annotations and save to a JSON file.
