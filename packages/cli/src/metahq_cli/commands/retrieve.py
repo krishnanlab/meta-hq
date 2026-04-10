@@ -8,9 +8,10 @@ Last updated: 2026-04-01 by Parker Hicks
 """
 
 from datetime import datetime
+
 import click
 from metahq_core.util.progress import get_console
-from metahq_core.util.supported import get_config, get_log_dir, supported
+from metahq_core.util.supported import get_database_version, get_log_dir, supported
 
 from metahq_cli.logger import setup_logger
 from metahq_cli.retrieval_builder import Builder
@@ -24,7 +25,6 @@ from metahq_cli.util.common_args import (
 from metahq_cli.util.helpers import set_verbosity
 
 AGE_GROUP_OPT = click.Choice(supported("age_groups") + ["all"])
-DATABASE_VERSION = get_config()["version"]
 NOW = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -102,7 +102,7 @@ def retrieve_age(
         resolved_dir, fmt, metadata, level=level, attribute=attribute
     )
     citation_config = builder.citation_config(
-        version=DATABASE_VERSION,
+        version=get_database_version(),
         attribute=attribute,
         terms=terms,
         level=level,
@@ -169,7 +169,7 @@ def retrieve_diseases(
         resolved_dir, fmt, metadata, level=level, attribute=attribute
     )
     citation_config = builder.citation_config(
-        version=DATABASE_VERSION,
+        version=get_database_version(),
         attribute=attribute,
         terms=terms,
         level=level,
@@ -223,7 +223,7 @@ def retrieve_sex(
         resolved_dir, fmt, metadata, level=level, attribute=attribute
     )
     citation_config = builder.citation_config(
-        version=DATABASE_VERSION,
+        version=get_database_version(),
         attribute=attribute,
         terms=terms,
         level=level,
@@ -290,7 +290,7 @@ def retrieve_tissues(
         resolved_dir, fmt, metadata, level=level, attribute=attribute
     )
     citation_config = builder.citation_config(
-        version=DATABASE_VERSION,
+        version=get_database_version(),
         attribute=attribute,
         terms=terms,
         level=level,

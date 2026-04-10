@@ -204,6 +204,11 @@ def get_default_data_dir() -> Path:
     return Path.home() / ".metahq_data"
 
 
+def get_database_version() -> str:
+    """Return the current version of the database."""
+    return get_config()["version"]
+
+
 def get_log_dir() -> Path:
     """Return log directory defined in config."""
     return get_config()["logs"]
