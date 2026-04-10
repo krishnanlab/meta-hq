@@ -4,7 +4,7 @@ Input/output functions.
 Author: Parker Hicks
 Date: 2025-04
 
-Last updated: 2025-11-28 by Parker Hicks
+Last updated: 2026-04-10 by Parker Hicks
 """
 
 import json
@@ -43,7 +43,7 @@ def checkdir(path: str | Path, is_file: bool = False) -> Path:
 
 
 def load_bson(file: str | Path, **kwargs) -> dict[str, Any]:
-    """Load dictionary from compressed bson.
+    """Load dictionary from compressed BSON.
 
     Arguments:
         file (str | Path):
@@ -70,7 +70,7 @@ def load_txt(
     delimiter: str = ",",
     encoding: str = "utf-8",
 ) -> list[str]:
-    """Loads a txt file.
+    """Loads a `.txt` file.
 
     Arguments:
         file (str | Path):
@@ -98,7 +98,7 @@ def load_txt(
 
 
 def load_txt_sections(file: str | Path, delimiter: str, encoding="utf-8") -> list[str]:
-    """Load a .txt file in sections.
+    """Load a `.txt` file in sections.
 
     Arguments:
         file (str | Path):
@@ -119,7 +119,7 @@ def load_txt_sections(file: str | Path, delimiter: str, encoding="utf-8") -> lis
 
 
 def load_yaml(file: str | Path, encoding: str = "utf-8") -> dict[str, Any]:
-    """Load a yaml dictionary.
+    """Load a YAML dictionary.
 
     Arguments:
         file (str | Path):
@@ -135,7 +135,7 @@ def load_yaml(file: str | Path, encoding: str = "utf-8") -> dict[str, Any]:
 
 
 def save_bson(data: dict, file: str | Path, **kwargs):
-    """Save dictionary to compressed bson.
+    """Save dictionary to compressed BSON.
 
     Arguments:
         data (dict):
@@ -188,3 +188,19 @@ def save_txt(
     with open(file, "w", encoding=encoding) as f:
         for entry in data:
             f.write(f"{entry}\n")
+
+
+def save_plain_text(data: str, file: str | Path, encoding="utf-8"):
+    """Save a single string to a `.txt` file.
+
+    Arguments:
+        data (str):
+            Any string.
+        file (str | Path):
+            Path to file.txt to save `data`.
+        encoding (str):
+            Text encoding format.
+    """
+
+    with open(file, "w", encoding=encoding) as f:
+        f.write(data)

@@ -93,11 +93,46 @@ def check_outfile(outfile: Path | str):
     _ = checkdir(outfile, is_file=True)
 
 
+def resolve_outdir(outdir: str | Path) -> Path:
+    """Resolve output directory, incrementing a numeric suffix if it already exists.
+
+    Arguments:
+        outdir (str | Path):
+            Desired output directory path.
+
+    Returns:
+        The resolved `Path` that was created. If `outdir` does not exist it is
+        created as-is. If it does exist, the first non-existing path among
+        `<outdir>_1`, `<outdir>_2`, ... is created and returned.
+    """
+    path = Path(outdir).resolve()
+
+    if not path.exists():
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    n = 1
+    candidate = path.parent / f"{path.name}_{n}"
+    while candidate.exists():
+        n += 1
+        candidate = path.parent / f"{path.name}_{n}"
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    return candidate
+
+
 def check_filter(_filter: str, query: str):
     """Supports checking for ecode, technology, and species."""
     _supported = supported(_filter)
     if not query in _supported:
         error(f"Expected {_filter} in {_supported}, got {query}.")
+
+
+def check_license(license: str):
+    """Checks if the requested license category is supported."""
+    _supported = supported("licenses")
+    if license not in _supported:
+        error(f"Expected license in {_supported}, got {license}.")
 
 
 def report_bad_entries(field: str, _supported: list[str], entries: list[str]):

@@ -4,16 +4,18 @@ CLI command to retrieve annotations and labels from meta-hq.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2025-12-01 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
+from datetime import datetime
 import click
 from metahq_core.util.progress import get_console
-from metahq_core.util.supported import get_log_dir, supported
+from metahq_core.util.supported import get_config, get_log_dir, supported
 
 from metahq_cli.logger import setup_logger
 from metahq_cli.retrieval_builder import Builder
 from metahq_cli.retriever import Retriever
+from metahq_cli.util.checkers import resolve_outdir
 from metahq_cli.util.common_args import (
     logging_args,
     ontology_retrieval_args,
@@ -22,6 +24,8 @@ from metahq_cli.util.common_args import (
 from metahq_cli.util.helpers import set_verbosity
 
 AGE_GROUP_OPT = click.Choice(supported("age_groups") + ["all"])
+DATABASE_VERSION = get_config()["version"]
+NOW = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def check_direct(mode: str, direct: bool, verbose: bool, logger) -> str:
@@ -70,7 +74,9 @@ def retrieve_commands():
 )
 @retrieval_args
 @logging_args
-def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet):
+def retrieve_age(
+    terms, level, fmt, metadata, filters, license, output, log_level, quiet
+):
     """Retrieval command for age group annotations."""
     if metadata == "default":
         metadata = level
@@ -85,16 +91,35 @@ def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet)
     # parse and check filters
     filters = builder.get_filters(filters)
 
+    # resolve output directory (creates it, incrementing suffix if it exists)
+    resolved_dir = resolve_outdir(output)
+
     # make configs
-    query_config = builder.query_config("geo", "age", level, filters)
-    curation_config = builder.curation_config(terms, "direct", "age")
+    attribute = "age"
+    query_config = builder.query_config("geo", attribute, level, filters, license)
+    curation_config = builder.curation_config(terms, "direct", attribute)
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute="age"
+        resolved_dir, fmt, metadata, level=level, attribute=attribute
+    )
+    citation_config = builder.citation_config(
+        version=DATABASE_VERSION,
+        attribute=attribute,
+        terms=terms,
+        level=level,
+        filters=filters,
+        mode="annotate",  # show annotate instead of direct for interpretability
+        date=NOW,
+        outdir=resolved_dir,
     )
 
     # retrieve
     retriever = Retriever(
-        query_config, curation_config, output_config, logger=log, verbose=verbose
+        query_config=query_config,
+        curation_config=curation_config,
+        output_config=output_config,
+        citation_config=citation_config,
+        logger=log,
+        verbose=verbose,
     )
     retriever.retrieve()
 
@@ -105,7 +130,17 @@ def retrieve_age(terms, level, fmt, metadata, filters, output, log_level, quiet)
 @ontology_retrieval_args
 @logging_args
 def retrieve_diseases(
-    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
+    terms,
+    level,
+    mode,
+    fmt,
+    metadata,
+    filters,
+    license,
+    output,
+    log_level,
+    quiet,
+    direct,
 ):
     """Retrieval command for disease ontology terms."""
     if metadata == "default":
@@ -123,16 +158,35 @@ def retrieve_diseases(
     # parse and check filters
     filters = builder.get_filters(filters)
 
+    # resolve output directory (creates it, incrementing suffix if it exists)
+    resolved_dir = resolve_outdir(output)
+
     # make configs
-    query_config = builder.query_config("geo", "disease", level, filters)
+    attribute = "disease"
+    query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, mode, "mondo")
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute="disease"
+        resolved_dir, fmt, metadata, level=level, attribute=attribute
+    )
+    citation_config = builder.citation_config(
+        version=DATABASE_VERSION,
+        attribute=attribute,
+        terms=terms,
+        level=level,
+        filters=filters,
+        mode=mode,
+        date=NOW,
+        outdir=resolved_dir,
     )
 
     # retrieve
     retriever = Retriever(
-        query_config, curation_config, output_config, logger=log, verbose=verbose
+        query_config=query_config,
+        curation_config=curation_config,
+        output_config=output_config,
+        citation_config=citation_config,
+        logger=log,
+        verbose=verbose,
     )
     retriever.retrieve()
 
@@ -141,7 +195,9 @@ def retrieve_diseases(
 @click.option("--terms", type=str, default="male,female")
 @retrieval_args
 @logging_args
-def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet):
+def retrieve_sex(
+    terms, level, fmt, metadata, filters, license, output, log_level, quiet
+):
     """Retrieval command for sex annotations."""
     if metadata == "default":
         metadata = level
@@ -156,16 +212,35 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet)
     # parse and check filters
     filters = builder.get_filters(filters)
 
+    # resolve output directory (creates it, incrementing suffix if it exists)
+    resolved_dir = resolve_outdir(output)
+
     # make configs
-    query_config = builder.query_config("geo", "sex", level, filters)
-    curation_config = builder.curation_config(terms, "direct", "sex")
+    attribute = "sex"
+    query_config = builder.query_config("geo", attribute, level, filters, license)
+    curation_config = builder.curation_config(terms, "direct", attribute)
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute="sex"
+        resolved_dir, fmt, metadata, level=level, attribute=attribute
+    )
+    citation_config = builder.citation_config(
+        version=DATABASE_VERSION,
+        attribute=attribute,
+        terms=terms,
+        level=level,
+        filters=filters,
+        mode="annotate",  # show annotate instead of direct for interpretability
+        date=NOW,
+        outdir=resolved_dir,
     )
 
     # retrieve
     retriever = Retriever(
-        query_config, curation_config, output_config, logger=log, verbose=verbose
+        query_config=query_config,
+        curation_config=curation_config,
+        output_config=output_config,
+        citation_config=citation_config,
+        logger=log,
+        verbose=verbose,
     )
     retriever.retrieve()
 
@@ -176,7 +251,17 @@ def retrieve_sex(terms, level, fmt, metadata, filters, output, log_level, quiet)
 @ontology_retrieval_args
 @logging_args
 def retrieve_tissues(
-    terms, level, mode, fmt, metadata, filters, output, log_level, quiet, direct
+    terms,
+    level,
+    mode,
+    fmt,
+    metadata,
+    filters,
+    license,
+    output,
+    log_level,
+    quiet,
+    direct,
 ):
     """Retrieval command for tissue ontology terms."""
     if metadata == "default":
@@ -194,15 +279,34 @@ def retrieve_tissues(
     # parse and check filters
     filters = builder.get_filters(filters)
 
+    # resolve output directory (creates it, incrementing suffix if it exists)
+    resolved_dir = resolve_outdir(output)
+
     # make configs
-    query_config = builder.query_config("geo", "tissue", level, filters)
+    attribute = "tissue"
+    query_config = builder.query_config("geo", attribute, level, filters, license)
     curation_config = builder.curation_config(terms, mode, "uberon")
     output_config = builder.output_config(
-        output, fmt, metadata, level=level, attribute="tissue"
+        resolved_dir, fmt, metadata, level=level, attribute=attribute
+    )
+    citation_config = builder.citation_config(
+        version=DATABASE_VERSION,
+        attribute=attribute,
+        terms=terms,
+        level=level,
+        filters=filters,
+        mode=mode,
+        date=NOW,
+        outdir=resolved_dir,
     )
 
     # retrieve
     retriever = Retriever(
-        query_config, curation_config, output_config, logger=log, verbose=verbose
+        query_config=query_config,
+        curation_config=curation_config,
+        output_config=output_config,
+        citation_config=citation_config,
+        logger=log,
+        verbose=verbose,
     )
     retriever.retrieve()
