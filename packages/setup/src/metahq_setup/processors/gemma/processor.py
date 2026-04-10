@@ -166,6 +166,14 @@ class GemmaProcessor(BaseProcessor):
             len(df),
         )
 
+        before = len(df)
+        df = df.filter(pl.col("sample_id").str.starts_with("GSE"))
+        self.logger.info(
+            "Filtered %d non-GSE annotations (kept %d)",
+            before - len(df),
+            len(df),
+        )
+
         output_file = output_dir / "gemma_processed.parquet"
         df.write_parquet(output_file)
         self.logger.info("Wrote processed data to %s", output_file)
