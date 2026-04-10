@@ -224,7 +224,7 @@ class DiSignAtlasProcessor(BaseProcessor):
             pl.col("sample_id"),
             pl.lit("disease").alias("annotation_type"),
             pl.col("disease_id").alias("term_id"),
-            pl.col("disease_name").alias("term_label"),
+            pl.col("disease_name").str.to_lowercase().alias("term_label"),
             pl.lit("expert").alias("ecode"),
         )
 
