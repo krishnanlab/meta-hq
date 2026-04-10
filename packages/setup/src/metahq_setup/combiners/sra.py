@@ -23,6 +23,8 @@ import polars as pl
 from metahq_setup.combiners.base import BaseAnnotationCombiner
 from metahq_setup.config.config import (
     BGEE_PROCESSED,
+    CELLO_PROCESSED,
+    GU_PROCESSED,
     JOHNSON_2023_RNASEQ_PROCESSED,
     OMICIDX_DB,
     PROCESSED_DIR,
@@ -31,6 +33,8 @@ from metahq_setup.config.config import (
 # Maps source name → default processed parquet path.
 SRA_SOURCES: dict[str, Path] = {
     "bgee": BGEE_PROCESSED,
+    "cello": CELLO_PROCESSED,
+    "gu": GU_PROCESSED,
     "johnson_2023_rnaseq": JOHNSON_2023_RNASEQ_PROCESSED,
 }
 

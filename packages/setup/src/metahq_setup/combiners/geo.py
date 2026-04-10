@@ -12,13 +12,11 @@ import polars as pl
 from metahq_setup.combiners.base import BaseAnnotationCombiner
 from metahq_setup.config.config import (
     ALE_PROCESSED,
-    CELLO_PROCESSED,
     CREEDS_PROCESSED,
     DISIGN_ATLAS_PROCESSED,
     GEMMA_PROCESSED,
     GOLIGHTLY_PROCESSED,
-    GU_PROCESSED,
-    JOHNSON_2023_PROCESSED,
+    JOHNSON_2023_MICROARRAY_PROCESSED,
     KRISHNANLAB_PROCESSED,
     PROCESSED_DIR,
     SIROTA_2011_PROCESSED,
@@ -29,13 +27,11 @@ from metahq_setup.config.config import (
 # Maps source name → default processed parquet path.
 GEO_SOURCES: dict[str, Path] = {
     "ale": ALE_PROCESSED,
-    "cello": CELLO_PROCESSED,
     "creeds": CREEDS_PROCESSED,
     "disign_atlas": DISIGN_ATLAS_PROCESSED,
     "gemma": GEMMA_PROCESSED,
     "golightly": GOLIGHTLY_PROCESSED,
-    "gu": GU_PROCESSED,
-    "johnson_2023": JOHNSON_2023_PROCESSED,
+    "johnson_2023": JOHNSON_2023_MICROARRAY_PROCESSED,
     "krishnanlab": KRISHNANLAB_PROCESSED,
     "sirota_2011": SIROTA_2011_PROCESSED,
     "ursa": URSA_PROCESSED,
