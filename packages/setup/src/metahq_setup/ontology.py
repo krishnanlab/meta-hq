@@ -605,6 +605,12 @@ class Graph(Ontology):
         return [node for node in self.nodes if self.graph.out_degree(node) == 0]
 
 
+def get_id_map(obo_file: Path) -> pl.DataFrame:
+    """Return a term ID to name mapping."""
+    onto = Ontology.from_obo(obo_file)
+    return onto.id_map(struct="polars")
+
+
 def get_system_descendants(systems_file: Path, obo_file: Path) -> frozenset[str]:
     """Return all valid term IDs that are descendants of system-level terms.
 
