@@ -225,9 +225,11 @@ class Ursa(Reference):
     of tissue and cell-type signals in gene expression profiles across platforms and technologies.
     Bioinformatics 29, 3036–3044 (2013)."""
     doi: str = "10.1093/bioinformatics/btt529"
-    url: str = "ursa.princeton.edu"
+    url: str = "https://doi.org/10.5281/zenodo.17663086"
     rights: str = "CC BY-NC 3.0"
-    notes: str | None = "url is no longer accessible."
+    notes: str | None = (
+        "The original web server that housed these annotations (ursa.princeton.edu) is no longer active. Access through the MetaHQ database."
+    )
 
     def __init__(self, n: int):
         self.n = n
