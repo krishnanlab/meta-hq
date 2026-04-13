@@ -59,6 +59,7 @@ def sample_citation_config():
         ecode="expert",
         tech="rnaseq",
         mode="annotate",
+        license="any",
         date="2026-04-01 12:00:00",
         outfile="test_CITATION.txt",
     )
@@ -319,6 +320,7 @@ class TestCitationConfig:
             ecode="expert",
             tech="rnaseq",
             mode="annotate",
+            license="any",
             date="2026-04-01 12:00:00",
         )
 
@@ -343,6 +345,7 @@ class TestCitationConfig:
             ecode="semi",
             tech="microarray",
             mode="label",
+            license="any",
             date="2026-04-01 12:00:00",
             outfile="custom_citation.txt",
         )
@@ -360,6 +363,7 @@ class TestCitationConfig:
             ecode="expert",
             tech="rnaseq",
             mode="annotate",
+            license="any",
             date="2026-04-01 12:00:00",
             outfile=Path("/tmp/citations.txt"),
         )

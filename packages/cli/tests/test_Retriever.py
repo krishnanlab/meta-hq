@@ -153,6 +153,7 @@ class TestRetriever:
             ecode="test_ecode",
             tech="test_tech",
             mode="direct",
+            license="any",
             date="2026-01-01 00:00:00",
             outfile="CITATION.txt",
         )
