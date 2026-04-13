@@ -155,7 +155,7 @@ that contributed to your retrieved annotation set.
 - **DOI:** [10.1093/bioinformatics/btt529](https://academic.oup.com/bioinformatics/article/29/23/3036/247250)
 - **Rights Statement** From Permissions in paper
 - **Access:** Access through the MetaHQ database at [https://doi.org/10.5281/zenodo.17663086](https://doi.org/10.5281/zenodo.17663086).
-- **Notes:** The original web server that housed these annotaitons (ursa.princeton.edu) is no longer active.
+- **Notes:** The original web server that housed these annotations (ursa.princeton.edu) is no longer active.
 - **Sample annotations in MetaHQ:** 11,931
 - **Study annotations in MetaHQ:** 389
 - **⚠️ NonCommercial Restriction**
