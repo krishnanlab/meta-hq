@@ -108,6 +108,7 @@ def retrieve_age(
         level=level,
         filters=filters,
         mode="annotate",  # show annotate instead of direct for interpretability
+        license=license,
         date=NOW,
         outdir=resolved_dir,
     )
@@ -175,6 +176,7 @@ def retrieve_diseases(
         level=level,
         filters=filters,
         mode=mode,
+        license=license,
         date=NOW,
         outdir=resolved_dir,
     )
@@ -229,6 +231,7 @@ def retrieve_sex(
         level=level,
         filters=filters,
         mode="annotate",  # show annotate instead of direct for interpretability
+        license=license,
         date=NOW,
         outdir=resolved_dir,
     )
@@ -296,6 +299,7 @@ def retrieve_tissues(
         level=level,
         filters=filters,
         mode=mode,
+        license=license,
         date=NOW,
         outdir=resolved_dir,
     )

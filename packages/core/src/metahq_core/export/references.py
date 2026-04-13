@@ -47,6 +47,8 @@ class CitationConfig:
             Technology of the quereied database entries.
         mode (str):
             Query mode (e.g, annotate, label).
+        license (str):
+            License filter applied to the query.
         date (str):
             Date formatted as 'YYYY-MM-DD HR:MIN:SEC'.
         outfile (str | Path):
@@ -62,6 +64,7 @@ class CitationConfig:
     ecode: str
     tech: str
     mode: str
+    license: str
     date: str
     outfile: str | Path = "CITATION.txt"
 
@@ -103,6 +106,7 @@ def build_citation_file(
         ecode=config.ecode,
         tech=config.tech,
         mode=config.mode,
+        license=config.license,
         date=config.date,
         metahq_reference=metahq_reference,
     )

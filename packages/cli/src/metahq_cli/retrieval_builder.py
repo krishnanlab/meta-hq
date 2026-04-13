@@ -238,6 +238,7 @@ class Builder:
         level: str,
         filters: dict[str, str],
         mode: str,
+        license: str,
         date: str,
         outdir: str | Path,
     ) -> CitationConfig:
@@ -258,6 +259,9 @@ class Builder:
 
             mode (Literal['direct', 'annotate', 'label']):
                 Retrieve direct, propagated annotations, or labels.
+
+            license (str):
+                License filter applied to the query.
 
             date (str):
                 Date and time of the query.
@@ -283,6 +287,7 @@ class Builder:
             ecode=filters["ecode"],
             tech=filters["tech"],
             mode=mode,
+            license=license,
             date=date,
             outfile=outfile,
         )

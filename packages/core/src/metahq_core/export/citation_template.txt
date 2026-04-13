@@ -16,6 +16,7 @@ Species: $species
 Ecode: $ecode
 Technology: $tech
 Mode: $mode
+License: $license
 
 ====================================
 Data sources included in this export
