@@ -218,10 +218,14 @@ class TestLabelsFromDf:
     def test_from_df_basic(self, sample_data):
         """test creating labelstations from combined dataframe"""
         data, ids = sample_data
-        combined_df = pl.concat([ids, data], how="horizontal")
+        ids_with_sources = ids.with_columns(pl.lit("source1").alias("sources"))
+        combined_df = pl.concat([ids_with_sources, data], how="horizontal")
 
         labels = Labels.from_df(
-            combined_df, index_col="index", group_cols=("group", "platform")
+            combined_df,
+            index_col="index",
+            sources_col="sources",
+            group_cols=("group", "platform"),
         )
 
         assert isinstance(labels, Labels)
@@ -233,10 +237,14 @@ class TestLabelsFromDf:
     def test_from_df_with_defaults(self, sample_data):
         """test from_df with default group_cols"""
         data, ids = sample_data
-        combined_df = pl.concat([ids, data], how="horizontal")
+        ids_with_sources = ids.with_columns(pl.lit("source1").alias("sources"))
+        combined_df = pl.concat([ids_with_sources, data], how="horizontal")
 
         labels = Labels.from_df(
-            combined_df, index_col="index", group_cols=("group", "platform")
+            combined_df,
+            index_col="index",
+            sources_col="sources",
+            group_cols=("group", "platform"),
         )
         assert labels.group_cols == ("group", "platform")
 

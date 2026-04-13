@@ -212,17 +212,19 @@ class TestParsedEntries:
     def test_init(self, sample_parsed_entries):
         """Test basic initialization"""
         assert isinstance(sample_parsed_entries.accessions, AccessionIDs)
-        assert sample_parsed_entries.entries == {"id": [], "value": []}
+        assert sample_parsed_entries.entries == {"id": [], "value": [], "sources": []}
 
     def test_add(self, sample_parsed_entries):
         """Test adding an entry"""
         sample_parsed_entries.add(
             "UBERON:0001",
             "brain",
+            "source1",
             {"sample": "GSM123", "series": "GSE456", "platform": "GPL789"},
         )
         assert sample_parsed_entries.entries["id"] == ["UBERON:0001"]
         assert sample_parsed_entries.entries["value"] == ["brain"]
+        assert sample_parsed_entries.entries["sources"] == ["source1"]
         assert sample_parsed_entries.accessions.ids["sample"] == ["GSM123"]
 
     def test_add_multiple(self, sample_parsed_entries):
@@ -230,16 +232,19 @@ class TestParsedEntries:
         sample_parsed_entries.add(
             "UBERON:0001",
             "brain",
+            "source1",
             {"sample": "GSM123", "series": "GSE456", "platform": "GPL789"},
         )
         sample_parsed_entries.add(
             "UBERON:0002",
             "liver",
+            "source2",
             {"sample": "GSM124", "series": "GSE457", "platform": "GPL790"},
         )
 
         assert len(sample_parsed_entries.entries["id"]) == 2
         assert len(sample_parsed_entries.entries["value"]) == 2
+        assert len(sample_parsed_entries.entries["sources"]) == 2
         assert len(sample_parsed_entries.accessions.ids["sample"]) == 2
 
     def test_to_polars(self, sample_parsed_entries):
@@ -247,11 +252,13 @@ class TestParsedEntries:
         sample_parsed_entries.add(
             "UBERON:0001",
             "brain",
+            "source1",
             {"sample": "GSM123", "series": "GSE456", "platform": "GPL789"},
         )
         sample_parsed_entries.add(
             "UBERON:0002",
             "liver",
+            "source2",
             {"sample": "GSM124", "series": "GSE457", "platform": "GPL790"},
         )
 
@@ -260,6 +267,7 @@ class TestParsedEntries:
         assert df.height == 2
         assert "id" in df.columns
         assert "value" in df.columns
+        assert "sources" in df.columns
         assert "sample" in df.columns
         assert "series" in df.columns
         assert "platform" in df.columns
@@ -440,22 +448,25 @@ class TestUnParsedEntry:
             },
         }
         entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
-        ids, values = entry.get_annotations()
+        ids, values, sources = entry.get_annotations()
         assert ids == "UBERON:0001"
         assert values == "brain"
+        assert sources == "source1"
 
     def test_get_annotations_multiple_sources(self, sample_annotation_entry):
         """Test getting annotations from multiple sources"""
         entry = UnParsedEntry(
             sample_annotation_entry, "tissue", ["expert-curated"], "homo sapiens"
         )
-        ids, values = entry.get_annotations()
+        ids, values, sources = entry.get_annotations()
         # Results are concatenated with | and order might vary due to set
         assert "UBERON:0001" in ids
         assert "UBERON:0002" in ids
         assert "|" in ids
         assert "brain" in values
         assert "cerebral cortex" in values
+        assert "source1" in sources
+        assert "source2" in sources
 
     def test_get_annotations_filtered_by_ecode(self):
         """Test that annotations are filtered by evidence code"""
@@ -475,10 +486,11 @@ class TestUnParsedEntry:
             },
         }
         entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
-        ids, values = entry.get_annotations()
+        ids, values, sources = entry.get_annotations()
         # Should only include expert-curated annotation
         assert ids == "UBERON:0001"
         assert values == "brain"
+        assert sources == "source1"
 
     def test_get_annotations_not_acceptable(self):
         """Test getting annotations when entry is not acceptable"""
@@ -493,9 +505,10 @@ class TestUnParsedEntry:
             },
         }
         entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
-        ids, values = entry.get_annotations()
+        ids, values, sources = entry.get_annotations()
         assert ids == "NA"
         assert values == "NA"
+        assert sources == "NA"
 
 
 # =======================================================
@@ -706,10 +719,11 @@ class TestQueryMethods:
         query = Query(
             "geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq"
         )
-        ids, values = query.get_valid_annotations("entry1")
+        ids, values, sources = query.get_valid_annotations("entry1")
 
         assert ids == "UBERON:0001"
         assert values == "brain"
+        assert sources == "source1"
 
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
@@ -722,10 +736,11 @@ class TestQueryMethods:
 
         query = Query("geo", "tissue", "sample", "expert-curated", "human", "rnaseq")
         # entry3 is mus musculus
-        ids, values = query.get_valid_annotations("entry3")
+        ids, values, sources = query.get_valid_annotations("entry3")
 
         assert ids == "NA"
         assert values == "NA"
+        assert sources == "NA"
 
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
