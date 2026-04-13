@@ -4,7 +4,7 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-04-07 by Parker Hicks
+Last updated: 2026-04-13 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 
+from metahq_core.config import SOURCES_COL
 from metahq_core.export.base import BaseExporter
 from metahq_core.export.references import CitationConfig, save_citations
 from metahq_core.logger import setup_logger
@@ -77,31 +78,6 @@ class AnnotationsExporter(BaseExporter):
             logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
-
-    def add_sources(self, anno: Annotations) -> Annotations:
-        """Add the sources that contributed to the labels of each sample or dataset.
-
-        Arguments:
-            anno (Annotations):
-                A populated Labels curation object.
-
-        Returns:
-            The Labels object with additional source IDs for each index.
-
-        """
-        allowed_sources = getattr(anno, "allowed_sources", None)
-        sources = {anno.index_col: [], "sources": []}
-        for idx in anno.index:
-            sources[anno.index_col].append(idx)
-
-            # get sources for a particular index for the specified attribute,
-            # filtering by license if a license filter was applied during querying
-            source_keys = list(self._database[idx][self.attribute].keys())
-            if allowed_sources is not None:
-                source_keys = [s for s in source_keys if s.lower() in allowed_sources]
-            sources["sources"].append("|".join(source_keys))
-
-        return anno.add_ids(pl.DataFrame(sources))
 
     def get_sra(self, anno: Annotations, fields: list[str]) -> Annotations:
         """
@@ -402,13 +378,11 @@ class AnnotationsExporter(BaseExporter):
                 anno, [field for field in _metadata if field in database_ids("sra")]
             )
 
-        # add sources
-        anno = self.add_sources(anno)
-        _metadata.extend(["sources"])
+        _metadata.extend([SOURCES_COL])
 
         # save sources to citation file
         save_citations(
-            anno.ids["sources"].str.split("|").explode().value_counts(sort=True),
+            anno.ids[SOURCES_COL].str.split("|").explode().value_counts(sort=True),
             citation_config,
             logger=self.log,
             verbose=self.verbose,
@@ -460,10 +434,8 @@ class AnnotationsExporter(BaseExporter):
     ):
         """Save annotations as JSON with requested metadata."""
 
-        # add sources
-        anno = self.add_sources(anno)
         save_citations(
-            anno.ids["sources"].str.split("|").explode().value_counts(sort=True),
+            anno.ids[SOURCES_COL].str.split("|").explode().value_counts(sort=True),
             citation_config,
             logger=self.log,
         )

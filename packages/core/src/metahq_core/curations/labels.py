@@ -4,7 +4,7 @@ Class for mutating and operating on sets of labels.
 Author: Parker Hicks
 Date: 2025-08-13
 
-Last updated: 2026-04-01 by Parker Hicks
+Last updated: 2026-04-13 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -258,6 +258,7 @@ class Labels(BaseCuration):
         cls,
         df: pl.DataFrame,
         index_col: str,
+        sources_col: str,
         group_cols: tuple[str, ...] | list[str],
         **kwargs,
     ) -> Labels:
@@ -298,7 +299,7 @@ class Labels(BaseCuration):
             │ GSM3   ┆ GSE2   ┆ -1             ┆ -1             ┆ 1              │
             └────────┴────────┴────────────────┴────────────────┴────────────────┘
         """
-        id_columns = [index_col] + list(group_cols)
+        id_columns = [index_col, sources_col] + list(group_cols)
         ids_data = df.select(id_columns)
         annotation_data = df.drop(id_columns)
 

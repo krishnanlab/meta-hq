@@ -4,7 +4,7 @@ Class for storing and mutating annotation collections.
 Author: Parker Hicks
 Date: 2025-04-14
 
-Last updated: 2026-04-01 by Parker Hicks
+Last updated: 2026-04-13 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -372,12 +372,10 @@ class Annotations(BaseCuration):
                 logger=self.log,
                 verbose=self.verbose,
             )
-            result.allowed_sources = getattr(self, "allowed_sources", None)
             return result
 
         if mode == 1:
             result = converter.to_labels()
-            result.allowed_sources = getattr(self, "allowed_sources", None)
             return result
 
         msg = ("Mode %s not available.", mode)
@@ -471,6 +469,7 @@ class Annotations(BaseCuration):
         cls,
         df: pl.DataFrame,
         index_col: str,
+        sources_col: str,
         group_cols: tuple[str, ...] | list[str],
         **kwargs,
     ) -> Annotations:
@@ -515,7 +514,7 @@ class Annotations(BaseCuration):
             └────────┴────────┴────────────────┴────────────────┴────────────────┴────────────────┘
         """
         group_cols = tuple(group_cols)
-        id_columns = [index_col] + list(group_cols)
+        id_columns = [index_col, sources_col] + list(group_cols)
         ids_data = df.select(id_columns)
         annotation_data = df.drop(id_columns)
 
