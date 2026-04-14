@@ -13,6 +13,7 @@ import polars as pl
 
 from metahq_setup.config.config import (
     BGEE_FISH,
+    BGEE_FLY,
     BGEE_HUMAN,
     BGEE_MOUSE,
     BGEE_RAT,
@@ -34,12 +35,13 @@ class BgeeProcessor(BaseProcessor):
     providing curated anatomical, developmental stage, and sex annotations
     for RNA-Seq libraries.
 
-    Processes data for 5 species:
+    Processes data for 6 species:
     - Mus musculus (mouse)
     - Homo sapiens (human)
     - Rattus norvegicus (rat)
     - Caenorhabditis elegans (worm)
     - Danio rerio (zebrafish)
+    - Drosophila melanogaster (fly)
     """
 
     source_name = "bgee"
@@ -53,6 +55,7 @@ class BgeeProcessor(BaseProcessor):
         "rat": BGEE_RAT,
         "worm": BGEE_WORM,
         "fish": BGEE_FISH,
+        "fly": BGEE_FLY,
     }
 
     def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
