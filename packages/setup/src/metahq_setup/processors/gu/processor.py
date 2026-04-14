@@ -71,9 +71,7 @@ class GuProcessor(BaseProcessor):
             )
             # Filter to rows with at least one annotation (tissue or disease)
             .filter(
-                ~pl.all_horizontal(
-                    pl.col(["tissue_name", "disease_name"]).is_null()
-                )
+                ~pl.all_horizontal(pl.col(["tissue_name", "disease_name"]).is_null())
             )
         )
 
@@ -122,9 +120,7 @@ class GuProcessor(BaseProcessor):
             df.filter(pl.col("disease_name").is_not_null())
             .select(["sample_id", "disease_name"])
             .join(disease_map, on="disease_name", how="left")
-            .filter(
-                pl.col("mondo_id").is_not_null() & (pl.col("mondo_id") != "na")
-            )
+            .filter(pl.col("mondo_id").is_not_null() & (pl.col("mondo_id") != "na"))
         )
 
         # Load MONDO system descendants for filtering
@@ -173,9 +169,7 @@ class GuProcessor(BaseProcessor):
             df.filter(pl.col("tissue_name").is_not_null())
             .select(["sample_id", "tissue_name"])
             .join(tissue_map, on="tissue_name", how="left")
-            .filter(
-                pl.col("uberon_id").is_not_null() & (pl.col("uberon_id") != "na")
-            )
+            .filter(pl.col("uberon_id").is_not_null() & (pl.col("uberon_id") != "na"))
         )
 
         # Load UBERON system descendants for filtering
@@ -223,7 +217,9 @@ class GuProcessor(BaseProcessor):
         annotation_types = data["annotation_type"].unique().to_list()
 
         if "disease" not in annotation_types and "tissue" not in annotation_types:
-            self.logger.warning("No disease or tissue annotations found in Gu 2023 output.")
+            self.logger.warning(
+                "No disease or tissue annotations found in Gu 2023 output."
+            )
 
         # Verify all records have ecode='expert'
         if not all(e == "expert" for e in data["ecode"].unique().to_list()):
