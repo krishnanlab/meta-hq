@@ -104,3 +104,8 @@ BGEE_WORM: Path = (
 BGEE_FISH: Path = (
     BGEE_DIR / "Danio_rerio_Bgee_15_0" / "Danio_rerio_RNA-Seq_libraries.tsv"
 )
+BGEE_FLY: Path = (
+    BGEE_DIR
+    / "Drosophila_melanogaster_Bgee_15_0"
+    / "Drosophila_melanogaster_RNA-Seq_libraries.tsv"
+)
