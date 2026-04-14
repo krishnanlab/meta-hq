@@ -543,7 +543,7 @@ class Johnson2023Processor(BaseProcessor):
         age_records = age_df.select(
             pl.col(sample_id_col).alias("sample_id"),
             pl.lit("age").alias("annotation_type"),
-            pl.lit("na").alias("term_id"),  # No standard ontology for age groups
+            pl.col("age_group").alias("term_id"),
             pl.col("age_group").alias("term_label"),
             pl.lit("expert").alias("ecode"),
         )
