@@ -211,17 +211,19 @@ class TestParsedEntries:
     def test_init(self, sample_parsed_entries):
         """Test basic initialization"""
         assert isinstance(sample_parsed_entries.accessions, AccessionIDs)
-        assert sample_parsed_entries.entries == {"id": [], "value": []}
+        assert sample_parsed_entries.entries == {"id": [], "value": [], "sources": []}
 
     def test_add(self, sample_parsed_entries):
         """Test adding an entry"""
         sample_parsed_entries.add(
             "UBERON:0001",
             "brain",
+            "source1",
             {"sample": "GSM123", "series": "GSE456", "platform": "GPL789"},
         )
         assert sample_parsed_entries.entries["id"] == ["UBERON:0001"]
         assert sample_parsed_entries.entries["value"] == ["brain"]
+        assert sample_parsed_entries.entries["sources"] == ["source1"]
         assert sample_parsed_entries.accessions.ids["sample"] == ["GSM123"]
 
     def test_add_multiple(self, sample_parsed_entries):
@@ -229,16 +231,19 @@ class TestParsedEntries:
         sample_parsed_entries.add(
             "UBERON:0001",
             "brain",
+            "source1",
             {"sample": "GSM123", "series": "GSE456", "platform": "GPL789"},
         )
         sample_parsed_entries.add(
             "UBERON:0002",
             "liver",
+            "source2",
             {"sample": "GSM124", "series": "GSE457", "platform": "GPL790"},
         )
 
         assert len(sample_parsed_entries.entries["id"]) == 2
         assert len(sample_parsed_entries.entries["value"]) == 2
+        assert len(sample_parsed_entries.entries["sources"]) == 2
         assert len(sample_parsed_entries.accessions.ids["sample"]) == 2
 
     def test_to_polars(self, sample_parsed_entries):
@@ -246,11 +251,13 @@ class TestParsedEntries:
         sample_parsed_entries.add(
             "UBERON:0001",
             "brain",
+            "source1",
             {"sample": "GSM123", "series": "GSE456", "platform": "GPL789"},
         )
         sample_parsed_entries.add(
             "UBERON:0002",
             "liver",
+            "source2",
             {"sample": "GSM124", "series": "GSE457", "platform": "GPL790"},
         )
 
@@ -259,6 +266,7 @@ class TestParsedEntries:
         assert df.height == 2
         assert "id" in df.columns
         assert "value" in df.columns
+        assert "sources" in df.columns
         assert "sample" in df.columns
         assert "series" in df.columns
         assert "platform" in df.columns
@@ -439,22 +447,25 @@ class TestUnParsedEntry:
             },
         }
         entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
-        ids, values = entry.get_annotations()
+        ids, values, sources = entry.get_annotations()
         assert ids == "UBERON:0001"
         assert values == "brain"
+        assert sources == "source1"
 
     def test_get_annotations_multiple_sources(self, sample_annotation_entry):
         """Test getting annotations from multiple sources"""
         entry = UnParsedEntry(
             sample_annotation_entry, "tissue", ["expert-curated"], "homo sapiens"
         )
-        ids, values = entry.get_annotations()
+        ids, values, sources = entry.get_annotations()
         # Results are concatenated with | and order might vary due to set
         assert "UBERON:0001" in ids
         assert "UBERON:0002" in ids
         assert "|" in ids
         assert "brain" in values
         assert "cerebral cortex" in values
+        assert "source1" in sources
+        assert "source2" in sources
 
     def test_get_annotations_filtered_by_ecode(self):
         """Test that annotations are filtered by evidence code"""
@@ -474,10 +485,11 @@ class TestUnParsedEntry:
             },
         }
         entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
-        ids, values = entry.get_annotations()
+        ids, values, sources = entry.get_annotations()
         # Should only include expert-curated annotation
         assert ids == "UBERON:0001"
         assert values == "brain"
+        assert sources == "source1"
 
     def test_get_annotations_not_acceptable(self):
         """Test getting annotations when entry is not acceptable"""
@@ -492,9 +504,114 @@ class TestUnParsedEntry:
             },
         }
         entry = UnParsedEntry(entry_data, "tissue", ["expert-curated"], "homo sapiens")
-        ids, values = entry.get_annotations()
+        ids, values, sources = entry.get_annotations()
         assert ids == "NA"
         assert values == "NA"
+        assert sources == "NA"
+
+    def test_allowed_sources_none_includes_all(self):
+        """allowed_sources=None should not filter any sources."""
+        entry_data = {
+            "organism": "homo sapiens",
+            "tissue": {
+                "ursa": {
+                    "id": "UBERON:0001",
+                    "value": "brain",
+                    "ecode": "expert-curated",
+                },
+                "gemma": {
+                    "id": "UBERON:0002",
+                    "value": "liver",
+                    "ecode": "expert-curated",
+                },
+            },
+        }
+        entry = UnParsedEntry(
+            entry_data,
+            "tissue",
+            ["expert-curated"],
+            "homo sapiens",
+            allowed_sources=None,
+        )
+        ids, values, sources = entry.get_annotations()
+        assert "UBERON:0001" in ids
+        assert "UBERON:0002" in ids
+
+    def test_allowed_sources_filters_disallowed_source(self):
+        """Sources whose lowercase name is not in allowed_sources should be skipped."""
+        entry_data = {
+            "organism": "homo sapiens",
+            "tissue": {
+                "ursa": {
+                    "id": "UBERON:0001",
+                    "value": "brain",
+                    "ecode": "expert-curated",
+                },
+                "gemma": {
+                    "id": "UBERON:0002",
+                    "value": "liver",
+                    "ecode": "expert-curated",
+                },
+            },
+        }
+        # Only allow 'ursa'; 'gemma' should be excluded
+        entry = UnParsedEntry(
+            entry_data,
+            "tissue",
+            ["expert-curated"],
+            "homo sapiens",
+            allowed_sources={"ursa"},
+        )
+        ids, values, sources = entry.get_annotations()
+        assert ids == "UBERON:0001"
+        assert values == "brain"
+        assert "UBERON:0002" not in ids
+
+    def test_allowed_sources_case_insensitive(self):
+        """Matching against allowed_sources should be case-insensitive."""
+        entry_data = {
+            "organism": "homo sapiens",
+            "tissue": {
+                "URSA": {
+                    "id": "UBERON:0001",
+                    "value": "brain",
+                    "ecode": "expert-curated",
+                },
+            },
+        }
+        # allowed_sources stored as lowercase (as Query does)
+        entry = UnParsedEntry(
+            entry_data,
+            "tissue",
+            ["expert-curated"],
+            "homo sapiens",
+            allowed_sources={"ursa"},
+        )
+        ids, values, sources = entry.get_annotations()
+        assert ids == "UBERON:0001"
+
+    def test_allowed_sources_all_filtered_returns_empty_strings(self):
+        """When all sources are filtered out, get_annotations returns empty strings."""
+        entry_data = {
+            "organism": "homo sapiens",
+            "tissue": {
+                "gemma": {
+                    "id": "UBERON:0002",
+                    "value": "liver",
+                    "ecode": "expert-curated",
+                },
+            },
+        }
+        entry = UnParsedEntry(
+            entry_data,
+            "tissue",
+            ["expert-curated"],
+            "homo sapiens",
+            allowed_sources={"ursa"},  # gemma not in allowed set
+        )
+        ids, values, sources = entry.get_annotations()
+        assert ids == ""
+        assert values == ""
 
 
 # =======================================================
@@ -533,7 +650,7 @@ class TestQueryInit:
             "geo",
             "disease",
             level="series",
-            ecode="semi-curated",
+            ecode="crowd-sourced",
             species="mouse",
             technology="microarray",
         )
@@ -560,7 +677,9 @@ class TestQueryInit:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
+        query = Query(
+            "geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq"
+        )
         assert query.ecodes == ["expert-curated"]
 
     @patch("metahq_core.query.load_bson")
@@ -591,7 +710,9 @@ class TestQueryInit:
         mock_load_bson.return_value = {}
 
         with pytest.raises(ValueError, match="Invalid species query"):
-            Query("geo", "tissue", "sample", "expert-curated", "invalid-species", "rnaseq")
+            Query(
+                "geo", "tissue", "sample", "expert-curated", "invalid-species", "rnaseq"
+            )
 
 
 class TestQueryMethods:
@@ -604,7 +725,9 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
+        query = Query(
+            "geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq"
+        )
         index, groups = query._assign_index_groups()
 
         assert index == "sample"
@@ -617,7 +740,9 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = {}
 
-        query = Query("geo", "tissue", "series", "expert-curated", "homo sapiens", "rnaseq")
+        query = Query(
+            "geo", "tissue", "series", "expert-curated", "homo sapiens", "rnaseq"
+        )
         index, groups = query._assign_index_groups()
 
         assert index == "series"
@@ -632,7 +757,9 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = mock_annotations_dict
 
-        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
+        query = Query(
+            "geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq"
+        )
         accessions = query.get_accession_ids("entry1")
 
         assert accessions["sample"] == "GSM1"
@@ -648,7 +775,9 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = mock_annotations_dict
 
-        query = Query("geo", "tissue", "series", "expert-curated", "homo sapiens", "rnaseq")
+        query = Query(
+            "geo", "tissue", "series", "expert-curated", "homo sapiens", "rnaseq"
+        )
         accessions = query.get_accession_ids("entry1")
 
         assert "sample" not in accessions
@@ -672,7 +801,9 @@ class TestQueryMethods:
         }
         mock_load_bson.return_value = mock_annotations
 
-        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
+        query = Query(
+            "geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq"
+        )
         accessions = query.get_accession_ids("entry1")
 
         assert accessions["sample"] == "GSM1"
@@ -688,11 +819,14 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = mock_annotations_dict
 
-        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
-        ids, values = query.get_valid_annotations("entry1")
+        query = Query(
+            "geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq"
+        )
+        ids, values, sources = query.get_valid_annotations("entry1")
 
         assert ids == "UBERON:0001"
         assert values == "brain"
+        assert sources == "source1"
 
     @patch("metahq_core.query.load_bson")
     @patch("metahq_core.query.get_annotations")
@@ -703,9 +837,102 @@ class TestQueryMethods:
         mock_get_annotations.return_value = "path/to/annotations.bson"
         mock_load_bson.return_value = mock_annotations_dict
 
-        query = Query("geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq")
+        query = Query(
+            "geo", "tissue", "sample", "expert-curated", "homo sapiens", "rnaseq"
+        )
         # entry3 is mus musculus
-        ids, values = query.get_valid_annotations("entry3")
+        ids, values, sources = query.get_valid_annotations("entry3")
 
         assert ids == "NA"
-        assert values == "NA"
+        assert sources == "NA"
+
+
+# =======================================================
+# ==== Query License Tests
+# =======================================================
+
+
+class TestQueryLicense:
+    """Test license parameter on Query."""
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_default_license_is_any(self, mock_get_annotations, mock_load_bson):
+        """Query defaults to license='any', which sets allowed_sources to None."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        query = Query("geo", "tissue", "sample", "expert", "human", "rnaseq")
+        assert query.allowed_sources is None
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_permissive_license_sets_allowed_sources(
+        self, mock_get_annotations, mock_load_bson
+    ):
+        """license='permissive' populates allowed_sources with lowercase permissive names."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        query = Query(
+            "geo", "tissue", "sample", "expert", "human", "rnaseq", license="permissive"
+        )
+        assert query.allowed_sources is not None
+        assert isinstance(query.allowed_sources, set)
+        # All entries should be lowercase
+        assert all(s == s.lower() for s in query.allowed_sources)
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_permissive_license_excludes_nc_sources(
+        self, mock_get_annotations, mock_load_bson
+    ):
+        """NC sources should not appear in allowed_sources for 'permissive'."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        query = Query(
+            "geo", "tissue", "sample", "expert", "human", "rnaseq", license="permissive"
+        )
+        assert "gemma" not in query.allowed_sources
+        assert "ursa" not in query.allowed_sources
+        assert "ursa_hd" not in query.allowed_sources
+        assert "disignatlas" not in query.allowed_sources
+        assert "sirota_2011" not in query.allowed_sources
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_nc_license_includes_only_nc_sources(
+        self, mock_get_annotations, mock_load_bson
+    ):
+        """license='nc' should allow only nc sources, not permissive ones."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        query = Query(
+            "geo", "tissue", "sample", "expert", "human", "rnaseq", license="nc"
+        )
+        assert "gemma" in query.allowed_sources
+        assert "ursa" in query.allowed_sources
+        assert "krishnanlab" not in query.allowed_sources
+        assert "ale" not in query.allowed_sources
+
+    @patch("metahq_core.query.load_bson")
+    @patch("metahq_core.query.get_annotations")
+    def test_invalid_license_raises_value_error(
+        self, mock_get_annotations, mock_load_bson
+    ):
+        """An unrecognised license value should raise ValueError."""
+        mock_get_annotations.return_value = "path/to/annotations.bson"
+        mock_load_bson.return_value = {}
+
+        with pytest.raises(ValueError):
+            Query(
+                "geo",
+                "tissue",
+                "sample",
+                "expert",
+                "human",
+                "rnaseq",
+                license="commercial",
+            )

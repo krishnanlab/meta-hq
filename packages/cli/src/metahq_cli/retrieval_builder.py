@@ -4,12 +4,14 @@ Class to take retrieval arguments, check them, and build the retrieval query.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2025-12-05 by Parker Hicks
+Last updated: 2026-04-01 by Parker Hicks
 """
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import polars as pl
+from metahq_core.export.references import CitationConfig
 from metahq_core.util.exceptions import NoResultsFound
 from metahq_core.util.supported import get_ontology_families
 
@@ -19,9 +21,9 @@ from metahq_cli.util.checkers import (
     check_filter_keys,
     check_format,
     check_if_txt,
+    check_license,
     check_metadata,
     check_mode,
-    check_outfile,
 )
 from metahq_cli.util.messages import TruncatedList
 from metahq_cli.util.supported import required_filters
@@ -116,7 +118,12 @@ class Builder:
         return parsed
 
     def query_config(
-        self, db: str, attribute: str, level: str, filters: dict[str, str]
+        self,
+        db: str,
+        attribute: str,
+        level: str,
+        filters: dict[str, str],
+        license: str = "any",
     ) -> QueryConfig:
         """Construct a query configuration.
 
@@ -135,12 +142,16 @@ class Builder:
             filters (dict[str, str]):
                 Filters parsed by `Builder.get_filters`.
 
+            license (str):
+                License filter category. One of 'permissive', 'nc', or 'any' (default).
+
         Returns:
             A populated `QueryConfig`.
         """
         check_filter("ecodes", filters["ecode"])
         check_filter("species", filters["species"])
         check_filter("technologies", filters["tech"])
+        check_license(license)
 
         return QueryConfig(
             database=db,
@@ -149,6 +160,7 @@ class Builder:
             ecode=filters["ecode"],
             species=filters["species"],
             tech=filters["tech"],
+            license=license,
         )
 
     def curation_config(self, terms: str, mode: str, ontology: str) -> CurationConfig:
@@ -187,7 +199,7 @@ class Builder:
 
     def output_config(
         self,
-        outfile: str,
+        outdir: Path,
         fmt: str,
         metadata: str,
         level: str,
@@ -196,8 +208,8 @@ class Builder:
         """Construct an output configuration.
 
         Attributes:
-            outfile (str | Path):
-                Path to file to store annotations.
+            outdir (Path):
+                Resolved output directory (created by `resolve_outdir`).
 
             fmt (Literal["json", "parquet", "csv", "tsv"]):
                 Format of the output file.
@@ -214,9 +226,71 @@ class Builder:
         """
         check_metadata(level, metadata)
         check_format(fmt)
-        check_outfile(outfile)
 
+        outfile = outdir / f"result.{fmt}"
         return OutputConfig(outfile, fmt, metadata, attribute, level)
+
+    def citation_config(
+        self,
+        version: str,
+        terms: str,
+        attribute: str,
+        level: str,
+        filters: dict[str, str],
+        mode: str,
+        license: str,
+        date: str,
+        outdir: str | Path,
+    ) -> CitationConfig:
+        """Construct a citation configuration.
+
+        Attributes:
+            version (str):
+                Version of the MetaHQ databse.
+
+            attribute (str):
+                A supported attribute within MetaHQ.
+
+            level (str):
+                A level of annotations (e.g., `'sample'` or `'series'`).
+
+            filters (dict[str, str]):
+                Filters parsed by `Builder.get_filters`.
+
+            mode (Literal['direct', 'annotate', 'label']):
+                Retrieve direct, propagated annotations, or labels.
+
+            license (str):
+                License filter applied to the query.
+
+            date (str):
+                Date and time of the query.
+
+            outdir (Path):
+                Path to the output directory for the citation file.
+
+        Returns:
+            A populated `CitationConfig`.
+        """
+        check_filter("ecodes", filters["ecode"])
+        check_filter("species", filters["species"])
+        check_filter("technologies", filters["tech"])
+
+        outfile = Path(outdir) / "CITATION.txt"
+
+        return CitationConfig(
+            version=version,
+            terms=terms,
+            attribute=attribute,
+            level=level,
+            species=filters["species"],
+            ecode=filters["ecode"],
+            tech=filters["tech"],
+            mode=mode,
+            license=license,
+            date=date,
+            outfile=outfile,
+        )
 
     def make_age_curation(self, terms: str, mode: str) -> CurationConfig:
         """Makes an age-specific CurationConfig."""

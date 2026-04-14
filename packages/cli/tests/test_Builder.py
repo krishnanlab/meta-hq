@@ -130,7 +130,8 @@ class TestBuilder:
         assert len(result) == 3
 
     @patch("metahq_cli.retrieval_builder.check_filter")
-    def test_query_config_creates_config(self, mock_check, builder):
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_creates_config(self, mock_check_license, mock_check, builder):
         """test query_config creates QueryConfig with correct parameters"""
         filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
@@ -143,12 +144,14 @@ class TestBuilder:
         assert result.species == "human"
         assert result.ecode == "expert"
         assert result.tech == "rnaseq"
+        assert result.license == "any"  # default
 
         # Check that filters were validated
         assert mock_check.call_count == 3
 
     @patch("metahq_cli.retrieval_builder.check_filter")
-    def test_query_config_validates_filters(self, mock_check, builder):
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_validates_filters(self, mock_check_license, mock_check, builder):
         """test query_config validates all filter parameters"""
         filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
@@ -159,19 +162,49 @@ class TestBuilder:
         mock_check.assert_any_call("species", "human")
         mock_check.assert_any_call("technologies", "rnaseq")
 
+    @patch("metahq_cli.retrieval_builder.check_filter")
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_default_license(self, mock_check_license, mock_check, builder):
+        """test query_config defaults license to 'any'"""
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
+
+        result = builder.query_config("geo", "tissue", "sample", filters)
+
+        assert result.license == "any"
+        mock_check_license.assert_called_once_with("any")
+
+    @patch("metahq_cli.retrieval_builder.check_filter")
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_passes_license(self, mock_check_license, mock_check, builder):
+        """test query_config stores the supplied license in QueryConfig"""
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
+
+        result = builder.query_config("geo", "tissue", "sample", filters, license="permissive")
+
+        assert result.license == "permissive"
+        mock_check_license.assert_called_once_with("permissive")
+
+    @patch("metahq_cli.retrieval_builder.check_filter")
+    @patch("metahq_cli.retrieval_builder.check_license")
+    def test_query_config_calls_check_license(self, mock_check_license, mock_check, builder):
+        """test query_config calls check_license with the supplied value"""
+        filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
+
+        builder.query_config("geo", "disease", "series", filters, license="nc")
+
+        mock_check_license.assert_called_once_with("nc")
+
     @patch("metahq_cli.retrieval_builder.check_metadata")
     @patch("metahq_cli.retrieval_builder.check_format")
-    @patch("metahq_cli.retrieval_builder.check_outfile")
-    def test_output_config_creates_config(
-        self, mock_outfile, mock_format, mock_metadata, builder
-    ):
+    def test_output_config_creates_config(self, mock_format, mock_metadata, builder):
         """test output_config creates OutputConfig with correct parameters"""
-        result = builder.output_config(
-            "output.parquet", "parquet", "sample", "sample", "test_attr"
-        )
+        from pathlib import Path
+
+        outdir = Path("/tmp/my_results")
+        result = builder.output_config(outdir, "parquet", "sample", "sample", "test_attr")
 
         assert isinstance(result, OutputConfig)
-        assert result.outfile == "output.parquet"
+        assert result.outfile == outdir / "result.parquet"
         assert result.fmt == "parquet"
         assert result.metadata == "sample"
         assert result.attribute == "test_attr"
@@ -179,7 +212,6 @@ class TestBuilder:
 
         mock_metadata.assert_called_once_with("sample", "sample")
         mock_format.assert_called_once_with("parquet")
-        mock_outfile.assert_called_once_with("output.parquet")
 
     def test_map_sex_to_id_maps_male_and_female(self, builder):
         """test map_sex_to_id converts male/female to M/F"""

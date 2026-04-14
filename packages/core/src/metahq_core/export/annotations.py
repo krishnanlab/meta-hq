@@ -4,7 +4,7 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-02-03 by Parker Hicks
+Last updated: 2026-04-13 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -14,7 +14,9 @@ from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 
+from metahq_core.config import SOURCES_COL
 from metahq_core.export.base import BaseExporter
+from metahq_core.export.references import CitationConfig, save_citations
 from metahq_core.logger import setup_logger
 from metahq_core.util.io import checkdir, load_bson, save_json
 from metahq_core.util.supported import (
@@ -77,28 +79,6 @@ class AnnotationsExporter(BaseExporter):
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
 
-    def add_sources(self, anno: Annotations) -> Annotations:
-        """Add the sources that contributed to the labels of each sample or dataset.
-
-        Arguments:
-            anno (Annotations):
-                A populated Labels curation object.
-
-        Returns:
-            The Labels object with additional source IDs for each index.
-
-        """
-        sources = {anno.index_col: [], "sources": []}
-        for idx in anno.index:
-            sources[anno.index_col].append(idx)
-
-            # get sources for a particular index for the specified attribute
-            sources["sources"].append(
-                "|".join(list(self._database[idx][self.attribute].keys()))
-            )
-
-        return anno.add_ids(pl.DataFrame(sources))
-
     def get_sra(self, anno: Annotations, fields: list[str]) -> Annotations:
         """
         Retrieve SRA IDs from the annotations if they exist.
@@ -137,6 +117,7 @@ class AnnotationsExporter(BaseExporter):
         anno: Annotations,
         fmt: Literal["json", "parquet", "csv", "tsv"],
         file: FilePath,
+        citation_config: CitationConfig,
         metadata: str | None = None,
         **kwargs,
     ):
@@ -153,6 +134,9 @@ class AnnotationsExporter(BaseExporter):
             file (FilePath):
                 Path to outfile.json.
 
+            citation_config (CitationConfig):
+                Parameters for saving citations.
+
             metadata (str):
                 Metadata fields to include.
 
@@ -165,13 +149,18 @@ class AnnotationsExporter(BaseExporter):
             "tsv": self.to_tsv,
         }
 
-        opt[fmt](anno, file, metadata, **kwargs)
+        opt[fmt](anno, file, citation_config, metadata, **kwargs)
 
         if self.verbose:
             self.log.info("Saved!")
 
     def to_csv(
-        self, anno: Annotations, file: FilePath, metadata: str | None = None, **kwargs
+        self,
+        anno: Annotations,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+        **kwargs,
     ):
         """Save annotations to csv.
 
@@ -186,9 +175,15 @@ class AnnotationsExporter(BaseExporter):
                 Metadata fields to include.
 
         """
-        self._save_tabular("csv", anno, file, metadata, **kwargs)
+        self._save_tabular("csv", anno, file, citation_config, metadata, **kwargs)
 
-    def to_json(self, anno: Annotations, file: FilePath, metadata: str | None = None):
+    def to_json(
+        self,
+        anno: Annotations,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+    ):
         """Save annotations curation to json. Keys are terms and values are
         positively annotated indices.
 
@@ -205,10 +200,10 @@ class AnnotationsExporter(BaseExporter):
         """
 
         if self._only_index(metadata, anno.index_col):
-            self._save_json_with_metadata(anno, file, anno.index_col)
+            self._save_json_with_metadata(anno, file, citation_config, anno.index_col)
 
         elif isinstance(metadata, str):
-            self._save_json_with_metadata(anno, file, metadata)
+            self._save_json_with_metadata(anno, file, citation_config, metadata)
 
         else:
             msg = ("Unexpected metedata arguments %s", metadata)
@@ -224,6 +219,7 @@ class AnnotationsExporter(BaseExporter):
         self,
         anno: Annotations,
         file: FilePath,
+        citation_config: CitationConfig,
         metadata: str | None = None,
         **kwargs,
     ):
@@ -240,10 +236,15 @@ class AnnotationsExporter(BaseExporter):
                 Metadata fields to include.
 
         """
-        self._save_tabular("parquet", anno, file, metadata, **kwargs)
+        self._save_tabular("parquet", anno, file, citation_config, metadata, **kwargs)
 
     def to_tsv(
-        self, anno: Annotations, file: FilePath, metadata: str | None = None, **kwargs
+        self,
+        anno: Annotations,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+        **kwargs,
     ):
         """Save annotations to tsv.
 
@@ -258,7 +259,7 @@ class AnnotationsExporter(BaseExporter):
                 Metadata fields to include.
 
         """
-        self._save_tabular("tsv", anno, file, metadata, **kwargs)
+        self._save_tabular("tsv", anno, file, citation_config, metadata, **kwargs)
 
     def _get_descriptions(self, anno: Annotations):
         """Collect descriptions to add the final output."""
@@ -343,14 +344,16 @@ class AnnotationsExporter(BaseExporter):
         ids = [m for m in metadata if m != "description"]
         reorder = metadata + anno.entities
 
+        df = (
+            anno.ids.select(ids)
+            .hstack(anno.data)  # stack IDs with annotations
+            .join(desc, on=anno.index_col, how="left")  # join with desc
+            .select(reorder)
+        )
+
         save_method = self._get_save_method(fmt)
         save_method(
-            (
-                anno.ids.select(ids)
-                .hstack(anno.data)  # stack IDs with annotations
-                .join(desc, on=anno.index_col, how="left")  # join with desc
-                .select(reorder)
-            ),
+            df,
             file,
             **kwargs,
         )
@@ -360,6 +363,7 @@ class AnnotationsExporter(BaseExporter):
         fmt: str,
         anno: Annotations,
         file: FilePath,
+        citation_config: CitationConfig,
         metadata: str | None = None,
         **kwargs,
     ):
@@ -374,10 +378,17 @@ class AnnotationsExporter(BaseExporter):
                 anno, [field for field in _metadata if field in database_ids("sra")]
             )
 
-        # add sources
-        anno = self.add_sources(anno)
-        _metadata.extend(["sources"])
+        _metadata.extend([SOURCES_COL])
 
+        # save sources to citation file
+        save_citations(
+            anno.ids[SOURCES_COL].str.split("|").explode().value_counts(sort=True),
+            citation_config,
+            logger=self.log,
+            verbose=self.verbose,
+        )
+
+        self.log.info("Saving retrieval result to %s", Path(file).parent)
         if "description" in _metadata:
             self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
 
@@ -406,6 +417,7 @@ class AnnotationsExporter(BaseExporter):
 
     def _save_json_only_index(self, anno: Annotations, file: FilePath):
         """Save annotations as JSON with only the index."""
+        self.log.info("Saving retrieval result to %s", file)
         _anno: dict[str, list[str]] = {}
         stacked = anno.data.hstack(anno.ids)
         for col in anno.entities:
@@ -414,13 +426,21 @@ class AnnotationsExporter(BaseExporter):
         save_json(_anno, file)
 
     def _save_json_with_metadata(
-        self, anno: Annotations, file: FilePath, metadata: str
+        self,
+        anno: Annotations,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str,
     ):
         """Save annotations as JSON with requested metadata."""
 
-        # add sources
-        anno = self.add_sources(anno)
+        save_citations(
+            anno.ids[SOURCES_COL].str.split("|").explode().value_counts(sort=True),
+            citation_config,
+            logger=self.log,
+        )
 
+        self.log.info("Saving retrieval result to %s", Path(file).parent)
         _anno: dict[str, dict[str, dict[str, str]]] = {
             term: {} for term in anno.entities
         }

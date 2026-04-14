@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from metahq_core.util.exceptions import NoResultsFound
+from metahq_core.export.references import CitationConfig
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig, Retriever
 
@@ -38,6 +39,45 @@ class TestQueryConfig:
         assert config.ecode == "test_ecode"
         assert config.species == "test_species"
         assert config.tech == "test_tech"
+        assert config.license == "any"  # default
+
+    def test_query_config_license_default(self):
+        """license should default to 'any'."""
+        config = QueryConfig(
+            database="geo",
+            attribute="tissue",
+            level="sample",
+            ecode="expert",
+            species="human",
+            tech="rnaseq",
+        )
+        assert config.license == "any"
+
+    def test_query_config_license_permissive(self):
+        """license field should accept 'permissive'."""
+        config = QueryConfig(
+            database="geo",
+            attribute="tissue",
+            level="sample",
+            ecode="expert",
+            species="human",
+            tech="rnaseq",
+            license="permissive",
+        )
+        assert config.license == "permissive"
+
+    def test_query_config_license_nc(self):
+        """license field should accept 'nc'."""
+        config = QueryConfig(
+            database="geo",
+            attribute="disease",
+            level="series",
+            ecode="any",
+            species="human",
+            tech="rnaseq",
+            license="nc",
+        )
+        assert config.license == "nc"
 
 
 class TestCurationConfig:
@@ -104,16 +144,31 @@ class TestRetriever:
             level="test_level",
         )
 
-        return query_config, curation_config, output_config
+        citation_config = CitationConfig(
+            version="test_version",
+            terms="term1, term2",
+            attribute="test_attr",
+            level="test_level",
+            species="test_species",
+            ecode="test_ecode",
+            tech="test_tech",
+            mode="direct",
+            license="any",
+            date="2026-01-01 00:00:00",
+            outfile="CITATION.txt",
+        )
+
+        return query_config, curation_config, output_config, citation_config
 
     @pytest.fixture
     def retriever(self, sample_configs, mock_logger):
         """fixture for retriever instance"""
-        query_config, curation_config, output_config = sample_configs
+        query_config, curation_config, output_config, citation_config = sample_configs
         return Retriever(
             query_config,
             curation_config,
             output_config,
+            citation_config,
             logger=mock_logger,
             verbose=False,
         )
@@ -121,22 +176,24 @@ class TestRetriever:
     @pytest.fixture
     def verbose_retriever(self, sample_configs, mock_logger):
         """fixture for verbose retriever instance"""
-        query_config, curation_config, output_config = sample_configs
+        query_config, curation_config, output_config, citation_config = sample_configs
         return Retriever(
             query_config,
             curation_config,
             output_config,
+            citation_config,
             logger=mock_logger,
             verbose=True,
         )
 
     def test_retriever_initialization(self, sample_configs, mock_logger):
         """test retriever init stores configs correctly"""
-        query_config, curation_config, output_config = sample_configs
+        query_config, curation_config, output_config, citation_config = sample_configs
         retriever = Retriever(
             query_config,
             curation_config,
             output_config,
+            citation_config,
             logger=mock_logger,
             verbose=True,
         )
@@ -144,6 +201,7 @@ class TestRetriever:
         assert retriever.query_config == query_config
         assert retriever.curation_config == curation_config
         assert retriever.output_config == output_config
+        assert retriever.citation_config == citation_config
         assert retriever.verbose is True
         assert retriever.log == mock_logger
 
@@ -151,11 +209,12 @@ class TestRetriever:
         self, sample_configs, mock_logger
     ):
         """test retriever logs configs in verbose mode"""
-        query_config, curation_config, output_config = sample_configs
+        query_config, curation_config, output_config, citation_config = sample_configs
         Retriever(
             query_config,
             curation_config,
             output_config,
+            citation_config,
             logger=mock_logger,
             verbose=True,
         )
@@ -168,11 +227,12 @@ class TestRetriever:
         self, sample_configs, mock_logger
     ):
         """test retriever does not log configs in silent mode"""
-        query_config, curation_config, output_config = sample_configs
+        query_config, curation_config, output_config, citation_config = sample_configs
         Retriever(
             query_config,
             curation_config,
             output_config,
+            citation_config,
             logger=mock_logger,
             verbose=False,
         )
@@ -196,6 +256,7 @@ class TestRetriever:
             ecode="test_ecode",
             species="test_species",
             technology="test_tech",
+            license="any",
             logger=retriever.log,
             verbose=False,
         )
@@ -219,11 +280,36 @@ class TestRetriever:
             ecode="test_ecode",
             species="test_species",
             technology="test_tech",
+            license="any",
             logger=verbose_retriever.log,
             verbose=True,
         )
         assert result == mock_annotations
         verbose_retriever.log.info.assert_called_with("Querying...")
+
+    @patch("metahq_cli.retriever.Query")
+    def test_query_passes_license_to_core(self, mock_query_class, sample_configs, mock_logger):
+        """license from QueryConfig is forwarded to the core Query."""
+        query_config, curation_config, output_config, citation_config = sample_configs
+        query_config.license = "permissive"
+
+        retriever = Retriever(
+            query_config,
+            curation_config,
+            output_config,
+            citation_config,
+            logger=mock_logger,
+            verbose=False,
+        )
+
+        mock_query = Mock()
+        mock_query.annotations.return_value = Mock()
+        mock_query_class.return_value = mock_query
+
+        retriever.query()
+
+        _, kwargs = mock_query_class.call_args
+        assert kwargs["license"] == "permissive"
 
     def test_curate_raises_error_when_no_annotations(self, retriever):
         """test curate raises NoResultsFound when there are no annotations"""
@@ -422,15 +508,13 @@ class TestRetriever:
             retriever.save_curation(mock_curation)
             mock_save.assert_called_once_with(mock_curation)
 
-    def test_save_curation_logs_info_when_verbose(self, verbose_retriever):
-        """test save_curation logs info in verbose mode"""
+    def test_save_curation_calls_save(self, verbose_retriever):
+        """test save_curation calls _save method"""
         mock_curation = Mock()
 
-        verbose_retriever.save_curation(mock_curation)
-
-        verbose_retriever.log.info.assert_called_with(
-            "Saving to %s...", verbose_retriever.output_config.outfile
-        )
+        with patch.object(verbose_retriever, "_save") as mock_save:
+            verbose_retriever.save_curation(mock_curation)
+            mock_save.assert_called_once_with(mock_curation)
 
     def test_save_calls_curation_save_method(self, retriever):
         """test _save calls the save method on curation object"""
@@ -444,6 +528,7 @@ class TestRetriever:
             metadata="test_metadata",
             attribute="test_attr",
             level="test_level",
+            citation_config=retriever.citation_config,
         )
 
     @patch.object(Retriever, "query")

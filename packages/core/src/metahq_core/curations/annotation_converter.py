@@ -4,16 +4,16 @@ Class to facilitate Annotations propagation and convertion to labels.
 Author: Parker Hicks
 Date: 2025-09-10
 
-Last updated: 2025-11-21 by Parker Hicks
+Last updated: 2026-04-13 by Parker Hicks
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import polars as pl
 
+from metahq_core.config import SOURCES_COL
 from metahq_core.curations.labels import Labels
 from metahq_core.curations.propagator import Propagator, propagate_controls
 from metahq_core.logger import setup_logger
@@ -160,8 +160,9 @@ class AnnotationsConverter:
 
             return Labels.from_df(
                 labels_df,
-                self.anno.index_col,
-                tuple(self.anno.group_cols),
+                index_col=self.anno.index_col,
+                sources_col=SOURCES_COL,
+                group_cols=tuple(self.anno.group_cols),
                 logger=self.log,
                 verbose=self.verbose,
             )
@@ -171,8 +172,9 @@ class AnnotationsConverter:
 
         return Labels.from_df(
             labels_df,
-            self.anno.index_col,
-            tuple(self.anno.group_cols),
+            index_col=self.anno.index_col,
+            sources_col=SOURCES_COL,
+            group_cols=tuple(self.anno.group_cols),
             logger=self.log,
             verbose=self.verbose,
         )

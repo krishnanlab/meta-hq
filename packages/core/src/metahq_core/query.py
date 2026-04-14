@@ -4,16 +4,17 @@ Class to query the annotations dictionary.
 Author: Parker Hicks
 Date: 2025-03
 
-Last updated: 2026-02-02 by Parker Hicks
+Last updated: 2026-04-13 by Parker Hicks
 """
 
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import polars as pl
 
+from metahq_core.config import SOURCES_COL
 from metahq_core.curations.annotations import Annotations
 from metahq_core.logger import setup_logger
+from metahq_core.sources import get_allowed_sources
 from metahq_core.util.exceptions import NoResultsFound
 from metahq_core.util.io import load_bson
 from metahq_core.util.supported import (
@@ -61,12 +62,13 @@ class ParsedEntries:
 
     def __init__(self, fields):
         self.accessions = AccessionIDs(fields)
-        self.entries = {"id": [], "value": []}
+        self.entries = {"id": [], "value": [], SOURCES_COL: []}
 
-    def add(self, id_: str, value: str, accessions: dict[str, str]):
+    def add(self, id_: str, value: str, sources: str, accessions: dict[str, str]):
         """Adds an annotation with an ID, value, and accession IDs. Args can be 'NA'."""
         self.entries["id"].append(id_)
         self.entries["value"].append(value)
+        self.entries[SOURCES_COL].append(sources)
         self.accessions.add(accessions)
 
     def to_polars(self) -> pl.DataFrame:
@@ -249,6 +251,10 @@ class UnParsedEntry:
         species (str):
             Species for which to extract annotations for.
 
+        allowed_sources (set[str] | None):
+            Lowercase source names permitted by the license filter. None means all sources
+            are allowed.
+
     Examples:
         >>> from metahq_core.query import UnParsedEntry
         >>> entry = {
@@ -265,17 +271,19 @@ class UnParsedEntry:
                 entry,
                 attribute='tissue',
                 ecodes=['expert-curated'],
-                'homo sapiens'
+                species='homo sapiens',
+                allowed_sources=None,
             )
     """
 
-    def __init__(self, entry, attribute, ecodes, species):
+    def __init__(self, entry, attribute, ecodes, species, allowed_sources=None):
         self.entry: dict[str, dict[str, dict[str, str]]] = entry
         self.attribute: str = attribute
         self.ecodes: list[str] = ecodes
         self.species: str = species
+        self.allowed_sources: set[str] | None = allowed_sources
 
-    def get_annotations(self) -> tuple[str, str]:
+    def get_annotations(self) -> tuple[str, str, str]:
         """
         Retrieves the ID and value annotations for a single entry.
 
@@ -307,20 +315,28 @@ class UnParsedEntry:
 
         """
         if not self.is_acceptable():
-            return ("NA", "NA")
+            return ("NA", "NA", "NA")
 
         # add attribute annotations across sources
         ids: set[str] = set()
         values: set[str] = set()
-        for source in self.entry[self.attribute].values():
+        sources: set[str] = set()
+        for source_name, source in self.entry[self.attribute].items():
             if source["ecode"] not in self.ecodes:
+                continue
+
+            if (
+                self.allowed_sources is not None
+                and source_name.lower() not in self.allowed_sources
+            ):
                 continue
 
             id_, value = self.get_id_value(source)
             ids.add(id_)
             values.add(value)
+            sources.add(source_name)
 
-        return "|".join(ids), "|".join(values)
+        return "|".join(ids), "|".join(values), "|".join(sources)
 
     def is_acceptable(self) -> bool:
         """Checks if the entry is not empty and is an acceptable annotation given the
@@ -425,6 +441,11 @@ class Query:
         technology (str):
             Technology of the queried samples.
 
+        license (str):
+            License filter category. One of 'permissive', 'nc', or 'any' (default).
+            Controls which annotation sources are included based on their license.
+            See `metahq_core.sources.get_allowed_sources` for details.
+
         _annotations (dict):
             Nested dictionary of annotations.
 
@@ -447,6 +468,7 @@ class Query:
         ecode,
         species,
         technology,
+        license="any",
         logger=None,
         loglevel=20,
         logdir=get_default_log_dir(),
@@ -458,6 +480,11 @@ class Query:
         self.ecodes: list[str] = self._load_ecode(ecode)
         self.species: str = self._load_species(species)
         self.technology: str = technologies(technology)
+
+        _allowed = get_allowed_sources(license)
+        self.allowed_sources: set[str] | None = (
+            {s.lower() for s in _allowed} if _allowed is not None else None
+        )
 
         self._annotations: dict[str, Any] = self._load_annotations()
 
@@ -496,17 +523,21 @@ class Query:
 
         # construct the annotations
         attr_anno = self.compile_annotations(id_cols)
-        attr_anno = LongAnnotations(attr_anno).pivot_wide(self.level, anchor, id_cols)
+        attr_anno = LongAnnotations(attr_anno).pivot_wide(
+            self.level, anchor, id_cols + [SOURCES_COL]
+        )
 
         na_cols = list(set(attr_anno.columns) & set(na_entities()))
 
-        return Annotations.from_df(
+        result = Annotations.from_df(
             attr_anno.drop(na_cols),
             index_col=index,
+            sources_col=SOURCES_COL,
             group_cols=groups,
             logger=self.log,
             verbose=self.verbose,
         )
+        return result
 
     def compile_annotations(self, id_cols: list[str]) -> pl.DataFrame:
         """Extract attribute annotations and accession IDs from the database.
@@ -526,8 +557,8 @@ class Query:
         parsed = ParsedEntries(id_cols)
         for entry in self._annotations:
             accessions = self.get_accession_ids(entry)
-            id_, value = self.get_valid_annotations(entry)
-            parsed.add(id_, value, accessions)
+            id_, value, sources = self.get_valid_annotations(entry)
+            parsed.add(id_, value, sources, accessions)
 
         parsed = parsed.to_polars()
         parsed = parsed.filter(
@@ -587,7 +618,7 @@ class Query:
 
         return accessions
 
-    def get_valid_annotations(self, entry: str) -> tuple[str, str]:
+    def get_valid_annotations(self, entry: str) -> tuple[str, str, str]:
         """Extract id and value annotations for each source of annotations in an entry.
 
         Arguments:
@@ -603,6 +634,7 @@ class Query:
             self.attribute,
             self.ecodes,
             self.species,
+            self.allowed_sources,
         ).get_annotations()
 
     def _assign_index_groups(self):

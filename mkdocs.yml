@@ -11,11 +11,15 @@ extra_css:
   - stylesheets/extra.css
 
 theme:
-  name: material
+  name: readthedocs
+  highlightjs: true
+  hljs_languages:
+    - python
+    - bash
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
-      scheme: default
+      scheme: slate
       primary: indigo
       accent: indigo
       toggle:
@@ -23,7 +27,7 @@ theme:
         name: Switch to dark mode
     # Dark mode
     - media: "(prefers-color-scheme: dark)"
-      scheme: slate
+      scheme: default
       primary: indigo
       accent: indigo
       toggle:
@@ -98,7 +102,7 @@ nav:
   - Contribute:
     - Overview: contribute/index.md
     - Annotations: contribute/annotations.md
-    - Code: contribute/code.md
+    - Codebase: contribute/code.md
   - Developer Guide:
       - Packages Overview: developer/index.md
       - Development Setup: developer/setup.md
@@ -118,7 +122,9 @@ nav:
               - Export: 
                 - Annotations: packages/core/api/export/annotations.md
                 - Labels: packages/core/api/export/labels.md
+                - References: packages/core/api/export/references.md
               - Search: packages/core/api/search.md
+              - Sources: packages/core/api/sources.md
               - Utilities:
                 - IO: packages/core/api/util/io.md
                 - Exceptions: packages/core/api/util/exceptions.md
@@ -143,9 +149,10 @@ nav:
               - Config: packages/cli/api/setup/config.md
               - Downloader: packages/cli/api/setup/download.md
   - About:
-      - Cite Us: about/citation.md 
-      - Mission: about/mission.md
-      - License: about/license.md
+      - Citations: about/citation.md 
+      - Database License: about/database_license.md
+      - Software License: about/software_license.md
+      - Terms and Conditions: about/terms_conditions.md
 
 extra:
   social:

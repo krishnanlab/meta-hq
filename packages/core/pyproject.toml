@@ -67,6 +67,7 @@ include = ["src/metahq_core"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/metahq_core"]
+include = ["src/metahq_core/export/citation_template.txt"]
 
 [tool.black]
 line-length = 88

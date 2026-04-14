@@ -1,0 +1,33 @@
+====================================
+MetaHQ Export
+====================================
+
+Date: $date
+Database Version: $version
+
+====================================
+Query parameters
+====================================
+
+Attribute: $attribute
+Terms: $terms
+Level: $level
+Species: $species
+Ecode: $ecode
+Technology: $tech
+Mode: $mode
+License: $license
+
+====================================
+Data sources included in this export
+====================================
+
+This MetaHQ export contains annotations from the following sources:
+
+$references
+
+
+Please cite these sources along with:
+
+$metahq_reference
+

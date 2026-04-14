@@ -2,17 +2,15 @@
 
 Clone the `meta-hq` repository:
 
-=== "https"
+Through `https`:
+```bash
+git clone https://github.com/krishnanlab/meta-hq.git
+```
 
-    ```bash
-    git clone https://github.com/krishnanlab/meta-hq.git
-    ```
-
-=== "ssh"
-
-    ```bash
-    git clone git@github.com:krishnanlab/meta-hq.git
-    ```
+Through `ssh`:
+```bash
+git clone git@github.com:krishnanlab/meta-hq.git
+```
 
 ## Install packages
 
@@ -20,22 +18,22 @@ We highly recommend using `uv` for install. The `meta-hq` repository is a struct
 monorepo `uv workspace` with the `metahq-cli` and `metahq-core` packages in `packages/cli`
 and `packages/core`, respectively.
 
-Install with:
 
-=== "make (uv)"
+**With Make:**
 
-    ```bash
-    make uv_dev
-    ```
+Through `uv`:
+```bash
+make uv_dev
+```
 
-=== "make"
+Through `pip`:
+```bash
+make dev
+```
 
-    ```bash
-    make dev
-    ```
+**Manually:**
 
-Or manually:
-
+Through `pip`:
 ```bash
 cd packages/core
 pip install -e ".[dev]"

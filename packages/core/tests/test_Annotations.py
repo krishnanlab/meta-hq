@@ -264,10 +264,14 @@ class TestAnnotationsFromDf:
     def test_from_df_basic(self, sample_data):
         """test creating annotations from combined dataframe"""
         data, ids = sample_data
-        combined_df = pl.concat([ids, data], how="horizontal")
+        ids_with_sources = ids.with_columns(pl.lit("source1").alias("sources"))
+        combined_df = pl.concat([ids_with_sources, data], how="horizontal")
 
         anno = Annotations.from_df(
-            combined_df, index_col="sample", group_cols=("series", "platform")
+            combined_df,
+            index_col="sample",
+            sources_col="sources",
+            group_cols=("series", "platform"),
         )
 
         assert isinstance(anno, Annotations)
@@ -279,21 +283,27 @@ class TestAnnotationsFromDf:
     def test_from_df_with_defaults(self, sample_data):
         """test from_df with default group_cols"""
         data, ids = sample_data
-        combined_df = pl.concat([ids, data], how="horizontal")
+        ids_with_sources = ids.with_columns(pl.lit("source1").alias("sources"))
+        combined_df = pl.concat([ids_with_sources, data], how="horizontal")
 
         anno = Annotations.from_df(
-            combined_df, index_col="sample", group_cols=("series", "platform")
+            combined_df,
+            index_col="sample",
+            sources_col="sources",
+            group_cols=("series", "platform"),
         )
         assert anno.group_cols == ("series", "platform")
 
     def test_from_df_with_list_group_cols(self, sample_data):
         """test from_df converts list to tuple for group_cols"""
         data, ids = sample_data
-        combined_df = pl.concat([ids, data], how="horizontal")
+        ids_with_sources = ids.with_columns(pl.lit("source1").alias("sources"))
+        combined_df = pl.concat([ids_with_sources, data], how="horizontal")
 
         anno = Annotations.from_df(
             combined_df,
             index_col="sample",
+            sources_col="sources",
             group_cols=["series", "platform"],  # list instead of tuple
         )
         assert anno.group_cols == ("series", "platform")

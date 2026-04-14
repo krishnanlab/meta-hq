@@ -1,4 +1,4 @@
-# CLI Quickstart
+# Quick Start
 
 Every installation of the MetaHQ CLI requires the `setup` command to be run. This will download the MetaHQ database from Zenodo
 and configure the package.
@@ -20,6 +20,19 @@ tissue annotations from human RNA-Seq samples:
 metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
     --level sample --filters "species=human,tech=rnaseq,ecode=expert" \
     --metadata "sample,series,description" --fmt tsv --output annotations.tsv
+```
+
+This command outputs a tabular dataset with columns `[sample, series, description, sources, UBERON:0000948, UBERON:0000955]`.
+An additional file is also created called `CITATION__<date>.txt` providing citation information for the original sources of annotations returned in your query.
+Please cite the original sources of any annotations that you use along with MetaHQ.
+
+Some annotations in MetaHQ come from sources with non-commercial licenses (e.g., CC BY-NC). You can filter for annotations
+with permissive licenses using the `--license` argument:
+
+```bash
+metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
+    --level sample --filters "species=human,tech=rnaseq,ecode=expert" \
+    --license permissive
 ```
 
 See the [retrieve documentation](../packages/cli/commands/retrieve.md) for more details.

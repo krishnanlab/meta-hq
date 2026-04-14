@@ -2,13 +2,13 @@ name: CLI Tests
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "packages/cli/**"
       - "packages/core/**"
       - ".github/workflows/cli-tests.yml"
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "packages/cli/**"
       - "packages/core/**"
@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         python-version: ["3.12", "3.13", "3.14"]
 
     defaults:
