@@ -17,6 +17,11 @@ git clone git@github.com:krishnanlab/meta-hq.git
 The data packages and some of the raw annotation sources are too large to be tracked through native git.
 We use Git LFS to track these large files. You can install Git-LFS at [https://git-lfs.com](https://git-lfs.com).
 
+## Install Git LFS
+
+The data packages and some of the raw annotation sources are too large to be tracked through native git.
+We use Git LFS to track these large files. You can install Git-LFS at [https://git-lfs.com](https://git-lfs.com).
+
 ## Install packages
 
 We highly recommend using `uv` for install. The `meta-hq` repository is a structured as a
