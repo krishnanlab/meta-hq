@@ -47,7 +47,7 @@ BTO:0000671,kidney,UBERON:0002113,kidney,5.917627168,xref,
 BTO:0000680,kidney cancer cell,UBERON:0002113,kidney,,,x
 BTO:0000711,glioma cell line,CL:1001579,cerebral cortex glial cell,3.501792962,,
 BTO:0000725,hematopoietic stem cell,CL:0000037,hematopoietic stem cell,8.936515332,xref,
-BTO:0000727,multiple myeloma cell line,CL_0000786,plasma cell,,,x
+BTO:0000727,multiple myeloma cell line,CL:0000786,plasma cell,,,x
 BTO:0000731,acute lymphoblastic leukemia cell,CL:0002092,bone marrow cell,4.302672282,,
 BTO:0000738,HL-60 cell,CL:0002191,granulocytopoietic cell,,,x
 BTO:0000751,leukocyte,CL:0000738,leukocyte,6.161757192,xref,
