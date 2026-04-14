@@ -42,6 +42,29 @@ SRA_SOURCES: dict[str, Path] = {
 SRA_COMBINED_BSON: Path = PROCESSED_DIR / "sra_combined.bson"
 
 
+# Some mappings are not in omicidx for some reason. Manually define here
+MANUAL_SRR_GSM_MAP: dict[str, str] = {
+    "SRR7430663": "GSM3223812",
+    "SRR7430660": "GSM3223809",
+    "SRR7430654": "GSM3223803",
+    "SRR7430665": "GSM3223814",
+    "SRR7430658": "GSM3223807",
+    "SRR7430666": "GSM3223815",
+    "SRR7430662": "GSM3223811",
+    "SRR7430656": "GSM3223805",
+    "SRR7430653": "GSM3223802",
+    "SRR7430650": "GSM3223799",
+    "SRR7430659": "GSM3223808",
+    "SRR7430657": "GSM3223806",
+    "SRR7430664": "GSM3223813",
+    "SRR7430651": "GSM3223800",
+    "SRR7430649": "GSM3223798",
+    "SRR7430655": "GSM3223804",
+    "SRR7430648": "GSM3223797",
+    "SRR7430667": "GSM3223816",
+}
+
+
 class SraCombiner(BaseAnnotationCombiner):
     """
     Combines annotations from SRA-based sources, mapping accession IDs to GSM.
@@ -121,18 +144,37 @@ class SraCombiner(BaseAnnotationCombiner):
             len(xxr_ids),
             len(xxx_ids),
         )
-        mapping = self._build_gsm_mapping(xxr_ids, xxx_ids, db_path)
+        mapping: pl.DataFrame = self._build_gsm_mapping(xxr_ids, xxx_ids, db_path)
         self.logger.info("Resolved %d IDs to GSM.", len(mapping))
+
+        # join mapping with manually assigned map
+        mapping = pl.concat(
+            [
+                mapping,
+                pl.DataFrame(
+                    {
+                        "sra": list(MANUAL_SRR_GSM_MAP.keys()),
+                        "geo": list(MANUAL_SRR_GSM_MAP.values()),
+                    }
+                ),
+            ],
+            how="vertical",
+        )
 
         # Apply mapping and add each source.
         for source_name, data in source_data.items():
             before = data.height
-            data = data.with_columns(
-                pl.col("sample_id").replace(mapping, default=None)
-            ).filter(pl.col("sample_id").is_not_null())
+
+            data = (
+                data.join(
+                    mapping.rename({"sra": "sample_id"}), on="sample_id", how="inner"
+                )
+                .drop("sample_id")
+                .rename({"geo": "sample_id"})
+            )
 
             dropped = before - data.height
-            if dropped:
+            if dropped > 0:
                 self.logger.warning(
                     "'%s': dropped %d rows with no GSM mapping (kept %d).",
                     source_name,
@@ -153,7 +195,7 @@ class SraCombiner(BaseAnnotationCombiner):
         xxr_ids: list[str],
         xxx_ids: list[str],
         db_path: Path,
-    ) -> dict[str, str]:
+    ) -> pl.DataFrame:
         """
         Query OmicIDX to build a mapping from SRA accession IDs to GSM.
 
@@ -173,7 +215,7 @@ class SraCombiner(BaseAnnotationCombiner):
             (dict[str, str]): Mapping of original SRA ID → GSM accession.
         """
         if not xxr_ids and not xxx_ids:
-            return {}
+            return pl.DataFrame()
 
         con = duckdb.connect(str(db_path), read_only=True)
         try:
@@ -208,8 +250,14 @@ class SraCombiner(BaseAnnotationCombiner):
                     ON a.xxx_id = json_extract_string(g.sra_experiment, '$')
                 WHERE g.accession IS NOT NULL
             """
+
             rows = con.execute(query, [xxr_ids, xxx_ids]).fetchall()
         finally:
             con.close()
 
-        return {original_id: gsm for original_id, gsm in rows}
+        return pl.DataFrame(
+            {
+                "sra": [row[0] for row in rows],
+                "geo": [row[1] for row in rows],
+            }
+        )
