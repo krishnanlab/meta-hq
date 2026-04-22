@@ -1,0 +1,397 @@
+sperm,CL:0000019
+myotube,CL:0002372
+uterine cervix,UBERON:0000002
+pituitary gland,UBERON:0000007
+lymph node,UBERON:0000029
+lamina propria,UBERON:0000030
+tendon,UBERON:0000043
+dorsal root ganglion,UBERON:0000044
+ureter,UBERON:0000056
+anal canal,UBERON:0000159
+intestine,UBERON:0000160
+oral cavity,UBERON:0000167
+amniotic fluid,UBERON:0000173
+blood,UBERON:0000178
+amnion,UBERON:0000305
+breast,UBERON:0000310
+mucosa,UBERON:0000344
+urothelium,UBERON:0000365
+meniscus,UBERON:0000387
+prefrontal cortex,UBERON:0000451
+endocervix,UBERON:0000458
+testis,UBERON:0000473
+epithelium,UBERON:0000483
+embryo,UBERON:0000922
+stomach,UBERON:0000945
+aorta,UBERON:0000947
+heart,UBERON:0000948
+brain,UBERON:0000955
+cerebral cortex,UBERON:0000956
+cornea,UBERON:0000964
+retina,UBERON:0000966
+pleura,UBERON:0000977
+tibia,UBERON:0000979
+ovary,UBERON:0000992
+oviduct,UBERON:0000993
+uterus,UBERON:0000995
+vagina,UBERON:0000996
+adipose tissue,UBERON:0001013
+central nervous system,UBERON:0001017
+esophagus,UBERON:0001043
+rectum,UBERON:0001052
+synovial fluid,UBERON:0001090
+diaphragm,UBERON:0001103
+colon,UBERON:0001155
+ascending colon,UBERON:0001156
+descending colon,UBERON:0001158
+sigmoid colon,UBERON:0001159
+peritoneal cavity,UBERON:0001179
+superior mesenteric artery,UBERON:0001182
+adrenal cortex,UBERON:0001235
+pancreas,UBERON:0001264
+endometrium,UBERON:0001295
+myometrium,UBERON:0001296
+epididymis,UBERON:0001301
+sciatic nerve,UBERON:0001322
+white adipose tissue,UBERON:0001347
+brown adipose tissue,UBERON:0001348
+rectus femoris,UBERON:0001378
+vastus lateralis,UBERON:0001379
+semimembranosus muscle,UBERON:0001381
+tibialis anterior,UBERON:0001385
+gastrocnemius,UBERON:0001388
+ulna,UBERON:0001424
+arm,UBERON:0001460
+knee,UBERON:0001465
+deltoid,UBERON:0001476
+knee joint,UBERON:0001485
+ascending aorta,UBERON:0001496
+thoracic aorta,UBERON:0001515
+abdominal aorta,UBERON:0001516
+coronary artery,UBERON:0001621
+temporal artery,UBERON:0001632
+artery,UBERON:0001637
+mandible,UBERON:0001684
+ear,UBERON:0001690
+nasal cavity,UBERON:0001707
+eyelid,UBERON:0001711
+tongue,UBERON:0001723
+nasopharynx,UBERON:0001728
+oropharynx,UBERON:0001729
+larynx,UBERON:0001737
+dental pulp,UBERON:0001754
+middle ear,UBERON:0001756
+corneal epithelium,UBERON:0001772
+conjunctiva,UBERON:0001811
+lacrimal gland,UBERON:0001817
+gingiva,UBERON:0001828
+minor salivary gland,UBERON:0001830
+saliva,UBERON:0001836
+cochlea,UBERON:0001844
+auricular cartilage,UBERON:0001848
+cortex,UBERON:0001851
+frontal cortex,UBERON:0001870
+parietal lobe,UBERON:0001872
+caudate nucleus,UBERON:0001873
+putamen,UBERON:0001874
+amygdala,UBERON:0001876
+nucleus accumbens,UBERON:0001882
+choroid plexus,UBERON:0001886
+forebrain,UBERON:0001890
+midbrain,UBERON:0001891
+hypothalamus,UBERON:0001898
+mammary gland,UBERON:0001911
+inferior colliculus,UBERON:0001946
+neocortex,UBERON:0001950
+blood plasma,UBERON:0001969
+blood serum,UBERON:0001977
+blood vessel,UBERON:0001981
+corneal endothelium,UBERON:0001985
+endothelium,UBERON:0001986
+placenta,UBERON:0001987
+olfactory epithelium,UBERON:0001997
+iliopsoas,UBERON:0001999
+pulmonary artery,UBERON:0002012
+occipital lobe,UBERON:0002021
+hindbrain,UBERON:0002028
+cerebellum,UBERON:0002037
+substantia nigra,UBERON:0002038
+lung,UBERON:0002048
+femoral artery,UBERON:0002060
+dermis,UBERON:0002067
+hair follicle,UBERON:0002073
+heart left ventricle,UBERON:0002084
+spleen,UBERON:0002106
+liver,UBERON:0002107
+small intestine,UBERON:0002108
+kidney,UBERON:0002113
+duodenum,UBERON:0002114
+jejunum,UBERON:0002115
+ileum,UBERON:0002116
+mitral valve,UBERON:0002135
+aortic valve,UBERON:0002137
+bronchus,UBERON:0002185
+subcutaneous adipose tissue,UBERON:0002190
+spinal cord,UBERON:0002240
+nucleus pulposus,UBERON:0002242
+olfactory bulb,UBERON:0002264
+brainstem,UBERON:0002298
+white matter,UBERON:0002316
+umbilical cord,UBERON:0002331
+corpus callosum,UBERON:0002336
+myocardium,UBERON:0002349
+prostate gland,UBERON:0002367
+adrenal gland,UBERON:0002369
+thymus,UBERON:0002370
+bone marrow,UBERON:0002371
+tonsil,UBERON:0002372
+rectus abdominis muscle,UBERON:0002382
+connective tissue,UBERON:0002384
+bile duct,UBERON:0002394
+maxilla,UBERON:0002397
+pericardium,UBERON:0002407
+oral epithelium,UBERON:0002424
+striatum,UBERON:0002435
+primary visual cortex,UBERON:0002436
+decidua,UBERON:0002450
+superior frontal gyrus,UBERON:0002661
+ventral tegmental area,UBERON:0002691
+corticospinal tract,UBERON:0002707
+entorhinal cortex,UBERON:0002728
+fusiform gyrus,UBERON:0002766
+lumbar spinal cord,UBERON:0002792
+callosal sulcus,UBERON:0002920
+cingulate gyrus,UBERON:0002967
+thoracic spinal cord,UBERON:0003038
+mesenchyme,UBERON:0003104
+trachea,UBERON:0003126
+skull,UBERON:0003129
+brain white matter,UBERON:0003544
+hindlimb muscle,UBERON:0003663
+vestibular nerve,UBERON:0003723
+fallopian tube,UBERON:0003889
+ectoplacental cone,UBERON:0004364
+sputum,UBERON:0007311
+dental follicle,UBERON:0008969
+dorsolateral prefrontal cortex,UBERON:0009834
+anterior cingulate cortex,UBERON:0009835
+adductor muscle,UBERON:0011145
+colorectum,UBERON:0012652
+colorectal mucosa,UBERON:0013067
+venous blood,UBERON:0013756
+chest wall,UBERON:0016435
+parietal cortex,UBERON:0016530
+temporal cortex,UBERON:0016538
+occipital cortex,UBERON:0016540
+insular cortex,UBERON:0034891
+visceral fat,UBERON:0035818
+pterygium,na
+anterior palate mesenchyme,UBERON:0000165
+islet,UBERON:0001264
+cartilage,UBERON:0002418
+ankle,UBERON:0001488
+basolateral amygdala,UBERON:0006107
+terminal ileum,UBERON:0002116
+bulbus durodenum,UBERON:0002114
+sinus mucosa,UBERON:0000344
+cranial nerve ganglia,UBERON:0001714
+hippocampus,UBERON:0002421
+cortex and hippocampus,UBERON:0000955
+craniofacial bone,UBERON:0003457
+kidney tubules,UBERON:0005215
+distal colon,UBERON:0008971
+subventricular zone,UBERON:0000955
+whole venous blood,UBERON:0013756
+teminal ileum,UBERON:0002116
+nasal epithelium,UBERON:0005384
+knee synovium,UBERON:0001485
+contralateral muscle,UBERON:0002385
+lobe,UBERON:0000955
+optic nerve,UBERON:0011215
+middle turbinate,UBERON:0001762
+gall bladder,UBERON:0002110
+left atrial appendage,UBERON:0003380
+extrahepatic bile duct and gallbladder,UBERON:0002294
+peripheral blood,UBERON:0000178
+visceral adipose tissue,UBERON:0001013
+cervix,UBERON:0000002
+muscle,UBERON:0002385
+meninges,UBERON:0002360
+tricuspid aortic valve leaflets,UBERON:0005998
+tracheobronchial,UBERON:0007196
+cortical organoid,UBERON:0000955
+central nucleus,UBERON:0002883
+cortical spheroidscortical spheroid,UBERON:0000955
+quadriceps,UBERON:0002385
+lower airway,UBERON:0002031
+left lobe of the thyroid gland,UBERON:0001120
+spine,na
+nasal mucosa,UBERON:0002306
+subcutaneous tissue,na
+trabecular meshwork,UBERON:0005969
+trans iliac bone,UBERON:0001273
+myeloid,CL:0000763
+cecum,UBERON:0001153
+uterosacral ligament,UBERON:0007136
+hippocampal dentate gyrus,UBERON:0001885
+bowel,UBERON:0000160
+synovium,UBERON:0002217
+extraocular muscle,UBERON:0001601
+intestinal tissue,UBERON:0000160
+hip joint capsule,UBERON:0011961
+peripheral venous blood,UBERON:0013756
+left ventricle,UBERON:0002084
+tibias;femurs,UBERON:0002481
+vaginal tissue,UBERON:0000996
+glia tissue,UBERON:0003714
+sciatic nerve axoplasm,UBERON:0001322
+skin fibroblasts,CL:0002620
+atria,UBERON:0002081
+brain microglia,CL:0000129
+dorsal spinal cord,UBERON:0002240
+basal ganglia,UBERON:0010011
+tubulointerstitium,UBERON:0005169
+abdominal muscle,UBERON:0002378
+palate mesenchyme,UBERON:0000165
+alveolar bone,UBERON:0004103
+nasal,UBERON:0000004
+visceral tissue,CL:2000000
+subcutaneous white adipose tissue,UBERON:0001347
+airway wall,UBERON:0002185
+uncinate tissue,UBERON:0001825
+optic chiasm,UBERON:0000959
+lateral temporal lobe,UBERON:0001871
+prostate,UBERON:0002367
+peripheral blood (pb),UBERON:0000178
+smooth muscle,UBERON:0001135
+right ventricle,UBERON:0002080
+subcutaneous fat,UBERON:0002190
+medil temporal gyrus,UBERON:0002771
+triceps muscle,UBERON:0001665
+renal cortex,UBERON:0001225
+bladder mucosae,UBERON:0001259
+parotid,UBERON:0001831
+corneal stroma,UBERON:0001777
+fibrous tissue,na
+ethmoidal tissue,UBERON:0011241
+venous segment,UBERON:0001106
+knee cartilage,UBERON:0003577
+ascendens,UBERON:0000317
+vascular organoids,na
+neural aggregates,UBERON:0003714
+colon mucosa,UBERON:0000317
+hemisphere,UBERON:0001869
+intraepithelium,CL:0002496
+descendens,UBERON:0000317
+cortical spheroid,UBERON:0003714
+rectal colon,UBERON:0000059
+middle thorax,na
+sigmoid colon mucosa,UBERON:0004993
+calf muscle,UBERON:0004256
+mouse embryonic pharyngeal arch,UBERON:0002539
+visceral white adipose tissue,UBERON:0001347
+bone marrrow;spleen,na
+motor cortex,UBERON:0000955
+bed nucleus of the stria terminalis,UBERON:0001880
+cardiac left ventricle,UBERON:0002084
+distal colorectal epithelium,UBERON:0001278
+biceps,UBERON:0002385
+oral mucosa,UBERON:0003729
+skeletal muscle,UBERON:0001134
+articular cartilage,CL:0000138
+aortic wall,UBERON:0004663
+diaphragm muscle,UBERON:0001103
+tirgeminal ganglion,UBERON:0001675
+anterior cortex,UBERON:0000956
+pancreatic islet,UBERON:0000006
+none,na
+triceps surae muscle,UBERON:0001665
+sphenoid sinus mucosa,UBERON:0005021
+osteocytes,CL:0000137
+airway smooth muscle,UBERON:0004225
+retina macula,UBERON:0000053
+choroid,UBERON:0000970
+optic nerve head,UBERON:0001783
+bronchial epithelium,UBERON:0002031
+tibialis anterior skeletal muscle,UBERON:0004499
+small airway,UBERON:0001005
+soleus,UBERON:0001389
+kidney cortex,UBERON:0001225
+bladder,UBERON:0018707
+placental villi,UBERON:0007106
+heart right ventricular wall,UBERON:0036286
+crypt of colon,UBERON:0013485
+neural retina,UBERON:0003902
+vulva,UBERON:0000997
+appendix,UBERON:0001154
+vaginal wall,UBERON:0036523
+plantaris muscle,UBERON:0011905
+cerebrum,UBERON:0000955
+grey matter,UBERON:0002020
+plalelets,CL:0000233
+brain striatum,UBERON:0002435
+esophageal mucosal,UBERON:0002469
+thyroid,UBERON:0002046
+transversum,UBERON:0001157
+airway,UBERON:0001005
+cerebral vessel,UBERON:0016565
+organoid,na
+embryonic dorsal root ganglia,UBERON:0000044
+oral tongue,UBERON:0001723
+epidermis,UBERON:0001003
+human hepatocyte,CL:0000182
+sigmoideum,UBERON:0001159
+gastrocnemius muscle,UBERON:0001388
+exocervix,UBERON:0000002
+prelimbic cortex,UBERON:8440032
+vulva biopsy,UBERON:0000997
+anterior orbit,UBERON:0004867
+nasal airway epithelium,UBERON:0005385
+tibia bone,UBERON:0000979
+gut,UBERON:0002114
+upper airway,UBERON:0001005
+tarsal joint,UBERON:0008447
+endometrial epithelium,UBERON:0022356
+dentate gyrus,UBERON:0001885
+whole blood,UBERON:0000178
+spleen;lymph node,na
+posterior cingulate,UBERON:0000955
+epididymal white adipose tissue,UBERON:0001347
+airway epithelium,UBERON:0004802
+internal capsule,UBERON:0000955
+callosum,UBERON:0002336
+immortalized primary myoblasts,CL:0000056
+duodenum small intestine,UBERON:0002114
+esophageal epithelium,UBERON:0001976
+scalp skin,UBERON:8300000
+arterial vessel,UBERON:0001637
+epithele,CL:0002368
+salivary gland,UBERON:0001044
+aortic arch,UBERON:0001508
+heart ventricle,UBERON:0002082
+bicuspid aortic valve,UBERON:0000946
+glomerulus,UBERON:0000074
+spinal,UBERON:0002240
+retinal pigment epithelium,UBERON:0001782
+tarsal conjunctiva,UBERON:0001812
+nasal polyp,na
+kidney glomerulus,UBERON:0000074
+ventricle,UBERON:0002082
+plasma,UBERON:0000179
+serum exosomes,na
+skin,UBERON:0002097
+tibialis anterior muscle,UBERON:0001385
+small bowel,UBERON:0002108
+foreskin,UBERON:0001332
+joint,UBERON:0000982
+oropharynx part,UBERON:0001729
+vessel wall,UBERON:0035965
+synovitis and thickening joint capsule,UBERON:0000982
+large airway epithelium,UBERON:0004802
+palate,UBERON:0000165
+bone,UBERON:0002481
+rectal mucosa,UBERON:0000912
+soft tissue,na
+labial salivary gland,UBERON:8480065
+ovarian surface epithelia,UBERON:0004911
+cancerous,na
