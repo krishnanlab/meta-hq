@@ -11,7 +11,13 @@ from pathlib import Path
 
 import polars as pl
 
-from metahq_setup.config.config import DISIGN_ATLAS_GMT, MONDO_OBO, MONDO_SYSTEMS
+from metahq_setup.config.config import (
+    DISIGN_ATLAS_CORRECTIONS,
+    DISIGN_ATLAS_GMT,
+    DISIGN_ATLAS_TISSUE_MAP,
+    MONDO_OBO,
+    MONDO_SYSTEMS,
+)
 from metahq_setup.ontology import Ontology, get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
@@ -228,15 +234,55 @@ class DiSignAtlasProcessor(BaseProcessor):
             pl.lit("expert").alias("ecode"),
         )
 
+        # Load manual tissue name -> term ID mapping and apply via join.
+        tissue_name_map = pl.read_csv(DISIGN_ATLAS_TISSUE_MAP)
+
         # Tissue annotations — only for rows with a non-null, non-"None" tissue.
-        tissue_records = all_samples.filter(
-            pl.col("tissue").is_not_null() & (pl.col("tissue") != "None")
-        ).select(
-            pl.col("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.lit("na").alias("term_id"),
-            pl.col("tissue").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+        tissue_records = (
+            all_samples.filter(
+                pl.col("tissue").is_not_null() & (pl.col("tissue") != "None")
+            )
+            .with_columns(pl.col("tissue").str.to_lowercase().alias("tissue"))
+            .join(
+                tissue_name_map.rename({"name": "tissue", "id": "term_id"}),
+                on="tissue",
+                how="left",
+            )
+            .with_columns(pl.col("term_id").fill_null("na"))
+            .select(
+                pl.col("sample_id"),
+                pl.lit("tissue").alias("annotation_type"),
+                pl.col("term_id"),
+                pl.col("tissue").alias("term_label"),
+                pl.lit("expert").alias("ecode"),
+            )
+        )
+
+        # Apply per-sample corrections, overwriting term_id and term_label where provided.
+        corrections = (
+            pl.read_csv(DISIGN_ATLAS_CORRECTIONS)
+            .rename(
+                {
+                    "sample": "sample_id",
+                    "term": "corr_term_id",
+                    "name": "corr_term_label",
+                }
+            )
+            .unique(subset=["sample_id"], keep="first")
+        )
+        tissue_records = (
+            tissue_records.join(corrections, on="sample_id", how="left")
+            .with_columns(
+                pl.when(pl.col("corr_term_id").is_not_null())
+                .then(pl.col("corr_term_id"))
+                .otherwise(pl.col("term_id"))
+                .alias("term_id"),
+                pl.when(pl.col("corr_term_label").is_not_null())
+                .then(pl.col("corr_term_label"))
+                .otherwise(pl.col("term_label"))
+                .alias("term_label"),
+            )
+            .drop("corr_term_id", "corr_term_label")
         )
 
         result_df = pl.concat([disease_records, tissue_records], how="vertical")
@@ -248,7 +294,7 @@ class DiSignAtlasProcessor(BaseProcessor):
             "Produced %s annotations (%s disease, %s tissue) from DiSignAtlas.",
             result_df.height,
             disease_records.height,
-            tissue_records.height,
+            tissue_records.filter(pl.col("term_id") != "na").height,
         )
 
         output_file = output_dir / "disign_atlas_processed.parquet"
