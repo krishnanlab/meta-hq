@@ -11,6 +11,8 @@ from pathlib import Path
 import click
 
 from metahq_setup import __version__
+from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
+from metahq_setup.combiners.study import StudyCombiner
 from metahq_setup.config import PipelineConfig, load_config, save_config
 from metahq_setup.processors import ProcessorRegistry
 from metahq_setup.util.checkpointing import CheckpointManager
@@ -429,6 +431,30 @@ def combine_sample(output, geo, sra, metadata_db):
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)
         sys.exit(1)
+
+
+@combine.command(name="study")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Output BSON file path (default: data/processed/combined__level-sample.bson)",
+)
+@click.option(
+    "--sample",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to sample combined BSON (default: data/processed/combined__level-sample.bson)",
+)
+def combine_study(sample, output):
+    from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
+    from metahq_setup.combiners.study import STUDY_COMBINED_BSON
+
+    output_path = Path(output) if output else STUDY_COMBINED_BSON
+    sample_path = Path(sample) if sample else SAMPLE_COMBINED_BSON
+    combiner = StudyCombiner()
+    combiner.combine(sample_combined_bson=sample_path)
 
 
 @main.command()
