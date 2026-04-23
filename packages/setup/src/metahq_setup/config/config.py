@@ -9,6 +9,9 @@ regardless of the working directory when it is invoked.
 
 from pathlib import Path
 
+# Annotation type keys that hold source-keyed dicts (not scalars).
+ANNOTATION_KEYS: frozenset[str] = frozenset({"tissue", "disease", "sex", "age"})
+
 # Root of the meta-hq monorepo.
 # Resolved from this file's location:
 #   config.py → config/ → metahq_setup/ → src/ → setup/ → packages/ → meta-hq/
@@ -74,12 +77,20 @@ DISIGN_ATLAS_PROCESSED: Path = PROCESSED_DIR / "disign_atlas_processed.parquet"
 GEMMA_PROCESSED: Path = PROCESSED_DIR / "gemma_processed.parquet"
 GOLIGHTLY_PROCESSED: Path = PROCESSED_DIR / "golightly_processed.parquet"
 GU_PROCESSED: Path = PROCESSED_DIR / "gu_processed.parquet"
-JOHNSON_2023_MICROARRAY_PROCESSED: Path = PROCESSED_DIR / "johnson_2023__microarray.parquet"
+JOHNSON_2023_MICROARRAY_PROCESSED: Path = (
+    PROCESSED_DIR / "johnson_2023__microarray.parquet"
+)
 JOHNSON_2023_RNASEQ_PROCESSED: Path = PROCESSED_DIR / "johnson_2023__rnaseq.parquet"
 KRISHNANLAB_PROCESSED: Path = PROCESSED_DIR / "krishnanlab_processed.parquet"
 SIROTA_2011_PROCESSED: Path = PROCESSED_DIR / "sirota_2011_processed.parquet"
 URSA_PROCESSED: Path = PROCESSED_DIR / "ursa_processed.parquet"
 URSAHD_PROCESSED: Path = PROCESSED_DIR / "ursahd_processed.parquet"
+
+# Samples deleted from GEO to remove from MetaHQ
+DELTED_SAMPLES: Path = HELPERS_DIR / "deleted_samples.txt"
+
+# Study-level annotations to append in the study combining phase
+PROCESSED_STUDY_ANNOTATIONS: list[Path] = [GEMMA_PROCESSED]
 
 # Gemma raw download output
 GEMMA_RAW: Path = UNPROCESSED_DIR / "gemma.json"

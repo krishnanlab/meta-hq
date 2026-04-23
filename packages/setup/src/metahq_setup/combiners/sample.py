@@ -26,13 +26,15 @@ import duckdb
 from metahq_setup.combiners.base import BaseAnnotationCombiner
 from metahq_setup.combiners.geo import GEO_COMBINED_BSON
 from metahq_setup.combiners.sra import SRA_COMBINED_BSON
-from metahq_setup.config.config import OMICIDX_DB, PROCESSED_DIR
+from metahq_setup.config.config import (
+    ANNOTATION_KEYS,
+    DELTED_SAMPLES,
+    OMICIDX_DB,
+    PROCESSED_DIR,
+)
 
 # Default output path for the combined sample-level annotations.
 SAMPLE_COMBINED_BSON: Path = PROCESSED_DIR / "combined__level-sample.bson"
-
-# Annotation type keys that hold source-keyed dicts (not scalars).
-_ANNOTATION_KEYS: frozenset[str] = frozenset({"tissue", "disease", "sex", "age"})
 
 
 class SampleCombiner(BaseAnnotationCombiner):
@@ -155,6 +157,8 @@ class SampleCombiner(BaseAnnotationCombiner):
                     "This is unexpected. More than just GSE entries are being removed."
                 )
 
+        data = self._remove_deleted_samples(data)
+
         return data
 
     def _build_accession_id_map(
@@ -260,6 +264,24 @@ class SampleCombiner(BaseAnnotationCombiner):
         )
         return result
 
+    def _remove_deleted_samples(self, data: dict) -> dict:
+        """Remove samples deleted from GEO."""
+        with open(DELTED_SAMPLES, "r", encoding="utf-8") as f:
+            delted_samples = [line.strip() for line in f.readlines()]
+
+        before = len(data)
+        data = {k: v for k, v in data.items() if k not in delted_samples}
+
+        after = len(data)
+        diff = before - after
+
+        if diff > 0:
+            self.logger.info(
+                "Removed %d samples deleted from GEO using %s", diff, DELTED_SAMPLES
+            )
+
+        return data
+
     @staticmethod
     def _merge_entries(
         geo_entry: dict[str, Any],
@@ -282,7 +304,7 @@ class SampleCombiner(BaseAnnotationCombiner):
         """
         merged: dict[str, Any] = {}
 
-        for key in _ANNOTATION_KEYS:
+        for key in ANNOTATION_KEYS:
             geo_sources = geo_entry.get(key, {})
             sra_sources = sra_entry.get(key, {})
             merged[key] = {**geo_sources, **sra_sources}
