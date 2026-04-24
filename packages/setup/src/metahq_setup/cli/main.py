@@ -453,7 +453,7 @@ def combine_study(sample, output):
     output_path = Path(output) if output else STUDY_COMBINED_BSON
     sample_path = Path(sample) if sample else SAMPLE_COMBINED_BSON
     combiner = StudyCombiner()
-    combiner.combine(sample_combined_bson=sample_path)
+    combiner.combine(sample_combined_bson=sample_path).save(output_path)
 
 
 @main.group()
@@ -483,7 +483,7 @@ def show_fields(level, metadata_db):
         db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
 
         retriever = SampleMetadataRetriever(db_path=db_path)
-        print(retriever.get_available_fields()[0])
+        retriever.show_available_fields()
 
 
 @metadata.command(name="sample")
