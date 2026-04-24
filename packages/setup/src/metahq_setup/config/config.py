@@ -65,7 +65,7 @@ GOLIGHTLY_ZIP: Path = UNPROCESSED_DIR / "golightly_2018.zip"
 GU_DISEASE_MONDO: Path = HELPERS_DIR / "gu_disease_name_to_mondo.csv"
 GU_TISSUE_UBERON: Path = HELPERS_DIR / "gu_tissue_name_to_uberon.csv"
 
-# OmicIDX DuckDB database (SRA/GEO accession mappings).
+# OmicIDX DuckDB database.
 OMICIDX_DB: Path = DATA_DIR / "omicidx.duckdb"
 
 # Processed output parquets (one per processor).
