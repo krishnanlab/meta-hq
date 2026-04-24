@@ -99,11 +99,18 @@ class SampleCombiner(BaseAnnotationCombiner):
 
         # Enrich accession_ids with series, platform, srx, srp from OmicIDX
         self.logger.info("Enriching accession IDs from OmicIDX...")
+
+        self.logger.info("[1/2] Fetching organism information...")
+        organism_map = self._build_organism_map(list(all_gsm), db_path)
+
+        self.logger.info("[2/2] Fetching accession IDs...")
         accession_map = self._build_accession_id_map(list(all_gsm), db_path)
+
         enriched = 0
         for gsm, ids in accession_map.items():
             if gsm in self.anno:
                 self.anno[gsm]["accession_ids"].update(ids)
+                self.anno[gsm]["organism"] = organism_map[gsm]
                 enriched += 1
         self.logger.info("Enriched accession IDs for %d samples.", enriched)
 
@@ -263,6 +270,33 @@ class SampleCombiner(BaseAnnotationCombiner):
             len(gsm_ids),
         )
         return result
+
+    def _build_organism_map(self, gsm_ids: list[str], db_path: Path) -> dict[str, str]:
+        if not gsm_ids:
+            return {}
+
+        if not db_path.exists():
+            self.logger.warning(
+                "OmicIDX DB not found at %s — skipping accession ID enrichment.",
+                db_path,
+            )
+            return {}
+
+        with duckdb.connect(db_path, read_only=True) as conn:
+            result = conn.execute(
+                """
+                WITH samples AS (
+                    SELECT s.accession, s.channels
+                    FROM src_geo_samples s
+                    WHERE s.accession = ANY($1)
+                )
+                SELECT accession, unnest(channels).organism
+                FROM samples;
+                """,
+                [gsm_ids],
+            ).fetchall()
+
+        return {row[0]: row[1].lower() for row in result}
 
     def _remove_deleted_samples(self, data: dict) -> dict:
         """Remove samples deleted from GEO."""
