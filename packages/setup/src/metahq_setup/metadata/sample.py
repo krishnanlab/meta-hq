@@ -107,6 +107,10 @@ class SampleMetadataRetriever(BaseMetadataRetriever):
 
         self.metadata = pl.DataFrame(result_dict)
 
+    def show_available_fields(self):
+        all_fields, _ = self.get_available_fields()
+        self.logger.info("Available fields: %s", all_fields)
+
     def _build_base_query(self, query_fields: list[str], accession_name: str) -> str:
         formatted_fields = ", ".join(query_fields)
         return f"""SELECT {formatted_fields} FROM {self.table} WHERE {accession_name} = ANY($1)"""
