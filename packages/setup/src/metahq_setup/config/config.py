@@ -9,8 +9,42 @@ regardless of the working directory when it is invoked.
 
 from pathlib import Path
 
+# ===============================================
+# ====== Annotation schema
+# ===============================================
+
 # Annotation type keys that hold source-keyed dicts (not scalars).
-ANNOTATION_KEYS: frozenset[str] = frozenset({"tissue", "disease", "sex", "age"})
+ATTRIBUTE_KEYS: frozenset[str] = frozenset({"tissue", "disease", "sex", "age"})
+ORGANISM_KEY: str = "organism"
+ACCESSIONS_KEY: str = "accession_ids"
+STUDY_ACCESSION_KEY: str = "series"
+SAMPLE_ACCESSION_KEY: str = "sample"
+PLATFORM_ACCESSION_KEY: str = "platform"
+
+# Attribute
+ID_KEY: str = "id"
+VALUE_KEY: str = "value"
+ECODE_KEY: str = "ecode"
+DELIMITER: str = "|"
+ATTRIBUTE_ANNOTATION_KEYS: list[str] = [ID_KEY, VALUE_KEY, ECODE_KEY]
+
+ALL_METAHQ_KEYS: list[str] = list(ATTRIBUTE_KEYS) + [ORGANISM_KEY, ACCESSIONS_KEY]
+
+# Control IDs
+CONTROL_ID: str = "MONDO:0000000"
+CONTROL_VALUE: str = "control"
+
+# ===============================================
+# ====== ACCESSION PROPERTIES
+# ===============================================
+
+SAMPLE_ID_PREFIX: str = "GSM"
+STUDY_ID_PREFIX: str = "GSE"
+
+
+# ===============================================
+# ====== Hard-coded Paths
+# ===============================================
 
 # Root of the meta-hq monorepo.
 # Resolved from this file's location:
@@ -86,12 +120,6 @@ SIROTA_2011_PROCESSED: Path = PROCESSED_DIR / "sirota_2011_processed.parquet"
 URSA_PROCESSED: Path = PROCESSED_DIR / "ursa_processed.parquet"
 URSAHD_PROCESSED: Path = PROCESSED_DIR / "ursahd_processed.parquet"
 
-# Samples deleted from GEO to remove from MetaHQ
-DELTED_SAMPLES: Path = HELPERS_DIR / "deleted_samples.txt"
-
-# Study-level annotations to append in the study combining phase
-PROCESSED_STUDY_ANNOTATIONS: list[Path] = [GEMMA_PROCESSED]
-
 # Gemma raw download output
 GEMMA_RAW: Path = UNPROCESSED_DIR / "gemma.json"
 GEMMA_DEV_STAGE_TO_AGE_GROUP: Path = (
@@ -122,3 +150,11 @@ BGEE_FLY: Path = (
     / "Drosophila_melanogaster_Bgee_15_0"
     / "Drosophila_melanogaster_RNA-Seq_libraries.tsv"
 )
+
+# Samples deleted from GEO to remove from MetaHQ
+DELTED_SAMPLES: Path = HELPERS_DIR / "deleted_samples.txt"
+DELTED_STUDIES: Path = HELPERS_DIR / "deleted_studies.txt"
+
+
+# Study-forward annotations
+PROCESSED_STUDY_ANNOTATIONS: dict[str, Path] = {"Gemma": GEMMA_PROCESSED}
