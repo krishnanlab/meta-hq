@@ -27,7 +27,7 @@ from metahq_setup.combiners.base import BaseAnnotationCombiner
 from metahq_setup.combiners.geo import GEO_COMBINED_BSON
 from metahq_setup.combiners.sra import SRA_COMBINED_BSON
 from metahq_setup.config.config import (
-    ANNOTATION_KEYS,
+    ATTRIBUTE_KEYS,
     DELTED_SAMPLES,
     OMICIDX_DB,
     PROCESSED_DIR,
@@ -338,7 +338,7 @@ class SampleCombiner(BaseAnnotationCombiner):
         """
         merged: dict[str, Any] = {}
 
-        for key in ANNOTATION_KEYS:
+        for key in ATTRIBUTE_KEYS:
             geo_sources = geo_entry.get(key, {})
             sra_sources = sra_entry.get(key, {})
             merged[key] = {**geo_sources, **sra_sources}
