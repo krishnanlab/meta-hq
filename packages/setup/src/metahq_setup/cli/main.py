@@ -12,7 +12,6 @@ import click
 
 from metahq_setup import __version__
 from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
-from metahq_setup.combiners.study import StudyCombiner
 from metahq_setup.config import PipelineConfig, load_config, save_config
 from metahq_setup.processors import ProcessorRegistry
 from metahq_setup.util.checkpointing import CheckpointManager
@@ -449,12 +448,73 @@ def combine_sample(output, geo, sra, metadata_db):
 )
 def combine_study(sample, output):
     from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
-    from metahq_setup.combiners.study import STUDY_COMBINED_BSON
+    from metahq_setup.combiners.study import STUDY_COMBINED_BSON, StudyCombiner
 
     output_path = Path(output) if output else STUDY_COMBINED_BSON
     sample_path = Path(sample) if sample else SAMPLE_COMBINED_BSON
     combiner = StudyCombiner()
     combiner.combine(sample_combined_bson=sample_path)
+
+
+@main.group()
+def metadata():
+    """Command group for OmicIDX queries."""
+    pass
+
+
+@metadata.command(name="show-fields")
+@click.option(
+    "--level",
+    "-l",
+    type=click.Choice(["sample", "study"]),
+    help="Which metadata level for which to show available fields.",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
+)
+def show_fields(level, metadata_db):
+    if level == "sample":
+        from metahq_setup.config.config import OMICIDX_DB
+        from metahq_setup.metadata.sample import SampleMetadataRetriever
+
+        db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
+
+        retriever = SampleMetadataRetriever(db_path=db_path)
+        print(retriever.get_available_fields()[0])
+
+
+@metadata.command(name="sample")
+@click.option(
+    "--fields",
+    "-f",
+    type=str,
+    default=None,
+    help="A comma-delimited string of fields to query",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
+)
+def retrieve_sample_metadata(fields, metadata_db):
+    import bson
+
+    from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
+    from metahq_setup.config.config import OMICIDX_DB
+    from metahq_setup.metadata.sample import SampleMetadataRetriever
+
+    db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
+    query_fields = fields.split(",")
+
+    with open(SAMPLE_COMBINED_BSON, "rb") as f:
+        samples = list(bson.decode(f.read()).keys())
+
+    retriever = SampleMetadataRetriever(db_path=db_path, table="src_geo_samples")
+    retriever.retrieve(fields=query_fields, samples=samples)
 
 
 @main.command()
