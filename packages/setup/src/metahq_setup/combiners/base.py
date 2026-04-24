@@ -54,9 +54,7 @@ class BaseAnnotationCombiner:
 
     def __init__(self):
         self.anno: dict[str, Any] = {}
-        self.logger = setup_logger(
-            f"metahq_setup.combiners.{self.__class__.__name__}"
-        )
+        self.logger = setup_logger(f"metahq_setup.combiners.{self.__class__.__name__}")
 
     def add_source(self, source_name: str, data: pl.DataFrame) -> None:
         """
@@ -129,7 +127,7 @@ class BaseAnnotationCombiner:
             cleaned_entry: dict[str, Any] = {}
 
             for attribute, value in annos.items():
-                if attribute == "accession_ids":
+                if attribute in ["accession_ids", "organism"]:
                     cleaned_entry[attribute] = value
                     continue
 
@@ -141,7 +139,7 @@ class BaseAnnotationCombiner:
                     cleaned_entry[attribute] = cleaned_attr
 
             # Only keep entries with at least one annotation beyond accession_ids.
-            if any(k != "accession_ids" for k in cleaned_entry):
+            if any(k not in ["accession_ids", "organism"] for k in cleaned_entry):
                 cleaned[sample_id] = cleaned_entry
 
         self.anno = cleaned
