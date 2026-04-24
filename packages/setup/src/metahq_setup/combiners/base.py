@@ -30,6 +30,19 @@ from typing import Any
 import bson
 import polars as pl
 
+from metahq_setup.config.config import (
+    ACCESSIONS_KEY,
+    ATTRIBUTE_KEYS,
+    DELIMITER,
+    ECODE_KEY,
+    ID_KEY,
+    ORGANISM_KEY,
+    SAMPLE_ACCESSION_KEY,
+    SAMPLE_ID_PREFIX,
+    STUDY_ACCESSION_KEY,
+    STUDY_ID_PREFIX,
+    VALUE_KEY,
+)
 from metahq_setup.util.logging import setup_logger
 
 # Annotation type names as produced by the processors.
@@ -61,7 +74,7 @@ class BaseAnnotationCombiner:
         Add annotations from a standard-schema DataFrame.
 
         Rows are grouped by ``(sample_id, annotation_type)``. Multiple term
-        IDs and labels for the same group are joined with ``||``. The ecode
+        IDs and labels for the same group are joined with DELIMITER. The ecode
         of the first row in the group is used (processors produce a single
         ecode per source).
 
@@ -85,22 +98,46 @@ class BaseAnnotationCombiner:
             data.sort(["sample_id", "annotation_type", "term_id"])
             .group_by(["sample_id", "annotation_type"])
             .agg(
-                pl.col("term_id").drop_nulls().str.join("||").alias("term_id"),
-                pl.col("term_label").drop_nulls().str.join("||").alias("term_label"),
+                pl.col("term_id").drop_nulls().str.join(DELIMITER).alias("term_id"),
+                pl.col("term_label")
+                .drop_nulls()
+                .str.join(DELIMITER)
+                .alias("term_label"),
                 pl.col("ecode").first().alias("ecode"),
+            )
+            .with_columns(
+                pl.col("term_id")
+                .str.split(DELIMITER)
+                .list.unique(maintain_order=True)
+                .list.join(DELIMITER)
+                .alias("term_id"),
+                pl.col("term_label")
+                .str.split(DELIMITER)
+                .list.unique(maintain_order=True)
+                .list.join(DELIMITER)
+                .alias("term_label"),
             )
         )
 
         for row in grouped.iter_rows(named=True):
-            sample_id = row["sample_id"]
+            accession = row["sample_id"]
             annotation_type = row["annotation_type"]
 
-            self._init_entry(sample_id)
+            self._init_entry(accession)
 
-            self.anno[sample_id][annotation_type][source_name] = {
-                "id": row["term_id"],
-                "value": row["term_label"],
-                "ecode": row["ecode"],
+            if accession.startswith(SAMPLE_ID_PREFIX):
+                self.anno[accession][ACCESSIONS_KEY][SAMPLE_ACCESSION_KEY] = accession
+
+            elif accession.startswith(STUDY_ID_PREFIX):
+                self.anno[accession][ACCESSIONS_KEY][STUDY_ACCESSION_KEY] = accession
+
+            else:
+                continue
+
+            self.anno[accession][annotation_type][source_name] = {
+                ID_KEY: row["term_id"],
+                VALUE_KEY: row["term_label"],
+                ECODE_KEY: row["ecode"],
             }
 
         self.logger.info(
@@ -127,7 +164,7 @@ class BaseAnnotationCombiner:
             cleaned_entry: dict[str, Any] = {}
 
             for attribute, value in annos.items():
-                if attribute in ["accession_ids", "organism"]:
+                if attribute in [ACCESSIONS_KEY, ORGANISM_KEY]:
                     cleaned_entry[attribute] = value
                     continue
 
@@ -139,7 +176,7 @@ class BaseAnnotationCombiner:
                     cleaned_entry[attribute] = cleaned_attr
 
             # Only keep entries with at least one annotation beyond accession_ids.
-            if any(k not in ["accession_ids", "organism"] for k in cleaned_entry):
+            if any(k not in [ACCESSIONS_KEY, ORGANISM_KEY] for k in cleaned_entry):
                 cleaned[sample_id] = cleaned_entry
 
         self.anno = cleaned
@@ -168,16 +205,11 @@ class BaseAnnotationCombiner:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _init_entry(self, sample_id: str) -> None:
+    def _init_entry(self, id_: str) -> None:
         """Initialize the annotation entry for a sample if not yet present."""
-        if sample_id not in self.anno:
-            self.anno[sample_id] = {
-                "tissue": {},
-                "disease": {},
-                "sex": {},
-                "age": {},
-                "accession_ids": {"sample": sample_id},
-            }
+        if id_ not in self.anno:
+            self.anno[id_] = {key: {} for key in ATTRIBUTE_KEYS}
+            self.anno[id_][ACCESSIONS_KEY] = {}
 
     @staticmethod
     def _clean_attribute(attribute: dict[str, dict]) -> dict[str, dict]:
@@ -199,7 +231,7 @@ class BaseAnnotationCombiner:
                 if v is not None and v not in UNDESIRED
             }
             # Require an 'id' key — annotations without one can't be queried.
-            if "id" not in filtered:
+            if ID_KEY not in filtered:
                 continue
             # Keep only if there's more than just the ecode field.
             if len(filtered) > 1:
