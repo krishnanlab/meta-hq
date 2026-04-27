@@ -106,14 +106,16 @@ def build(config, data_dir, output_dir, start_from, end_at, num_workers, verbose
         # Create directories
         pipeline_config.create_directories()
 
-        click.echo(f"Starting MetaHQ database build...")
+        click.echo("Starting MetaHQ database build...")
         click.echo(f"Data directory: {pipeline_config.data_dir}")
         click.echo(f"Output directory: {pipeline_config.output_dir}")
         click.echo("")
 
-        # Import and run pipeline (this will be implemented later)
-        click.echo("Pipeline execution not yet implemented.")
-        click.echo("This will be connected to the PipelineOrchestrator.")
+        from metahq_setup.pipeline import PipelineOrchestrator
+
+        orchestrator = PipelineOrchestrator(checkpoint_dir=Path(".checkpoints"))
+        orchestrator.run(start_from=start_from, end_at=end_at)
+        click.secho("✓ Pipeline completed successfully", fg="green")
 
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)

@@ -173,8 +173,11 @@ def load_config(
         ...     overrides={"parallel": {"num_workers": 16}}
         ... )
     """
-    # Start with empty dict (Pydantic will use defaults)
-    config_dict: dict[str, Any] = {}
+    # Seed with sensible defaults so no-config invocations work
+    config_dict: dict[str, Any] = {
+        "data_dir": Path.cwd() / "data",
+        "output_dir": Path.cwd() / "output",
+    }
 
     # Load from file if provided
     if config_file is not None:
@@ -194,7 +197,7 @@ def load_config(
     try:
         return PipelineConfig(**config_dict)
     except ValidationError as e:
-        raise ValidationError(f"Invalid pipeline configuration: {e}")
+        raise ValueError(f"Invalid configuration file: {config_file}") from e
 
 
 def save_config(config: PipelineConfig, output_path: Path) -> None:
