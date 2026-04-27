@@ -1,0 +1,81 @@
+# metahq-setup pipeline configuration
+# Pass to the build command with: metahq-setup build --config metahq_setup.yaml
+
+# -----------------------------------------------------------------
+# Directories
+# -----------------------------------------------------------------
+data_dir: ./data # root for all input data (unprocessed/, helpers/, etc.)
+output_dir: ./data/data_package # final packaged database output
+temp_dir: /tmp/metahq_setup
+checkpoint_dir: .checkpoints
+log_dir: .log
+
+# -----------------------------------------------------------------
+# Parallel processing
+# -----------------------------------------------------------------
+parallel:
+  num_workers: 4
+  chunk_size: 1000
+  use_multiprocessing: true
+
+# -----------------------------------------------------------------
+# Validation
+# -----------------------------------------------------------------
+validation:
+  strict: true # fail on any validation error
+  warn_only: false # set true to log errors without stopping
+  check_ontology_coverage: true
+
+# -----------------------------------------------------------------
+# Per-source processor settings
+# Set enabled: false to skip a source entirely.
+# -----------------------------------------------------------------
+processors:
+  ale:
+    enabled: true
+  bgee:
+    enabled: true
+  cello:
+    enabled: true
+  creeds:
+    enabled: true
+  disign_atlas:
+    enabled: true
+  gemma:
+    enabled: true
+  golightly:
+    enabled: true
+  gu:
+    enabled: true
+  johnson_2023:
+    enabled: true
+  krishnanlab:
+    enabled: true
+  sirota_2011:
+    enabled: true
+  ursa:
+    enabled: true
+  ursahd:
+    enabled: true
+
+# -----------------------------------------------------------------
+# Per-stage settings
+# Stage names: process__<source>, combine__geo, combine__sra, combine__sample
+# Set skip: true to bypass a stage (useful with --start-from / --end-at too).
+# -----------------------------------------------------------------
+stages:
+  combine__geo:
+    skip: false
+    use_checkpoint: true
+  combine__sra:
+    skip: false
+    use_checkpoint: true
+  combine__sample:
+    skip: false
+    use_checkpoint: true
+
+# -----------------------------------------------------------------
+# General
+# -----------------------------------------------------------------
+clean_temp: true
+verbose: false
