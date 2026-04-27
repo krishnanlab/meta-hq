@@ -24,4 +24,8 @@ dev-dependencies = [
     "mkdocstrings[python]",
     "mkdocs-material",
     "mkdocs-click",
+    "marimo>=0.23.3",
+    "matplotlib>=3.10.9",
+    "seaborn>=0.13.2",
+    "scipy>=1.17.1",
 ]
