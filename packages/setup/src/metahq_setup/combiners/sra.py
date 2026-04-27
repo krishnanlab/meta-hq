@@ -36,7 +36,7 @@ SRA_SOURCES: dict[str, Path] = {
     "bgee": BGEE_PROCESSED,
     "cello": CELLO_PROCESSED,
     "gu": GU_PROCESSED,
-    "johnson_2023_rnaseq": JOHNSON_2023_RNASEQ_PROCESSED,
+    "johnson_2023": JOHNSON_2023_RNASEQ_PROCESSED,
 }
 
 # Default output path for the combined SRA annotations.
@@ -168,7 +168,9 @@ class SraCombiner(BaseAnnotationCombiner):
 
             data = (
                 data.join(
-                    mapping.rename({"sra": COL_ACCESSION}), on=COL_ACCESSION, how="inner"
+                    mapping.rename({"sra": COL_ACCESSION}),
+                    on=COL_ACCESSION,
+                    how="inner",
                 )
                 .drop(COL_ACCESSION)
                 .rename({"geo": COL_ACCESSION})
