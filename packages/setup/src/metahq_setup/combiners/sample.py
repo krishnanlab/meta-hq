@@ -22,15 +22,20 @@ from typing import Any
 
 import bson
 import duckdb
+import polars as pl
 
 from metahq_setup.combiners.base import BaseAnnotationCombiner
 from metahq_setup.combiners.geo import GEO_COMBINED_BSON
 from metahq_setup.combiners.sra import SRA_COMBINED_BSON
 from metahq_setup.config.config import (
+    ACCESSIONS_KEY,
     ATTRIBUTE_KEYS,
+    COL_TECHNOLOGY_MAP_GPL,
     DELTED_SAMPLES,
     OMICIDX_DB,
+    PLATFORM_ACCESSION_KEY,
     PROCESSED_DIR,
+    TECHNOLOGY_MAP,
 )
 
 # Default output path for the combined sample-level annotations.
@@ -113,6 +118,14 @@ class SampleCombiner(BaseAnnotationCombiner):
                 self.anno[gsm]["organism"] = organism_map[gsm]
                 enriched += 1
         self.logger.info("Enriched accession IDs for %d samples.", enriched)
+
+        self.logger.info("Removing non-transcriptomcs samples")
+        before = len(self.anno)
+        ok_platforms = pl.read_parquet(TECHNOLOGY_MAP)[COL_TECHNOLOGY_MAP_GPL].to_list()
+        self._remove_non_transcriptomics_samples(ok_platforms)
+        self.logger.info(
+            "Removed %d non-transcriptomcs samples", before - len(self.anno)
+        )
 
         return self
 
@@ -270,6 +283,15 @@ class SampleCombiner(BaseAnnotationCombiner):
             len(gsm_ids),
         )
         return result
+
+    def _remove_non_transcriptomics_samples(self, ok_platforms: list[str]):
+        transcriptomics_samples: dict[str, Any] = {}
+        for entry, values in self.anno.items():
+            platform = values[ACCESSIONS_KEY][PLATFORM_ACCESSION_KEY]
+            if platform in ok_platforms:
+                transcriptomics_samples[entry] = values
+
+        self.anno = transcriptomics_samples
 
     def _build_organism_map(self, gsm_ids: list[str], db_path: Path) -> dict[str, str]:
         if not gsm_ids:

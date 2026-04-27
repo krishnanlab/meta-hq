@@ -168,3 +168,7 @@ DELTED_STUDIES: Path = HELPERS_DIR / "deleted_studies.txt"
 
 # Study-forward annotations
 PROCESSED_STUDY_ANNOTATIONS: dict[str, Path] = {"Gemma": GEMMA_PROCESSED}
+
+# Transcriptomics technology map (GPL -> microarray|rnaseq)
+TECHNOLOGY_MAP: Path = HELPERS_DIR / "technologies.parquet"
+COL_TECHNOLOGY_MAP_GPL: str = "id"
