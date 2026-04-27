@@ -10,7 +10,16 @@ from pathlib import Path
 
 import polars as pl
 
-from metahq_setup.config.config import CREEDS_JSON, MONDO_OBO, MONDO_SYSTEMS
+from metahq_setup.config.config import (
+    CREEDS_JSON,
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
+    MONDO_OBO,
+    MONDO_SYSTEMS,
+)
 from metahq_setup.ontology import Ontology, get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
@@ -106,22 +115,22 @@ class CREEDSProcessor(BaseProcessor):
             pert_ids = entry.get("pert_ids", [])
             for gsm_id in pert_ids:
                 records.append({
-                    "sample_id": gsm_id,
-                    "annotation_type": "disease",
-                    "term_id": mondo_id,
-                    "term_label": disease_name,
-                    "ecode": "crowd",
+                    COL_ACCESSION: gsm_id,
+                    COL_ATTRIBUTE: "disease",
+                    COL_TERM_ID: mondo_id,
+                    COL_TERM_NAME: disease_name,
+                    COL_ECODE: "crowd",
                 })
 
             # Process control samples
             ctrl_ids = entry.get("ctrl_ids", [])
             for gsm_id in ctrl_ids:
                 records.append({
-                    "sample_id": gsm_id,
-                    "annotation_type": "disease",
-                    "term_id": "MONDO:0000000",  # Control samples
-                    "term_label": "control",
-                    "ecode": "crowd",
+                    COL_ACCESSION: gsm_id,
+                    COL_ATTRIBUTE: "disease",
+                    COL_TERM_ID: "MONDO:0000000",  # Control samples
+                    COL_TERM_NAME: "control",
+                    COL_ECODE: "crowd",
                 })
 
         if skipped_system_level > 0:
@@ -135,8 +144,8 @@ class CREEDSProcessor(BaseProcessor):
         self.logger.info(
             "Produced %s disease annotations from CREEDS (%s perturbation + %s control)",
             len(result_df),
-            len([r for r in records if r["term_id"] != "MONDO:0000000"]),
-            len([r for r in records if r["term_id"] == "MONDO:0000000"]),
+            len([r for r in records if r[COL_TERM_ID] != "MONDO:0000000"]),
+            len([r for r in records if r[COL_TERM_ID] == "MONDO:0000000"]),
         )
 
         # Save processed data
@@ -183,12 +192,12 @@ class CREEDSProcessor(BaseProcessor):
         self._validate_required_columns(data)
 
         # Check that disease annotations are present
-        annotation_types = data["annotation_type"].unique().to_list()
+        annotation_types = data[COL_ATTRIBUTE].unique().to_list()
         if "disease" not in annotation_types:
             self.logger.warning("No disease annotations found in CREEDS output.")
 
         # Verify all records have ecode='crowd'
-        if not all(e == "crowd" for e in data["ecode"].unique().to_list()):
+        if not all(e == "crowd" for e in data[COL_ECODE].unique().to_list()):
             self.logger.warning("Found non-crowd ecode values in CREEDS data.")
 
         return True

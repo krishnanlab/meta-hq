@@ -12,6 +12,11 @@ from pathlib import Path
 import polars as pl
 
 from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     KRISHNANLAB_TSV,
     MONDO_OBO,
     MONDO_SYSTEMS,
@@ -63,6 +68,12 @@ class KrishnanLabProcessor(BaseProcessor):
         disease_records = self._build_disease(df)
 
         result_df = pl.concat([tissue_records, disease_records], how="vertical")
+        result_df = result_df.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
+
         self.logger.info(
             "Produced %s total annotations from KrishnanLab.", result_df.height
         )
@@ -177,7 +188,7 @@ class KrishnanLabProcessor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        types = data["annotation_type"].unique().to_list()
+        types = data[COL_ATTRIBUTE].unique().to_list()
         for expected in ["disease", "tissue"]:
             if expected not in types:
                 self.logger.warning(

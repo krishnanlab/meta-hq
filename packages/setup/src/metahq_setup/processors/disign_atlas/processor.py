@@ -12,6 +12,11 @@ from pathlib import Path
 import polars as pl
 
 from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     DISIGN_ATLAS_CORRECTIONS,
     DISIGN_ATLAS_GMT,
     DISIGN_ATLAS_TISSUE_MAP,
@@ -297,6 +302,12 @@ class DiSignAtlasProcessor(BaseProcessor):
             tissue_records.filter(pl.col("term_id") != "na").height,
         )
 
+        result_df = result_df.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
+
         output_file = output_dir / "disign_atlas_processed.parquet"
         result_df.write_parquet(output_file)
         self.logger.info("Wrote processed data to %s", output_file)
@@ -318,7 +329,7 @@ class DiSignAtlasProcessor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        has_disease = "disease" in data["annotation_type"].unique().to_list()
+        has_disease = "disease" in data[COL_ATTRIBUTE].unique().to_list()
         if not has_disease:
             self.logger.warning("No disease annotations found in DiSignAtlas output.")
 

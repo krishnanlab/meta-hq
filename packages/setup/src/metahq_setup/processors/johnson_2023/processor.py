@@ -11,6 +11,11 @@ from pathlib import Path
 import polars as pl
 
 from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     JOHNSON_MICROARRAY_MESH_MONDO,
     JOHNSON_MICROARRAY_MESH_UBERON,
     JOHNSON_MICROARRAY_TSV,
@@ -81,6 +86,10 @@ class Johnson2023Processor(BaseProcessor):
             microarray_df.height,
             rnaseq_df.height,
         )
+
+        _rename = {"sample_id": COL_ACCESSION, "annotation_type": COL_ATTRIBUTE, "term_label": COL_TERM_NAME}
+        microarray_df = microarray_df.rename(_rename)
+        rnaseq_df = rnaseq_df.rename(_rename)
 
         # Save each dataset separately so geo/sra combiners can consume them
         microarray_file = output_dir / "johnson_2023__microarray.parquet"
@@ -567,7 +576,7 @@ class Johnson2023Processor(BaseProcessor):
         self._validate_required_columns(data)
 
         # Check that all expected annotation types are present
-        annotation_types = data["annotation_type"].unique().to_list()
+        annotation_types = data[COL_ATTRIBUTE].unique().to_list()
         expected_types = {"disease", "tissue", "sex", "age"}
 
         for expected_type in expected_types:
@@ -578,7 +587,7 @@ class Johnson2023Processor(BaseProcessor):
                 )
 
         # Verify all records have ecode='expert'
-        if not data["ecode"].unique().to_list() == ["expert"]:
+        if not data[COL_ECODE].unique().to_list() == ["expert"]:
             self.logger.warning("Found non-expert ecode values in Johnson 2023 data.")
 
         return True

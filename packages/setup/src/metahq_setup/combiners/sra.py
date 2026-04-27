@@ -24,6 +24,7 @@ from metahq_setup.combiners.base import BaseAnnotationCombiner
 from metahq_setup.config.config import (
     BGEE_PROCESSED,
     CELLO_PROCESSED,
+    COL_ACCESSION,
     GU_PROCESSED,
     JOHNSON_2023_RNASEQ_PROCESSED,
     OMICIDX_DB,
@@ -120,7 +121,7 @@ class SraCombiner(BaseAnnotationCombiner):
             self.logger.info("Loading '%s' from %s...", source_name, path)
             data = pl.read_parquet(path)
             source_data[source_name] = data
-            all_sample_ids.update(data["sample_id"].unique().to_list())
+            all_sample_ids.update(data[COL_ACCESSION].unique().to_list())
 
         if not all_sample_ids:
             self.logger.warning("No sample IDs found across all SRA sources.")
@@ -167,10 +168,10 @@ class SraCombiner(BaseAnnotationCombiner):
 
             data = (
                 data.join(
-                    mapping.rename({"sra": "sample_id"}), on="sample_id", how="inner"
+                    mapping.rename({"sra": COL_ACCESSION}), on=COL_ACCESSION, how="inner"
                 )
-                .drop("sample_id")
-                .rename({"geo": "sample_id"})
+                .drop(COL_ACCESSION)
+                .rename({"geo": COL_ACCESSION})
             )
 
             dropped = before - data.height

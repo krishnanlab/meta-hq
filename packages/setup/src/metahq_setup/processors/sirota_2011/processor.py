@@ -14,6 +14,11 @@ from pathlib import Path
 import polars as pl
 
 from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     MONDO_OBO,
     MONDO_SYSTEMS,
     SIROTA_2011_CSV,
@@ -76,6 +81,12 @@ class Sirota2011Processor(BaseProcessor):
         tissue_records = self._build_tissue(samples)
 
         result_df = pl.concat([disease_records, tissue_records], how="vertical")
+        result_df = result_df.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
+
         self.logger.info(
             "Produced %s total annotations from Sirota 2011.", result_df.height
         )
@@ -240,7 +251,7 @@ class Sirota2011Processor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        types = data["annotation_type"].unique().to_list()
+        types = data[COL_ATTRIBUTE].unique().to_list()
         for expected in ["disease", "tissue"]:
             if expected not in types:
                 self.logger.warning(

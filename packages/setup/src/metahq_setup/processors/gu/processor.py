@@ -10,6 +10,11 @@ from pathlib import Path
 import polars as pl
 
 from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     GU_2023_CSV,
     GU_DISEASE_MONDO,
     GU_TISSUE_UBERON,
@@ -92,6 +97,12 @@ class GuProcessor(BaseProcessor):
             disease_records.height,
             tissue_records.height,
         )
+
+        result_df = result_df.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
 
         # Save processed data
         output_file = output_dir / "gu_processed.parquet"
@@ -214,7 +225,7 @@ class GuProcessor(BaseProcessor):
         self._validate_required_columns(data)
 
         # Check that expected annotation types are present
-        annotation_types = data["annotation_type"].unique().to_list()
+        annotation_types = data[COL_ATTRIBUTE].unique().to_list()
 
         if "disease" not in annotation_types and "tissue" not in annotation_types:
             self.logger.warning(
@@ -222,7 +233,7 @@ class GuProcessor(BaseProcessor):
             )
 
         # Verify all records have ecode='expert'
-        if not all(e == "expert" for e in data["ecode"].unique().to_list()):
+        if not all(e == "expert" for e in data[COL_ECODE].unique().to_list()):
             self.logger.warning("Found non-expert ecode values in Gu 2023 data.")
 
         return True

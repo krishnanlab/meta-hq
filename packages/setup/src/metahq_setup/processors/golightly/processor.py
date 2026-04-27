@@ -13,6 +13,11 @@ from pathlib import Path
 import polars as pl
 
 from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     GOLIGHTLY_ZIP,
     PROCESSED_DIR,
     UBERON_OBO,
@@ -196,15 +201,21 @@ class GolightlyProcessor(BaseProcessor):
             self.logger.warning("No annotations produced from Golightly.")
             return pl.DataFrame(
                 schema={
-                    "sample_id": pl.Utf8,
-                    "annotation_type": pl.Utf8,
-                    "term_id": pl.Utf8,
-                    "term_label": pl.Utf8,
-                    "ecode": pl.Utf8,
+                    COL_ACCESSION: pl.Utf8,
+                    COL_ATTRIBUTE: pl.Utf8,
+                    COL_TERM_ID: pl.Utf8,
+                    COL_TERM_NAME: pl.Utf8,
+                    COL_ECODE: pl.Utf8,
                 }
             )
 
         result = pl.concat(parts, how="diagonal_relaxed").unique()
+        result = result.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
+
         self.logger.info("Processed %d annotations from Golightly", len(result))
 
         output_file = output_dir / "golightly_processed.parquet"
@@ -230,7 +241,7 @@ class GolightlyProcessor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        if "tissue" not in data["annotation_type"].unique().to_list():
+        if "tissue" not in data[COL_ATTRIBUTE].unique().to_list():
             raise ValidationError("No tissue annotations found in Golightly output.")
 
         return True

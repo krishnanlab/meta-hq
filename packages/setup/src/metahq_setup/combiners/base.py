@@ -33,6 +33,11 @@ import polars as pl
 from metahq_setup.config.config import (
     ACCESSIONS_KEY,
     ATTRIBUTE_KEYS,
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     DELIMITER,
     ECODE_KEY,
     ID_KEY,
@@ -86,7 +91,7 @@ class BaseAnnotationCombiner:
                 Standard-schema DataFrame with columns ``sample_id``,
                 ``annotation_type``, ``term_id``, ``term_label``, ``ecode``.
         """
-        data = data.filter(pl.col("annotation_type").is_in(ANNOTATION_TYPES))
+        data = data.filter(pl.col(COL_ATTRIBUTE).is_in(ANNOTATION_TYPES))
 
         if data.is_empty():
             self.logger.warning(
@@ -95,33 +100,33 @@ class BaseAnnotationCombiner:
             return
 
         grouped = (
-            data.sort(["sample_id", "annotation_type", "term_id"])
-            .group_by(["sample_id", "annotation_type"])
+            data.sort([COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID])
+            .group_by([COL_ACCESSION, COL_ATTRIBUTE])
             .agg(
-                pl.col("term_id").drop_nulls().str.join(DELIMITER).alias("term_id"),
-                pl.col("term_label")
+                pl.col(COL_TERM_ID).drop_nulls().str.join(DELIMITER).alias(COL_TERM_ID),
+                pl.col(COL_TERM_NAME)
                 .drop_nulls()
                 .str.join(DELIMITER)
-                .alias("term_label"),
-                pl.col("ecode").first().alias("ecode"),
+                .alias(COL_TERM_NAME),
+                pl.col(COL_ECODE).first().alias(COL_ECODE),
             )
             .with_columns(
-                pl.col("term_id")
+                pl.col(COL_TERM_ID)
                 .str.split(DELIMITER)
                 .list.unique(maintain_order=True)
                 .list.join(DELIMITER)
-                .alias("term_id"),
-                pl.col("term_label")
+                .alias(COL_TERM_ID),
+                pl.col(COL_TERM_NAME)
                 .str.split(DELIMITER)
                 .list.unique(maintain_order=True)
                 .list.join(DELIMITER)
-                .alias("term_label"),
+                .alias(COL_TERM_NAME),
             )
         )
 
         for row in grouped.iter_rows(named=True):
-            accession = row["sample_id"]
-            annotation_type = row["annotation_type"]
+            accession = row[COL_ACCESSION]
+            annotation_type = row[COL_ATTRIBUTE]
 
             self._init_entry(accession)
 
@@ -135,16 +140,16 @@ class BaseAnnotationCombiner:
                 continue
 
             self.anno[accession][annotation_type][source_name] = {
-                ID_KEY: row["term_id"],
-                VALUE_KEY: row["term_label"],
-                ECODE_KEY: row["ecode"],
+                ID_KEY: row[COL_TERM_ID],
+                VALUE_KEY: row[COL_TERM_NAME],
+                ECODE_KEY: row[COL_ECODE],
             }
 
         self.logger.info(
             "Added %d annotations from '%s' across %d samples.",
             data.height,
             source_name,
-            grouped["sample_id"].n_unique(),
+            grouped[COL_ACCESSION].n_unique(),
         )
 
     def clean(self) -> "BaseAnnotationCombiner":

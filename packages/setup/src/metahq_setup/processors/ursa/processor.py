@@ -9,7 +9,16 @@ from pathlib import Path
 
 import polars as pl
 
-from metahq_setup.config.config import UBERON_OBO, UBERON_SYSTEMS, URSA_CSV
+from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
+    UBERON_OBO,
+    UBERON_SYSTEMS,
+    URSA_CSV,
+)
 from metahq_setup.ontology import Ontology, get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
@@ -97,6 +106,12 @@ class URSAProcessor(BaseProcessor):
             result_df["sample_id"].n_unique(),
         )
 
+        result_df = result_df.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
+
         output_file = output_dir / "ursa_processed.parquet"
         result_df.write_parquet(output_file)
         self.logger.info("Wrote processed data to %s", output_file)
@@ -119,7 +134,7 @@ class URSAProcessor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        has_tissue = "tissue" in data["annotation_type"].unique().to_list()
+        has_tissue = "tissue" in data[COL_ATTRIBUTE].unique().to_list()
         if not has_tissue:
             self.logger.warning("No tissue annotations found in URSA output.")
 

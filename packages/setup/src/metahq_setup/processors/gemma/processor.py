@@ -12,6 +12,11 @@ from pathlib import Path
 import polars as pl
 
 from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     GEMMA_DEV_STAGE_TO_AGE_GROUP,
     GEMMA_RAW,
     MONDO_OBO,
@@ -170,6 +175,12 @@ class GemmaProcessor(BaseProcessor):
             before - len(df),
             len(df),
         )
+
+        df = df.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
 
         output_file = output_dir / "gemma_processed.parquet"
         df.write_parquet(output_file)

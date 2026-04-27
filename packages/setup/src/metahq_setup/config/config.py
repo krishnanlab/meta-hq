@@ -35,6 +35,16 @@ CONTROL_ID: str = "MONDO:0000000"
 CONTROL_VALUE: str = "control"
 
 # ===============================================
+# ====== Processor output schema column names
+# ===============================================
+
+COL_ACCESSION: str = "accession"
+COL_ATTRIBUTE: str = "attribute"
+COL_TERM_ID: str = "term_id"
+COL_TERM_NAME: str = "term_name"
+COL_ECODE: str = "ecode"
+
+# ===============================================
 # ====== ACCESSION PROPERTIES
 # ===============================================
 

@@ -18,6 +18,11 @@ from metahq_setup.config.config import (
     BGEE_MOUSE,
     BGEE_RAT,
     BGEE_WORM,
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
@@ -107,15 +112,20 @@ class BgeeProcessor(BaseProcessor):
             self.logger.error("No species data was successfully processed!")
             return pl.DataFrame(
                 schema={
-                    "sample_id": pl.Utf8,
-                    "annotation_type": pl.Utf8,
-                    "term_id": pl.Utf8,
-                    "term_label": pl.Utf8,
-                    "ecode": pl.Utf8,
+                    COL_ACCESSION: pl.Utf8,
+                    COL_ATTRIBUTE: pl.Utf8,
+                    COL_TERM_ID: pl.Utf8,
+                    COL_TERM_NAME: pl.Utf8,
+                    COL_ECODE: pl.Utf8,
                 }
             )
 
         result_df = pl.concat(all_species_data, how="vertical")
+        result_df = result_df.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
 
         self.logger.info(
             "Produced %s total annotations across %s species",
@@ -324,7 +334,7 @@ class BgeeProcessor(BaseProcessor):
         self._validate_required_columns(data)
 
         # Check that expected annotation types are present
-        annotation_types = data["annotation_type"].unique().to_list()
+        annotation_types = data[COL_ATTRIBUTE].unique().to_list()
         expected_types = {"tissue", "sex", "developmental_stage"}
 
         for expected_type in expected_types:
@@ -335,7 +345,7 @@ class BgeeProcessor(BaseProcessor):
                 )
 
         # Verify all records have ecode='expert'
-        unique_ecodes = data["ecode"].unique().to_list()
+        unique_ecodes = data[COL_ECODE].unique().to_list()
         if unique_ecodes != ["expert"]:
             self.logger.warning(
                 "Found non-expert ecode values in Bgee data: %s",
@@ -343,7 +353,7 @@ class BgeeProcessor(BaseProcessor):
             )
 
         # Check for sample IDs (should all be SRR format)
-        sample_count = data["sample_id"].n_unique()
+        sample_count = data[COL_ACCESSION].n_unique()
         self.logger.info("Validated %s unique samples", sample_count)
 
         return True

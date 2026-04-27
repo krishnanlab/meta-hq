@@ -12,6 +12,11 @@ import polars as pl
 from metahq_setup.config.config import (
     ALE_BTO_UBERON,
     ALE_TSV,
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
     PROCESSED_DIR,
     UBERON_OBO,
     UBERON_SYSTEMS,
@@ -92,6 +97,11 @@ class ALEProcessor(BaseProcessor):
         age_df = self._build_age(df)
 
         result = pl.concat([tissue_df, sex_df, age_df], how="vertical")
+        result = result.rename({
+            "sample_id": COL_ACCESSION,
+            "annotation_type": COL_ATTRIBUTE,
+            "term_label": COL_TERM_NAME,
+        })
 
         self.logger.info("Processed %d annotations from ALE", len(result))
 
@@ -118,7 +128,7 @@ class ALEProcessor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        if "tissue" not in data["annotation_type"].unique().to_list():
+        if "tissue" not in data[COL_ATTRIBUTE].unique().to_list():
             raise ValidationError("No tissue annotations found in ALE output.")
 
         return True

@@ -10,7 +10,14 @@ from pathlib import Path
 
 import polars as pl
 
-from metahq_setup.config.config import PROCESSED_DIR
+from metahq_setup.config.config import (
+    COL_ACCESSION,
+    COL_ATTRIBUTE,
+    COL_ECODE,
+    COL_TERM_ID,
+    COL_TERM_NAME,
+    PROCESSED_DIR,
+)
 from metahq_setup.util.logging import setup_logger
 
 
@@ -67,10 +74,10 @@ class BaseProcessor(ABC):
         Process raw data into standardized annotation format.
 
         The output DataFrame must have the following columns:
-        - sample_id: str - Sample identifier (GSM, SRR, etc.)
-        - annotation_type: str - Type of annotation (tissue, disease, cell_type, sex, age)
+        - accession: str - Sample or study identifier (GSM, GSE, SRR, etc.)
+        - attribute: str - Type of annotation (tissue, disease, cell_type, sex, age)
         - term_id: str - Ontology term ID (e.g., MONDO:0004994, UBERON:0000948)
-        - term_label: str - Human-readable term label
+        - term_name: str - Human-readable term label
         - ecode: str - Evidence code (expert, semi, crowd, automated)
 
         Arguments:
@@ -152,7 +159,7 @@ class BaseProcessor(ABC):
         data = self.process(output_dir, **kwargs)
 
         # Sort
-        data = data.sort(["sample_id", "annotation_type", "term_id"])
+        data = data.sort([COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID])
 
         # Validate
         if validate_output:
@@ -176,10 +183,10 @@ class BaseProcessor(ABC):
             ValidationError: If required columns are missing
         """
         required_columns = [
-            "sample_id",
-            "annotation_type",
-            "term_id",
-            "term_label",
+            COL_ACCESSION,
+            COL_ATTRIBUTE,
+            COL_TERM_ID,
+            COL_TERM_NAME,
         ]
 
         missing_columns = [col for col in required_columns if col not in data.columns]
