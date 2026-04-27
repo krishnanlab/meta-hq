@@ -3,3 +3,4 @@ data/unprocessed/gemma.json filter=lfs diff=lfs merge=lfs -text
 data/processed/geo_combined.bson filter=lfs diff=lfs merge=lfs -text
 data/processed/sra_combined.bson filter=lfs diff=lfs merge=lfs -text
 data/processed/combined__level-sample.bson filter=lfs diff=lfs merge=lfs -text
+data/processed/combined__level-series.bson filter=lfs diff=lfs merge=lfs -text
