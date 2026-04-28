@@ -187,6 +187,7 @@ class BaseProcessor(ABC):
             COL_ATTRIBUTE,
             COL_TERM_ID,
             COL_TERM_NAME,
+            COL_ECODE,
         ]
 
         missing_columns = [col for col in required_columns if col not in data.columns]
