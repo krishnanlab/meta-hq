@@ -520,21 +520,29 @@ def list_fields(level, metadata_db):
     help="A comma-delimited string of fields to query",
 )
 @click.option(
+    "--sample-bson",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to sample-level BSON database storing MetaHQ sample anntotations.",
+)
+@click.option(
     "--metadata-db",
     type=click.Path(exists=True, path_type=Path),
     default=None,
     help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
 )
-def retrieve_sample_metadata(fields, metadata_db):
+def retrieve_sample_metadata(fields, sample_bson, metadata_db):
+    """Retrieve sample-level metadata from OmicIDX for samples in a MetaHQ BSON database."""
     import bson
 
     from metahq_setup.config.config import OMICIDX_DB, SAMPLE_COMBINED_BSON
     from metahq_setup.metadata.sample import SampleMetadataRetriever
 
+    sample_bson = Path(sample_bson) if sample_bson else SAMPLE_COMBINED_BSON
     db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
     query_fields = fields.split(",")
 
-    with open(SAMPLE_COMBINED_BSON, "rb") as f:
+    with open(sample_bson, "rb") as f:
         samples = list(bson.decode(f.read()).keys())
 
     retriever = SampleMetadataRetriever(db_path=db_path, table="src_geo_samples")
@@ -546,8 +554,14 @@ def retrieve_sample_metadata(fields, metadata_db):
     "--fields",
     "-f",
     type=str,
-    default="accession,title,summary",
+    default="accession,title,summary,overall_design",
     help="A comma-delimited string of fields to query",
+)
+@click.option(
+    "--series-bson",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to series-level BSON database storing MetaHQ series anntotations.",
 )
 @click.option(
     "--metadata-db",
@@ -555,17 +569,18 @@ def retrieve_sample_metadata(fields, metadata_db):
     default=None,
     help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
 )
-def retrieve_series_metadata(fields, metadata_db):
+def retrieve_series_metadata(fields, series_bson, metadata_db):
+    """Retrieve series-level metadata from OmicIDX for series in a MetaHQ BSON database."""
     import bson
 
-    from metahq_setup.combiners.study import STUDY_COMBINED_BSON
-    from metahq_setup.config import OMICIDX_DB
+    from metahq_setup.config import OMICIDX_DB, SERIES_COMBINED_BSON
     from metahq_setup.metadata.series import SeriesMetadataRetriever
 
+    series_bson = Path(series_bson) if series_bson else SERIES_COMBINED_BSON
     db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
     query_fields = fields.split(",")
 
-    with open(STUDY_COMBINED_BSON, "rb") as f:
+    with open(series_bson, "rb") as f:
         series = list(bson.decode(f.read()).keys())
 
     retriever = SeriesMetadataRetriever(db_path=db_path, table="src_geo_series")
@@ -706,23 +721,19 @@ def ontology_relations(obo_file, outfile):
     representing that particular column. If the value is 0, then there is no relationship
     between the terms.
     """
-
-    import polars as pl
-
     from metahq_setup.ontology import Graph
 
     try:
+        click.echo("Extracting ontology relations...")
+        click.echo(f"OBO file: {obo_file}")
+        click.echo(f"Out file: {outfile}")
+        click.echo("")
+
         graph = Graph.from_obo(obo_file)
-        relations, terms = graph.relations_matrix()
+        graph.relations_matrix().save(outfile)
 
-        outdir = outfile.resolve().parents[0]
-        if not outdir.exists():
-            outdir.mkdir(exist_ok=True, parents=True)
-
-        # transpose for compatability with metahq-cli
-        pl.LazyFrame(relations.T, schema=list(terms), orient="row").sink_parquet(
-            outfile, engine="streaming"
-        )
+        click.secho(f"✓ Relations saved to {outfile}", fg="green")
+        sys.exit(0)
 
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)

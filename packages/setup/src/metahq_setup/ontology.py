@@ -17,6 +17,8 @@ import polars as pl
 from numpy.typing import DTypeLike, NDArray
 from tqdm import tqdm
 
+from metahq_setup.util.logging import setup_logger
+
 
 class Ontology:
     """This class contains functionalities for working with ontologies. Currently only supports
@@ -41,6 +43,8 @@ class Ontology:
     def __init__(self):
         self._entries: list[str] = []
         self._class_dict: dict[str, str] = {}
+
+        self.logger = setup_logger("metahq_setup.ontology")
 
     def get_class_dict(self, verbose: bool = False):
         """
@@ -526,11 +530,11 @@ class Graph(Ontology):
 
         return _map
 
-    def relations_matrix(self, dtype: DTypeLike = np.int8) -> tuple[NDArray, NDArray]:
+    def relations_matrix(self, dtype: DTypeLike = np.int8) -> "RelationsMatrix":
         """Construct a term x term matrices defining ancestor and descendant relationships.
 
         You may interpret the output matrix as the following: For any row, column pair, if the
-        value is 1, then the term representing that particular row is a descendant of the term
+        value is 1, then the term representing that particular row is an ancestor of the term
         representing that particular column. If the value is 0, then there is no relationship
         between the terms.
 
@@ -540,10 +544,9 @@ class Graph(Ontology):
                     numpy dtype (e.g., np.int8, np.int32) a python builtin dtype (e.g., int, float),
                     or a string (e.g., 'int8', ''>i4').
 
-
         Returns:
-            (NDArray): A terms x terms matrix defining their relationships in the ontology.
-            (NDArray): An array of terms representing the columns and rows of the family matrix.
+            (RelationsMatrix): A RelationsMatrix object storing the relationships matrix and terms
+                representing the rows and columns.
         """
         # extract node relationships
         ancestor_relationships = self.ancestors_from(self.nodes)
@@ -565,7 +568,7 @@ class Graph(Ontology):
             related = np.where(np.isin(np_nodes, relatives))[0]
             propagated_relations[i, related] = 1
 
-        return propagated_relations, np_nodes
+        return RelationsMatrix(matrix=propagated_relations.T, terms=np_nodes)
 
     def deepest_node(self, query: list[str]) -> str:
         """Find the deepest node using breadth first search from root nodes.
@@ -651,6 +654,35 @@ class Graph(Ontology):
     def leaves(self) -> list[str]:
         """Return leaf nodes of the ontology"""
         return [node for node in self.nodes if self.graph.out_degree(node) == 0]
+
+
+class RelationsMatrix:
+    """Class to store and save ontology relations matrices.
+
+    Attributes:
+        matrix (NDArray):
+            A terms x terms matrix storing binary relationships between term pairs.
+                You may interpret it as the following: For any row, column pair, if the
+                value is 1, then the term representing that particular row is an ancestor
+                of the term representing that particular column. If the value is 0, then
+                there is no relationship between the terms.
+
+        terms (NDArray):
+            An array representing the columns and rows of the matrix.
+    """
+
+    def __init__(self, matrix: NDArray, terms: NDArray):
+        self.matrix = matrix
+        self.terms = terms
+
+    def save(self, outfile: Path):
+        outdir = outfile.resolve().parents[0]
+        if not outdir.exists():
+            outdir.mkdir(exist_ok=True, parents=True)
+
+        pl.LazyFrame(self.matrix, schema=list(self.terms), orient="row").sink_parquet(
+            outfile, engine="streaming"
+        )
 
 
 def get_id_map(obo_file: Path) -> pl.DataFrame:
