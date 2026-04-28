@@ -17,6 +17,9 @@ from metahq_setup.config.config import (
     ECODE_KEY,
     GEO_COMBINED_BSON,
     ID_KEY,
+    MONDO_OBO,
+    MONDO_RELATIONS,
+    MONDO_SYSTEMS,
     OMICIDX_DB,
     OMICIDX_SAMPLE_TABLE,
     OMICIDX_SERIES_TABLE,
@@ -29,6 +32,9 @@ from metahq_setup.config.config import (
     SRA_COMBINED_BSON,
     STUDY_ACCESSION_KEY,
     STUDY_ID_PREFIX,
+    UBERON_OBO,
+    UBERON_RELATIONS,
+    UBERON_SYSTEMS,
     VALUE_KEY,
 )
 from metahq_setup.config.loader import (
@@ -75,6 +81,9 @@ __all__ = [
     "ECODE_KEY",
     "GEO_COMBINED_BSON",
     "ID_KEY",
+    "MONDO_OBO",
+    "MONDO_RELATIONS",
+    "MONDO_SYSTEMS",
     "PROCESSED_DIR",
     "OMICIDX_DB",
     "OMICIDX_SAMPLE_TABLE",
@@ -87,5 +96,8 @@ __all__ = [
     "SRA_COMBINED_BSON",
     "STUDY_ACCESSION_KEY",
     "STUDY_ID_PREFIX",
+    "UBERON_OBO",
+    "UBERON_RELATIONS",
+    "UBERON_SYSTEMS",
     "VALUE_KEY",
 ]

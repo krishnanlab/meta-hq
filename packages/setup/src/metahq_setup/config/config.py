@@ -68,13 +68,18 @@ PROCESSED_DIR: Path = DATA_DIR / "processed"
 ONTOLOGY_DIR: Path = DATA_DIR / "ontology"
 HELPERS_DIR: Path = DATA_DIR / "helpers"
 
-# Ontology OBO files.
+# Ontology
+## Ontology OBO files.
 MONDO_OBO: Path = ONTOLOGY_DIR / "mondo" / "mondo.obo.gz"
 UBERON_OBO: Path = ONTOLOGY_DIR / "uberon_ext" / "uberon_ext.obo.gz"
 BTO_OBO: Path = ONTOLOGY_DIR / "bto" / "bto.obo.gz"
 CL_OBO: Path = ONTOLOGY_DIR / "cl" / "cl.obo.gz"
 
-# System-level term lists (used to filter annotations to biologically meaningful terms).
+## Default relations paths
+MONDO_RELATIONS: Path = ONTOLOGY_DIR / "mondo" / "relations.parquet"
+UBERON_RELATIONS: Path = ONTOLOGY_DIR / "uberon_ext" / "relations.parquet"
+
+## System-level term lists (used to filter annotations to biologically meaningful terms).
 MONDO_SYSTEMS: Path = ONTOLOGY_DIR / "mondo" / "systems.txt"
 UBERON_SYSTEMS: Path = ONTOLOGY_DIR / "uberon_ext" / "systems.txt"
 
