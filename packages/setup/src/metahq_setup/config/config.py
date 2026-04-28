@@ -165,10 +165,19 @@ BGEE_FLY: Path = (
 DELTED_SAMPLES: Path = HELPERS_DIR / "deleted_samples.txt"
 DELTED_STUDIES: Path = HELPERS_DIR / "deleted_studies.txt"
 
-
 # Study-forward annotations
 PROCESSED_STUDY_ANNOTATIONS: dict[str, Path] = {"Gemma": GEMMA_PROCESSED}
+
+# Database file names
+SAMPLE_COMBINED_BSON: Path = PROCESSED_DIR / "combined__level-sample.bson"
+SERIES_COMBINED_BSON: Path = PROCESSED_DIR / "combined__level-series.bson"
+GEO_COMBINED_BSON: Path = PROCESSED_DIR / "geo.bson"
+SRA_COMBINED_BSON: Path = PROCESSED_DIR / "sra.bson"
 
 # Transcriptomics technology map (GPL -> microarray|rnaseq)
 TECHNOLOGY_MAP: Path = HELPERS_DIR / "technologies.parquet"
 COL_TECHNOLOGY_MAP_GPL: str = "id"
+
+# OmicIDX properties
+OMICIDX_SAMPLE_TABLE = "src_geo_samples"
+OMICIDX_SERIES_TABLE = "src_geo_series"

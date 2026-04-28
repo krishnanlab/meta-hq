@@ -9,7 +9,6 @@ import duckdb
 import polars as pl
 
 from metahq_setup.combiners.base import BaseAnnotationCombiner
-from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
 from metahq_setup.config.config import (
     ACCESSIONS_KEY,
     ALL_METAHQ_KEYS,
@@ -22,12 +21,10 @@ from metahq_setup.config.config import (
     OMICIDX_DB,
     ORGANISM_KEY,
     PLATFORM_ACCESSION_KEY,
-    PROCESSED_DIR,
     PROCESSED_STUDY_ANNOTATIONS,
+    SAMPLE_COMBINED_BSON,
     STUDY_ACCESSION_KEY,
 )
-
-STUDY_COMBINED_BSON = PROCESSED_DIR / "combined__level-series.bson"
 
 
 class StudyCombiner(BaseAnnotationCombiner):

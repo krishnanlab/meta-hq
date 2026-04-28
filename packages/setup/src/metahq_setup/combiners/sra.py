@@ -28,7 +28,6 @@ from metahq_setup.config.config import (
     GU_PROCESSED,
     JOHNSON_2023_RNASEQ_PROCESSED,
     OMICIDX_DB,
-    PROCESSED_DIR,
 )
 
 # Maps source name → default processed parquet path.
@@ -38,10 +37,6 @@ SRA_SOURCES: dict[str, Path] = {
     "gu": GU_PROCESSED,
     "johnson_2023": JOHNSON_2023_RNASEQ_PROCESSED,
 }
-
-# Default output path for the combined SRA annotations.
-SRA_COMBINED_BSON: Path = PROCESSED_DIR / "sra_combined.bson"
-
 
 # Some mappings are not in omicidx for some reason. Manually define here
 MANUAL_SRR_GSM_MAP: dict[str, str] = {

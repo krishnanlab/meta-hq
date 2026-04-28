@@ -18,7 +18,6 @@ from metahq_setup.config.config import (
     GOLIGHTLY_PROCESSED,
     JOHNSON_2023_MICROARRAY_PROCESSED,
     KRISHNANLAB_PROCESSED,
-    PROCESSED_DIR,
     SIROTA_2011_PROCESSED,
     URSA_PROCESSED,
     URSAHD_PROCESSED,
@@ -37,9 +36,6 @@ GEO_SOURCES: dict[str, Path] = {
     "ursa": URSA_PROCESSED,
     "ursahd": URSAHD_PROCESSED,
 }
-
-# Default output path for the combined GEO annotations.
-GEO_COMBINED_BSON: Path = PROCESSED_DIR / "geo_combined.bson"
 
 
 class GeoCombiner(BaseAnnotationCombiner):

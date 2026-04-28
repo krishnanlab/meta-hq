@@ -34,12 +34,8 @@ from metahq_setup.config.config import (
     DELTED_SAMPLES,
     OMICIDX_DB,
     PLATFORM_ACCESSION_KEY,
-    PROCESSED_DIR,
     TECHNOLOGY_MAP,
 )
-
-# Default output path for the combined sample-level annotations.
-SAMPLE_COMBINED_BSON: Path = PROCESSED_DIR / "combined__level-sample.bson"
 
 
 class SampleCombiner(BaseAnnotationCombiner):
