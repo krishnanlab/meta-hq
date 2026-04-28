@@ -73,6 +73,12 @@ stages:
   combine__sample:
     skip: false
     use_checkpoint: true
+  extract__uberon__relations:
+    skip: false
+    use_checkpoint: true
+  extract__mondo__relations:
+    skip: false
+    use_checkpoint: true
 
 # -----------------------------------------------------------------
 # General

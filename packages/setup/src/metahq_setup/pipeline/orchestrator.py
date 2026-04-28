@@ -13,11 +13,16 @@ from metahq_setup.combiners.sample import SampleCombiner
 from metahq_setup.combiners.sra import SraCombiner
 from metahq_setup.config import (
     GEO_COMBINED_BSON,
+    MONDO_OBO,
+    MONDO_RELATIONS,
     OMICIDX_DB,
     PROCESSED_DIR,
     SAMPLE_COMBINED_BSON,
     SRA_COMBINED_BSON,
+    UBERON_OBO,
+    UBERON_RELATIONS,
 )
+from metahq_setup.ontology import Graph
 from metahq_setup.processors import ProcessorRegistry
 from metahq_setup.util.checkpointing import CheckpointManager
 from metahq_setup.util.logging import setup_logger
@@ -139,6 +144,22 @@ class PipelineOrchestrator:
                 )
                 .clean()
                 .save(SAMPLE_COMBINED_BSON),
+            )
+        )
+        stages.append(
+            (
+                "extract__mondo_relations",
+                lambda: Graph.from_obo(MONDO_OBO)
+                .relations_matrix()
+                .save(MONDO_RELATIONS),
+            )
+        )
+        stages.append(
+            (
+                "extract__uberon_relations",
+                lambda: Graph.from_obo(UBERON_OBO)
+                .relations_matrix()
+                .save(UBERON_RELATIONS),
             )
         )
 
