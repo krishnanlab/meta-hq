@@ -4,7 +4,7 @@ Operations for ontologies. Currently, only UBERON, CL, and MONDO are supported.
 Authors: Parker Hicks, Hao Yuan
 Date: 2026-04-03
 
-Last updated: 2026-04-03 by Parker Hicks
+Last updated: 2026-04-27 by Parker Hicks
 """
 
 import gzip
@@ -12,7 +12,10 @@ import re
 from pathlib import Path
 
 import networkx as nx
+import numpy as np
 import polars as pl
+from numpy.typing import DTypeLike, NDArray
+from tqdm import tqdm
 
 
 class Ontology:
@@ -36,7 +39,7 @@ class Ontology:
     """
 
     def __init__(self):
-        self.entries: list[str] = []
+        self._entries: list[str] = []
         self._class_dict: dict[str, str] = {}
 
     def get_class_dict(self, verbose: bool = False):
@@ -415,6 +418,7 @@ class Graph(Ontology):
         """Initialize Graph object as a child of Ontology"""
         super().__init__()
         self._graph = nx.DiGraph()
+        self._nodes: list[str] = []
 
     def construct_graph(self):
         """Constructs an ontology graph from entries from an ontology file.
@@ -522,6 +526,47 @@ class Graph(Ontology):
 
         return _map
 
+    def relations_matrix(self, dtype: DTypeLike = np.int8) -> tuple[NDArray, NDArray]:
+        """Construct a term x term matrices defining ancestor and descendant relationships.
+
+        You may interpret the output matrix as the following: For any row, column pair, if the
+        value is 1, then the term representing that particular row is a descendant of the term
+        representing that particular column. If the value is 0, then there is no relationship
+        between the terms.
+
+        Arguments:
+            dtype (DTypeLike):
+                A string representing a dtype that can be coerced into a np.dtype. Can be a
+                    numpy dtype (e.g., np.int8, np.int32) a python builtin dtype (e.g., int, float),
+                    or a string (e.g., 'int8', ''>i4').
+
+
+        Returns:
+            (NDArray): A terms x terms matrix defining their relationships in the ontology.
+            (NDArray): An array of terms representing the columns and rows of the family matrix.
+        """
+        # extract node relationships
+        ancestor_relationships = self.ancestors_from(self.nodes)
+        propagated_relations = np.identity(len(self.nodes), dtype=np.dtype(dtype))
+
+        # convert iterables to numpy arrays for quick search
+        np_nodes = np.array(self.nodes)
+        ancestor_relationships = {
+            k: np.array(v) for k, v in ancestor_relationships.items()
+        }
+
+        # construct the relations matrix
+        for i, relatives in tqdm(
+            enumerate(ancestor_relationships.values()),
+            total=len(ancestor_relationships),
+            desc="Constructing family tree",
+        ):
+            # relatives = ancestor_relationships[node]
+            related = np.where(np.isin(np_nodes, relatives))[0]
+            propagated_relations[i, related] = 1
+
+        return propagated_relations, np_nodes
+
     def deepest_node(self, query: list[str]) -> str:
         """Find the deepest node using breadth first search from root nodes.
 
@@ -597,7 +642,10 @@ class Graph(Ontology):
     @property
     def nodes(self) -> list[str]:
         """Return the IDs of the graph nodes"""
-        return list(self.graph.nodes())
+        if len(self._nodes) == 0:
+            self._nodes = sorted(list(self.graph.nodes()))
+
+        return self._nodes
 
     @property
     def leaves(self) -> list[str]:

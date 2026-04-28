@@ -11,7 +11,6 @@ from pathlib import Path
 import click
 
 from metahq_setup import __version__
-from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
 from metahq_setup.config import PipelineConfig, load_config, save_config
 from metahq_setup.processors import ProcessorRegistry
 from metahq_setup.util.checkpointing import CheckpointManager
@@ -405,10 +404,13 @@ def combine_sample(output, geo, sra, metadata_db):
         metahq-setup combine sample --geo /data/geo.bson --sra /data/sra.bson
         metahq-setup combine sample --metadata-db /data/omicidx.duckdb
     """
-    from metahq_setup.combiners.geo import GEO_COMBINED_BSON
-    from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON, SampleCombiner
-    from metahq_setup.combiners.sra import SRA_COMBINED_BSON
-    from metahq_setup.config.config import OMICIDX_DB
+    from metahq_setup.combiners.sample import SampleCombiner
+    from metahq_setup.config import (
+        GEO_COMBINED_BSON,
+        OMICIDX_DB,
+        SAMPLE_COMBINED_BSON,
+        SRA_COMBINED_BSON,
+    )
 
     try:
         output_path = Path(output) if output else SAMPLE_COMBINED_BSON
@@ -449,10 +451,10 @@ def combine_sample(output, geo, sra, metadata_db):
     help="Path to sample combined BSON (default: data/processed/combined__level-sample.bson)",
 )
 def combine_study(sample, output):
-    from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
-    from metahq_setup.combiners.study import STUDY_COMBINED_BSON, StudyCombiner
+    from metahq_setup.combiners.study import StudyCombiner
+    from metahq_setup.config import SAMPLE_COMBINED_BSON, SERIES_COMBINED_BSON
 
-    output_path = Path(output) if output else STUDY_COMBINED_BSON
+    output_path = Path(output) if output else SERIES_COMBINED_BSON
     sample_path = Path(sample) if sample else SAMPLE_COMBINED_BSON
     combiner = StudyCombiner()
     combiner.combine(sample_combined_bson=sample_path).save(output_path)
@@ -464,28 +466,49 @@ def metadata():
     pass
 
 
-@metadata.command(name="show-fields")
+@metadata.command(name="list-fields")
 @click.option(
     "--level",
     "-l",
-    type=click.Choice(["sample", "study"]),
+    type=click.Choice(["sample", "series"]),
     help="Which metadata level for which to show available fields.",
 )
 @click.option(
     "--metadata-db",
-    type=click.Path(path_type=Path),
+    type=click.Path(exists=True, path_type=Path),
     default=None,
     help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
 )
-def show_fields(level, metadata_db):
-    if level == "sample":
-        from metahq_setup.config.config import OMICIDX_DB
-        from metahq_setup.metadata.sample import SampleMetadataRetriever
+def list_fields(level, metadata_db):
+    """Show queriable metadata fields from OmicIDX."""
+    from metahq_setup.config import (
+        OMICIDX_DB,
+        OMICIDX_SAMPLE_TABLE,
+        OMICIDX_SERIES_TABLE,
+    )
+    from metahq_setup.metadata.base import BaseMetadataRetriever
+
+    try:
+        if level == "sample":
+            table = OMICIDX_SAMPLE_TABLE
+        elif level == "series":
+            table = OMICIDX_SERIES_TABLE
+        else:
+            click.secho(
+                f"Error: Expected level in [sample, series]. Got {level}.",
+                fg="red",
+                err=True,
+            )
+            sys.exit(1)
 
         db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
 
-        retriever = SampleMetadataRetriever(db_path=db_path)
+        retriever = BaseMetadataRetriever(db_path=db_path, table=table)
         retriever.show_available_fields()
+
+    except Exception as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
 
 
 @metadata.command(name="sample")
@@ -498,15 +521,14 @@ def show_fields(level, metadata_db):
 )
 @click.option(
     "--metadata-db",
-    type=click.Path(path_type=Path),
+    type=click.Path(exists=True, path_type=Path),
     default=None,
     help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
 )
 def retrieve_sample_metadata(fields, metadata_db):
     import bson
 
-    from metahq_setup.combiners.sample import SAMPLE_COMBINED_BSON
-    from metahq_setup.config.config import OMICIDX_DB
+    from metahq_setup.config.config import OMICIDX_DB, SAMPLE_COMBINED_BSON
     from metahq_setup.metadata.sample import SampleMetadataRetriever
 
     db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
@@ -517,6 +539,37 @@ def retrieve_sample_metadata(fields, metadata_db):
 
     retriever = SampleMetadataRetriever(db_path=db_path, table="src_geo_samples")
     retriever.retrieve(fields=query_fields, samples=samples)
+
+
+@metadata.command(name="series")
+@click.option(
+    "--fields",
+    "-f",
+    type=str,
+    default="accession,title,summary",
+    help="A comma-delimited string of fields to query",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
+)
+def retrieve_series_metadata(fields, metadata_db):
+    import bson
+
+    from metahq_setup.combiners.study import STUDY_COMBINED_BSON
+    from metahq_setup.config import OMICIDX_DB
+    from metahq_setup.metadata.series import SeriesMetadataRetriever
+
+    db_path = Path(metadata_db) if metadata_db else OMICIDX_DB
+    query_fields = fields.split(",")
+
+    with open(STUDY_COMBINED_BSON, "rb") as f:
+        series = list(bson.decode(f.read()).keys())
+
+    retriever = SeriesMetadataRetriever(db_path=db_path, table="src_geo_series")
+    retriever.retrieve(fields=query_fields, series=series)
 
 
 @main.command()
@@ -620,6 +673,56 @@ def init_config(output_path, data_dir, output_dir):
 
         click.secho(f"✓ Created configuration file: {output_path}", fg="green")
         click.echo("Edit this file to customize your pipeline settings.")
+
+    except Exception as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
+@main.group()
+def ontology():
+    """Command group for OmicIDX queries."""
+    pass
+
+
+@ontology.command(name="relations")
+@click.option(
+    "--obo_file",
+    "-i",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to ontology .obo or .obo.gz file.",
+)
+@click.option(
+    "--outfile",
+    "-o",
+    type=click.Path(path_type=Path),
+    help="Path to .parquet outfile storing ontology relations.",
+)
+def ontology_relations(obo_file, outfile):
+    """Extract a terms x terms ontology relations matrix.
+
+    You may interpret the output matrix as the following: For any row, column pair, if the
+    value is 1, then the term representing that particular row is an ancestor of the term
+    representing that particular column. If the value is 0, then there is no relationship
+    between the terms.
+    """
+
+    import polars as pl
+
+    from metahq_setup.ontology import Graph
+
+    try:
+        graph = Graph.from_obo(obo_file)
+        relations, terms = graph.relations_matrix()
+
+        outdir = outfile.resolve().parents[0]
+        if not outdir.exists():
+            outdir.mkdir(exist_ok=True, parents=True)
+
+        # transpose for compatability with metahq-cli
+        pl.LazyFrame(relations.T, schema=list(terms), orient="row").sink_parquet(
+            outfile, engine="streaming"
+        )
 
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)
