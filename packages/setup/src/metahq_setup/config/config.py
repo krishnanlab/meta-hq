@@ -67,6 +67,7 @@ UNPROCESSED_DIR: Path = DATA_DIR / "unprocessed"
 PROCESSED_DIR: Path = DATA_DIR / "processed"
 ONTOLOGY_DIR: Path = DATA_DIR / "ontology"
 HELPERS_DIR: Path = DATA_DIR / "helpers"
+METADATA_DIR: Path = DATA_DIR / "metadata"
 
 # Ontology
 ## Ontology OBO files.
@@ -180,7 +181,7 @@ GEO_COMBINED_BSON: Path = PROCESSED_DIR / "geo.bson"
 SRA_COMBINED_BSON: Path = PROCESSED_DIR / "sra.bson"
 
 # Transcriptomics technology map (GPL -> microarray|rnaseq)
-TECHNOLOGY_MAP: Path = HELPERS_DIR / "technologies.parquet"
+TECHNOLOGY_MAP: Path = METADATA_DIR / "technologies.parquet"
 COL_TECHNOLOGY_MAP_GPL: str = "id"
 
 # OmicIDX properties
