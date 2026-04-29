@@ -2,21 +2,17 @@
 # Pass to the build command with: metahq-setup build --config metahq_setup.yaml
 
 # -----------------------------------------------------------------
-# Directories
+# Parameters
 # -----------------------------------------------------------------
-data_dir: ./data # root for all input data (unprocessed/, helpers/, etc.)
-output_dir: ./data/data_package # final packaged database output
-temp_dir: /tmp/metahq_setup
-checkpoint_dir: .checkpoints
-log_dir: .log
-
-# -----------------------------------------------------------------
-# Parallel processing
-# -----------------------------------------------------------------
-parallel:
-  num_workers: 4
-  chunk_size: 1000
-  use_multiprocessing: true
+params:
+  data_dir: ./data # root for all input data (unprocessed/, helpers/, etc.)
+  output_dir: ./data/data_packages # location of data packages
+  package_name: metahq_data__v1.0.2 # final package name
+  overwrite: false # overwrite existing data package
+  omicidx_path: ./data/omicidx.duckdb # path to OmicIDX DuckDB database
+  temp_dir: /tmp/metahq_setup
+  checkpoint_dir: .checkpoints
+  log_dir: .log
 
 # -----------------------------------------------------------------
 # Validation
@@ -79,6 +75,61 @@ stages:
   extract__mondo__relations:
     skip: false
     use_checkpoint: true
+
+# -----------------------------------------------------------------
+# Data package structure
+# -----------------------------------------------------------------
+
+# output_dir and package_name MUST be defined. This is structured to adhere to the
+# data package structured required by metahq-core and metahq-cli
+structure:
+  # Annotations
+  - source: data/processed/combined__level-sample.bson
+    destination: "{output_dir}/{package_name}/annotations/combined__level-sample.bson"
+
+  - source: data/processed/combined__level-series.bson
+    destination: "{output_dir}/{package_name}/annotations/combined__level-series.bson"
+
+  # Ontology
+  ## MONDO
+  - source: data/ontology/mondo/relations.parquet
+    destination: "{output_dir}/{package_name}/ontology/mondo/relations.parquet"
+
+  - source: data/ontology/mondo/id_map.parquet
+    destination: "{output_dir}/{package_name}/ontology/mondo/id_map.parquet"
+
+  - source: data/ontology/mondo/systems.txt
+    destination: "{output_dir}/{package_name}/ontology/mondo/systems.txt"
+
+  - source: data/ontology/mondo/names_synonyms.json
+    destination: "{output_dir}/{package_name}/ontology/mondo/names_synonyms.json"
+
+  ## UBERON
+  - source: data/ontology/uberon_ext/relations.parquet
+    destination: "{output_dir}/{package_name}/ontology/uberon_ext/relations.parquet"
+
+  - source: data/ontology/uberon_ext/id_map.parquet
+    destination: "{output_dir}/{package_name}/ontology/uberon_ext/id_map.parquet"
+
+  - source: data/ontology/uberon_ext/systems.txt
+    destination: "{output_dir}/{package_name}/ontology/uberon_ext/systems.txt"
+
+  - source: data/ontology/uberon_ext/names_synonyms.json
+    destination: "{output_dir}/{package_name}/ontology/uberon_ext/names_synonyms.json"
+
+  ## Term search
+  - source: data/ontology/ontology_search.duckdb
+    destination: "{output_dir}/{package_name}/ontology/ontology_search.duckdb"
+
+  # Metadata
+  - source: data/metadata/metadata__level-sample.parquet
+    destination: "{output_dir}/{package_name}/metadata/metadata__level-series.parquet"
+
+  - source: data/metadata/metadata__level-series.parquet
+    destination: "{output_dir}/{package_name}/metadata/metadata__level-series.parquet"
+
+  - source: data/metadata/technology.parquet
+    destination: "{output_dir}/{package_name}/metadata/technologies.parquet"
 
 # -----------------------------------------------------------------
 # General

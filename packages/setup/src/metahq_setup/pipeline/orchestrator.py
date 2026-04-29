@@ -6,8 +6,8 @@ and progress tracking.
 """
 
 from collections.abc import Callable
-from pathlib import Path
 
+from metahq_setup.builders import DataPackageBuilder
 from metahq_setup.combiners.geo import GeoCombiner
 from metahq_setup.combiners.sample import SampleCombiner
 from metahq_setup.combiners.sra import SraCombiner
@@ -15,13 +15,12 @@ from metahq_setup.config import (
     GEO_COMBINED_BSON,
     MONDO_OBO,
     MONDO_RELATIONS,
-    OMICIDX_DB,
-    PROCESSED_DIR,
     SAMPLE_COMBINED_BSON,
     SRA_COMBINED_BSON,
     UBERON_OBO,
     UBERON_RELATIONS,
 )
+from metahq_setup.config.schema import DataPackageConfig
 from metahq_setup.ontology import Graph
 from metahq_setup.processors import ProcessorRegistry
 from metahq_setup.util.checkpointing import CheckpointManager
@@ -32,34 +31,19 @@ class PipelineOrchestrator:
     """
     Orchestrates the complete MetaHQ database build pipeline.
 
-    Runs processing for all registered sources in alphabetical order, then
+    Runs processing for all enabled sources in alphabetical order, then
     combines GEO, SRA, and sample annotations. Supports checkpoint-based
     resumption so a failed run can be restarted from the last completed stage.
+
+    All pipeline behaviour is driven from a ``DataPackageConfig`` loaded from
+    ``metahq_setup.yaml``.
     """
 
-    def __init__(
-        self,
-        output_dir: Path = PROCESSED_DIR,
-        checkpoint_dir: Path = Path(".checkpoints"),
-        db_path: Path = OMICIDX_DB,
-    ):
-        """
-        Initialize the pipeline orchestrator.
-
-        Arguments:
-            output_dir (Path):
-                Directory where processor parquets are written.
-                Defaults to ``PROCESSED_DIR`` from config.
-            checkpoint_dir (Path):
-                Directory for checkpoint state files.
-                Defaults to ``.checkpoints`` in the working directory.
-            db_path (Path):
-                Path to the OmicIDX DuckDB file used by SRA and sample combiners.
-                Defaults to ``OMICIDX_DB`` from config.
-        """
-        self.output_dir = Path(output_dir)
-        self.db_path = Path(db_path)
-        self.checkpoints = CheckpointManager(checkpoint_dir)
+    def __init__(self, config: DataPackageConfig):
+        self.config = config
+        self.output_dir = config.data_dir / "processed"
+        self.db_path = config.omicidx_path
+        self.checkpoints = CheckpointManager(config.checkpoint_dir)
         self.logger = setup_logger("metahq_setup.pipeline")
 
     def run(
@@ -71,9 +55,10 @@ class PipelineOrchestrator:
         Execute all pipeline stages in order with checkpointing.
 
         Already-completed stages (recorded in the checkpoint file) are skipped
-        automatically. Use ``start_from`` to ignore everything before a named
-        stage (overriding the checkpoint file), or ``end_at`` to stop after a
-        named stage.
+        automatically unless the stage has ``use_checkpoint: false`` in config.
+        Stages with ``skip: true`` in config are always bypassed. Use
+        ``start_from`` to ignore everything before a named stage, or ``end_at``
+        to stop after a named stage.
 
         Arguments:
             start_from (str | None):
@@ -91,14 +76,21 @@ class PipelineOrchestrator:
                     reached_start = True
                 else:
                     self.logger.info("Skipping stage (before start): %s", stage_name)
+                    if end_at and stage_name == end_at:
+                        break
                     continue
 
-            if self.checkpoints.is_stage_completed(stage_name):
+            stage_cfg = self.config.get_stage_config(stage_name)
+
+            if stage_cfg.skip:
+                self.logger.info("Skipping stage (config skip=true): %s", stage_name)
+            elif stage_cfg.use_checkpoint and self.checkpoints.is_stage_completed(stage_name):
                 self.logger.info("Skipping stage (already completed): %s", stage_name)
             else:
                 self.logger.info("Starting stage: %s", stage_name)
                 stage_fn()
-                self.checkpoints.save_checkpoint(stage_name)
+                if stage_cfg.use_checkpoint:
+                    self.checkpoints.save_checkpoint(stage_name)
                 self.logger.info("Finished stage: %s", stage_name)
 
             if end_at and stage_name == end_at:
@@ -106,10 +98,18 @@ class PipelineOrchestrator:
                 break
 
     def _build_stages(self) -> list[tuple[str, Callable]]:
-        """Build the ordered list of (stage_name, callable) pairs."""
+        """Build the ordered list of (stage_name, callable) pairs.
+
+        Processors with ``enabled: false`` in config are omitted entirely.
+        Stage names match the keys used in the ``stages`` section of
+        ``metahq_setup.yaml``.
+        """
         stages: list[tuple[str, Callable]] = []
 
         for source_name in ProcessorRegistry.list_processors():
+            if not self.config.get_processor_config(source_name).enabled:
+                self.logger.info("Skipping disabled processor: %s", source_name)
+                continue
             processor = ProcessorRegistry.get(source_name)
             stages.append(
                 (
@@ -148,18 +148,20 @@ class PipelineOrchestrator:
         )
         stages.append(
             (
-                "extract__mondo_relations",
-                lambda: Graph.from_obo(MONDO_OBO)
-                .relations_matrix()
-                .save(MONDO_RELATIONS),
+                "extract__mondo__relations",
+                lambda: Graph.from_obo(MONDO_OBO).relations_matrix().save(MONDO_RELATIONS),
             )
         )
         stages.append(
             (
-                "extract__uberon_relations",
-                lambda: Graph.from_obo(UBERON_OBO)
-                .relations_matrix()
-                .save(UBERON_RELATIONS),
+                "extract__uberon__relations",
+                lambda: Graph.from_obo(UBERON_OBO).relations_matrix().save(UBERON_RELATIONS),
+            )
+        )
+        stages.append(
+            (
+                "build__data_package",
+                lambda: DataPackageBuilder(self.config).build(),
             )
         )
 

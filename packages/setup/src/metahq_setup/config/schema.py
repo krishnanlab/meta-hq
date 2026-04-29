@@ -97,9 +97,7 @@ class ParallelConfig(BaseModel):
     chunk_size: int = Field(
         default=1000, ge=1, description="Items per processing chunk"
     )
-    use_multiprocessing: bool = Field(
-        default=True, description="Use multiprocessing"
-    )
+    use_multiprocessing: bool = Field(default=True, description="Use multiprocessing")
 
 
 class ValidationConfig(BaseModel):
@@ -201,66 +199,127 @@ class PipelineConfig(BaseModel):
     )
     verbose: bool = Field(default=False, description="Enable verbose output")
 
-    @field_validator("data_dir", "output_dir", mode="before")
+
+class FileEntry(BaseModel):
+    """A source → destination file mapping in the data package structure."""
+
+    source: Path
+    destination: Path
+
+
+class DataPackageConfig(BaseModel):
+    """Full configuration for the MetaHQ setup pipeline, driven by metahq_setup.yaml.
+
+    Attributes:
+        data_dir (Path):
+            Root directory for all input data.
+        output_dir (Path):
+            Directory where data packages are written.
+        package_name (str):
+            Name of the data package.
+        overwrite (bool):
+            Overwrite an existing package with the same name.
+        omicidx_path (Path):
+            Path to the OmicIDX DuckDB database.
+        temp_dir (Path):
+            Temporary directory for intermediate files.
+        checkpoint_dir (Path):
+            Directory for pipeline checkpoint state.
+        log_dir (Path):
+            Directory for log files.
+        validation (ValidationConfig):
+            Validation settings.
+        processors (dict[str, ProcessorConfig]):
+            Per-source processor settings.
+        stages (dict[str, PipelineStageConfig]):
+            Per-stage settings.
+        structure (list[FileEntry]):
+            Data package file mapping.
+        clean_temp (bool):
+            Remove temp files after completion.
+        verbose (bool):
+            Enable verbose output.
+    """
+
+    data_dir: Path = Field(description="Root data directory")
+    output_dir: Path = Field(description="Data package output directory")
+    package_name: str = Field(description="Data package name")
+    overwrite: bool = Field(default=False, description="Overwrite existing package")
+    omicidx_path: Path = Field(description="Path to OmicIDX DuckDB database")
+    temp_dir: Path = Field(default=Path("/tmp/metahq_setup"), description="Temporary directory")
+    checkpoint_dir: Path = Field(default=Path(".checkpoints"), description="Checkpoint directory")
+    log_dir: Path = Field(default=Path(".log"), description="Log directory")
+
+    validation: ValidationConfig = Field(default_factory=ValidationConfig)
+    processors: dict[str, ProcessorConfig] = Field(default_factory=dict)
+    stages: dict[str, PipelineStageConfig] = Field(default_factory=dict)
+    structure: list[FileEntry] = Field(default_factory=list)
+
+    clean_temp: bool = Field(default=True, description="Clean temp files after completion")
+    verbose: bool = Field(default=False, description="Enable verbose output")
+
+    @field_validator(
+        "data_dir", "output_dir", "omicidx_path", "temp_dir", "checkpoint_dir", "log_dir",
+        mode="before",
+    )
     @classmethod
     def expand_paths(cls, v: str | Path) -> Path:
+        return Path(v).expanduser().resolve()
+
+    @property
+    def data_package_path(self) -> Path:
+        """Return the full path to the data package directory."""
+        return self.output_dir / self.package_name
+
+    @classmethod
+    def from_yaml(cls, file: Path) -> "DataPackageConfig":
+        """Load and validate config from metahq_setup.yaml.
+
+        Flattens ``params`` keys into the top level and resolves
+        ``{output_dir}/{package_name}`` placeholders in structure destinations.
         """
-        Expand paths to absolute paths.
+        import yaml
 
-        Arguments:
-            v (str | Path):
-                Path to expand
+        with open(file, "r", encoding="utf-8") as f:
+            raw = yaml.safe_load(f)
 
-        Returns:
-            (Path): Expanded absolute path
+        params = raw.pop("params", {})
+        config_dict = {**params, **raw}
+
+        for entry in config_dict.get("structure", []):
+            entry["destination"] = entry["destination"].format(**params)
+
+        return cls(**config_dict)
+
+    def get_processor_config(self, name: str) -> ProcessorConfig:
+        """Return config for a named processor, falling back to defaults."""
+        return self.processors.get(name, ProcessorConfig())
+
+    def get_stage_config(self, name: str) -> PipelineStageConfig:
+        """Return config for a named pipeline stage, falling back to defaults."""
+        return self.stages.get(name, PipelineStageConfig())
+
+    def verify_source_files(self) -> None:
+        """Ensure every source file listed in the structure exists.
+
+        Logs all missing files before exiting so the user can fix them all at once.
         """
-        path = Path(v)
-        return path.expanduser().resolve()
+        import sys
 
-    def get_processor_config(self, processor_name: str) -> ProcessorConfig:
-        """
-        Get configuration for a specific processor.
+        from metahq_setup.util.logging import setup_logger
 
-        Arguments:
-            processor_name (str):
-                Name of the processor
-
-        Returns:
-            (ProcessorConfig): Processor configuration
-        """
-        return self.processors.get(processor_name, ProcessorConfig())
-
-    def get_stage_config(self, stage_name: str) -> PipelineStageConfig:
-        """
-        Get configuration for a specific stage.
-
-        Arguments:
-            stage_name (str):
-                Name of the stage
-
-        Returns:
-            (PipelineStageConfig): Stage configuration
-        """
-        return self.stages.get(stage_name, PipelineStageConfig())
-
-    def get_ontology_config(self, ontology_name: str) -> OntologyConfig | None:
-        """
-        Get configuration for a specific ontology.
-
-        Arguments:
-            ontology_name (str):
-                Name of the ontology
-
-        Returns:
-            (OntologyConfig | None): Ontology config, or None if not found
-        """
-        for onto_config in self.ontologies:
-            if onto_config.name == ontology_name:
-                return onto_config
-        return None
+        logger = setup_logger("metahq_setup.config.DataPackageConfig")
+        error_raised = False
+        for entry in self.structure:
+            if not entry.source.exists():
+                error_raised = True
+                logger.error("Source file does not exist: %s", entry.source)
+        if error_raised:
+            logger.error("Missing source files. Exiting...")
+            sys.exit(1)
 
     def create_directories(self) -> None:
-        """Create all required directories."""
+        """Create all required pipeline directories."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.temp_dir.mkdir(parents=True, exist_ok=True)

@@ -4,4 +4,6 @@ Database building utilities.
 Assembles final database files in BSON and Parquet formats.
 """
 
-__all__ = []
+from metahq_setup.builders.data_package import DataPackageBuilder
+
+__all__ = ["DataPackageBuilder"]

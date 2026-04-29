@@ -12,6 +12,7 @@ import click
 
 from metahq_setup import __version__
 from metahq_setup.config import PipelineConfig, load_config, save_config
+from metahq_setup.config.schema import DataPackageConfig
 from metahq_setup.processors import ProcessorRegistry
 from metahq_setup.util.checkpointing import CheckpointManager
 
@@ -68,7 +69,7 @@ def main(ctx):
     is_flag=True,
     help="Enable verbose output",
 )
-def build(config, data_dir, output_dir, start_from, end_at, num_workers, verbose):
+def build(config, data_dir, output_dir, start_from, end_at, verbose):
     """
     Build the complete MetaHQ database.
 
@@ -89,30 +90,36 @@ def build(config, data_dir, output_dir, start_from, end_at, num_workers, verbose
         metahq-setup build --num-workers 16
     """
     try:
-        # Load configuration
-        overrides = {}
+        if config is None:
+            click.secho(
+                "Error: --config is required. Pass the path to metahq_setup.yaml.",
+                fg="red",
+            )
+            sys.exit(1)
+
+        pkg_config = DataPackageConfig.from_yaml(config)
+
+        # Apply CLI overrides via model_copy so Pydantic re-validates
+        updates = {}
         if data_dir:
-            overrides["data_dir"] = data_dir
+            updates["data_dir"] = data_dir
         if output_dir:
-            overrides["output_dir"] = output_dir
-        if num_workers:
-            overrides["parallel"] = {"num_workers": num_workers}
+            updates["output_dir"] = output_dir
         if verbose:
-            overrides["verbose"] = verbose
+            updates["verbose"] = True
+        if updates:
+            pkg_config = pkg_config.model_copy(update=updates)
 
-        pipeline_config = load_config(config_file=config, overrides=overrides)
-
-        # Create directories
-        pipeline_config.create_directories()
+        pkg_config.create_directories()
 
         click.echo("Starting MetaHQ database build...")
-        click.echo(f"Data directory: {pipeline_config.data_dir}")
-        click.echo(f"Output directory: {pipeline_config.output_dir}")
+        click.echo(f"Data directory: {pkg_config.data_dir}")
+        click.echo(f"Output directory: {pkg_config.output_dir}")
         click.echo("")
 
         from metahq_setup.pipeline import PipelineOrchestrator
 
-        orchestrator = PipelineOrchestrator(checkpoint_dir=Path(".checkpoints"))
+        orchestrator = PipelineOrchestrator(pkg_config)
         orchestrator.run(start_from=start_from, end_at=end_at)
         click.secho("✓ Pipeline completed successfully", fg="green")
 
@@ -296,7 +303,8 @@ def combine_geo(output):
         metahq-setup combine geo
         metahq-setup combine geo --output /data/geo_combined.bson
     """
-    from metahq_setup.combiners.geo import GEO_COMBINED_BSON, GeoCombiner
+    from metahq_setup.combiners.geo import GeoCombiner
+    from metahq_setup.config import GEO_COMBINED_BSON
 
     try:
         output_path = Path(output) if output else GEO_COMBINED_BSON
@@ -341,8 +349,8 @@ def combine_sra(output, metadata_db):
         metahq-setup combine sra --output /data/sra_combined.bson
         metahq-setup combine sra --metadata-db /data/omicidx.duckdb
     """
-    from metahq_setup.combiners.sra import SRA_COMBINED_BSON, SraCombiner
-    from metahq_setup.config.config import OMICIDX_DB
+    from metahq_setup.combiners.sra import SraCombiner
+    from metahq_setup.config.config import OMICIDX_DB, SRA_COMBINED_BSON
 
     try:
         output_path = Path(output) if output else SRA_COMBINED_BSON

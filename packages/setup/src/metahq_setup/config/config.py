@@ -177,8 +177,8 @@ PROCESSED_STUDY_ANNOTATIONS: dict[str, Path] = {"Gemma": GEMMA_PROCESSED}
 # Database file names
 SAMPLE_COMBINED_BSON: Path = PROCESSED_DIR / "combined__level-sample.bson"
 SERIES_COMBINED_BSON: Path = PROCESSED_DIR / "combined__level-series.bson"
-GEO_COMBINED_BSON: Path = PROCESSED_DIR / "geo.bson"
-SRA_COMBINED_BSON: Path = PROCESSED_DIR / "sra.bson"
+GEO_COMBINED_BSON: Path = PROCESSED_DIR / "geo_combined.bson"
+SRA_COMBINED_BSON: Path = PROCESSED_DIR / "sra_combined.bson"
 
 # Transcriptomics technology map (GPL -> microarray|rnaseq)
 TECHNOLOGY_MAP: Path = METADATA_DIR / "technologies.parquet"
