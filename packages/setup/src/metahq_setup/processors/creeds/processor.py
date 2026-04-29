@@ -11,12 +11,14 @@ from pathlib import Path
 import polars as pl
 
 from metahq_setup.config.config import (
-    CREEDS_JSON,
     COL_ACCESSION,
     COL_ATTRIBUTE,
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    CONTROL_ID,
+    CONTROL_VALUE,
+    CREEDS_JSON,
     MONDO_OBO,
     MONDO_SYSTEMS,
 )
@@ -77,10 +79,7 @@ class CREEDSProcessor(BaseProcessor):
 
         # Map DOID to MONDO
         doid_to_mondo = mondo.map_terms(
-            terms=list(valid_doids),
-            ontology="MONDO",
-            _from="DOID",
-            _to="MONDO"
+            terms=list(valid_doids), ontology="MONDO", _from="DOID", _to="MONDO"
         )
 
         # Load MONDO system descendants for filtering
@@ -114,24 +113,28 @@ class CREEDSProcessor(BaseProcessor):
             # Process perturbation samples (disease samples)
             pert_ids = entry.get("pert_ids", [])
             for gsm_id in pert_ids:
-                records.append({
-                    COL_ACCESSION: gsm_id,
-                    COL_ATTRIBUTE: "disease",
-                    COL_TERM_ID: mondo_id,
-                    COL_TERM_NAME: disease_name,
-                    COL_ECODE: "crowd",
-                })
+                records.append(
+                    {
+                        COL_ACCESSION: gsm_id,
+                        COL_ATTRIBUTE: "disease",
+                        COL_TERM_ID: mondo_id,
+                        COL_TERM_NAME: disease_name,
+                        COL_ECODE: "crowd",
+                    }
+                )
 
             # Process control samples
             ctrl_ids = entry.get("ctrl_ids", [])
             for gsm_id in ctrl_ids:
-                records.append({
-                    COL_ACCESSION: gsm_id,
-                    COL_ATTRIBUTE: "disease",
-                    COL_TERM_ID: "MONDO:0000000",  # Control samples
-                    COL_TERM_NAME: "control",
-                    COL_ECODE: "crowd",
-                })
+                records.append(
+                    {
+                        COL_ACCESSION: gsm_id,
+                        COL_ATTRIBUTE: "disease",
+                        COL_TERM_ID: CONTROL_ID,  # Control samples
+                        COL_TERM_NAME: CONTROL_VALUE,
+                        COL_ECODE: "crowd",
+                    }
+                )
 
         if skipped_system_level > 0:
             self.logger.info(
@@ -139,13 +142,13 @@ class CREEDSProcessor(BaseProcessor):
                 skipped_system_level,
             )
 
-        result_df = pl.DataFrame(records)
+        result_df = pl.DataFrame(records).sort(COL_ACCESSION)
 
         self.logger.info(
             "Produced %s disease annotations from CREEDS (%s perturbation + %s control)",
             len(result_df),
-            len([r for r in records if r[COL_TERM_ID] != "MONDO:0000000"]),
-            len([r for r in records if r[COL_TERM_ID] == "MONDO:0000000"]),
+            len([r for r in records if r[COL_TERM_ID] != CONTROL_ID]),
+            len([r for r in records if r[COL_TERM_ID] == CONTROL_ID]),
         )
 
         # Save processed data

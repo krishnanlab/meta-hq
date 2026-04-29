@@ -74,18 +74,16 @@ class Sirota2011Processor(BaseProcessor):
 
         samples = self._explode_samples(df)
         self.logger.info(
-            "Exploded to %s unique (sample, disease_cui, tissue_cui) rows.", samples.height
+            "Exploded to %s unique (sample, disease_cui, tissue_cui) rows.",
+            samples.height,
         )
 
         disease_records = self._build_disease(samples)
         tissue_records = self._build_tissue(samples)
 
-        result_df = pl.concat([disease_records, tissue_records], how="vertical")
-        result_df = result_df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
+        result_df = pl.concat([disease_records, tissue_records], how="vertical").sort(
+            COL_ACCESSION
+        )
 
         self.logger.info(
             "Produced %s total annotations from Sirota 2011.", result_df.height
@@ -104,29 +102,25 @@ class Sirota2011Processor(BaseProcessor):
     def _explode_samples(self, df: pl.DataFrame) -> pl.DataFrame:
         """Explode comma-separated GSM lists into one row per sample."""
         disease = (
-            df.with_columns(
-                pl.col("DISEASE GSM").str.split(",").alias("gsm_list")
-            )
+            df.with_columns(pl.col("DISEASE GSM").str.split(",").alias("gsm_list"))
             .explode("gsm_list")
             .select(
-                ("GSM" + pl.col("gsm_list").str.strip_chars()).alias("sample_id"),
+                ("GSM" + pl.col("gsm_list").str.strip_chars()).alias(COL_ACCESSION),
                 pl.col("TISSUE CUI").alias("tissue_cui"),
                 pl.col("DISEASE CUI").alias("disease_cui"),
             )
-            .filter(pl.col("sample_id") != "GSM")
+            .filter(pl.col(COL_ACCESSION) != "GSM")
         )
 
         control = (
-            df.with_columns(
-                pl.col("CONTROL GSM").str.split(",").alias("gsm_list")
-            )
+            df.with_columns(pl.col("CONTROL GSM").str.split(",").alias("gsm_list"))
             .explode("gsm_list")
             .select(
-                ("GSM" + pl.col("gsm_list").str.strip_chars()).alias("sample_id"),
+                ("GSM" + pl.col("gsm_list").str.strip_chars()).alias(COL_ACCESSION),
                 pl.col("TISSUE CUI").alias("tissue_cui"),
                 pl.lit("control").alias("disease_cui"),
             )
-            .filter(pl.col("sample_id") != "GSM")
+            .filter(pl.col(COL_ACCESSION) != "GSM")
         )
 
         return pl.concat([disease, control]).unique()
@@ -144,20 +138,21 @@ class Sirota2011Processor(BaseProcessor):
         control_samples = samples.filter(pl.col("disease_cui") == "control")
 
         disease_df = (
-            disease_samples
-            .join(mondo_map, left_on="disease_cui", right_on="CUI", how="left")
+            disease_samples.join(
+                mondo_map, left_on="disease_cui", right_on="CUI", how="left"
+            )
             .filter(pl.col("mapped_mondo_id").is_not_null())
             .select(
-                pl.col("sample_id"),
-                pl.col("mapped_mondo_id").alias("term_id"),
-                pl.col("mondo_name").alias("term_label"),
+                pl.col(COL_ACCESSION),
+                pl.col("mapped_mondo_id").alias(COL_TERM_ID),
+                pl.col("mondo_name").alias(COL_TERM_NAME),
             )
         )
 
         control_df = control_samples.select(
-            pl.col("sample_id"),
-            pl.lit("MONDO:0000000").alias("term_id"),
-            pl.lit("control").alias("term_label"),
+            pl.col(COL_ACCESSION),
+            pl.lit("MONDO:0000000").alias(COL_TERM_ID),
+            pl.lit("control").alias(COL_TERM_NAME),
         )
 
         combined = pl.concat([disease_df, control_df]).unique()
@@ -166,7 +161,8 @@ class Sirota2011Processor(BaseProcessor):
         valid_mondo = get_system_descendants(MONDO_SYSTEMS, MONDO_OBO)
         before = combined.height
         combined = combined.filter(
-            pl.col("term_id").is_in(valid_mondo) | (pl.col("term_id") == "MONDO:0000000")
+            pl.col(COL_TERM_ID).is_in(valid_mondo)
+            | (pl.col("term_id") == "MONDO:0000000")
         )
         self.logger.info(
             "Filtered disease from %s to %s rows using MONDO system descendants.",
@@ -175,17 +171,17 @@ class Sirota2011Processor(BaseProcessor):
         )
 
         records = combined.select(
-            pl.col("sample_id"),
-            pl.lit("disease").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("disease").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info(
             "Produced %s disease annotations across %s unique samples.",
             records.height,
-            records["sample_id"].n_unique(),
+            records[COL_ACCESSION].n_unique(),
         )
         return records
 
@@ -199,13 +195,14 @@ class Sirota2011Processor(BaseProcessor):
         )
 
         tissue_df = (
-            samples
-            .join(uberon_map, left_on="tissue_cui", right_on="TISSUE_CUI", how="left")
+            samples.join(
+                uberon_map, left_on="tissue_cui", right_on="TISSUE_CUI", how="left"
+            )
             .filter(pl.col("mapped_uber_id").is_not_null())
             .select(
-                pl.col("sample_id"),
-                pl.col("mapped_uber_id").alias("term_id"),
-                pl.col("uberon_name").alias("term_label"),
+                pl.col(COL_ACCESSION),
+                pl.col("mapped_uber_id").alias(COL_TERM_ID),
+                pl.col("uberon_name").alias(COL_TERM_NAME),
             )
             .unique()
         )
@@ -213,7 +210,7 @@ class Sirota2011Processor(BaseProcessor):
         self.logger.info("Loading UBERON system descendants for tissue filtering...")
         valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
         before = tissue_df.height
-        tissue_df = tissue_df.filter(pl.col("term_id").is_in(valid_uberon))
+        tissue_df = tissue_df.filter(pl.col(COL_TERM_ID).is_in(valid_uberon))
         self.logger.info(
             "Filtered tissue from %s to %s rows using UBERON system descendants.",
             before,
@@ -221,17 +218,17 @@ class Sirota2011Processor(BaseProcessor):
         )
 
         records = tissue_df.select(
-            pl.col("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info(
             "Produced %s tissue annotations across %s unique samples.",
             records.height,
-            records["sample_id"].n_unique(),
+            records[COL_ACCESSION].n_unique(),
         )
         return records
 

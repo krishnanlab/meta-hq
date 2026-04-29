@@ -17,11 +17,13 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    CONTROL_ID,
     DISIGN_ATLAS_CORRECTIONS,
     DISIGN_ATLAS_GMT,
     DISIGN_ATLAS_TISSUE_MAP,
     MONDO_OBO,
     MONDO_SYSTEMS,
+    PLATFORM_ACCESSION_KEY,
 )
 from metahq_setup.ontology import Ontology, get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
@@ -158,7 +160,7 @@ class DiSignAtlasProcessor(BaseProcessor):
         none_count = extracted.filter(
             (pl.col("tissue") == "None")
             | (pl.col("disease_id") == "None")
-            | (pl.col("platform") == "None")
+            | (pl.col(PLATFORM_ACCESSION_KEY) == "None")
         ).height
         self.logger.info(
             "%s parsed dataset(s) have 'None' in tissue, disease_id, or platform.",
@@ -169,10 +171,10 @@ class DiSignAtlasProcessor(BaseProcessor):
         # disease fields with the synthetic control term.
         control_df = (
             extracted.with_columns(
-                pl.col("gsm_control").str.split(";").alias("sample_id")
+                pl.col("gsm_control").str.split(";").alias(COL_ACCESSION)
             )
-            .explode("sample_id")
-            .filter(pl.col("sample_id") != "")
+            .explode(COL_ACCESSION)
+            .filter(pl.col(COL_ACCESSION) != "")
             .with_columns(
                 pl.lit(_CONTROL_DISEASE_NAME).alias("disease_name"),
                 pl.lit(_CONTROL_DISEASE_ID).alias("disease_id"),
@@ -182,9 +184,11 @@ class DiSignAtlasProcessor(BaseProcessor):
 
         # Build case rows: explode semicolon-separated GSM IDs, preserve disease fields.
         case_df = (
-            extracted.with_columns(pl.col("gsm_case").str.split(";").alias("sample_id"))
-            .explode("sample_id")
-            .filter(pl.col("sample_id") != "")
+            extracted.with_columns(
+                pl.col("gsm_case").str.split(";").alias(COL_ACCESSION)
+            )
+            .explode(COL_ACCESSION)
+            .filter(pl.col(COL_ACCESSION) != "")
             .drop("gsm_control", "gsm_case")
         )
 
@@ -222,7 +226,7 @@ class DiSignAtlasProcessor(BaseProcessor):
         before = all_samples.height
         all_samples = all_samples.filter(
             pl.col("disease_id").is_in(valid_mondo)
-            | (pl.col("disease_id") == "MONDO:0000000")
+            | (pl.col("disease_id") == CONTROL_ID)
         )
         self.logger.info(
             "Filtered disease rows from %s to %s using MONDO system descendants.",
@@ -232,11 +236,11 @@ class DiSignAtlasProcessor(BaseProcessor):
 
         # Disease annotations — every sample row, including controls.
         disease_records = all_samples.select(
-            pl.col("sample_id"),
-            pl.lit("disease").alias("annotation_type"),
-            pl.col("disease_id").alias("term_id"),
-            pl.col("disease_name").str.to_lowercase().alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("disease").alias(COL_ATTRIBUTE),
+            pl.col("disease_id").alias(COL_TERM_ID),
+            pl.col("disease_name").str.to_lowercase().alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         # Load manual tissue name -> term ID mapping and apply via join.
@@ -249,17 +253,17 @@ class DiSignAtlasProcessor(BaseProcessor):
             )
             .with_columns(pl.col("tissue").str.to_lowercase().alias("tissue"))
             .join(
-                tissue_name_map.rename({"name": "tissue", "id": "term_id"}),
+                tissue_name_map.rename({"name": "tissue", "id": COL_TERM_ID}),
                 on="tissue",
                 how="left",
             )
-            .with_columns(pl.col("term_id").fill_null("na"))
+            .with_columns(pl.col(COL_TERM_ID).fill_null("na"))
             .select(
-                pl.col("sample_id"),
-                pl.lit("tissue").alias("annotation_type"),
-                pl.col("term_id"),
-                pl.col("tissue").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
+                pl.col(COL_ACCESSION),
+                pl.lit("tissue").alias(COL_ATTRIBUTE),
+                pl.col(COL_TERM_ID),
+                pl.col("tissue").alias(COL_TERM_NAME),
+                pl.lit("expert").alias(COL_ECODE),
             )
         )
 
@@ -268,24 +272,24 @@ class DiSignAtlasProcessor(BaseProcessor):
             pl.read_csv(DISIGN_ATLAS_CORRECTIONS)
             .rename(
                 {
-                    "sample": "sample_id",
+                    "sample": COL_ACCESSION,
                     "term": "corr_term_id",
                     "name": "corr_term_label",
                 }
             )
-            .unique(subset=["sample_id"], keep="first")
+            .unique(subset=[COL_ACCESSION], keep="first")
         )
         tissue_records = (
-            tissue_records.join(corrections, on="sample_id", how="left")
+            tissue_records.join(corrections, on=COL_ACCESSION, how="left")
             .with_columns(
                 pl.when(pl.col("corr_term_id").is_not_null())
                 .then(pl.col("corr_term_id"))
-                .otherwise(pl.col("term_id"))
-                .alias("term_id"),
+                .otherwise(pl.col(COL_TERM_ID))
+                .alias(COL_TERM_ID),
                 pl.when(pl.col("corr_term_label").is_not_null())
                 .then(pl.col("corr_term_label"))
-                .otherwise(pl.col("term_label"))
-                .alias("term_label"),
+                .otherwise(pl.col(COL_TERM_NAME))
+                .alias(COL_TERM_NAME),
             )
             .drop("corr_term_id", "corr_term_label")
         )
@@ -293,20 +297,16 @@ class DiSignAtlasProcessor(BaseProcessor):
         result_df = pl.concat([disease_records, tissue_records], how="vertical")
 
         # only keep GSM sample annotations
-        result_df = result_df.filter(pl.col("sample_id").str.starts_with("GSM"))
+        result_df = result_df.filter(pl.col(COL_ACCESSION).str.starts_with("GSM")).sort(
+            COL_ACCESSION
+        )
 
         self.logger.info(
             "Produced %s annotations (%s disease, %s tissue) from DiSignAtlas.",
             result_df.height,
             disease_records.height,
-            tissue_records.filter(pl.col("term_id") != "na").height,
+            tissue_records.filter(pl.col(COL_TERM_ID) != "na").height,
         )
-
-        result_df = result_df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
 
         output_file = output_dir / "disign_atlas_processed.parquet"
         result_df.write_parquet(output_file)

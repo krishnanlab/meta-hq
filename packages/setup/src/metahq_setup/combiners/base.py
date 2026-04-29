@@ -50,9 +50,6 @@ from metahq_setup.config.config import (
 )
 from metahq_setup.util.logging import setup_logger
 
-# Annotation type names as produced by the processors.
-ANNOTATION_TYPES: frozenset[str] = frozenset({"tissue", "disease", "sex", "age"})
-
 # Values treated as absent / undesired during the clean step.
 UNDESIRED: frozenset = frozenset({"na", "", "NA", "none", "not annotated"})
 
@@ -78,7 +75,7 @@ class BaseAnnotationCombiner:
         """
         Add annotations from a standard-schema DataFrame.
 
-        Rows are grouped by ``(sample_id, annotation_type)``. Multiple term
+        Rows are grouped by ``(COL_ACCESSION, COL_ATTRIBUTE)``. Multiple term
         IDs and labels for the same group are joined with DELIMITER. The ecode
         of the first row in the group is used (processors produce a single
         ecode per source).
@@ -88,10 +85,10 @@ class BaseAnnotationCombiner:
                 Name of the data source, used as the key in the nested dict
                 (e.g., ``"ale"``, ``"gemma"``).
             data (pl.DataFrame):
-                Standard-schema DataFrame with columns ``sample_id``,
-                ``annotation_type``, ``term_id``, ``term_label``, ``ecode``.
+                Standard-schema DataFrame with columns ``COL_ACCESSION``,
+                ``COL_ATTRIBUTE``, ``COL_TERM_ID``, ``COL_TERM_NAME``, ``COL_ECODE``.
         """
-        data = data.filter(pl.col(COL_ATTRIBUTE).is_in(ANNOTATION_TYPES))
+        data = data.filter(pl.col(COL_ATTRIBUTE).is_in(ATTRIBUTE_KEYS))
 
         if data.is_empty():
             self.logger.warning(
@@ -165,7 +162,7 @@ class BaseAnnotationCombiner:
         """
         cleaned: dict[str, Any] = {}
 
-        for sample_id, annos in self.anno.items():
+        for id_, annos in self.anno.items():
             cleaned_entry: dict[str, Any] = {}
 
             for attribute, value in annos.items():
@@ -182,7 +179,7 @@ class BaseAnnotationCombiner:
 
             # Only keep entries with at least one annotation beyond accession_ids.
             if any(k not in [ACCESSIONS_KEY, ORGANISM_KEY] for k in cleaned_entry):
-                cleaned[sample_id] = cleaned_entry
+                cleaned[id_] = cleaned_entry
 
         self.anno = cleaned
         self.logger.info("Retained %d samples after cleaning.", len(self.anno))
@@ -196,6 +193,7 @@ class BaseAnnotationCombiner:
             output_path (Path):
                 Destination file path (parent directories are created if needed).
         """
+        self.anno = dict(sorted(self.anno.items()))
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 

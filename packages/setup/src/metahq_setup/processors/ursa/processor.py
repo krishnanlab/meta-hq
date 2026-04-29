@@ -60,32 +60,39 @@ class URSAProcessor(BaseProcessor):
         df = pl.read_csv(
             input_path,
             has_header=False,
-            new_columns=["sample_id", "study_id", "term_id"],
-            schema={"sample_id": pl.String, "study_id": pl.String, "term_id": pl.String},
+            new_columns=[COL_ACCESSION, "study_id", COL_TERM_ID],
+            schema={
+                COL_ACCESSION: pl.String,
+                "study_id": pl.String,
+                COL_TERM_ID: pl.String,
+            },
         )
 
         self.logger.info("Read %s rows from URSA CSV.", df.height)
 
         # Map term IDs to human-readable names via UBERON OBO.
-        self.logger.info("Loading UBERON ontology for ID -> name mapping: %s", UBERON_OBO)
+        self.logger.info(
+            "Loading UBERON ontology for ID -> name mapping: %s", UBERON_OBO
+        )
         class_dict = Ontology.from_obo(UBERON_OBO).class_dict
 
         df = df.with_columns(
-            pl.col("term_id").replace(class_dict, default="NA").alias("term_label")
+            pl.col(COL_TERM_ID).replace(class_dict, default="NA").alias(COL_TERM_NAME)
         )
 
-        unmapped = df.filter(pl.col("term_label") == "NA").height
+        unmapped = df.filter(pl.col(COL_TERM_NAME) == "NA").height
         if unmapped > 0:
             self.logger.warning(
-                "%s rows could not be mapped to a term name and will be dropped.", unmapped
+                "%s rows could not be mapped to a term name and will be dropped.",
+                unmapped,
             )
-        df = df.filter(pl.col("term_label") != "NA")
+        df = df.filter(pl.col(COL_TERM_NAME) != "NA")
 
         # Filter to descendants of UBERON/CL system-level terms.
         self.logger.info("Loading UBERON system descendants for filtering...")
         valid_terms = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
         before = df.height
-        df = df.filter(pl.col("term_id").is_in(valid_terms))
+        df = df.filter(pl.col(COL_TERM_ID).is_in(valid_terms))
         self.logger.info(
             "Filtered annotations from %s to %s using UBERON/CL system descendants.",
             before,
@@ -93,24 +100,18 @@ class URSAProcessor(BaseProcessor):
         )
 
         result_df = df.select(
-            pl.col("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
-        )
+            pl.col(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
+        ).sort(COL_ACCESSION)
 
         self.logger.info(
             "Produced %s tissue annotations across %s unique samples.",
             result_df.height,
-            result_df["sample_id"].n_unique(),
+            result_df[COL_ACCESSION].n_unique(),
         )
-
-        result_df = result_df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
 
         output_file = output_dir / "ursa_processed.parquet"
         result_df.write_parquet(output_file)

@@ -12,17 +12,14 @@ Three combiners are provided:
   sample-level database keyed by GSM.
 """
 
-from metahq_setup.combiners.geo import GeoCombiner, GEO_COMBINED_BSON, GEO_SOURCES
-from metahq_setup.combiners.sra import SraCombiner, SRA_COMBINED_BSON, SRA_SOURCES
-from metahq_setup.combiners.sample import SampleCombiner, SAMPLE_COMBINED_BSON
+from metahq_setup.combiners.geo import GEO_SOURCES, GeoCombiner
+from metahq_setup.combiners.sample import SampleCombiner
+from metahq_setup.combiners.sra import SRA_SOURCES, SraCombiner
 
 __all__ = [
     "GeoCombiner",
-    "GEO_COMBINED_BSON",
     "GEO_SOURCES",
     "SraCombiner",
-    "SRA_COMBINED_BSON",
     "SRA_SOURCES",
     "SampleCombiner",
-    "SAMPLE_COMBINED_BSON",
 ]

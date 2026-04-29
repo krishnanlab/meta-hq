@@ -18,6 +18,8 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    CONTROL_ID,
+    CONTROL_VALUE,
     MONDO_OBO,
     MONDO_SYSTEMS,
     UBERON_OBO,
@@ -31,8 +33,15 @@ from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
 
 _FEMALE_KEYWORDS = [
-    "placenta", "cervix", "trimester", "myometrium", "hysterectomy",
-    "ovarian", "ovary", "vagina", "vulva",
+    "placenta",
+    "cervix",
+    "trimester",
+    "myometrium",
+    "hysterectomy",
+    "ovarian",
+    "ovary",
+    "vagina",
+    "vulva",
 ]
 _MALE_KEYWORDS = ["prostate"]
 _MALE_LABELS = {"male", "m", " m", " male", "m "}
@@ -80,7 +89,7 @@ class URSAHDProcessor(BaseProcessor):
 
         base_df = df.select(["GSMID", "GSEID", "GEO Sample Description"])
 
-        disease_records = self._build_disease(df, base_df)
+        disease_records = self._build_disease(df)
         tissue_records = self._build_tissue(base_df)
         age_records = self._build_age(base_df)
         sex_records = self._build_sex(base_df)
@@ -88,15 +97,11 @@ class URSAHDProcessor(BaseProcessor):
         result_df = pl.concat(
             [disease_records, tissue_records, age_records, sex_records],
             how="vertical",
+        ).sort(COL_ACCESSION)
+
+        self.logger.info(
+            "Produced %s total annotations from URSA-HD.", result_df.height
         )
-
-        self.logger.info("Produced %s total annotations from URSA-HD.", result_df.height)
-
-        result_df = result_df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
 
         output_file = output_dir / "ursahd_processed.parquet"
         result_df.write_parquet(output_file)
@@ -108,18 +113,16 @@ class URSAHDProcessor(BaseProcessor):
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _build_disease(self, df: pl.DataFrame, base_df: pl.DataFrame) -> pl.DataFrame:
+    def _build_disease(self, df: pl.DataFrame) -> pl.DataFrame:
         """Map MESH disease IDs to MONDO and filter to system descendants."""
         disease_df = (
             df.with_columns(pl.col("UID").str.split("|").alias("mesh_ids"))
             .explode("mesh_ids")
-            .rename({"GSMID": "sample_id", "mesh_ids": "mesh_id"})
+            .rename({"GSMID": COL_ACCESSION, "mesh_ids": "mesh_id"})
             .drop(["UID", "GSEID", "GEO Sample Description"])
             .filter(pl.col("mesh_id") != "")
         )
-        self.logger.info(
-            "Loading MONDO ontology for MESH -> MONDO mapping..."
-        )
+        self.logger.info("Loading MONDO ontology for MESH -> MONDO mapping...")
         mondo = Ontology.from_obo(MONDO_OBO)
         mesh_ids = disease_df["mesh_id"].unique().to_list()
         prefixed = ["MESH:" + mid for mid in mesh_ids]
@@ -134,22 +137,22 @@ class URSAHDProcessor(BaseProcessor):
         }
 
         disease_df = disease_df.with_columns(
-            pl.col("mesh_id").replace(bare_to_mondo).alias("term_id")
+            pl.col("mesh_id").replace(bare_to_mondo).alias(COL_TERM_ID)
         )
 
-        unmapped = disease_df.filter(pl.col("term_id") == "NA").height
+        unmapped = disease_df.filter(pl.col(COL_TERM_ID) == "NA").height
         if unmapped > 0:
             self.logger.warning(
                 "%s disease rows could not be mapped to MONDO and will be dropped.",
                 unmapped,
             )
-        disease_df = disease_df.filter(pl.col("term_id") != "NA")
+        disease_df = disease_df.filter(pl.col(COL_TERM_ID) != "NA")
 
         self.logger.info("Loading MONDO system descendants for filtering...")
         valid_mondo = get_system_descendants(MONDO_SYSTEMS, MONDO_OBO)
         before = disease_df.height
         disease_df = disease_df.filter(
-            pl.col("term_id").is_in(valid_mondo) | (pl.col("term_id") == "MONDO:0000000")
+            pl.col(COL_TERM_ID).is_in(valid_mondo) | (pl.col("term_id") == CONTROL_ID)
         )
         self.logger.info(
             "Filtered disease from %s to %s rows using MONDO system descendants.",
@@ -159,23 +162,23 @@ class URSAHDProcessor(BaseProcessor):
 
         mondo_names = mondo.class_dict
         disease_df = disease_df.with_columns(
-            pl.when(pl.col("term_id") == "MONDO:0000000")
-            .then(pl.lit("control"))
-            .otherwise(pl.col("term_id").replace(mondo_names, default="NA"))
-            .alias("term_label")
+            pl.when(pl.col(COL_TERM_ID) == CONTROL_ID)
+            .then(pl.lit(CONTROL_VALUE))
+            .otherwise(pl.col(COL_TERM_ID).replace(mondo_names, default="NA"))
+            .alias(COL_TERM_NAME)
         )
 
         records = disease_df.select(
-            pl.col("sample_id"),
-            pl.lit("disease").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("disease").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
         self.logger.info(
             "Produced %s disease annotations across %s unique samples.",
             records.height,
-            records["sample_id"].n_unique(),
+            records[COL_ACCESSION].n_unique(),
         )
         return records
 
@@ -185,22 +188,23 @@ class URSAHDProcessor(BaseProcessor):
         gse_map = pl.read_csv(URSAHD_GSE_UBERON)
 
         gse_tissue = (
-            base_df
-            .with_columns(pl.col("GSEID").str.split("|").alias("gse_list"))
+            base_df.with_columns(pl.col("GSEID").str.split("|").alias("gse_list"))
             .explode("gse_list")
             .join(
-                gse_map.rename({
-                    "GSE": "gse_list",
-                    "UBERON_ID": "term_id",
-                    "tissue_name": "term_label",
-                }),
+                gse_map.rename(
+                    {
+                        "GSE": "gse_list",
+                        "UBERON_ID": COL_TERM_ID,
+                        "tissue_name": COL_TERM_NAME,
+                    }
+                ),
                 on="gse_list",
                 how="left",
             )
             .group_by("GSMID")
             .agg(
-                pl.col("term_id").drop_nulls().first(),
-                pl.col("term_label").drop_nulls().first(),
+                pl.col(COL_TERM_ID).drop_nulls().first(),
+                pl.col(COL_TERM_NAME).drop_nulls().first(),
                 pl.col("GSEID").first(),
                 pl.col("GEO Sample Description").first(),
             )
@@ -208,9 +212,8 @@ class URSAHDProcessor(BaseProcessor):
 
         raw_map = pl.read_csv(URSAHD_RAW_TISSUE)
         gse3526_tissue = (
-            gse_tissue
-            .filter(
-                pl.col("term_id").is_null() & pl.col("GSEID").str.contains("GSE3526")
+            gse_tissue.filter(
+                pl.col(COL_TERM_ID).is_null() & pl.col("GSEID").str.contains("GSE3526")
             )
             .with_columns(
                 pl.col("GEO Sample Description")
@@ -220,32 +223,39 @@ class URSAHDProcessor(BaseProcessor):
                 .alias("raw_tissue")
             )
             .join(
-                raw_map.rename({
-                    "uberon_id": "term_id_raw",
-                    "tissue_uberon": "term_label_raw",
-                }),
+                raw_map.rename(
+                    {
+                        "uberon_id": "term_id_raw",
+                        "tissue_uberon": "term_label_raw",
+                    }
+                ),
                 left_on="raw_tissue",
                 right_on="raw_tissue",
                 how="left",
             )
             .with_columns(
-                pl.col("term_id_raw").alias("term_id"),
-                pl.col("term_label_raw").alias("term_label"),
+                pl.col("term_id_raw").alias(COL_TERM_ID),
+                pl.col("term_label_raw").alias(COL_TERM_NAME),
             )
             .drop(["raw_tissue", "term_id_raw", "term_label_raw"])
         )
 
-        tissue_df = pl.concat([
-            gse_tissue.filter(
-                ~(pl.col("term_id").is_null() & pl.col("GSEID").str.contains("GSE3526"))
-            ),
-            gse3526_tissue,
-        ]).filter(pl.col("term_id").is_not_null())
+        tissue_df = pl.concat(
+            [
+                gse_tissue.filter(
+                    ~(
+                        pl.col(COL_TERM_ID).is_null()
+                        & pl.col("GSEID").str.contains("GSE3526")
+                    )
+                ),
+                gse3526_tissue,
+            ]
+        ).filter(pl.col(COL_TERM_ID).is_not_null())
 
         self.logger.info("Loading UBERON system descendants for tissue filtering...")
         valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
         before = tissue_df.height
-        tissue_df = tissue_df.filter(pl.col("term_id").is_in(valid_uberon))
+        tissue_df = tissue_df.filter(pl.col(COL_TERM_ID).is_in(valid_uberon))
         self.logger.info(
             "Filtered tissue from %s to %s rows using UBERON system descendants.",
             before,
@@ -253,16 +263,16 @@ class URSAHDProcessor(BaseProcessor):
         )
 
         records = tissue_df.select(
-            pl.col("GSMID").alias("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col("GSMID").alias(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
         self.logger.info(
             "Produced %s tissue annotations across %s unique samples.",
             records.height,
-            records["sample_id"].n_unique(),
+            records[COL_ACCESSION].n_unique(),
         )
         return records
 
@@ -278,9 +288,17 @@ class URSAHDProcessor(BaseProcessor):
             .when(desc.str.contains(r"age \(y\): "))
             .then(desc.str.extract(r"age \(y\): (.*?)\|").str.strip_chars() + " years")
             .when(desc.str.contains(r"block age \(at extraction in years\): "))
-            .then(desc.str.extract(r"block age \(at extraction in years\): (.*?)\|").str.strip_chars() + " years")
+            .then(
+                desc.str.extract(
+                    r"block age \(at extraction in years\): (.*?)\|"
+                ).str.strip_chars()
+                + " years"
+            )
             .when(desc.str.contains(r"age \(months\): "))
-            .then(desc.str.extract(r"age \(months\): (.*?)\|").str.strip_chars() + " months")
+            .then(
+                desc.str.extract(r"age \(months\): (.*?)\|").str.strip_chars()
+                + " months"
+            )
             .when(desc.str.contains(r"age_years: "))
             .then(desc.str.extract(r"age_years: (.*?)\|").str.strip_chars() + " years")
             .when(desc.str.contains(r"age\.at\.surgery: "))
@@ -291,7 +309,9 @@ class URSAHDProcessor(BaseProcessor):
         # Normalize to numeric years.
         age_years = (
             pl.when(age_raw.str.contains("months"))
-            .then(age_raw.str.extract(r"(\d+\.?\d*)").cast(pl.Float64, strict=False) / 12)
+            .then(
+                age_raw.str.extract(r"(\d+\.?\d*)").cast(pl.Float64, strict=False) / 12
+            )
             .when(age_raw.str.contains("years"))
             .then(age_raw.str.extract(r"(\d+\.?\d*)").cast(pl.Float64, strict=False))
             .when(age_raw.str.contains(r"\d"))
@@ -319,24 +339,23 @@ class URSAHDProcessor(BaseProcessor):
         )
 
         age_df = (
-            base_df
-            .with_columns(age_years.alias("age_years"))
+            base_df.with_columns(age_years.alias("age_years"))
             .filter(pl.col("age_years").is_not_null())
             .with_columns(age_group.alias("age_group"))
             .filter(pl.col("age_group").is_not_null())
             .select(
-                pl.col("GSMID").alias("sample_id"),
-                pl.lit("age").alias("annotation_type"),
-                pl.lit("na").alias("term_id"),
-                pl.col("age_group").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
+                pl.col("GSMID").alias(COL_ACCESSION),
+                pl.lit("age").alias(COL_ATTRIBUTE),
+                pl.lit("na").alias(COL_TERM_ID),
+                pl.col("age_group").alias(COL_TERM_NAME),
+                pl.lit("expert").alias(COL_ECODE),
             )
         )
 
         self.logger.info(
             "Produced %s age annotations across %s unique samples.",
             age_df.height,
-            age_df["sample_id"].n_unique(),
+            age_df[COL_ACCESSION].n_unique(),
         )
         return age_df
 
@@ -387,22 +406,21 @@ class URSAHDProcessor(BaseProcessor):
         )
 
         sex_df = (
-            base_df
-            .with_columns(sex_normalized.alias("sex"))
+            base_df.with_columns(sex_normalized.alias("sex"))
             .filter(pl.col("sex").is_not_null())
             .select(
-                pl.col("GSMID").alias("sample_id"),
-                pl.lit("sex").alias("annotation_type"),
-                pl.lit("na").alias("term_id"),
-                pl.col("sex").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
+                pl.col("GSMID").alias(COL_ACCESSION),
+                pl.lit("sex").alias(COL_ATTRIBUTE),
+                pl.lit("na").alias(COL_TERM_ID),
+                pl.col("sex").alias(COL_TERM_NAME),
+                pl.lit("expert").alias(COL_ECODE),
             )
         )
 
         self.logger.info(
             "Produced %s sex annotations across %s unique samples.",
             sex_df.height,
-            sex_df["sample_id"].n_unique(),
+            sex_df[COL_ACCESSION].n_unique(),
         )
         return sex_df
 

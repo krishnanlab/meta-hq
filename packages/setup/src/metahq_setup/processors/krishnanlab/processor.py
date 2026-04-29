@@ -61,18 +61,15 @@ class KrishnanLabProcessor(BaseProcessor):
         input_path = Path(kwargs.get("input_path", KRISHNANLAB_TSV))
         self.logger.info("Processing KrishnanLab TSV: %s", input_path)
 
-        df = pl.read_csv(input_path, separator="\t", columns=["GSM", "ID", "ID_name", "task"])
+        df = pl.read_csv(
+            input_path, separator="\t", columns=["GSM", "ID", "ID_name", "task"]
+        )
         self.logger.info("Read %s rows from KrishnanLab TSV.", df.height)
 
         tissue_records = self._build_tissue(df)
         disease_records = self._build_disease(df)
 
         result_df = pl.concat([tissue_records, disease_records], how="vertical")
-        result_df = result_df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
 
         self.logger.info(
             "Produced %s total annotations from KrishnanLab.", result_df.height
@@ -93,17 +90,17 @@ class KrishnanLabProcessor(BaseProcessor):
         self.logger.info("Building tissue annotations...")
 
         tissue_df = df.filter(pl.col("task") == "tissue").select(
-            pl.col("GSM").alias("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("ID").alias("term_id"),
-            pl.col("ID_name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col("GSM").alias(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col("ID").alias(COL_TERM_ID),
+            pl.col("ID_name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info("Loading UBERON system descendants for tissue filtering...")
         valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
         before = tissue_df.height
-        tissue_df = tissue_df.filter(pl.col("term_id").is_in(valid_uberon))
+        tissue_df = tissue_df.filter(pl.col(COL_TERM_ID).is_in(valid_uberon))
         self.logger.info(
             "Filtered tissue from %s to %s rows using UBERON system descendants.",
             before,
@@ -113,7 +110,7 @@ class KrishnanLabProcessor(BaseProcessor):
         self.logger.info(
             "Produced %s tissue annotations across %s unique samples.",
             tissue_df.height,
-            tissue_df["sample_id"].n_unique(),
+            tissue_df[COL_ACCESSION].n_unique(),
         )
         return tissue_df
 
@@ -138,16 +135,14 @@ class KrishnanLabProcessor(BaseProcessor):
             )
 
         mapped = {k: v for k, v in doid_to_mondo.items() if v != "NA"}
-        disease_df = (
-            disease_df
-            .with_columns(pl.col("ID").replace(mapped).alias("term_id"))
-            .filter(pl.col("term_id") != pl.col("ID"))
-        )
+        disease_df = disease_df.with_columns(
+            pl.col("ID").replace(mapped).alias(COL_TERM_ID)
+        ).filter(pl.col(COL_TERM_ID) != pl.col("ID"))
 
         self.logger.info("Loading MONDO system descendants for filtering...")
         valid_mondo = get_system_descendants(MONDO_SYSTEMS, MONDO_OBO)
         before = disease_df.height
-        disease_df = disease_df.filter(pl.col("term_id").is_in(valid_mondo))
+        disease_df = disease_df.filter(pl.col(COL_TERM_ID).is_in(valid_mondo))
         self.logger.info(
             "Filtered disease from %s to %s rows using MONDO system descendants.",
             before,
@@ -156,19 +151,19 @@ class KrishnanLabProcessor(BaseProcessor):
 
         mondo_names = mondo.class_dict
         records = disease_df.with_columns(
-            pl.col("term_id").replace(mondo_names, default="NA").alias("term_label")
+            pl.col(COL_TERM_ID).replace(mondo_names, default="NA").alias(COL_TERM_NAME)
         ).select(
-            pl.col("GSM").alias("sample_id"),
-            pl.lit("disease").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col("GSM").alias(COL_ACCESSION),
+            pl.lit("disease").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info(
             "Produced %s disease annotations across %s unique samples.",
             records.height,
-            records["sample_id"].n_unique(),
+            records[COL_ACCESSION].n_unique(),
         )
         return records
 

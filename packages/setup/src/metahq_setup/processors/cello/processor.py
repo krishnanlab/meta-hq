@@ -62,7 +62,7 @@ class CellOProcessor(BaseProcessor):
 
         Returns:
             (pl.DataFrame): Standardized annotations with columns
-                ``sample_id``, ``annotation_type``, ``term_id``,
+                ``COL_ACCESSION``, ``annotation_type``, ``term_id``,
                 ``term_label``, and ``ecode``.
         """
         input_path = Path(kwargs.get("input_path", CELLO_JSON))
@@ -82,11 +82,11 @@ class CellOProcessor(BaseProcessor):
 
         df = (
             pl.DataFrame(
-                {"sample_id": sample_ids, "term_ids": term_id_lists},
-                schema={"sample_id": pl.String, "term_ids": pl.List(pl.String)},
+                {COL_ACCESSION: sample_ids, "term_ids": term_id_lists},
+                schema={COL_ACCESSION: pl.String, "term_ids": pl.List(pl.String)},
             )
             .explode("term_ids")
-            .rename({"term_ids": "term_id"})
+            .rename({"term_ids": COL_TERM_ID})
         )
 
         self.logger.info(
@@ -98,23 +98,25 @@ class CellOProcessor(BaseProcessor):
         cl_class_dict: dict[str, str] = Ontology.from_obo(CL_OBO).class_dict
 
         df = df.with_columns(
-            pl.col("term_id").replace(cl_class_dict, default="NA").alias("term_label")
+            pl.col(COL_TERM_ID)
+            .replace(cl_class_dict, default="NA")
+            .alias(COL_TERM_NAME)
         )
 
-        unmapped = df.filter(pl.col("term_label") == "NA").height
+        unmapped = df.filter(pl.col(COL_TERM_NAME) == "NA").height
         if unmapped > 0:
             self.logger.warning(
                 "%s (sample, term) rows could not be mapped to a CL name and will be dropped.",
                 unmapped,
             )
 
-        df = df.filter(pl.col("term_label") != "NA")
+        df = df.filter(pl.col(COL_TERM_NAME) != "NA")
 
         # Filter to descendants of UBERON/CL system-level terms.
         self.logger.info("Loading UBERON system descendants for filtering...")
         valid_terms = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
         before = df.height
-        df = df.filter(pl.col("term_id").is_in(valid_terms))
+        df = df.filter(pl.col(COL_TERM_ID).is_in(valid_terms))
         self.logger.info(
             "Filtered annotations from %s to %s using UBERON/CL system descendants.",
             before,
@@ -122,24 +124,18 @@ class CellOProcessor(BaseProcessor):
         )
 
         result_df = df.select(
-            pl.col("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
-        )
+            pl.col(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
+        ).sort(COL_ACCESSION)
 
         self.logger.info(
             "Produced %s tissue annotations across %s unique samples.",
             result_df.height,
-            result_df["sample_id"].n_unique(),
+            result_df[COL_ACCESSION].n_unique(),
         )
-
-        result_df = result_df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
 
         output_file = output_dir / "cello_processed.parquet"
         result_df.write_parquet(output_file)

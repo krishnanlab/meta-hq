@@ -69,7 +69,7 @@ class GuProcessor(BaseProcessor):
             )
             .rename(
                 {
-                    "Sample ID": "sample_id",
+                    "Sample ID": COL_ACCESSION,
                     "Manual annotation": "tissue_name",
                     "Sample info #manual annotation": "disease_name",
                 }
@@ -89,7 +89,9 @@ class GuProcessor(BaseProcessor):
         tissue_records = self._process_tissue(df)
 
         # Combine all annotation types
-        result_df = pl.concat([disease_records, tissue_records], how="vertical")
+        result_df = pl.concat([disease_records, tissue_records], how="vertical").sort(
+            COL_ACCESSION
+        )
 
         self.logger.info(
             "Produced %s total annotations (%s disease, %s tissue)",
@@ -97,12 +99,6 @@ class GuProcessor(BaseProcessor):
             disease_records.height,
             tissue_records.height,
         )
-
-        result_df = result_df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
 
         # Save processed data
         output_file = output_dir / "gu_processed.parquet"
@@ -129,7 +125,7 @@ class GuProcessor(BaseProcessor):
         # Join with mapping
         mapped = (
             df.filter(pl.col("disease_name").is_not_null())
-            .select(["sample_id", "disease_name"])
+            .select([COL_ACCESSION, "disease_name"])
             .join(disease_map, on="disease_name", how="left")
             .filter(pl.col("mondo_id").is_not_null() & (pl.col("mondo_id") != "na"))
         )
@@ -150,11 +146,11 @@ class GuProcessor(BaseProcessor):
 
         # Create disease annotation records
         disease_records = mapped_filtered.select(
-            pl.col("sample_id"),
-            pl.lit("disease").alias("annotation_type"),
-            pl.col("mondo_id").alias("term_id"),
-            pl.col("disease_name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("disease").alias(COL_ATTRIBUTE),
+            pl.col("mondo_id").alias(COL_TERM_ID),
+            pl.col("disease_name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info("Processed %s disease annotations", disease_records.height)
@@ -178,7 +174,7 @@ class GuProcessor(BaseProcessor):
         # Join with mapping
         mapped = (
             df.filter(pl.col("tissue_name").is_not_null())
-            .select(["sample_id", "tissue_name"])
+            .select([COL_ACCESSION, "tissue_name"])
             .join(tissue_map, on="tissue_name", how="left")
             .filter(pl.col("uberon_id").is_not_null() & (pl.col("uberon_id") != "na"))
         )
@@ -199,11 +195,11 @@ class GuProcessor(BaseProcessor):
 
         # Create tissue annotation records
         tissue_records = mapped_filtered.select(
-            pl.col("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("uberon_id").alias("term_id"),
-            pl.col("tissue_name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col("uberon_id").alias(COL_TERM_ID),
+            pl.col("tissue_name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info("Processed %s tissue annotations", tissue_records.height)

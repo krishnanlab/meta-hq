@@ -97,7 +97,9 @@ class BgeeProcessor(BaseProcessor):
                 )
                 continue
 
-            self.logger.info("Processing %s data from %s...", species_name, file_path.name)
+            self.logger.info(
+                "Processing %s data from %s...", species_name, file_path.name
+            )
             species_df = self._process_species(file_path, valid_uberon, species_name)
             all_species_data.append(species_df)
 
@@ -120,12 +122,7 @@ class BgeeProcessor(BaseProcessor):
                 }
             )
 
-        result_df = pl.concat(all_species_data, how="vertical")
-        result_df = result_df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
+        result_df = pl.concat(all_species_data, how="vertical").sort(COL_ACCESSION)
 
         self.logger.info(
             "Produced %s total annotations across %s species",
@@ -141,7 +138,7 @@ class BgeeProcessor(BaseProcessor):
         return result_df
 
     def _process_species(
-        self, file_path: Path, valid_uberon: frozenset[str], species_name: str
+        self, file_path: Path, valid_uberon: frozenset[str]
     ) -> pl.DataFrame:
         """Process a single species RNA-Seq library file.
 
@@ -164,32 +161,32 @@ class BgeeProcessor(BaseProcessor):
         )
 
         # Select and rename columns we need
-        df = df.select([
-            "Run IDs",
-            "Expression mapped anatomical entity ID",
-            "Expression mapped anatomical entity name",
-            "Expression mapped stage ID",
-            "Expression mapped stage name",
-            "Expression mapped sex",
-        ])
+        df = df.select(
+            [
+                "Run IDs",
+                "Expression mapped anatomical entity ID",
+                "Expression mapped anatomical entity name",
+                "Expression mapped stage ID",
+                "Expression mapped stage name",
+                "Expression mapped sex",
+            ]
+        )
 
         # Explode pipe-delimited Run IDs column
         # First split the Run IDs into a list
-        df = df.with_columns(
-            pl.col("Run IDs").str.split("|").alias("run_id_list")
-        )
+        df = df.with_columns(pl.col("Run IDs").str.split("|").alias("run_id_list"))
 
         # Explode the list to create one row per run ID
         df_exploded = df.explode("run_id_list")
 
         # Rename for clarity
-        df_exploded = df_exploded.rename({"run_id_list": "sample_id"})
+        df_exploded = df_exploded.rename({"run_id_list": COL_ACCESSION})
 
         # Drop the original "Run IDs" column
         df_exploded = df_exploded.drop("Run IDs")
 
         # Filter out any null sample IDs
-        df_exploded = df_exploded.filter(pl.col("sample_id").is_not_null())
+        df_exploded = df_exploded.filter(pl.col(COL_ACCESSION).is_not_null())
 
         # Process each annotation type
         tissue_records = self._process_tissue(df_exploded, valid_uberon)
@@ -238,11 +235,11 @@ class BgeeProcessor(BaseProcessor):
 
         # Create tissue annotation records
         tissue_records = tissue_df.select(
-            pl.col("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("Expression mapped anatomical entity ID").alias("term_id"),
-            pl.col("Expression mapped anatomical entity name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col("Expression mapped anatomical entity ID").alias(COL_TERM_ID),
+            pl.col("Expression mapped anatomical entity name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         return tissue_records
@@ -262,9 +259,7 @@ class BgeeProcessor(BaseProcessor):
         """
         # Filter to rows with valid sex annotations
         # We'll only process 'male' and 'female', skip 'mixed', 'hermaphrodite', 'not annotated'
-        sex_df = df.filter(
-            pl.col("Expression mapped sex").is_in(["male", "female"])
-        )
+        sex_df = df.filter(pl.col("Expression mapped sex").is_in(["male", "female"]))
 
         # Map to PATO terms
         sex_records = sex_df.with_columns(
@@ -273,19 +268,19 @@ class BgeeProcessor(BaseProcessor):
             .when(pl.col("Expression mapped sex") == "female")
             .then(pl.lit("PATO:0000383"))
             .otherwise(pl.lit(None))
-            .alias("term_id"),
+            .alias(COL_TERM_ID),
             pl.when(pl.col("Expression mapped sex") == "male")
             .then(pl.lit("male"))
             .when(pl.col("Expression mapped sex") == "female")
             .then(pl.lit("female"))
             .otherwise(pl.lit(None))
-            .alias("term_label"),
+            .alias(COL_TERM_NAME),
         ).select(
-            pl.col("sample_id"),
-            pl.lit("sex").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("sex").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         return sex_records
@@ -309,11 +304,11 @@ class BgeeProcessor(BaseProcessor):
         # Create developmental stage annotation records
         # Note: These use various ontologies (MmusDv for mouse, HsapDv for human, UBERON, etc.)
         stage_records = stage_df.select(
-            pl.col("sample_id"),
-            pl.lit("developmental_stage").alias("annotation_type"),
-            pl.col("Expression mapped stage ID").alias("term_id"),
-            pl.col("Expression mapped stage name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(COL_ACCESSION),
+            pl.lit("developmental_stage").alias(COL_ATTRIBUTE),
+            pl.col("Expression mapped stage ID").alias(COL_TERM_ID),
+            pl.col("Expression mapped stage name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         return stage_records

@@ -77,7 +77,7 @@ class ALEProcessor(BaseProcessor):
             input_path,
             separator="\t",
             skip_rows=1,
-            new_columns=["sample_id", "brenda", "age_months", "gender"],
+            new_columns=[COL_ACCESSION, "brenda", "age_months", "gender"],
             schema_overrides={"age_months": pl.Float64},
             null_values=["", "na", "NA"],
             infer_schema_length=40000,
@@ -96,12 +96,9 @@ class ALEProcessor(BaseProcessor):
         sex_df = self._build_sex(df)
         age_df = self._build_age(df)
 
-        result = pl.concat([tissue_df, sex_df, age_df], how="vertical")
-        result = result.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
+        result = pl.concat([tissue_df, sex_df, age_df], how="vertical").sort(
+            COL_ACCESSION
+        )
 
         self.logger.info("Processed %d annotations from ALE", len(result))
 
@@ -151,18 +148,14 @@ class ALEProcessor(BaseProcessor):
             (pl.DataFrame): Tissue annotation records.
         """
         before = df.filter(pl.col("uberon").is_not_null()).height
-        tissue_df = (
-            df.filter(
-                pl.col("uberon").is_not_null()
-                & pl.col("uberon").is_in(valid_uberon)
-            )
-            .select(
-                pl.col("sample_id"),
-                pl.lit("tissue").alias("annotation_type"),
-                pl.col("uberon").alias("term_id"),
-                pl.col("uberon_name").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
-            )
+        tissue_df = df.filter(
+            pl.col("uberon").is_not_null() & pl.col("uberon").is_in(valid_uberon)
+        ).select(
+            pl.col(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col("uberon").alias(COL_TERM_ID),
+            pl.col("uberon_name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
         self.logger.info(
             "Filtered %d system-level or above tissue annotations (kept %d)",
@@ -175,15 +168,15 @@ class ALEProcessor(BaseProcessor):
     def _build_sex(df: pl.DataFrame) -> pl.DataFrame:
         """Build sex annotation records, mapping F/M to PATO terms."""
         return df.filter(pl.col("gender").is_in(list(_SEX_MAP))).select(
-            pl.col("sample_id"),
-            pl.lit("sex").alias("annotation_type"),
+            pl.col(COL_ACCESSION),
+            pl.lit("sex").alias(COL_ATTRIBUTE),
             pl.col("gender")
             .replace({k: v[0] for k, v in _SEX_MAP.items()})
-            .alias("term_id"),
+            .alias(COL_TERM_ID),
             pl.col("gender")
             .replace({k: v[1] for k, v in _SEX_MAP.items()})
-            .alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            .alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
     @staticmethod
@@ -198,10 +191,10 @@ class ALEProcessor(BaseProcessor):
             )
             .filter(pl.col("age_group").is_not_null())
             .select(
-                pl.col("sample_id"),
-                pl.lit("age").alias("annotation_type"),
-                pl.col("age_group").alias("term_id"),
-                pl.col("age_group").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
+                pl.col(COL_ACCESSION),
+                pl.lit("age").alias(COL_ATTRIBUTE),
+                pl.col("age_group").alias(COL_TERM_ID),
+                pl.col("age_group").alias(COL_TERM_NAME),
+                pl.lit("expert").alias(COL_ECODE),
             )
         )

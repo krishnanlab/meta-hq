@@ -75,21 +75,17 @@ class Johnson2023Processor(BaseProcessor):
 
         # Process microarray data (GPL570/GEO)
         self.logger.info("Processing microarray dataset...")
-        microarray_df = self._process_microarray(microarray_path)
+        microarray_df = self._process_microarray(microarray_path).sort(COL_ACCESSION)
 
         # Process RNA-seq data (refine.bio/SRA)
         self.logger.info("Processing RNA-seq dataset...")
-        rnaseq_df = self._process_rnaseq(rnaseq_path)
+        rnaseq_df = self._process_rnaseq(rnaseq_path).sort(COL_ACCESSION)
 
         self.logger.info(
             "Produced %s microarray and %s RNA-seq annotations.",
             microarray_df.height,
             rnaseq_df.height,
         )
-
-        _rename = {"sample_id": COL_ACCESSION, "annotation_type": COL_ATTRIBUTE, "term_label": COL_TERM_NAME}
-        microarray_df = microarray_df.rename(_rename)
-        rnaseq_df = rnaseq_df.rename(_rename)
 
         # Save each dataset separately so geo/sra combiners can consume them
         microarray_file = output_dir / "johnson_2023__microarray.parquet"
@@ -193,11 +189,11 @@ class Johnson2023Processor(BaseProcessor):
 
         # Create disease annotation records - one row per term
         disease_records = mapped_filtered.select(
-            pl.col("gsm").alias("sample_id"),
-            pl.lit("disease").alias("annotation_type"),
-            pl.col("mondo_id").alias("term_id"),
-            pl.col("mondo_name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col("gsm").alias(COL_ACCESSION),
+            pl.lit("disease").alias(COL_ATTRIBUTE),
+            pl.col("mondo_id").alias(COL_TERM_ID),
+            pl.col("mondo_name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -285,11 +281,11 @@ class Johnson2023Processor(BaseProcessor):
 
         # Create tissue annotation records - one row per term
         tissue_records = mapped_filtered.select(
-            pl.col("gsm").alias("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("uber_id").alias("term_id"),
-            pl.col("uber_name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col("gsm").alias(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col("uber_id").alias(COL_TERM_ID),
+            pl.col("uber_name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -375,11 +371,11 @@ class Johnson2023Processor(BaseProcessor):
                 | (pl.col("mondo_id") == "MONDO:000000")
             )
         ).select(
-            pl.col("run").alias("sample_id"),
-            pl.lit("disease").alias("annotation_type"),
-            pl.col("mondo_id").alias("term_id"),
-            pl.col("mondo_name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col("run").alias(COL_ACCESSION),
+            pl.lit("disease").alias(COL_ATTRIBUTE),
+            pl.col("mondo_id").alias(COL_TERM_ID),
+            pl.col("mondo_name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -459,11 +455,11 @@ class Johnson2023Processor(BaseProcessor):
         tissue_records = mapped_exploded.filter(
             pl.col("uber_id").is_in(valid_uberon)
         ).select(
-            pl.col("run").alias("sample_id"),
-            pl.lit("tissue").alias("annotation_type"),
-            pl.col("uber_id").alias("term_id"),
-            pl.col("uber_name").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col("run").alias(COL_ACCESSION),
+            pl.lit("tissue").alias(COL_ATTRIBUTE),
+            pl.col("uber_id").alias(COL_TERM_ID),
+            pl.col("uber_name").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -510,19 +506,19 @@ class Johnson2023Processor(BaseProcessor):
             .when(pl.col("normalized_sex") == "F")
             .then(pl.lit("PATO:0000383"))
             .otherwise(pl.lit(None))
-            .alias("term_id"),
+            .alias(COL_TERM_ID),
             pl.when(pl.col("normalized_sex") == "M")
             .then(pl.lit("male"))
             .when(pl.col("normalized_sex") == "F")
             .then(pl.lit("female"))
             .otherwise(pl.lit(None))
-            .alias("term_label"),
+            .alias(COL_TERM_NAME),
         ).select(
-            pl.col(sample_id_col).alias("sample_id"),
-            pl.lit("sex").alias("annotation_type"),
-            pl.col("term_id"),
-            pl.col("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(sample_id_col).alias(COL_ACCESSION),
+            pl.lit("sex").alias(COL_ATTRIBUTE),
+            pl.col(COL_TERM_ID),
+            pl.col(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info("Processed %s sex annotations", sex_records.height)
@@ -550,11 +546,11 @@ class Johnson2023Processor(BaseProcessor):
 
         # Create age annotation records using age_group as term_label
         age_records = age_df.select(
-            pl.col(sample_id_col).alias("sample_id"),
-            pl.lit("age").alias("annotation_type"),
-            pl.col("age_group").alias("term_id"),
-            pl.col("age_group").alias("term_label"),
-            pl.lit("expert").alias("ecode"),
+            pl.col(sample_id_col).alias(COL_ACCESSION),
+            pl.lit("age").alias(COL_ATTRIBUTE),
+            pl.col("age_group").alias(COL_TERM_ID),
+            pl.col("age_group").alias(COL_TERM_NAME),
+            pl.lit("expert").alias(COL_ECODE),
         )
 
         self.logger.info("Processed %s age annotations", age_records.height)

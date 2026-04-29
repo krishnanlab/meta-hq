@@ -49,23 +49,58 @@ _SEX_NORMALIZE = {
 _FILE_METADATA: dict[str, tuple[str, str, str, str]] = {
     "GSE10320_Clinical.txt": ("UBERON:0002113", "kidney", "", ""),
     "GSE1456_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
-    "GSE15296_Clinical.txt": ("CL:2000001", "peripheral blood mononuclear cell", "", ""),
+    "GSE15296_Clinical.txt": (
+        "CL:2000001",
+        "peripheral blood mononuclear cell",
+        "",
+        "",
+    ),
     "GSE19804_Clinical.txt": ("UBERON:0002048", "lung", "age", ""),
     "GSE20181_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
     "GSE20189_Clinical.txt": ("UBERON:0002048", "lung", "", ""),
-    "GSE2109_Breast_Clinical.txt": ("UBERON:0000310", "breast", "Patient_Age", "Gender"),
+    "GSE2109_Breast_Clinical.txt": (
+        "UBERON:0000310",
+        "breast",
+        "Patient_Age",
+        "Gender",
+    ),
     "GSE2109_Colon_Clinical.txt": ("UBERON:0001155", "colon", "Patient_Age", "Gender"),
-    "GSE2109_Endometrium_Clinical.txt": ("UBERON:0001295", "endometrium", "Patient_Age", ""),
-    "GSE2109_Kidney_Clinical.txt": ("UBERON:0002113", "kidney", "Patient_Age", "Gender"),
+    "GSE2109_Endometrium_Clinical.txt": (
+        "UBERON:0001295",
+        "endometrium",
+        "Patient_Age",
+        "",
+    ),
+    "GSE2109_Kidney_Clinical.txt": (
+        "UBERON:0002113",
+        "kidney",
+        "Patient_Age",
+        "Gender",
+    ),
     "GSE2109_Lung_Clinical.txt": ("UBERON:0002048", "lung", "Patient_Age", "Gender"),
     "GSE2109_Ovary_Clinical.txt": ("UBERON:0000992", "ovary", "Patient_Age", ""),
-    "GSE2109_Prostate_Clinical.txt": ("UBERON:0002367", "prostate gland", "Patient_Age", ""),
+    "GSE2109_Prostate_Clinical.txt": (
+        "UBERON:0002367",
+        "prostate gland",
+        "Patient_Age",
+        "",
+    ),
     "GSE2109_Uterus_Clinical.txt": ("UBERON:0000995", "uterus", "Patient_Age", ""),
     "GSE21510_Clinical.txt": ("UBERON:0012652", "colorectum", "", ""),
     "GSE25507_Clinical.txt": ("CL:0000542", "lymphocyte", "subject_age", ""),
     "GSE26682_U133A_Clinical.txt": ("UBERON:0012652", "colorectum", "age", "gender"),
-    "GSE26682_U133PLUS2_Clinical.txt": ("UBERON:0012652", "colorectum", "age", "gender"),
-    "GSE27279_Clinical.txt": ("UBERON:0008788", "posterior cranial fossa", "age", "gender"),
+    "GSE26682_U133PLUS2_Clinical.txt": (
+        "UBERON:0012652",
+        "colorectum",
+        "age",
+        "gender",
+    ),
+    "GSE27279_Clinical.txt": (
+        "UBERON:0008788",
+        "posterior cranial fossa",
+        "age",
+        "gender",
+    ),
     "GSE27342_Clinical.txt": ("UBERON:0000945", "stomach", "age", "gender"),
     "GSE27854_Clinical.txt": ("UBERON:0012652", "colorectum", "", ""),
     "GSE30219_Clinical.txt": ("UBERON:0002048", "lung", "age_at_surgery", "gender"),
@@ -74,9 +109,24 @@ _FILE_METADATA: dict[str, tuple[str, str, str, str]] = {
     "GSE37147_Clinical.txt": ("UBERON:0002185", "bronchus", "age_years", "Sex"),
     "GSE37199_Clinical.txt": ("UBERON:0000178", "blood", "", ""),
     "GSE37892_Clinical.txt": ("UBERON:0001155", "colon", "age_at_diagnosis", "gender"),
-    "GSE38958_Clinical.txt": ("CL:2000001", "peripheral blood mononuclear cell", "age", "gender"),
-    "GSE39491_Clinical.txt": ("UBERON:0004921", "subdivision of digestive tract", "", ""),
-    "GSE39582_Clinical.txt": ("UBERON:0001155", "colon", "age.at.diagnosis_year", "Sex"),
+    "GSE38958_Clinical.txt": (
+        "CL:2000001",
+        "peripheral blood mononuclear cell",
+        "age",
+        "gender",
+    ),
+    "GSE39491_Clinical.txt": (
+        "UBERON:0004921",
+        "subdivision of digestive tract",
+        "",
+        "",
+    ),
+    "GSE39582_Clinical.txt": (
+        "UBERON:0001155",
+        "colon",
+        "age.at.diagnosis_year",
+        "Sex",
+    ),
     "GSE40292_Clinical.txt": ("UBERON:0002116", "ileum", "", "gender"),
     "GSE4271_Clinical.txt": ("CL:0000125", "glial cell", "age", "Sex"),
     "GSE43176_Clinical.txt": ("CL:0000738", "leukocyte", "", ""),
@@ -86,7 +136,12 @@ _FILE_METADATA: dict[str, tuple[str, str, str, str]] = {
     "GSE48391_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
     "GSE5460_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
     "GSE5462_Clinical.txt": ("UBERON:0000310", "breast", "", ""),
-    "GSE58697_Clinical.txt": ("UBERON:0003697", "abdominal wall", "age_at_diagnosis", "Sex"),
+    "GSE58697_Clinical.txt": (
+        "UBERON:0003697",
+        "abdominal wall",
+        "age_at_diagnosis",
+        "Sex",
+    ),
     "GSE63885_Clinical.txt": ("UBERON:0000992", "ovary", "", ""),
     "GSE6532_U133A_Clinical.txt": ("UBERON:0000310", "breast", "age", ""),
     "GSE6532_U133PLUS2_Clinical.txt": ("UBERON:0000310", "breast", "age", ""),
@@ -168,16 +223,16 @@ class GolightlyProcessor(BaseProcessor):
                     )
                     continue
 
-                df = df.rename({"SampleID": "sample_id"})
+                df = df.rename({"SampleID": COL_ACCESSION})
 
                 # Tissue: fixed per file, one row per sample.
                 if uberon_id in valid_uberon:
                     tissue_frames.append(
-                        df.select("sample_id").with_columns(
-                            pl.lit("tissue").alias("annotation_type"),
-                            pl.lit(uberon_id).alias("term_id"),
-                            pl.lit(uberon_name).alias("term_label"),
-                            pl.lit("expert").alias("ecode"),
+                        df.select(COL_ACCESSION).with_columns(
+                            pl.lit("tissue").alias(COL_ATTRIBUTE),
+                            pl.lit(uberon_id).alias(COL_TERM_ID),
+                            pl.lit(uberon_name).alias(COL_TERM_NAME),
+                            pl.lit("expert").alias(COL_ECODE),
                         )
                     )
                 else:
@@ -190,11 +245,15 @@ class GolightlyProcessor(BaseProcessor):
 
                 # Sex annotations.
                 if sex_col and sex_col in df.columns:
-                    sex_frames.append(self._build_sex(df.select(["sample_id", sex_col]), sex_col))
+                    sex_frames.append(
+                        self._build_sex(df.select([COL_ACCESSION, sex_col]), sex_col)
+                    )
 
                 # Age annotations.
                 if age_col and age_col in df.columns:
-                    age_frames.append(self._build_age(df.select(["sample_id", age_col]), age_col))
+                    age_frames.append(
+                        self._build_age(df.select([COL_ACCESSION, age_col]), age_col)
+                    )
 
         parts = tissue_frames + sex_frames + age_frames
         if not parts:
@@ -209,12 +268,7 @@ class GolightlyProcessor(BaseProcessor):
                 }
             )
 
-        result = pl.concat(parts, how="diagonal_relaxed").unique()
-        result = result.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
+        result = pl.concat(parts, how="diagonal_relaxed").unique().sort(COL_ACCESSION)
 
         self.logger.info("Processed %d annotations from Golightly", len(result))
 
@@ -271,15 +325,15 @@ class GolightlyProcessor(BaseProcessor):
             )
             .filter(pl.col("_sex_key").is_in(list(_SEX_MAP)))
             .select(
-                pl.col("sample_id"),
-                pl.lit("sex").alias("annotation_type"),
+                pl.col(COL_ACCESSION),
+                pl.lit("sex").alias(COL_ATTRIBUTE),
                 pl.col("_sex_key")
                 .replace({k: v[0] for k, v in _SEX_MAP.items()})
-                .alias("term_id"),
+                .alias(COL_TERM_ID),
                 pl.col("_sex_key")
                 .replace({k: v[1] for k, v in _SEX_MAP.items()})
-                .alias("term_label"),
-                pl.lit("expert").alias("ecode"),
+                .alias(COL_TERM_NAME),
+                pl.lit("expert").alias(COL_ECODE),
             )
         )
 
@@ -321,10 +375,10 @@ class GolightlyProcessor(BaseProcessor):
             )
             .filter(pl.col("age_group").is_not_null())
             .select(
-                pl.col("sample_id"),
-                pl.lit("age").alias("annotation_type"),
-                pl.col("age_group").alias("term_id"),
-                pl.col("age_group").alias("term_label"),
-                pl.lit("expert").alias("ecode"),
+                pl.col(COL_ACCESSION),
+                pl.lit("age").alias(COL_ATTRIBUTE),
+                pl.col("age_group").alias(COL_TERM_ID),
+                pl.col("age_group").alias(COL_TERM_NAME),
+                pl.lit("expert").alias(COL_ECODE),
             )
         )

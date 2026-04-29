@@ -25,15 +25,15 @@ import duckdb
 import polars as pl
 
 from metahq_setup.combiners.base import BaseAnnotationCombiner
-from metahq_setup.combiners.geo import GEO_COMBINED_BSON
-from metahq_setup.combiners.sra import SRA_COMBINED_BSON
-from metahq_setup.config.config import (
+from metahq_setup.config import (
     ACCESSIONS_KEY,
     ATTRIBUTE_KEYS,
     COL_TECHNOLOGY_MAP_GPL,
     DELTED_SAMPLES,
+    GEO_COMBINED_BSON,
     OMICIDX_DB,
     PLATFORM_ACCESSION_KEY,
+    SRA_COMBINED_BSON,
     TECHNOLOGY_MAP,
 )
 

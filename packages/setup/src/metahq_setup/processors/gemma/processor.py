@@ -121,22 +121,22 @@ class GemmaProcessor(BaseProcessor):
 
                     records.append(
                         {
-                            "sample_id": gse,
-                            "annotation_type": CHARACTERISTICS_MAP[category],
-                            "term_id": term_id,
-                            "term_label": value.lower(),
-                            "ecode": "expert",
+                            COL_ACCESSION: gse,
+                            COL_ATTRIBUTE: CHARACTERISTICS_MAP[category],
+                            COL_TERM_ID: term_id,
+                            COL_TERM_NAME: value.lower(),
+                            COL_ECODE: "expert",
                         }
                     )
 
         df = pl.DataFrame(
             records,
             schema={
-                "sample_id": pl.Utf8,
-                "annotation_type": pl.Utf8,
-                "term_id": pl.Utf8,
-                "term_label": pl.Utf8,
-                "ecode": pl.Utf8,
+                COL_ACCESSION: pl.Utf8,
+                COL_ATTRIBUTE: pl.Utf8,
+                COL_TERM_ID: pl.Utf8,
+                COL_TERM_NAME: pl.Utf8,
+                COL_ECODE: pl.Utf8,
             },
         )
         df = self._map_age_groups(df)
@@ -152,14 +152,14 @@ class GemmaProcessor(BaseProcessor):
 
         before = len(df)
         df = df.filter(
-            ~pl.col("annotation_type").is_in(["tissue", "disease"])
+            ~pl.col(COL_ATTRIBUTE).is_in(["tissue", "disease"])
             | (
-                (pl.col("annotation_type") == "tissue")
-                & pl.col("term_id").is_in(valid_uberon)
+                (pl.col(COL_ATTRIBUTE) == "tissue")
+                & pl.col(COL_TERM_ID).is_in(valid_uberon)
             )
             | (
-                (pl.col("annotation_type") == "disease")
-                & pl.col("term_id").is_in(valid_mondo)
+                (pl.col(COL_ATTRIBUTE) == "disease")
+                & pl.col(COL_TERM_ID).is_in(valid_mondo)
             )
         )
         self.logger.info(
@@ -169,18 +169,12 @@ class GemmaProcessor(BaseProcessor):
         )
 
         before = len(df)
-        df = df.filter(pl.col("sample_id").str.starts_with("GSE"))
+        df = df.filter(pl.col(COL_ACCESSION).str.starts_with("GSE")).sort(COL_ACCESSION)
         self.logger.info(
             "Filtered %d non-GSE annotations (kept %d)",
             before - len(df),
             len(df),
         )
-
-        df = df.rename({
-            "sample_id": COL_ACCESSION,
-            "annotation_type": COL_ATTRIBUTE,
-            "term_label": COL_TERM_NAME,
-        })
 
         output_file = output_dir / "gemma_processed.parquet"
         df.write_parquet(output_file)
@@ -213,22 +207,22 @@ class GemmaProcessor(BaseProcessor):
         """Map term IDs to our pre-defined age groups."""
         age_group_map = (
             pl.read_csv(GEMMA_DEV_STAGE_TO_AGE_GROUP, null_values="na")
-            .select(["term_id", "age_group"])
+            .select([COL_TERM_ID, "age_group"])
             .filter(pl.all_horizontal(pl.col("*").is_not_null()))
         )
 
         return (
-            df.join(age_group_map, on="term_id", how="left")
+            df.join(age_group_map, on=COL_TERM_ID, how="left")
             .filter(
-                (pl.col("annotation_type") != "age") | pl.col("age_group").is_not_null()
+                (pl.col(COL_ATTRIBUTE) != "age") | pl.col("age_group").is_not_null()
             )
             .with_columns(
-                pl.when(pl.col("annotation_type") == "age")
+                pl.when(pl.col(COL_ATTRIBUTE) == "age")
                 .then(pl.col("age_group"))
-                .otherwise(pl.col("term_id"))
-                .alias("term_id")
+                .otherwise(pl.col(COL_TERM_ID))
+                .alias(COL_TERM_ID)
             )
             .drop("age_group")
             .unique()
-            .sort("sample_id")
+            .sort(COL_ACCESSION)
         )
