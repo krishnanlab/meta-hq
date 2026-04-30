@@ -30,7 +30,46 @@ def main(ctx):
     ctx.ensure_object(dict)
 
 
-@main.command()
+@main.group()
+def build():
+    """
+    Build various components of the data package or the package itself.
+    """
+    pass
+
+
+@build.command(name="ontology")
+@click.option(
+    "--mondo",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=False,
+    help="Path to mondo's names_synonyms.json",
+)
+@click.option(
+    "--uberon-cl",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=False,
+    help="Path to uberon/CL's names_synonyms.json",
+)
+@click.option(
+    "--out-db",
+    type=click.Path(dir_okay=False, path_type=Path),
+    required=False,
+    show_default=True,
+    help="Output DuckDB database path",
+)
+def ontology_db(mondo, uberon_cl, out_db):
+    from metahq_setup.builders import OntologySearchDbBuilder
+
+    click.echo("Building ontology search database...")
+    builder = OntologySearchDbBuilder(mondo=mondo, uberon_cl=uberon_cl, out_db=out_db)
+    builder.build()
+    click.secho(
+        f"✓ Ontology search DuckDB database successfully built: {out_db}", fg="green"
+    )
+
+
+@build.command(name="package")
 @click.option(
     "--config",
     "-c",
@@ -69,7 +108,7 @@ def main(ctx):
     is_flag=True,
     help="Enable verbose output",
 )
-def build(config, data_dir, output_dir, start_from, end_at, verbose):
+def package(config, data_dir, output_dir, start_from, end_at, verbose):
     """
     Build the complete MetaHQ database.
 
