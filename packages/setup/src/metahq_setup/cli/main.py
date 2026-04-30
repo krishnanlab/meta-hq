@@ -60,6 +60,15 @@ def build():
 )
 def ontology_db(mondo, uberon_cl, out_db):
     from metahq_setup.builders import OntologySearchDbBuilder
+    from metahq_setup.config import (
+        MONDO_NAMES_SYNONYMS,
+        ONTOLOGY_SEARCH_DB,
+        UBERON_CL_NAMES_SYNONYMS,
+    )
+
+    mondo = mondo if mondo else MONDO_NAMES_SYNONYMS
+    uberon_cl = uberon_cl if uberon_cl else UBERON_CL_NAMES_SYNONYMS
+    out_db = out_db if out_db else ONTOLOGY_SEARCH_DB
 
     click.echo("Building ontology search database...")
     builder = OntologySearchDbBuilder(mondo=mondo, uberon_cl=uberon_cl, out_db=out_db)

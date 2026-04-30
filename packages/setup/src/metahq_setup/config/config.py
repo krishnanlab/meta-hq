@@ -80,6 +80,11 @@ CL_OBO: Path = ONTOLOGY_DIR / "cl" / "cl.obo.gz"
 MONDO_RELATIONS: Path = ONTOLOGY_DIR / "mondo" / "relations.parquet"
 UBERON_RELATIONS: Path = ONTOLOGY_DIR / "uberon_ext" / "relations.parquet"
 
+## Default names and synonyms paths
+MONDO_NAMES_SYNONYMS: Path = ONTOLOGY_DIR / "mondo" / "names_synonyms.json"
+UBERON_CL_NAMES_SYNONYMS: Path = ONTOLOGY_DIR / "uberon_ext" / "names_synonyms.json"
+ONTOLOGY_SEARCH_DB: Path = ONTOLOGY_DIR / "ontology_search.duckdb"
+
 ## System-level term lists (used to filter annotations to biologically meaningful terms).
 MONDO_SYSTEMS: Path = ONTOLOGY_DIR / "mondo" / "systems.txt"
 UBERON_SYSTEMS: Path = ONTOLOGY_DIR / "uberon_ext" / "systems.txt"
