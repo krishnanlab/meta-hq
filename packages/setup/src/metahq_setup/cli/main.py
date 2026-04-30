@@ -30,18 +30,7 @@ def main(ctx):
     ctx.ensure_object(dict)
 
 
-@main.group()
-def build():
-    """
-    Build various components of the data package or the package itself.
-    """
-    pass
-
-
-
-
-
-@build.command(name="package")
+@main.command(name="package")
 @click.option(
     "--config",
     "-c",
