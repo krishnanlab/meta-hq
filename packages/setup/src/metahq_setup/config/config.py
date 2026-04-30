@@ -51,7 +51,6 @@ COL_ECODE: str = "ecode"
 SAMPLE_ID_PREFIX: str = "GSM"
 STUDY_ID_PREFIX: str = "GSE"
 
-
 # ===============================================
 # ====== Hard-coded Paths
 # ===============================================
@@ -120,8 +119,6 @@ GOLIGHTLY_ZIP: Path = UNPROCESSED_DIR / "golightly_2018.zip"
 GU_DISEASE_MONDO: Path = HELPERS_DIR / "gu_disease_name_to_mondo.csv"
 GU_TISSUE_UBERON: Path = HELPERS_DIR / "gu_tissue_name_to_uberon.csv"
 
-# OmicIDX DuckDB database.
-OMICIDX_DB: Path = DATA_DIR / "omicidx.duckdb"
 
 # Processed output parquets (one per processor).
 ALE_PROCESSED: Path = PROCESSED_DIR / "ale_processed.parquet"
@@ -190,5 +187,11 @@ TECHNOLOGY_MAP: Path = METADATA_DIR / "technologies.parquet"
 COL_TECHNOLOGY_MAP_GPL: str = "id"
 
 # OmicIDX properties
-OMICIDX_SAMPLE_TABLE = "src_geo_samples"
-OMICIDX_SERIES_TABLE = "src_geo_series"
+OMICIDX_DB: Path = DATA_DIR / "omicidx.duckdb"
+OMICIDX_SAMPLE_TABLE: str = "src_geo_samples"
+OMICIDX_SERIES_TABLE: str = "src_geo_series"
+OMICIDX_COL_ACCESSION: str = "accession"
+
+# Metadata locations
+SAMPLE_METADATA = METADATA_DIR / "metadata__level-sample.parquet"
+SERIES_METADATA = METADATA_DIR / "metadata__level-series.parquet"
