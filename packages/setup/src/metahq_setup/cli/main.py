@@ -22,7 +22,7 @@ from metahq_setup.util.checkpointing import CheckpointManager
 @click.pass_context
 def main(ctx):
     """
-    MetaHQ database setup and build tool.
+    MetaHQ database harmonization and build tool.
 
     Processes biomedical annotations from multiple sources and builds
     the MetaHQ database for use with metahq-cli.
@@ -38,44 +38,7 @@ def build():
     pass
 
 
-@build.command(name="ontology")
-@click.option(
-    "--mondo",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    required=False,
-    help="Path to mondo's names_synonyms.json",
-)
-@click.option(
-    "--uberon-cl",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    required=False,
-    help="Path to uberon/CL's names_synonyms.json",
-)
-@click.option(
-    "--out-db",
-    type=click.Path(dir_okay=False, path_type=Path),
-    required=False,
-    show_default=True,
-    help="Output DuckDB database path",
-)
-def ontology_db(mondo, uberon_cl, out_db):
-    from metahq_setup.builders import OntologySearchDbBuilder
-    from metahq_setup.config import (
-        MONDO_NAMES_SYNONYMS,
-        ONTOLOGY_SEARCH_DB,
-        UBERON_CL_NAMES_SYNONYMS,
-    )
 
-    mondo = mondo if mondo else MONDO_NAMES_SYNONYMS
-    uberon_cl = uberon_cl if uberon_cl else UBERON_CL_NAMES_SYNONYMS
-    out_db = out_db if out_db else ONTOLOGY_SEARCH_DB
-
-    click.echo("Building ontology search database...")
-    builder = OntologySearchDbBuilder(mondo=mondo, uberon_cl=uberon_cl, out_db=out_db)
-    builder.build()
-    click.secho(
-        f"✓ Ontology search DuckDB database successfully built: {out_db}", fg="green"
-    )
 
 
 @build.command(name="package")
@@ -794,6 +757,47 @@ def ontology_relations(obo_file, outfile):
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)
         sys.exit(1)
+
+
+@ontology.command(name="search-db")
+@click.option(
+    "--mondo",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=False,
+    help="Path to mondo's names_synonyms.json",
+)
+@click.option(
+    "--uberon-cl",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=False,
+    help="Path to uberon/CL's names_synonyms.json",
+)
+@click.option(
+    "--out-db",
+    type=click.Path(dir_okay=False, path_type=Path),
+    required=False,
+    show_default=True,
+    help="Output DuckDB database path",
+)
+def ontology_search_db(mondo, uberon_cl, out_db):
+    """Build the ontology search DuckDB database."""
+    from metahq_setup.builders import OntologySearchDbBuilder
+    from metahq_setup.config import (
+        MONDO_NAMES_SYNONYMS,
+        ONTOLOGY_SEARCH_DB,
+        UBERON_CL_NAMES_SYNONYMS,
+    )
+
+    mondo = mondo if mondo else MONDO_NAMES_SYNONYMS
+    uberon_cl = uberon_cl if uberon_cl else UBERON_CL_NAMES_SYNONYMS
+    out_db = out_db if out_db else ONTOLOGY_SEARCH_DB
+
+    click.echo("Building ontology search database...")
+    builder = OntologySearchDbBuilder(mondo=mondo, uberon_cl=uberon_cl, out_db=out_db)
+    builder.build()
+    click.secho(
+        f"✓ Ontology search DuckDB database successfully built: {out_db}", fg="green"
+    )
 
 
 @main.command()
