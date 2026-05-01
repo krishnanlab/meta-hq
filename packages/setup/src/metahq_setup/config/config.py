@@ -191,6 +191,25 @@ OMICIDX_DB: Path = DATA_DIR / "omicidx.duckdb"
 OMICIDX_SAMPLE_TABLE: str = "src_geo_samples"
 OMICIDX_SERIES_TABLE: str = "src_geo_series"
 OMICIDX_COL_ACCESSION: str = "accession"
+OMICIDX_COL_CHANNELS: str = "channels"
+
+# MetaHQ database required metadata fields
+SAMPLE_METADATA_FIELDS: list[str] = [
+    "accession",
+    "title",
+    "platform_id",
+    "description",
+    "source_name",
+    "characteristics",
+]
+SERIES_METADATA_FIELDS: list[str] = [
+    "accession",
+    "title",
+    "summary",
+    "overall_design",
+    "sample_id",
+    "platform_id",
+]
 
 # Metadata locations
 SAMPLE_METADATA = METADATA_DIR / "metadata__level-sample.parquet"
