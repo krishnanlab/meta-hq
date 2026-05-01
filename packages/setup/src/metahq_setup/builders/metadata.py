@@ -25,6 +25,7 @@ SAMPLE_METADATA_FIELDS: list[str] = [
     "description",
     "source_name",
     "characteristics",
+    "channel_count",
 ]
 SERIES_METADATA_FIELDS: list[str] = [
     "accession",
@@ -71,7 +72,6 @@ class MetadataBuilder:
 
         # build sample metadata
         samples = self._load_metahq_db_entries(sample_db)
-        self._query_sample(samples)
 
         # build series metadata
         series = self._load_metahq_db_entries(series_db)
@@ -83,16 +83,24 @@ class MetadataBuilder:
     ):
         """Save sample and series metadata for the MetaHQ data package."""
 
+    def _format_sample_descriptions(self):
+
+        SAMPLE_DESCRIPTION: list[str] = [
+            "title",
+            "source_name_ch1",
+            "characteristics_ch1",
+            "description",
+        ]
+
     def _query_sample(
         self,
         samples: list[str],
-        fields: list[str] = SAMPLE_METADATA_FIELDS,
+        fields: list[str],
     ):
         retriever = SampleMetadataRetriever(
             db_path=self.db_path, table=self.sample_table
         )
         retriever.retrieve(fields=fields, samples=samples)
-        pass
 
     def _query_series(self):
         pass
