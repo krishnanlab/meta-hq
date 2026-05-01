@@ -107,7 +107,7 @@ def _(np, pl, plt, sns):
                 .set_index("source", drop=True)
             )
 
-            sns.clustermap(df, ax=ax, **heatmap_kwargs)
+            sns.heatmap(df, ax=ax, **heatmap_kwargs)
             ax.set_title(group_name.capitalize())
 
             xticks = ax.get_xticklabels()
