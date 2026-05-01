@@ -7,6 +7,7 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
+from metahq_setup.config import OMICIDX_COL_ACCESSION, OMICIDX_COL_CHANNELS
 from metahq_setup.util.logging import setup_logger
 
 
@@ -30,7 +31,7 @@ class BaseMetadataRetriever:
 
     def get_available_fields(
         self,
-        channel_name: str = "channels",
+        channel_name: str = OMICIDX_COL_CHANNELS,
     ) -> tuple[list[str], list[str]]:
         """Identify the available metadata fields to query.
 
@@ -83,17 +84,36 @@ class BaseMetadataRetriever:
         all_fields, _ = self.get_available_fields()
         self.logger.info("Available fields: %s", all_fields)
 
-    def _build_base_query(self, query_fields: list[str], accession_name: str) -> str:
-        formatted_fields = ", ".join(query_fields)
+    def _build_base_query(
+        self, fields: list[str], accession_name: str = OMICIDX_COL_ACCESSION
+    ) -> str:
+        if not accession_name in fields:
+            raise ValueError(
+                f"{accession_name} must be in the queried metadata fields."
+            )
+
+        formatted_fields = ", ".join(fields)
         return f"""SELECT {formatted_fields} FROM {self.table} WHERE {accession_name} = ANY($1)"""
 
     def _check_fields(self, queried_fields: list[str], available_fields: list[str]):
         ok_fields = []
+        warning_raised: bool = False
         for field in queried_fields:
             if field not in available_fields:
                 self.logger.warning("%s not in available fields. Skipping...", field)
+                warning_raised = True
                 continue
 
             ok_fields.append(field)
 
+        if warning_raised:
+            self.logger.info("You can query fields from: %s", available_fields)
+
         return ok_fields
+
+    def _execute_query(self, query: str, entries: list[str]):
+        """Execute a query from OmicIDX filtering for"""
+        self.logger.info("Querying OmicIDX...")
+        with duckdb.connect(self.db_path, read_only=True) as conn:
+            self.logger.debug("Query: %s", query)
+            self.metadata = conn.execute(query, [entries]).pl()

@@ -5,6 +5,7 @@ Build the metadata files required in the MetaHQ data package.
 from pathlib import Path
 
 import bson
+import polars as pl
 
 from metahq_setup.config import (
     OMICIDX_DB,
@@ -12,34 +13,18 @@ from metahq_setup.config import (
     OMICIDX_SERIES_TABLE,
     SAMPLE_COMBINED_BSON,
     SAMPLE_METADATA,
+    SAMPLE_METADATA_FIELDS,
     SERIES_COMBINED_BSON,
     SERIES_METADATA,
+    SERIES_METADATA_FIELDS,
 )
 from metahq_setup.metadata.sample import SampleMetadataRetriever
 from metahq_setup.metadata.series import SeriesMetadataRetriever
-
-SAMPLE_METADATA_FIELDS: list[str] = [
-    "accession",
-    "title",
-    "platform_id",
-    "description",
-    "source_name",
-    "characteristics",
-    "channel_count",
-]
-SERIES_METADATA_FIELDS: list[str] = [
-    "accession",
-    "title",
-    "summary",
-    "overall_design",
-    "sample_id",
-    "platform_id",
-]
+from metahq_setup.util.logging import setup_logger
 
 
 class MetadataBuilder:
     """Build the metadata files required in the MetaHQ data package.
-
 
     Attributes:
         db_path (Path):
@@ -60,21 +45,33 @@ class MetadataBuilder:
         series_table: str = OMICIDX_SERIES_TABLE,
     ):
         self.db_path = db_path
+
         self.sample_table = sample_table
+        self.sample_metadata = pl.DataFrame()
+
         self.series_table = series_table
+        self.series_metadata = pl.DataFrame()
+
+        self.logger = setup_logger("metahq_setup.builders.metadata")
 
     def build_from_db(
         self,
         sample_db: Path = SAMPLE_COMBINED_BSON,
         series_db: Path = SERIES_COMBINED_BSON,
-    ):
+    ) -> "MetadataBuilder":
         """Build the metadata files."""
 
         # build sample metadata
+        self.logger.info("Building sample metadata...")
         samples = self._load_metahq_db_entries(sample_db)
+        self.sample_metadata = self._query_sample(samples, SAMPLE_METADATA_FIELDS)
 
         # build series metadata
+        self.logger.info("Building series metadata...")
         series = self._load_metahq_db_entries(series_db)
+        self.series_metadata = self._query_series(series, SERIES_METADATA_FIELDS)
+
+        return self
 
     def save(
         self,
@@ -82,28 +79,44 @@ class MetadataBuilder:
         series_outfile: Path = SERIES_METADATA,
     ):
         """Save sample and series metadata for the MetaHQ data package."""
+        self.logger.info("Saving metadata...")
+        # sample
+        if self.sample_metadata.is_empty():
+            self.logger.warning("Sample metadata is empty. Run build_from_db() first.")
 
-    def _format_sample_descriptions(self):
+        self.sample_metadata.write_parquet(sample_outfile)
+        self.logger.info("Sample metadata saved to: %s", sample_outfile)
 
-        SAMPLE_DESCRIPTION: list[str] = [
-            "title",
-            "source_name_ch1",
-            "characteristics_ch1",
-            "description",
-        ]
+        # series
+        if self.series_metadata.is_empty():
+            self.logger.warning("Series metadata is empty. Run build_from_db() first.")
+
+        self.series_metadata.write_parquet(series_outfile)
+        self.logger.info("Series metadata saved to: %s", series_outfile)
 
     def _query_sample(
         self,
         samples: list[str],
         fields: list[str],
     ):
+        """Retrieve sample metadata."""
         retriever = SampleMetadataRetriever(
             db_path=self.db_path, table=self.sample_table
         )
         retriever.retrieve(fields=fields, samples=samples)
+        return retriever.metadata
 
-    def _query_series(self):
-        pass
+    def _query_series(
+        self,
+        series: list[str],
+        fields: list[str],
+    ):
+        """Retrieve series metadata."""
+        retriever = SeriesMetadataRetriever(
+            db_path=self.db_path, table=self.series_table
+        )
+        retriever.retrieve(fields=fields, series=series)
+        return retriever.metadata
 
     def _load_metahq_db_entries(self, file: Path) -> list[str]:
         """Load samples or series from a MetaHQ BSON database."""
