@@ -12,6 +12,7 @@ import click
 
 from metahq_setup import __version__
 from metahq_setup.config import PipelineConfig, load_config, save_config
+from metahq_setup.config.config import SERIES_COMBINED_BSON
 from metahq_setup.config.schema import DataPackageConfig
 from metahq_setup.processors import ProcessorRegistry
 from metahq_setup.util.checkpointing import CheckpointManager
@@ -126,6 +127,42 @@ def package(config, data_dir, output_dir, start_from, end_at, verbose):
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)
         sys.exit(1)
+
+
+@main.command(name="shields")
+@click.option(
+    "--sample-db",
+    type=click.Path(path_type=Path, exists=True),
+    help="Path to MetaHQ sample BSON database.",
+)
+@click.option(
+    "--series-db",
+    type=click.Path(path_type=Path, exists=True),
+    help="Path to MetaHQ series BSON database.",
+)
+@click.option(
+    "-o",
+    "--outdir",
+    type=click.Path(path_type=Path),
+    help="Path to directory to save shields.",
+)
+def build_shields(sample_db, series_db, outdir):
+    """Build and save shield.io JSON endpoints storing counts for each source in MetaHQ
+    sample and series BSON databases.
+    """
+    from metahq_setup.builders import ShieldEndpointBuilder
+    from metahq_setup.config import (
+        SAMPLE_COMBINED_BSON,
+        SERIES_COMBINED_BSON,
+        SOURCE_COUNT_SHIELD_OUTDIR,
+    )
+
+    sample_db = sample_db if sample_db else SAMPLE_COMBINED_BSON
+    series_db = series_db if series_db else SERIES_COMBINED_BSON
+    outdir = outdir if outdir else SOURCE_COUNT_SHIELD_OUTDIR
+
+    builder = ShieldEndpointBuilder(sample_db=sample_db, series_db=series_db)
+    builder.build().save(outdir)
 
 
 @main.command()
