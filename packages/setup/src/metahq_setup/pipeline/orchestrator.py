@@ -7,18 +7,35 @@ and progress tracking.
 
 from collections.abc import Callable
 
-from metahq_setup.builders import DataPackageBuilder
+from metahq_setup.builders import (
+    DataPackageBuilder,
+    MetadataBuilder,
+    OntologySearchDbBuilder,
+    ShieldEndpointBuilder,
+)
 from metahq_setup.combiners.geo import GeoCombiner
 from metahq_setup.combiners.sample import SampleCombiner
 from metahq_setup.combiners.sra import SraCombiner
+from metahq_setup.combiners.study import StudyCombiner
 from metahq_setup.config import (
     GEO_COMBINED_BSON,
     MONDO_OBO,
     MONDO_RELATIONS,
     SAMPLE_COMBINED_BSON,
+    SERIES_COMBINED_BSON,
+    SOURCE_COUNT_SHIELD_OUTDIR,
     SRA_COMBINED_BSON,
     UBERON_OBO,
     UBERON_RELATIONS,
+)
+from metahq_setup.config.config import (
+    MONDO_NAMES_SYNONYMS,
+    OMICIDX_SAMPLE_TABLE,
+    OMICIDX_SERIES_TABLE,
+    ONTOLOGY_SEARCH_DB,
+    SAMPLE_METADATA,
+    SERIES_METADATA,
+    UBERON_CL_NAMES_SYNONYMS,
 )
 from metahq_setup.config.schema import DataPackageConfig
 from metahq_setup.ontology import Graph
@@ -84,7 +101,9 @@ class PipelineOrchestrator:
 
             if stage_cfg.skip:
                 self.logger.info("Skipping stage (config skip=true): %s", stage_name)
-            elif stage_cfg.use_checkpoint and self.checkpoints.is_stage_completed(stage_name):
+            elif stage_cfg.use_checkpoint and self.checkpoints.is_stage_completed(
+                stage_name
+            ):
                 self.logger.info("Skipping stage (already completed): %s", stage_name)
             else:
                 self.logger.info("Starting stage: %s", stage_name)
@@ -148,14 +167,62 @@ class PipelineOrchestrator:
         )
         stages.append(
             (
+                "combine__series",
+                lambda: StudyCombiner()
+                .combine(
+                    sample_combined_bson=SAMPLE_COMBINED_BSON,
+                    db_path=self.db_path,
+                )
+                .clean()
+                .save(SERIES_COMBINED_BSON),
+            )
+        )
+        stages.append(
+            (
+                "build__shield_endpoints",
+                lambda: ShieldEndpointBuilder(
+                    sample_db=SAMPLE_COMBINED_BSON, series_db=SERIES_COMBINED_BSON
+                )
+                .build()
+                .save(SOURCE_COUNT_SHIELD_OUTDIR),
+            )
+        )
+        stages.append(
+            (
                 "extract__mondo__relations",
-                lambda: Graph.from_obo(MONDO_OBO).relations_matrix().save(MONDO_RELATIONS),
+                lambda: Graph.from_obo(MONDO_OBO)
+                .relations_matrix()
+                .save(MONDO_RELATIONS),
             )
         )
         stages.append(
             (
                 "extract__uberon__relations",
-                lambda: Graph.from_obo(UBERON_OBO).relations_matrix().save(UBERON_RELATIONS),
+                lambda: Graph.from_obo(UBERON_OBO)
+                .relations_matrix()
+                .save(UBERON_RELATIONS),
+            )
+        )
+        stages.append(
+            (
+                "build__ontology_search",
+                lambda: OntologySearchDbBuilder(
+                    mondo=MONDO_NAMES_SYNONYMS,
+                    uberon_cl=UBERON_CL_NAMES_SYNONYMS,
+                    out_db=ONTOLOGY_SEARCH_DB,
+                ).build(),
+            )
+        )
+        stages.append(
+            (
+                "build__metadata",
+                lambda: MetadataBuilder(
+                    sample_table=OMICIDX_SAMPLE_TABLE, series_table=OMICIDX_SERIES_TABLE
+                )
+                .build_from_db(
+                    sample_db=SAMPLE_COMBINED_BSON, series_db=SERIES_COMBINED_BSON
+                )
+                .save(sample_outfile=SAMPLE_METADATA, series_outfile=SERIES_METADATA),
             )
         )
         stages.append(
