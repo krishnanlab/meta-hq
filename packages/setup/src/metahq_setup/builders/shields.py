@@ -70,7 +70,7 @@ class ShieldEndpointBuilder:
         for level, counts in source_counts.items():
             for source, count in counts.items():
                 source_endpoint = EndpointParams(
-                    label=source,
+                    label="",  # information is present in the file name
                     message=format(count, ","),
                     filename=f"{source}__{level}.json",
                 )
@@ -97,7 +97,7 @@ class ShieldEndpointBuilder:
         with open(file, "rb") as f:
             return bson.decode(f.read())
 
-    def get_source_counts(self) -> tuple[dict[str, dict[str, int]], set[str]]:
+    def get_source_counts(self) -> tuple[dict[str, dict[str, int]], list[str]]:
         """Get counts for each annotation source in the sample and series MetaHQ databases."""
         counts: dict[str, dict[str, int]] = {
             "sample": self._source_counts(self.sample_db),
@@ -105,8 +105,8 @@ class ShieldEndpointBuilder:
         }
 
         # find all possible annotation sources and add zeros to missing sources
-        all_sources: set[str] = set(counts["sample"].keys()) & set(
-            counts["series"].keys()
+        all_sources: list[str] = sorted(
+            set(counts["sample"].keys()) | set(counts["series"].keys())
         )
         for level_counts in counts.values():
             for source in all_sources:
