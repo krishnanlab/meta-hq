@@ -214,3 +214,6 @@ SERIES_METADATA_FIELDS: list[str] = [
 # Metadata locations
 SAMPLE_METADATA = METADATA_DIR / "metadata__level-sample.parquet"
 SERIES_METADATA = METADATA_DIR / "metadata__level-series.parquet"
+
+# Source count shield endpoint directory
+SOURCE_COUNT_SHIELD_OUTDIR: Path = DATA_DIR / "shields"
