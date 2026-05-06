@@ -475,13 +475,13 @@ def combine_sample(output, geo, sra, metadata_db):
         sys.exit(1)
 
 
-@combine.command(name="study")
+@combine.command(name="series")
 @click.option(
     "--output",
     "-o",
     type=click.Path(path_type=Path),
     default=None,
-    help="Output BSON file path (default: data/processed/combined__level-sample.bson)",
+    help="Output BSON file path (default: data/processed/combined__level-series.bson)",
 )
 @click.option(
     "--sample",
@@ -489,7 +489,7 @@ def combine_sample(output, geo, sra, metadata_db):
     default=None,
     help="Path to sample combined BSON (default: data/processed/combined__level-sample.bson)",
 )
-def combine_study(sample, output):
+def combine_series(sample, output):
     from metahq_setup.combiners.study import StudyCombiner
     from metahq_setup.config import SAMPLE_COMBINED_BSON, SERIES_COMBINED_BSON
 
