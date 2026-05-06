@@ -42,7 +42,7 @@ class CellOProcessor(BaseProcessor):
     CL OBO file, and drops any terms that cannot be resolved.
     """
 
-    source_name = "cello"
+    source_name = "Cello"
     version = "1.0.0"
     description = "CellO automated cell type annotations for bulk RNA-seq"
 

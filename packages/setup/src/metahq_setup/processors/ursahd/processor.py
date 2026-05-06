@@ -58,7 +58,7 @@ class URSAHDProcessor(BaseProcessor):
     and sex extracted from the GEO Sample Description field.
     """
 
-    source_name = "ursahd"
+    source_name = "URSA_HD"
     version = "1.0.0"
     description = "URSA-HD expert-curated disease, tissue, age, and sex annotations"
 

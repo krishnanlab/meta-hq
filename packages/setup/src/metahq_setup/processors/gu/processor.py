@@ -36,7 +36,7 @@ class GuProcessor(BaseProcessor):
     Provides manually curated tissue and disease annotations for SRA samples.
     """
 
-    source_name = "gu"
+    source_name = "Gu_2023"
     version = "1.0.0"
     description = "Gu et al. tissue and disease annotations"
 

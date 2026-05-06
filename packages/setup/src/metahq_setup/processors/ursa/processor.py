@@ -34,7 +34,7 @@ class URSAProcessor(BaseProcessor):
     term_id.
     """
 
-    source_name = "ursa"
+    source_name = "URSA"
     version = "1.0.0"
     description = "URSA expert-curated tissue annotations"
 

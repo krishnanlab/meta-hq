@@ -45,7 +45,7 @@ class Johnson2023Processor(BaseProcessor):
     All annotations have expert curation (ecode='expert').
     """
 
-    source_name = "johnson_2023"
+    source_name = "Johnson_2023"
     version = "1.0.0"
     description = "Johnson 2023 manually curated annotations for microarray and RNA-seq"
 

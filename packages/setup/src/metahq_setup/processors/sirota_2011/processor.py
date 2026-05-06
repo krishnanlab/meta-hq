@@ -42,7 +42,7 @@ class Sirota2011Processor(BaseProcessor):
     UBERON mapping files, and filters to system-level ontology descendants.
     """
 
-    source_name = "sirota_2011"
+    source_name = "Sirota_2011"
     version = "1.0.0"
     description = "Sirota 2011 expert-curated disease and tissue annotations"
 

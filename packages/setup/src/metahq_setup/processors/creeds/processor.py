@@ -36,7 +36,7 @@ class CREEDSProcessor(BaseProcessor):
     with both control and perturbation sample annotations.
     """
 
-    source_name = "creeds"
+    source_name = "CREEDS"
     version = "1.0.0"
     description = "CREEDS crowd-sourced perturbation annotations"
 

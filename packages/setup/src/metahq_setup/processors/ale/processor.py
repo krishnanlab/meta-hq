@@ -43,7 +43,7 @@ class ALEProcessor(BaseProcessor):
     Age in months is converted to years and then to a discrete age group.
     """
 
-    source_name = "ale"
+    source_name = "ALE"
     version = "1.0.0"
     description = "ALE (Giles et al.) manually curated GEO sample annotations"
 

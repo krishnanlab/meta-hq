@@ -52,7 +52,7 @@ class GemmaProcessor(BaseProcessor):
         metahq-setup download gemma
     """
 
-    source_name = "gemma"
+    source_name = "Gemma"
     version = "1.32.6"
     description = "Gemma database annotations for gene expression studies"
 

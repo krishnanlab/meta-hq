@@ -38,7 +38,7 @@ class KrishnanLabProcessor(BaseProcessor):
     descendants. Tissue UBERON/CL IDs are filtered to system-level descendants.
     """
 
-    source_name = "krishnanlab"
+    source_name = "KrishnanLab"
     version = "1.0.0"
     description = "KrishnanLab expert-curated tissue and disease annotations"
 

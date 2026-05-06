@@ -97,7 +97,7 @@ class DiSignAtlasProcessor(BaseProcessor):
       the literal string ``"None"``.
     """
 
-    source_name = "disign_atlas"
+    source_name = "DiSignAtlas"
     version = "1.0.0"
     description = "DiSignAtlas disease and tissue annotations"
 

@@ -160,7 +160,7 @@ class GolightlyProcessor(BaseProcessor):
     before being converted to an age group.
     """
 
-    source_name = "golightly"
+    source_name = "Golightly_2018"
     version = "1.0.0"
     description = "Golightly (2018) expert-curated GEO sample clinical annotations"
 

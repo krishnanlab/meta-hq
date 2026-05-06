@@ -49,7 +49,7 @@ class BgeeProcessor(BaseProcessor):
     - Drosophila melanogaster (fly)
     """
 
-    source_name = "bgee"
+    source_name = "BGee"
     version = "1.0.0"
     description = "Bgee database RNA-Seq library annotations across multiple species"
 
@@ -100,7 +100,7 @@ class BgeeProcessor(BaseProcessor):
             self.logger.info(
                 "Processing %s data from %s...", species_name, file_path.name
             )
-            species_df = self._process_species(file_path, valid_uberon, species_name)
+            species_df = self._process_species(file_path, valid_uberon)
             all_species_data.append(species_df)
 
             self.logger.info(
