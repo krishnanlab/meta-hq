@@ -59,12 +59,6 @@ def main(ctx):
     help="Stop at specific stage",
 )
 @click.option(
-    "--num-workers",
-    "-j",
-    type=int,
-    help="Number of parallel workers",
-)
-@click.option(
     "--verbose",
     "-v",
     is_flag=True,
