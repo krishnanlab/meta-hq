@@ -240,7 +240,7 @@ class StudyCombiner(BaseAnnotationCombiner):
             if platforms:
                 ids["platform"] = DELIMITER.join(platforms)
             if srp:
-                ids["srp"] = srp
+                ids["srp"] = DELIMITER.join(srp)
             if ids:
                 accession_map[series] = ids
 
