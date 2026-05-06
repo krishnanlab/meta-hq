@@ -23,6 +23,7 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    ECODE_EXPERT,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
@@ -239,7 +240,7 @@ class BgeeProcessor(BaseProcessor):
             pl.lit("tissue").alias(COL_ATTRIBUTE),
             pl.col("Expression mapped anatomical entity ID").alias(COL_TERM_ID),
             pl.col("Expression mapped anatomical entity name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         return tissue_records
@@ -280,7 +281,7 @@ class BgeeProcessor(BaseProcessor):
             pl.lit("sex").alias(COL_ATTRIBUTE),
             pl.col(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         return sex_records
@@ -308,7 +309,7 @@ class BgeeProcessor(BaseProcessor):
             pl.lit("developmental_stage").alias(COL_ATTRIBUTE),
             pl.col("Expression mapped stage ID").alias(COL_TERM_ID),
             pl.col("Expression mapped stage name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         return stage_records
@@ -341,7 +342,7 @@ class BgeeProcessor(BaseProcessor):
 
         # Verify all records have ecode='expert'
         unique_ecodes = data[COL_ECODE].unique().to_list()
-        if unique_ecodes != ["expert"]:
+        if unique_ecodes != [ECODE_EXPERT]:
             self.logger.warning(
                 "Found non-expert ecode values in Bgee data: %s",
                 unique_ecodes,

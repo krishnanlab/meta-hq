@@ -15,6 +15,7 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    ECODE_EXPERT,
     GU_2023_CSV,
     GU_DISEASE_MONDO,
     GU_TISSUE_UBERON,
@@ -150,7 +151,7 @@ class GuProcessor(BaseProcessor):
             pl.lit("disease").alias(COL_ATTRIBUTE),
             pl.col("mondo_id").alias(COL_TERM_ID),
             pl.col("disease_name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info("Processed %s disease annotations", disease_records.height)
@@ -199,7 +200,7 @@ class GuProcessor(BaseProcessor):
             pl.lit("tissue").alias(COL_ATTRIBUTE),
             pl.col("uberon_id").alias(COL_TERM_ID),
             pl.col("tissue_name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info("Processed %s tissue annotations", tissue_records.height)
@@ -229,7 +230,7 @@ class GuProcessor(BaseProcessor):
             )
 
         # Verify all records have ecode='expert'
-        if not all(e == "expert" for e in data[COL_ECODE].unique().to_list()):
+        if not all(e == ECODE_EXPERT for e in data[COL_ECODE].unique().to_list()):
             self.logger.warning("Found non-expert ecode values in Gu 2023 data.")
 
         return True

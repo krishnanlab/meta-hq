@@ -21,6 +21,7 @@ from metahq_setup.config.config import (
     DISIGN_ATLAS_CORRECTIONS,
     DISIGN_ATLAS_GMT,
     DISIGN_ATLAS_TISSUE_MAP,
+    ECODE_EXPERT,
     MONDO_OBO,
     MONDO_SYSTEMS,
     PLATFORM_ACCESSION_KEY,
@@ -240,7 +241,7 @@ class DiSignAtlasProcessor(BaseProcessor):
             pl.lit("disease").alias(COL_ATTRIBUTE),
             pl.col("disease_id").alias(COL_TERM_ID),
             pl.col("disease_name").str.to_lowercase().alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         # Load manual tissue name -> term ID mapping and apply via join.
@@ -263,7 +264,7 @@ class DiSignAtlasProcessor(BaseProcessor):
                 pl.lit("tissue").alias(COL_ATTRIBUTE),
                 pl.col(COL_TERM_ID),
                 pl.col("tissue").alias(COL_TERM_NAME),
-                pl.lit("expert").alias(COL_ECODE),
+                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
         )
 

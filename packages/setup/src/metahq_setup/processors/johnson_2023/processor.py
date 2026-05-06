@@ -16,6 +16,7 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    ECODE_EXPERT,
     JOHNSON_MICROARRAY_MESH_MONDO,
     JOHNSON_MICROARRAY_MESH_UBERON,
     JOHNSON_MICROARRAY_TSV,
@@ -193,7 +194,7 @@ class Johnson2023Processor(BaseProcessor):
             pl.lit("disease").alias(COL_ATTRIBUTE),
             pl.col("mondo_id").alias(COL_TERM_ID),
             pl.col("mondo_name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -285,7 +286,7 @@ class Johnson2023Processor(BaseProcessor):
             pl.lit("tissue").alias(COL_ATTRIBUTE),
             pl.col("uber_id").alias(COL_TERM_ID),
             pl.col("uber_name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -375,7 +376,7 @@ class Johnson2023Processor(BaseProcessor):
             pl.lit("disease").alias(COL_ATTRIBUTE),
             pl.col("mondo_id").alias(COL_TERM_ID),
             pl.col("mondo_name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -459,7 +460,7 @@ class Johnson2023Processor(BaseProcessor):
             pl.lit("tissue").alias(COL_ATTRIBUTE),
             pl.col("uber_id").alias(COL_TERM_ID),
             pl.col("uber_name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -518,7 +519,7 @@ class Johnson2023Processor(BaseProcessor):
             pl.lit("sex").alias(COL_ATTRIBUTE),
             pl.col(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info("Processed %s sex annotations", sex_records.height)
@@ -550,7 +551,7 @@ class Johnson2023Processor(BaseProcessor):
             pl.lit("age").alias(COL_ATTRIBUTE),
             pl.col("age_group").alias(COL_TERM_ID),
             pl.col("age_group").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info("Processed %s age annotations", age_records.height)
@@ -583,7 +584,7 @@ class Johnson2023Processor(BaseProcessor):
                 )
 
         # Verify all records have ecode='expert'
-        if not data[COL_ECODE].unique().to_list() == ["expert"]:
+        if not data[COL_ECODE].unique().to_list() == [ECODE_EXPERT]:
             self.logger.warning("Found non-expert ecode values in Johnson 2023 data.")
 
         return True

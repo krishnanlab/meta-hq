@@ -19,6 +19,7 @@ from metahq_setup.config.config import (
     CONTROL_ID,
     CONTROL_VALUE,
     CREEDS_JSON,
+    ECODE_CROWD,
     MONDO_OBO,
     MONDO_SYSTEMS,
 )
@@ -119,7 +120,7 @@ class CREEDSProcessor(BaseProcessor):
                         COL_ATTRIBUTE: "disease",
                         COL_TERM_ID: mondo_id,
                         COL_TERM_NAME: disease_name,
-                        COL_ECODE: "crowd",
+                        COL_ECODE: ECODE_CROWD,
                     }
                 )
 
@@ -132,7 +133,7 @@ class CREEDSProcessor(BaseProcessor):
                         COL_ATTRIBUTE: "disease",
                         COL_TERM_ID: CONTROL_ID,  # Control samples
                         COL_TERM_NAME: CONTROL_VALUE,
-                        COL_ECODE: "crowd",
+                        COL_ECODE: ECODE_CROWD,
                     }
                 )
 
@@ -200,7 +201,7 @@ class CREEDSProcessor(BaseProcessor):
             self.logger.warning("No disease annotations found in CREEDS output.")
 
         # Verify all records have ecode='crowd'
-        if not all(e == "crowd" for e in data[COL_ECODE].unique().to_list()):
+        if not all(e == ECODE_CROWD for e in data[COL_ECODE].unique().to_list()):
             self.logger.warning("Found non-crowd ecode values in CREEDS data.")
 
         return True

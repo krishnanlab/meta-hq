@@ -19,6 +19,7 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    ECODE_EXPERT,
     MONDO_OBO,
     MONDO_SYSTEMS,
     SIROTA_2011_CSV,
@@ -175,7 +176,7 @@ class Sirota2011Processor(BaseProcessor):
             pl.lit("disease").alias(COL_ATTRIBUTE),
             pl.col(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info(
@@ -222,7 +223,7 @@ class Sirota2011Processor(BaseProcessor):
             pl.lit("tissue").alias(COL_ATTRIBUTE),
             pl.col(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
         self.logger.info(

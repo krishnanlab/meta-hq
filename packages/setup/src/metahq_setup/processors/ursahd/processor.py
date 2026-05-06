@@ -20,6 +20,7 @@ from metahq_setup.config.config import (
     COL_TERM_NAME,
     CONTROL_ID,
     CONTROL_VALUE,
+    ECODE_EXPERT,
     MONDO_OBO,
     MONDO_SYSTEMS,
     UBERON_OBO,
@@ -173,7 +174,7 @@ class URSAHDProcessor(BaseProcessor):
             pl.lit("disease").alias(COL_ATTRIBUTE),
             pl.col(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
         self.logger.info(
             "Produced %s disease annotations across %s unique samples.",
@@ -267,7 +268,7 @@ class URSAHDProcessor(BaseProcessor):
             pl.lit("tissue").alias(COL_ATTRIBUTE),
             pl.col(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
         self.logger.info(
             "Produced %s tissue annotations across %s unique samples.",
@@ -348,7 +349,7 @@ class URSAHDProcessor(BaseProcessor):
                 pl.lit("age").alias(COL_ATTRIBUTE),
                 pl.lit("na").alias(COL_TERM_ID),
                 pl.col("age_group").alias(COL_TERM_NAME),
-                pl.lit("expert").alias(COL_ECODE),
+                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
         )
 
@@ -413,7 +414,7 @@ class URSAHDProcessor(BaseProcessor):
                 pl.lit("sex").alias(COL_ATTRIBUTE),
                 pl.lit("na").alias(COL_TERM_ID),
                 pl.col("sex").alias(COL_TERM_NAME),
-                pl.lit("expert").alias(COL_ECODE),
+                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
         )
 

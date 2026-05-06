@@ -18,6 +18,7 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    ECODE_EXPERT,
     GOLIGHTLY_ZIP,
     PROCESSED_DIR,
     UBERON_OBO,
@@ -232,7 +233,7 @@ class GolightlyProcessor(BaseProcessor):
                             pl.lit("tissue").alias(COL_ATTRIBUTE),
                             pl.lit(uberon_id).alias(COL_TERM_ID),
                             pl.lit(uberon_name).alias(COL_TERM_NAME),
-                            pl.lit("expert").alias(COL_ECODE),
+                            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
                         )
                     )
                 else:
@@ -333,7 +334,7 @@ class GolightlyProcessor(BaseProcessor):
                 pl.col("_sex_key")
                 .replace({k: v[1] for k, v in _SEX_MAP.items()})
                 .alias(COL_TERM_NAME),
-                pl.lit("expert").alias(COL_ECODE),
+                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
         )
 
@@ -379,6 +380,6 @@ class GolightlyProcessor(BaseProcessor):
                 pl.lit("age").alias(COL_ATTRIBUTE),
                 pl.col("age_group").alias(COL_TERM_ID),
                 pl.col("age_group").alias(COL_TERM_NAME),
-                pl.lit("expert").alias(COL_ECODE),
+                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
         )

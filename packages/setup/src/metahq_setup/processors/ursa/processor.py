@@ -15,6 +15,7 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    ECODE_EXPERT,
     UBERON_OBO,
     UBERON_SYSTEMS,
     URSA_CSV,
@@ -104,7 +105,7 @@ class URSAProcessor(BaseProcessor):
             pl.lit("tissue").alias(COL_ATTRIBUTE),
             pl.col(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         ).sort(COL_ACCESSION)
 
         self.logger.info(

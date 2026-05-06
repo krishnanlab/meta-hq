@@ -17,6 +17,7 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    ECODE_EXPERT,
     PROCESSED_DIR,
     UBERON_OBO,
     UBERON_SYSTEMS,
@@ -155,7 +156,7 @@ class ALEProcessor(BaseProcessor):
             pl.lit("tissue").alias(COL_ATTRIBUTE),
             pl.col("uberon").alias(COL_TERM_ID),
             pl.col("uberon_name").alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
         self.logger.info(
             "Filtered %d system-level or above tissue annotations (kept %d)",
@@ -176,7 +177,7 @@ class ALEProcessor(BaseProcessor):
             pl.col("gender")
             .replace({k: v[1] for k, v in _SEX_MAP.items()})
             .alias(COL_TERM_NAME),
-            pl.lit("expert").alias(COL_ECODE),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
     @staticmethod
@@ -195,6 +196,6 @@ class ALEProcessor(BaseProcessor):
                 pl.lit("age").alias(COL_ATTRIBUTE),
                 pl.col("age_group").alias(COL_TERM_ID),
                 pl.col("age_group").alias(COL_TERM_NAME),
-                pl.lit("expert").alias(COL_ECODE),
+                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
         )

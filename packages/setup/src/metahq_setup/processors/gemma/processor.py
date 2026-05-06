@@ -17,6 +17,7 @@ from metahq_setup.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    ECODE_EXPERT,
     GEMMA_DEV_STAGE_TO_AGE_GROUP,
     GEMMA_RAW,
     MONDO_OBO,
@@ -125,7 +126,7 @@ class GemmaProcessor(BaseProcessor):
                             COL_ATTRIBUTE: CHARACTERISTICS_MAP[category],
                             COL_TERM_ID: term_id,
                             COL_TERM_NAME: value.lower(),
-                            COL_ECODE: "expert",
+                            COL_ECODE: ECODE_EXPERT,
                         }
                     )
 
