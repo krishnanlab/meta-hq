@@ -23,6 +23,8 @@ from metahq_setup.config.config import (
     ECODE_EXPERT,
     MONDO_OBO,
     MONDO_SYSTEMS,
+    SEX_FEMALE_ID,
+    SEX_MALE_ID,
     UBERON_OBO,
     UBERON_SYSTEMS,
     URSAHD_CSV,
@@ -397,12 +399,12 @@ class URSAHDProcessor(BaseProcessor):
             .otherwise(None)
         )
 
-        # Normalize to "M" / "F".
+        # Normalize
         sex_normalized = (
             pl.when(sex_with_fallback.str.strip_chars().is_in(_MALE_LABELS))
-            .then(pl.lit("M"))
+            .then(pl.lit(SEX_MALE_ID))
             .when(sex_with_fallback.str.strip_chars().is_in(_FEMALE_LABELS))
-            .then(pl.lit("F"))
+            .then(pl.lit(SEX_FEMALE_ID))
             .otherwise(None)
         )
 
