@@ -44,6 +44,10 @@ ALL_METAHQ_KEYS: list[str] = list(ATTRIBUTE_KEYS) + [ORGANISM_KEY, ACCESSIONS_KE
 CONTROL_ID: str = "MONDO:0000000"
 CONTROL_VALUE: str = "control"
 
+# Ecode values
+ECODE_EXPERT: str = "expert-curated"
+ECODE_CROWD: str = "crowd-sourced"
+
 # ===============================================
 # ====== Processor output schema column names
 # ===============================================
