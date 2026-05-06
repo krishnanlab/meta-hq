@@ -6,7 +6,8 @@ import numpy as np
 from numpy.typing import DTypeLike
 from tqdm import tqdm
 
-from metahq_setup.ontology import Ontology, RelationsMatrix
+from metahq_setup.ontology.ontology import Ontology
+from metahq_setup.ontology.relations import RelationsMatrix
 
 
 class Graph(Ontology):
