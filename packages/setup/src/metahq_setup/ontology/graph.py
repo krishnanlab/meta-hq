@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 from metahq_setup.ontology.ontology import Ontology
 from metahq_setup.ontology.relations import RelationsMatrix
+from metahq_setup.util.logging import setup_logger
 
 
 class Graph(Ontology):
@@ -38,6 +39,8 @@ class Graph(Ontology):
         self._graph = nx.DiGraph()
         self._nodes: list[str] = []
 
+        self.logger = setup_logger("metahq_setup.ontology.graph.Graph")
+
     def construct_graph(self):
         """Constructs an ontology graph from entries from an ontology file.
 
@@ -47,6 +50,7 @@ class Graph(Ontology):
         directed acyclic structure of the edgelist, we intentionally keep only one
         edge (fiber network is parent of fiber) on Line 100.
         """
+        self.logger.info("Constructing the ontology graph...")
         # ID entries have at least 1 capital letter, a colon, and at least 1 digit
         id_pattern = re.compile(r"[A-Za-z]+:\S+")
 

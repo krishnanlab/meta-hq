@@ -121,7 +121,6 @@ class RelationsLazyFrame:
         relations = dict(zip(relations[ROW_ID], relations[COL_ID]))
 
         if rm_self:
-            self.logger.info("Removing self terms from descendants query...")
             relations = self._rm_self_relations(relations)
 
         return relations

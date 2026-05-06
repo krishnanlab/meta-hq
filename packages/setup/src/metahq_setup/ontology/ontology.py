@@ -185,6 +185,7 @@ class Ontology:
                 raise ValueError(
                     f"Unknown reader {reader!r}, available options are [obo]",
                 )
+        self.logger.info("Built ontology from %s", file)
 
     def id_map(self, struct: str = "polars") -> dict[str, str] | pl.DataFrame:
         """Returns class_dict as specified data structure."""
