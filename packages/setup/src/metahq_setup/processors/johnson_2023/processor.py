@@ -35,6 +35,9 @@ from metahq_setup.ontology import get_id_map, get_system_descendants
 from metahq_setup.processors.base import BaseProcessor
 from metahq_setup.processors.registry import ProcessorRegistry
 
+# Johnson encodes elderly adults as elderly. Map to elderly_adult for compatibility
+ELDERLY_MAP = {"elderly": "elderly_adult"}
+
 
 @ProcessorRegistry.register
 class Johnson2023Processor(BaseProcessor):
@@ -553,6 +556,11 @@ class Johnson2023Processor(BaseProcessor):
             pl.col("age_group").alias(COL_TERM_ID),
             pl.col("age_group").alias(COL_TERM_NAME),
             pl.lit(ECODE_EXPERT).alias(COL_ECODE),
+        )
+
+        age_records = age_records.with_columns(
+            pl.col(COL_TERM_ID).replace(ELDERLY_MAP).alias(COL_TERM_ID),
+            pl.col(COL_TERM_NAME).replace(ELDERLY_MAP).alias(COL_TERM_NAME),
         )
 
         self.logger.info("Processed %s age annotations", age_records.height)
