@@ -6,10 +6,10 @@ and building the nested annotation dict that forms the MetaHQ database.
 
 Output structure
 ----------------
-The combined dict is keyed by sample ID (GSM, SRR, etc.) and has the form::
+The combined dict is keyed by accession ID (GSM, SRR, etc.) and has the form::
 
     {
-        "<sample_id>": {
+        "<id>": {
             "tissue": {
                 "<source_name>": {"id": "UBERON:...", "value": "brain", "ecode": "expert"}
             },
@@ -21,7 +21,7 @@ The combined dict is keyed by sample ID (GSM, SRR, etc.) and has the form::
     }
 
 Multiple ontology terms for the same (sample, source, annotation_type) are
-joined with ``||``.
+joined with ``DELIMITER`` from the config module.
 """
 
 from pathlib import Path
@@ -69,7 +69,7 @@ class BaseAnnotationCombiner:
 
     Attributes:
         anno (dict[str, Any]):
-            The combined annotation dictionary, keyed by sample ID.
+            The combined annotation dictionary, keyed by accession ID.
     """
 
     def __init__(self):
@@ -148,7 +148,7 @@ class BaseAnnotationCombiner:
             }
 
         self.logger.info(
-            "Added %d annotations from '%s' across %d samples.",
+            "Added %d annotations from '%s' across %d entries.",
             data.height,
             source_name,
             grouped[COL_ACCESSION].n_unique(),
@@ -166,7 +166,7 @@ class BaseAnnotationCombiner:
         Remove empty and undesired annotation entries.
 
         Drops source entries where every value is in ``UNDESIRED`` or where
-        the only key remaining after filtering is ``ecode``. Drops sample
+        the only key remaining after filtering is ``ecode``. Drops
         entries that have no substantive annotations after cleaning.
 
         Arguments:
@@ -213,7 +213,7 @@ class BaseAnnotationCombiner:
             )
             self.anno = filterer.get_specific_annotations()
 
-        self.logger.info("Retained %d samples after cleaning.", len(self.anno))
+        self.logger.info("Retained %d entries after cleaning.", len(self.anno))
         return self
 
     def save(self, output_path: Path) -> None:
@@ -231,16 +231,14 @@ class BaseAnnotationCombiner:
         with open(output_path, "wb") as f:
             f.write(bson.encode(self.anno))
 
-        self.logger.info(
-            "Saved %d sample annotations to %s", len(self.anno), output_path
-        )
+        self.logger.info("Saved %d annotations to %s", len(self.anno), output_path)
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
     def _init_entry(self, id_: str) -> None:
-        """Initialize the annotation entry for a sample if not yet present."""
+        """Initialize the annotation entry for an entry if not yet present."""
         if id_ not in self.anno:
             self.anno[id_] = {key: {} for key in ATTRIBUTE_KEYS}
             self.anno[id_][ACCESSIONS_KEY] = {}
