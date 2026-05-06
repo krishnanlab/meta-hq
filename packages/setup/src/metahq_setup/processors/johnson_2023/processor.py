@@ -26,6 +26,8 @@ from metahq_setup.config.config import (
     MONDO_OBO,
     MONDO_SYSTEMS,
     PROCESSED_DIR,
+    SEX_FEMALE_ID,
+    SEX_MALE_ID,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
@@ -475,7 +477,7 @@ class Johnson2023Processor(BaseProcessor):
         """Process sex annotations.
 
         Normalizes 'male'/'female' to 'M'/'F' and creates sex annotations
-        using PATO ontology terms.
+        using sex ID constants defined in the config module.
 
         Arguments:
             df (pl.DataFrame):
@@ -493,19 +495,18 @@ class Johnson2023Processor(BaseProcessor):
 
         sex_df = sex_df.with_columns(
             pl.when(pl.col("sex") == "male")
-            .then(pl.lit("M"))
+            .then(pl.lit(SEX_MALE_ID))
             .when(pl.col("sex") == "female")
-            .then(pl.lit("F"))
+            .then(pl.lit(SEX_FEMALE_ID))
             .otherwise(pl.col("sex"))
             .alias("normalized_sex")
         )
 
-        # Map to PATO terms (male: PATO:0000384, female: PATO:0000383)
         sex_records = sex_df.with_columns(
             pl.when(pl.col("normalized_sex") == "M")
-            .then(pl.lit("PATO:0000384"))
+            .then(pl.lit(SEX_MALE_ID))
             .when(pl.col("normalized_sex") == "F")
-            .then(pl.lit("PATO:0000383"))
+            .then(pl.lit(SEX_FEMALE_ID))
             .otherwise(pl.lit(None))
             .alias(COL_TERM_ID),
             pl.when(pl.col("normalized_sex") == "M")
