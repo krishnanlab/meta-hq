@@ -19,23 +19,23 @@ from metahq_setup.combiners.sra import SraCombiner
 from metahq_setup.combiners.study import StudyCombiner
 from metahq_setup.config import (
     GEO_COMBINED_BSON,
+    MONDO_NAMES_SYNONYMS,
     MONDO_OBO,
     MONDO_RELATIONS,
-    SAMPLE_COMBINED_BSON,
-    SERIES_COMBINED_BSON,
-    SOURCE_COUNT_SHIELD_OUTDIR,
-    SRA_COMBINED_BSON,
-    UBERON_OBO,
-    UBERON_RELATIONS,
-)
-from metahq_setup.config.config import (
-    MONDO_NAMES_SYNONYMS,
+    MONDO_SYSTEMS,
     OMICIDX_SAMPLE_TABLE,
     OMICIDX_SERIES_TABLE,
     ONTOLOGY_SEARCH_DB,
+    SAMPLE_COMBINED_BSON,
     SAMPLE_METADATA,
+    SERIES_COMBINED_BSON,
     SERIES_METADATA,
+    SOURCE_COUNT_SHIELD_OUTDIR,
+    SRA_COMBINED_BSON,
     UBERON_CL_NAMES_SYNONYMS,
+    UBERON_OBO,
+    UBERON_RELATIONS,
+    UBERON_SYSTEMS,
 )
 from metahq_setup.config.schema import DataPackageConfig
 from metahq_setup.ontology import Graph
@@ -58,6 +58,7 @@ class PipelineOrchestrator:
 
     def __init__(self, config: DataPackageConfig):
         self.config = config
+        self.specific = config.specific
         self.output_dir = config.data_dir / "processed"
         self.db_path = config.omicidx_path
         self.checkpoints = CheckpointManager(config.checkpoint_dir)
@@ -124,6 +125,32 @@ class PipelineOrchestrator:
         ``metahq_setup.yaml``.
         """
         stages: list[tuple[str, Callable]] = []
+        stages.append(
+            (
+                "extract__mondo__relations",
+                lambda: Graph.from_obo(MONDO_OBO)
+                .relations_matrix()
+                .save(MONDO_RELATIONS),
+            )
+        )
+        stages.append(
+            (
+                "extract__uberon__relations",
+                lambda: Graph.from_obo(UBERON_OBO)
+                .relations_matrix()
+                .save(UBERON_RELATIONS),
+            )
+        )
+        stages.append(
+            (
+                "build__ontology_search",
+                lambda: OntologySearchDbBuilder(
+                    mondo=MONDO_NAMES_SYNONYMS,
+                    uberon_cl=UBERON_CL_NAMES_SYNONYMS,
+                    out_db=ONTOLOGY_SEARCH_DB,
+                ).build(),
+            )
+        )
 
         for source_name in ProcessorRegistry.list_processors():
             if not self.config.get_processor_config(source_name).enabled:
@@ -161,7 +188,7 @@ class PipelineOrchestrator:
                     sra_bson=SRA_COMBINED_BSON,
                     db_path=self.db_path,
                 )
-                .clean()
+                .clean(specific=self.specific)
                 .save(SAMPLE_COMBINED_BSON),
             )
         )
@@ -173,7 +200,7 @@ class PipelineOrchestrator:
                     sample_combined_bson=SAMPLE_COMBINED_BSON,
                     db_path=self.db_path,
                 )
-                .clean()
+                .clean(specific=self.specific)
                 .save(SERIES_COMBINED_BSON),
             )
         )
@@ -187,32 +214,7 @@ class PipelineOrchestrator:
                 .save(SOURCE_COUNT_SHIELD_OUTDIR),
             )
         )
-        stages.append(
-            (
-                "extract__mondo__relations",
-                lambda: Graph.from_obo(MONDO_OBO)
-                .relations_matrix()
-                .save(MONDO_RELATIONS),
-            )
-        )
-        stages.append(
-            (
-                "extract__uberon__relations",
-                lambda: Graph.from_obo(UBERON_OBO)
-                .relations_matrix()
-                .save(UBERON_RELATIONS),
-            )
-        )
-        stages.append(
-            (
-                "build__ontology_search",
-                lambda: OntologySearchDbBuilder(
-                    mondo=MONDO_NAMES_SYNONYMS,
-                    uberon_cl=UBERON_CL_NAMES_SYNONYMS,
-                    out_db=ONTOLOGY_SEARCH_DB,
-                ).build(),
-            )
-        )
+
         stages.append(
             (
                 "build__metadata",

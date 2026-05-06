@@ -246,20 +246,34 @@ class DataPackageConfig(BaseModel):
     package_name: str = Field(description="Data package name")
     overwrite: bool = Field(default=False, description="Overwrite existing package")
     omicidx_path: Path = Field(description="Path to OmicIDX DuckDB database")
-    temp_dir: Path = Field(default=Path("/tmp/metahq_setup"), description="Temporary directory")
-    checkpoint_dir: Path = Field(default=Path(".checkpoints"), description="Checkpoint directory")
+    temp_dir: Path = Field(
+        default=Path("/tmp/metahq_setup"), description="Temporary directory"
+    )
+    checkpoint_dir: Path = Field(
+        default=Path(".checkpoints"), description="Checkpoint directory"
+    )
     log_dir: Path = Field(default=Path(".log"), description="Log directory")
+    specific: bool = Field(
+        default=False, description="Filter for most specific annotations."
+    )
 
     validation: ValidationConfig = Field(default_factory=ValidationConfig)
     processors: dict[str, ProcessorConfig] = Field(default_factory=dict)
     stages: dict[str, PipelineStageConfig] = Field(default_factory=dict)
     structure: list[FileEntry] = Field(default_factory=list)
 
-    clean_temp: bool = Field(default=True, description="Clean temp files after completion")
+    clean_temp: bool = Field(
+        default=True, description="Clean temp files after completion"
+    )
     verbose: bool = Field(default=False, description="Enable verbose output")
 
     @field_validator(
-        "data_dir", "output_dir", "omicidx_path", "temp_dir", "checkpoint_dir", "log_dir",
+        "data_dir",
+        "output_dir",
+        "omicidx_path",
+        "temp_dir",
+        "checkpoint_dir",
+        "log_dir",
         mode="before",
     )
     @classmethod

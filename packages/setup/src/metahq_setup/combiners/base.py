@@ -30,6 +30,7 @@ from typing import Any
 import bson
 import polars as pl
 
+from metahq_setup.combiners._term_filterer import TermFilterer
 from metahq_setup.config.config import (
     ACCESSIONS_KEY,
     ATTRIBUTE_KEYS,
@@ -41,11 +42,15 @@ from metahq_setup.config.config import (
     DELIMITER,
     ECODE_KEY,
     ID_KEY,
+    MONDO_RELATIONS,
+    MONDO_SYSTEMS,
     ORGANISM_KEY,
     SAMPLE_ACCESSION_KEY,
     SAMPLE_ID_PREFIX,
     STUDY_ACCESSION_KEY,
     STUDY_ID_PREFIX,
+    UBERON_RELATIONS,
+    UBERON_SYSTEMS,
     VALUE_KEY,
 )
 from metahq_setup.util.logging import setup_logger
@@ -149,13 +154,27 @@ class BaseAnnotationCombiner:
             grouped[COL_ACCESSION].n_unique(),
         )
 
-    def clean(self) -> "BaseAnnotationCombiner":
+    def clean(
+        self,
+        specific: bool = False,
+        uberon_relations: Path = UBERON_RELATIONS,
+        mondo_relations: Path = MONDO_RELATIONS,
+        uberon_systems: Path = UBERON_SYSTEMS,
+        mondo_systems: Path = MONDO_SYSTEMS,
+    ) -> "BaseAnnotationCombiner":
         """
         Remove empty and undesired annotation entries.
 
         Drops source entries where every value is in ``UNDESIRED`` or where
         the only key remaining after filtering is ``ecode``. Drops sample
         entries that have no substantive annotations after cleaning.
+
+        Arguments:
+            specific (bool):
+                If True, will remove general annotations and find the most
+                    specific from all sources.
+            filter_kwargs:
+
 
         Returns:
             (BaseAnnotationCombiner): self, for chaining.
@@ -182,6 +201,18 @@ class BaseAnnotationCombiner:
                 cleaned[id_] = cleaned_entry
 
         self.anno = cleaned
+
+        if specific:
+            self.logger.info("Filtering for most specific annotations...")
+            filterer = TermFilterer(
+                db=self.anno,
+                uberon_relations=uberon_relations,
+                uberon_systems=uberon_systems,
+                mondo_relations=mondo_relations,
+                mondo_systems=mondo_systems,
+            )
+            self.anno = filterer.get_specific_annotations()
+
         self.logger.info("Retained %d samples after cleaning.", len(self.anno))
         return self
 
