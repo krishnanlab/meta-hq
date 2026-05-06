@@ -4,12 +4,13 @@ Tools for using ontologies, constructing ontology graphs, and precomputing ontol
 
 from metahq_setup.ontology.graph import Graph, get_system_descendants
 from metahq_setup.ontology.ontology import Ontology, get_id_map
-from metahq_setup.ontology.relations import RelationsMatrix
+from metahq_setup.ontology.relations import RelationsLazyFrame, RelationsMatrix
 
 __all__ = [
     "Graph",
     "Ontology",
     "RelationsMatrix",
+    "RelationsLazyFrame",
     "get_id_map",
     "get_system_descendants",
 ]
