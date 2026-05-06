@@ -13,13 +13,23 @@ from pathlib import Path
 # ====== Annotation schema
 # ===============================================
 
-# Annotation type keys that hold source-keyed dicts (not scalars).
-ATTRIBUTE_KEYS: frozenset[str] = frozenset({"tissue", "disease", "sex", "age"})
+# MetaHQ BSON database key names
+SEX_KEY: str = "sex"
+AGE_KEY: str = "age"
+TISSUE_KEY: str = "tissue"
+DISEASE_KEY: str = "disease"
 ORGANISM_KEY: str = "organism"
 ACCESSIONS_KEY: str = "accession_ids"
 STUDY_ACCESSION_KEY: str = "series"
 SAMPLE_ACCESSION_KEY: str = "sample"
 PLATFORM_ACCESSION_KEY: str = "platform"
+
+# MetaHQ BSON database key sets
+ATTRIBUTE_KEYS: frozenset[str] = frozenset({TISSUE_KEY, DISEASE_KEY, SEX_KEY, AGE_KEY})
+ONTOLOGY_BASED_KEYS: frozenset[str] = frozenset({TISSUE_KEY, DISEASE_KEY})
+NON_ONTOLOGY_BASED_KEYS: frozenset[str] = frozenset(
+    {SEX_KEY, AGE_KEY, ACCESSIONS_KEY, ORGANISM_KEY}
+)
 
 # Attribute
 ID_KEY: str = "id"
