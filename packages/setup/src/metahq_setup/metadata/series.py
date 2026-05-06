@@ -34,6 +34,7 @@ class SeriesMetadataRetriever(BaseMetadataRetriever):
         self.logger.info("Checking queried fields...")
         fields = self._check_fields(fields, available_fields)
 
+        self.logger.info("Querying fields: %s", fields)
         query = self._build_base_query(fields, accession_name=accession_name)
         self._execute_query(query=query, entries=series)
 
