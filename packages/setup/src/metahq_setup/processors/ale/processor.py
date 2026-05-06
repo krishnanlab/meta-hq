@@ -19,6 +19,8 @@ from metahq_setup.config.config import (
     COL_TERM_NAME,
     ECODE_EXPERT,
     PROCESSED_DIR,
+    SEX_FEMALE_ID,
+    SEX_MALE_ID,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
@@ -29,8 +31,8 @@ from metahq_setup.util.age_groups import get_age_group
 
 # PATO term IDs and labels for sex annotations.
 _SEX_MAP = {
-    "F": ("PATO:0000383", "female"),
-    "M": ("PATO:0000384", "male"),
+    "F": (SEX_FEMALE_ID, "female"),
+    "M": (SEX_MALE_ID, "male"),
 }
 
 

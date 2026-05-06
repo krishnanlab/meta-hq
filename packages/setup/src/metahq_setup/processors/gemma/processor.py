@@ -23,6 +23,8 @@ from metahq_setup.config.config import (
     MONDO_OBO,
     MONDO_SYSTEMS,
     PROCESSED_DIR,
+    SEX_FEMALE_ID,
+    SEX_MALE_ID,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
@@ -39,6 +41,9 @@ CHARACTERISTICS_MAP = {
     "organism part": "tissue",
     "biological sex": "sex",
 }
+
+
+PATO_SEX_MAP = {"PATO:0000384": SEX_MALE_ID, "PATO:0000383": SEX_FEMALE_ID}
 
 
 @ProcessorRegistry.register
@@ -141,6 +146,7 @@ class GemmaProcessor(BaseProcessor):
             },
         )
         df = self._map_age_groups(df)
+        df = self._map_sex(df)
 
         self.logger.info("Parsed %d annotations from Gemma", len(df))
 
@@ -227,3 +233,7 @@ class GemmaProcessor(BaseProcessor):
             .unique()
             .sort(COL_ACCESSION)
         )
+
+    def _map_sex(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Map PATO terms to MetaHQ sex ID constants."""
+        return df.with_columns(pl.col(COL_TERM_ID).replace(PATO_SEX_MAP))

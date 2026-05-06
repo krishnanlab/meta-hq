@@ -24,6 +24,8 @@ from metahq_setup.config.config import (
     COL_TERM_ID,
     COL_TERM_NAME,
     ECODE_EXPERT,
+    SEX_FEMALE_ID,
+    SEX_MALE_ID,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
@@ -265,9 +267,9 @@ class BgeeProcessor(BaseProcessor):
         # Map to PATO terms
         sex_records = sex_df.with_columns(
             pl.when(pl.col("Expression mapped sex") == "male")
-            .then(pl.lit("PATO:0000384"))
+            .then(pl.lit(SEX_MALE_ID))
             .when(pl.col("Expression mapped sex") == "female")
-            .then(pl.lit("PATO:0000383"))
+            .then(pl.lit(SEX_FEMALE_ID))
             .otherwise(pl.lit(None))
             .alias(COL_TERM_ID),
             pl.when(pl.col("Expression mapped sex") == "male")

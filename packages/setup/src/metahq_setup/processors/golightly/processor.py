@@ -21,6 +21,8 @@ from metahq_setup.config.config import (
     ECODE_EXPERT,
     GOLIGHTLY_ZIP,
     PROCESSED_DIR,
+    SEX_FEMALE_ID,
+    SEX_MALE_ID,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
@@ -31,16 +33,16 @@ from metahq_setup.util.age_groups import get_age_group
 
 # PATO term IDs and labels for sex annotations.
 _SEX_MAP = {
-    "F": ("PATO:0000383", "female"),
-    "M": ("PATO:0000384", "male"),
+    "F": (SEX_FEMALE_ID, "female"),
+    "M": (SEX_MALE_ID, "male"),
 }
 
 # Normalizes raw sex strings to canonical M/F keys.
 _SEX_NORMALIZE = {
-    "male": "M",
-    "m": "M",
-    "female": "F",
-    "f": "F",
+    "male": SEX_MALE_ID,
+    "m": SEX_MALE_ID,
+    "female": SEX_FEMALE_ID,
+    "f": SEX_FEMALE_ID,
 }
 
 # Per-file metadata derived from cross-referencing zip file headers with the
