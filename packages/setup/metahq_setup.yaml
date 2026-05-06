@@ -8,6 +8,7 @@ params:
   data_dir: ./data # root for all input data (unprocessed/, helpers/, etc.)
   output_dir: ./data/data_packages # location of data packages
   package_name: metahq_data__v1.0.2 # final package name
+  specific: true # filter for most specific annotations
   overwrite: false # overwrite existing data package
   omicidx_path: ./data/omicidx.duckdb # path to OmicIDX DuckDB database
   temp_dir: /tmp/metahq_setup
@@ -25,34 +26,49 @@ validation:
 # -----------------------------------------------------------------
 # Per-source processor settings
 # Set enabled: false to skip a source entirely.
+# The name must match that defined in the class attribute of each processor.
+# Otherwise, the default settings for enabled and download are true.
 # -----------------------------------------------------------------
 processors:
-  ale:
+  ALE:
     enabled: true
-  bgee:
+    download: false
+  BGee:
     enabled: true
-  cello:
+    download: false
+  Cello:
     enabled: true
-  creeds:
+    download: false
+  CREEDS:
     enabled: true
-  disign_atlas:
+    download: false
+  DiSignAtlas:
     enabled: true
-  gemma:
+    download: false
+  Gemma:
     enabled: true
-  golightly:
+    download: false
+  Golightly_2018:
     enabled: true
-  gu:
+    download: false
+  Gu_2023:
     enabled: true
-  johnson_2023:
+    download: false
+  Johnson_2023:
     enabled: true
-  krishnanlab:
+    download: false
+  KrishnanLab:
     enabled: true
-  sirota_2011:
+    download: false
+  Sirota_2011:
     enabled: true
-  ursa:
+    download: false
+  URSA:
     enabled: true
-  ursahd:
+    download: false
+  URSA_HD:
     enabled: true
+    download: false
 
 # -----------------------------------------------------------------
 # Per-stage settings
@@ -123,12 +139,12 @@ structure:
 
   # Metadata
   - source: data/metadata/metadata__level-sample.parquet
-    destination: "{output_dir}/{package_name}/metadata/metadata__level-series.parquet"
+    destination: "{output_dir}/{package_name}/metadata/metadata__level-sample.parquet"
 
   - source: data/metadata/metadata__level-series.parquet
     destination: "{output_dir}/{package_name}/metadata/metadata__level-series.parquet"
 
-  - source: data/metadata/technology.parquet
+  - source: data/metadata/technologies.parquet
     destination: "{output_dir}/{package_name}/metadata/technologies.parquet"
 
 # -----------------------------------------------------------------
