@@ -94,7 +94,7 @@ class GemmaFetcher:
                     annotations[str(idx)] = data["data"]
 
             with open(output_path, "w") as f:
-                json.dump(annotations, f)
+                json.dump(annotations, f, indent=4)
 
             self.logger.info(
                 "Saved %d non-empty batches to %s", len(annotations), output_path
