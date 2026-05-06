@@ -32,10 +32,10 @@ from metahq_setup.config.config import (
 
 # Maps source name → default processed parquet path.
 SRA_SOURCES: dict[str, Path] = {
-    "bgee": BGEE_PROCESSED,
-    "cello": CELLO_PROCESSED,
-    "gu": GU_PROCESSED,
-    "johnson_2023": JOHNSON_2023_RNASEQ_PROCESSED,
+    "BGee": BGEE_PROCESSED,
+    "Cello": CELLO_PROCESSED,
+    "Gu_2023": GU_PROCESSED,
+    "Johnson_2023": JOHNSON_2023_RNASEQ_PROCESSED,
 }
 
 # Some mappings are not in omicidx for some reason. Manually define here

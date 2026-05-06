@@ -25,16 +25,16 @@ from metahq_setup.config.config import (
 
 # Maps source name → default processed parquet path.
 GEO_SOURCES: dict[str, Path] = {
-    "ale": ALE_PROCESSED,
-    "creeds": CREEDS_PROCESSED,
-    "disign_atlas": DISIGN_ATLAS_PROCESSED,
-    "gemma": GEMMA_PROCESSED,
-    "golightly": GOLIGHTLY_PROCESSED,
-    "johnson_2023": JOHNSON_2023_MICROARRAY_PROCESSED,
-    "krishnanlab": KRISHNANLAB_PROCESSED,
-    "sirota_2011": SIROTA_2011_PROCESSED,
-    "ursa": URSA_PROCESSED,
-    "ursahd": URSAHD_PROCESSED,
+    "ALE": ALE_PROCESSED,
+    "CREEDS": CREEDS_PROCESSED,
+    "DiSignAtlas": DISIGN_ATLAS_PROCESSED,
+    "Gemma": GEMMA_PROCESSED,
+    "Golightly_2018": GOLIGHTLY_PROCESSED,
+    "Johnson_2023": JOHNSON_2023_MICROARRAY_PROCESSED,
+    "KrishnanKab": KRISHNANLAB_PROCESSED,
+    "Sirota_2011": SIROTA_2011_PROCESSED,
+    "URSA": URSA_PROCESSED,
+    "URSA_HD": URSAHD_PROCESSED,
 }
 
 
