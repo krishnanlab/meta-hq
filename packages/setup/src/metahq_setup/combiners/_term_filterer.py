@@ -102,6 +102,9 @@ class TermFilterer:
         These negatively affect downstream applications
         such as generating labels.
         """
+        self.logger.info(
+            "Collecting tissue and disease descendants excluding self-relationships..."
+        )
         descendants = {
             "tissue": {
                 "all": self.uberon.get_descendants(),
