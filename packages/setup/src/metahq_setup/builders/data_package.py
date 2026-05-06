@@ -37,7 +37,8 @@ class DataPackageBuilder:
         if not self.dry_run:
             self.config.output_dir.mkdir(exist_ok=True, parents=True)
         self.logger.info(
-            "Made directory: [medium_purple1]%s[/medium_purple1]", self.config.output_dir
+            "Made directory: [medium_purple1]%s[/medium_purple1]",
+            self.config.output_dir,
         )
 
         for entry in self.config.structure:
@@ -88,11 +89,14 @@ class DataPackageBuilder:
 
     def _resolve_mkdir_exit_code(self, code: int | None):
         if code == 0:
-            self.logger.info("Outdir exists, but overwrite is set to false.")
-        elif code == 1:
+            self.logger.info("Outdir exists, but overwrite is set to false. Exiting...")
+            sys.exit(code)
+
+        if code == 1:
             self.logger.error(
                 "Data package directory checks failed unexpectedly. Please check your config.\n"
                 "Outdir: %s\nOverwrite: %s",
                 self.config.data_package_path,
                 self.config.overwrite,
             )
+            sys.exit(code)
