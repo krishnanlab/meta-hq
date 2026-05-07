@@ -7,7 +7,7 @@
 params:
   data_dir: ./data # root for all input data (unprocessed/, helpers/, etc.)
   output_dir: ./data/data_packages # location of data packages
-  package_name: metahq_data__v1.0.2 # final package name
+  package_name: metahq_data__v1.1.0 # final package name
   specific: true # filter for most specific annotations
   overwrite: false # overwrite existing data package
   omicidx_path: ./data/omicidx.duckdb # path to OmicIDX DuckDB database
