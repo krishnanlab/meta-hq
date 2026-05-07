@@ -23,6 +23,7 @@ from metahq_setup.config.config import (
     PLATFORM_ACCESSION_KEY,
     PROCESSED_STUDY_ANNOTATIONS,
     SAMPLE_COMBINED_BSON,
+    SRP_ACCESSION_KEY,
     STUDY_ACCESSION_KEY,
 )
 
@@ -105,6 +106,13 @@ class StudyCombiner(BaseAnnotationCombiner):
                             study_anno[key][PLATFORM_ACCESSION_KEY] = sample_anno[
                                 sample
                             ][key][PLATFORM_ACCESSION_KEY]
+
+                            # not every study has an SRP
+                            if SRP_ACCESSION_KEY in sample_anno[sample][key]:
+                                study_anno[key][SRP_ACCESSION_KEY] = sample_anno[
+                                    sample
+                                ][key][SRP_ACCESSION_KEY]
+
                             continue
 
                         # append a new platform ID if it already exits
@@ -202,10 +210,10 @@ class StudyCombiner(BaseAnnotationCombiner):
                     "Removed %d studies deleted from GEO.",
                     len(self.anno) - len(studies),
                 )
-            accesion_map, organism_map = self._build_enrichment_map(studies, db_path)
+            accession_map, organism_map = self._build_enrichment_map(studies, db_path)
 
             enriched = 0
-            for gse, ids in accesion_map.items():
+            for gse, ids in accession_map.items():
                 if gse in self.anno:
                     self.anno[gse]["accession_ids"].update(ids)
                     self.anno[gse]["organism"] = organism_map[gse]
@@ -236,11 +244,13 @@ class StudyCombiner(BaseAnnotationCombiner):
         for series, srp, platforms, organisms in rows:
             ids: dict[str, str] = {}
             if series:
-                ids["series"] = series
+                ids["series"] = series.strip()
             if platforms:
-                ids["platform"] = DELIMITER.join(platforms)
+                ids["platform"] = DELIMITER.join(platforms).strip()
             if srp:
-                ids["srp"] = DELIMITER.join(srp)
+                ids["srp"] = DELIMITER.join(srp).strip(
+                    '"'
+                )  # for some reason OmicIDX stores SRPs with double quotations
             if ids:
                 accession_map[series] = ids
 

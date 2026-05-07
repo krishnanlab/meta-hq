@@ -261,15 +261,15 @@ class SampleCombiner(BaseAnnotationCombiner):
         for gsm, series, platform, srx, srs, srp in rows:
             ids: dict[str, str] = {}
             if series:
-                ids["series"] = series
+                ids["series"] = series.strip('"')
             if platform:
-                ids["platform"] = platform
+                ids["platform"] = platform.strip('"')
             if srx:
-                ids["srx"] = srx
+                ids["srx"] = srx.strip('"')
             if srs:
-                ids["srs"] = srs
+                ids["srs"] = srs.strip('"')
             if srp:
-                ids["srp"] = srp
+                ids["srp"] = srp.strip('"')
             if ids:
                 result[gsm] = ids
 
