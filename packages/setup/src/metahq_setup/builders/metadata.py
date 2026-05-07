@@ -18,6 +18,7 @@ from metahq_setup.config import (
     SERIES_METADATA,
     SERIES_METADATA_FIELDS,
 )
+from metahq_setup.config.config import COL_ACCESSION, DELIMITER
 from metahq_setup.metadata.sample import SampleMetadataRetriever
 from metahq_setup.metadata.series import SeriesMetadataRetriever
 from metahq_setup.util.logging import setup_logger
@@ -64,12 +65,25 @@ class MetadataBuilder:
         # build sample metadata
         self.logger.info("Building sample metadata...")
         samples = self._load_metahq_db_entries(sample_db)
-        self.sample_metadata = self._query_sample(samples, SAMPLE_METADATA_FIELDS)
+        self.sample_metadata = self._query_sample(
+            samples, SAMPLE_METADATA_FIELDS
+        ).rename({COL_ACCESSION: "sample"})
 
         # build series metadata
         self.logger.info("Building series metadata...")
         series = self._load_metahq_db_entries(series_db)
-        self.series_metadata = self._query_series(series, SERIES_METADATA_FIELDS)
+        self.series_metadata = (
+            self._query_series(series, SERIES_METADATA_FIELDS)
+            .rename({COL_ACCESSION: "series"})
+            .with_columns(
+                pl.concat_str(
+                    ["Title: " + pl.col("title"), "Summary: " + pl.col("summary")],
+                    separator=f" {DELIMITER} ",
+                )
+                .alias("description")
+                .cast(pl.String)
+            )  # add description column for backwards compatibility
+        )
 
         return self
 
