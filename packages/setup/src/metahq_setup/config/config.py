@@ -23,6 +23,7 @@ ACCESSIONS_KEY: str = "accession_ids"
 STUDY_ACCESSION_KEY: str = "series"
 SAMPLE_ACCESSION_KEY: str = "sample"
 PLATFORM_ACCESSION_KEY: str = "platform"
+SRP_ACCESSION_KEY: str = "srp"
 
 # MetaHQ BSON database key sets
 ATTRIBUTE_KEYS: frozenset[str] = frozenset({TISSUE_KEY, DISEASE_KEY, SEX_KEY, AGE_KEY})
@@ -214,7 +215,6 @@ OMICIDX_COL_CHANNELS: str = "channels"
 SAMPLE_METADATA_FIELDS: list[str] = [
     "accession",
     "title",
-    "platform_id",
     "description",
     "source_name",
     "characteristics",
@@ -225,7 +225,6 @@ SERIES_METADATA_FIELDS: list[str] = [
     "summary",
     "overall_design",
     "sample_id",
-    "platform_id",
 ]
 
 # Metadata locations
