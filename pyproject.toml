@@ -4,7 +4,7 @@ members = ["packages/core", "packages/cli", "packages/setup"]
 [tool.uv.sources]
 metahq-core = { workspace = true }
 metahq-cli = { workspace = true }
-metahq-setup = { workspace = true }
+metahq-build = { workspace = true }
 
 [tool.uv]
 dev-dependencies = [
@@ -18,7 +18,7 @@ dev-dependencies = [
     "vulture",
     "metahq-cli",
     "metahq-core",
-    "metahq-setup",
+    "metahq-build",
     "mkdocs>=1.6.1",
     "pymdown-extensions",
     "mkdocstrings[python]",

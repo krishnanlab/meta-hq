@@ -1,10 +1,10 @@
-# metahq-setup
+# metahq-build
 
 Data pipeline package for building the MetaHQ database from raw biomedical annotations.
 
 ## Overview
 
-`metahq-setup` processes annotations from multiple biomedical data sources and assembles them into the MetaHQ data package — a set of BSON annotation databases, ontology relation matrices, and sample/series metadata Parquets consumed by `metahq-core` and `metahq-cli`.
+`metahq-build` processes annotations from multiple biomedical data sources and assembles them into the MetaHQ data package — a set of BSON annotation databases, ontology relation matrices, and sample/series metadata Parquets consumed by `metahq-core` and `metahq-cli`.
 
 Key capabilities:
 
@@ -43,7 +43,7 @@ OBO files must be present before running `extract__mondo__relations` and `extrac
 ### 1. Copy and edit the configuration
 
 ```bash
-cp packages/setup/metahq_setup.yaml my_config.yaml
+cp packages/setup/metahq_build.yaml my_config.yaml
 # Edit params, processors, and stages to suit your environment
 ```
 
@@ -52,15 +52,15 @@ cp packages/setup/metahq_setup.yaml my_config.yaml
 Gemma data is fetched from its REST API and must be downloaded before processing:
 
 ```bash
-metahq-setup download gemma
+metahq-build download gemma
 # Or to a custom path:
-metahq-setup download gemma --output /data/gemma.json
+metahq-build download gemma --output /data/gemma.json
 ```
 
 ### 3. Run the full pipeline
 
 ```bash
-metahq-setup package --config my_config.yaml
+metahq-build package --config my_config.yaml
 ```
 
 The pipeline runs all enabled stages in order, writing checkpoints after each one. If interrupted, re-run the same command and already-completed stages are skipped automatically.
@@ -69,17 +69,17 @@ The pipeline runs all enabled stages in order, writing checkpoints after each on
 
 ```bash
 # Skip everything before combine__geo
-metahq-setup package --config my_config.yaml --start-from combine__geo
+metahq-build package --config my_config.yaml --start-from combine__geo
 
 # Run only up through combine__sample
-metahq-setup package --config my_config.yaml --end-at combine__sample
+metahq-build package --config my_config.yaml --end-at combine__sample
 ```
 
 ## Configuration
 
-The pipeline is driven entirely by a `metahq_setup.yaml` file. The command `metahq-setup package --config <file>` is the only required argument.
+The pipeline is driven entirely by a `metahq_build.yaml` file. The command `metahq-build package --config <file>` is the only required argument.
 
-### Full example (`metahq_setup.yaml`)
+### Full example (`metahq_build.yaml`)
 
 ```yaml
 # -----------------------------------------------------------------
@@ -92,7 +92,7 @@ params:
   omicidx_path: ./data/omicidx.duckdb
   specific: true               # filter for most-specific ontology annotations per sample
   overwrite: false             # overwrite an existing package with the same name
-  temp_dir: /tmp/metahq_setup
+  temp_dir: /tmp/metahq_build
   checkpoint_dir: .checkpoints
   log_dir: .log
 
@@ -224,77 +224,77 @@ export METAHQ_SETUP_OMICIDX_PATH=/data/omicidx.duckdb
 
 ## CLI Reference
 
-### `metahq-setup package`
+### `metahq-build package`
 
 Run the complete build pipeline.
 
 ```bash
-metahq-setup package --config metahq_setup.yaml
-metahq-setup package --config metahq_setup.yaml --start-from combine__geo
-metahq-setup package --config metahq_setup.yaml --end-at combine__sample
-metahq-setup package --config metahq_setup.yaml --data-dir /data --output-dir /out
+metahq-build package --config metahq_build.yaml
+metahq-build package --config metahq_build.yaml --start-from combine__geo
+metahq-build package --config metahq_build.yaml --end-at combine__sample
+metahq-build package --config metahq_build.yaml --data-dir /data --output-dir /out
 ```
 
-### `metahq-setup process`
+### `metahq-build process`
 
 Process a single data source and write its Parquet to `data/processed/`.
 
 ```bash
-metahq-setup process ALE
-metahq-setup process ALE --output-dir /custom/output
-metahq-setup process ALE --no-validate    # skip output validation
-metahq-setup list-sources                 # show all registered processors
+metahq-build process ALE
+metahq-build process ALE --output-dir /custom/output
+metahq-build process ALE --no-validate    # skip output validation
+metahq-build list-sources                 # show all registered processors
 ```
 
-### `metahq-setup download`
+### `metahq-build download`
 
 Download raw data from external APIs.
 
 ```bash
-metahq-setup download gemma
-metahq-setup download gemma --output /data/gemma.json --max-studies 60000
+metahq-build download gemma
+metahq-build download gemma --output /data/gemma.json --max-studies 60000
 ```
 
-### `metahq-setup combine`
+### `metahq-build combine`
 
 Combine processed Parquets into annotation BSON files. Run after all relevant processors.
 
 ```bash
-metahq-setup combine geo     # combine GEO-based sources → geo_combined.bson
-metahq-setup combine sra     # combine SRA-based sources → sra_combined.bson (requires OmicIDX)
-metahq-setup combine sample  # merge GEO + SRA BSONs → combined__level-sample.bson
-metahq-setup combine series  # aggregate samples to study level → combined__level-series.bson
+metahq-build combine geo     # combine GEO-based sources → geo_combined.bson
+metahq-build combine sra     # combine SRA-based sources → sra_combined.bson (requires OmicIDX)
+metahq-build combine sample  # merge GEO + SRA BSONs → combined__level-sample.bson
+metahq-build combine series  # aggregate samples to study level → combined__level-series.bson
 ```
 
 Each sub-command accepts `--output` and source-specific path overrides; see `--help` for details.
 
-### `metahq-setup ontology`
+### `metahq-build ontology`
 
 ```bash
-metahq-setup ontology relations --obo_file data/ontology/mondo/mondo.obo.gz \
+metahq-build ontology relations --obo_file data/ontology/mondo/mondo.obo.gz \
     --outfile data/ontology/mondo/relations.parquet
 
-metahq-setup ontology search-db   # build the DuckDB ontology term search database
+metahq-build ontology search-db   # build the DuckDB ontology term search database
 ```
 
-### `metahq-setup metadata`
+### `metahq-build metadata`
 
 Query OmicIDX for sample or series metadata.
 
 ```bash
-metahq-setup metadata list-fields --level sample
-metahq-setup metadata list-fields --level series
+metahq-build metadata list-fields --level sample
+metahq-build metadata list-fields --level series
 
-metahq-setup metadata sample --fields accession,title,characteristics
-metahq-setup metadata series --fields accession,title,summary,overall_design
+metahq-build metadata sample --fields accession,title,characteristics
+metahq-build metadata series --fields accession,title,summary,overall_design
 ```
 
-### `metahq-setup status` / `metahq-setup clear-checkpoints`
+### `metahq-build status` / `metahq-build clear-checkpoints`
 
 ```bash
-metahq-setup status                       # show completed pipeline stages
-metahq-setup clear-checkpoints            # clear all checkpoints (prompts for confirmation)
-metahq-setup clear-checkpoints --from-stage combine__geo  # clear from a specific stage
+metahq-build status                       # show completed pipeline stages
+metahq-build clear-checkpoints            # clear all checkpoints (prompts for confirmation)
+metahq-build clear-checkpoints --from-stage combine__geo  # clear from a specific stage
 ```
 
 ## Pipeline Stages
@@ -320,7 +320,7 @@ Completed stages are checkpointed. Re-running the pipeline skips them unless `us
 ## Package Structure
 
 ```
-metahq_setup/
+metahq_build/
 ├── cli/              # Click command definitions
 ├── config/           # Pydantic schemas (DataPackageConfig) and path constants
 ├── processors/       # Data source processors (plugin system)
@@ -389,7 +389,7 @@ processors/
 ```python
 """My Source annotation processor."""
 
-from metahq_setup.processors.my_source.processor import MySourceProcessor
+from metahq_build.processors.my_source.processor import MySourceProcessor
 
 __all__ = ["MySourceProcessor"]
 ```
@@ -401,12 +401,12 @@ __all__ = ["MySourceProcessor"]
 ```python
 from pathlib import Path
 import polars as pl
-from metahq_setup.config.config import (
+from metahq_build.config.config import (
     COL_ACCESSION, COL_ATTRIBUTE, COL_ECODE, COL_TERM_ID, COL_TERM_NAME,
     ECODE_EXPERT, PROCESSED_DIR,
 )
-from metahq_setup.processors.base import BaseProcessor, ValidationError
-from metahq_setup.processors.registry import ProcessorRegistry
+from metahq_build.processors.base import BaseProcessor, ValidationError
+from metahq_build.processors.registry import ProcessorRegistry
 
 
 @ProcessorRegistry.register
@@ -458,7 +458,7 @@ The registry relies on the import to trigger `@ProcessorRegistry.register`. Add 
 
 ```python
 # In the import block:
-from metahq_setup.processors.my_source import MySourceProcessor
+from metahq_build.processors.my_source import MySourceProcessor
 
 # In __all__:
 "MySourceProcessor",
@@ -481,7 +481,7 @@ MY_SOURCE_PROCESSED: Path = PROCESSED_DIR / "my_source_processed.parquet"
 **For a GEO source** — edit `combiners/geo.py`:
 
 ```python
-from metahq_setup.config.config import MY_SOURCE_PROCESSED
+from metahq_build.config.config import MY_SOURCE_PROCESSED
 
 GEO_SOURCES: dict[str, Path] = {
     ...
@@ -492,7 +492,7 @@ GEO_SOURCES: dict[str, Path] = {
 **For an SRA source** — edit `combiners/sra.py`:
 
 ```python
-from metahq_setup.config.config import MY_SOURCE_PROCESSED
+from metahq_build.config.config import MY_SOURCE_PROCESSED
 
 SRA_SOURCES: dict[str, Path] = {
     ...
@@ -502,7 +502,7 @@ SRA_SOURCES: dict[str, Path] = {
 
 The combiner key must match `source_name` exactly — it becomes the source label stored in the BSON annotation database.
 
-### 7. Add the source to `metahq_setup.yaml`
+### 7. Add the source to `metahq_build.yaml`
 
 ```yaml
 processors:
@@ -516,13 +516,13 @@ The key must exactly match the `source_name` class attribute on the processor.
 ### 8. Test the processor in isolation
 
 ```bash
-metahq-setup process MySource
+metahq-build process MySource
 ```
 
 Or from Python:
 
 ```python
-from metahq_setup.processors import ProcessorRegistry
+from metahq_build.processors import ProcessorRegistry
 
 processor = ProcessorRegistry.get("MySource")
 df = processor.run()
@@ -536,7 +536,7 @@ print(df.head())
 ```bash
 pip install -e ".[dev]"
 pytest
-mypy src/metahq_setup
+mypy src/metahq_build
 ```
 
 ## Documentation

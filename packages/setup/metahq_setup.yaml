@@ -1,5 +1,5 @@
-# metahq-setup pipeline configuration
-# Pass to the build command with: metahq-setup build --config metahq_setup.yaml
+# metahq-build pipeline configuration
+# Pass to the build command with: metahq-build build --config metahq_build.yaml
 
 # -----------------------------------------------------------------
 # Parameters
@@ -11,7 +11,7 @@ params:
   specific: true # filter for most specific annotations
   overwrite: false # overwrite existing data package
   omicidx_path: ./data/omicidx.duckdb # path to OmicIDX DuckDB database
-  temp_dir: /tmp/metahq_setup
+  temp_dir: /tmp/metahq_build
   checkpoint_dir: .checkpoints
   log_dir: .log
 
