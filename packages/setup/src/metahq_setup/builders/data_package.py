@@ -89,7 +89,10 @@ class DataPackageBuilder:
 
     def _resolve_mkdir_exit_code(self, code: int | None):
         if code == 0:
-            self.logger.info("Outdir exists, but overwrite is set to false. Exiting...")
+            self.logger.info(
+                "Outdir exists (%s), but overwrite is set to false. Exiting...",
+                self.config.data_package_path,
+            )
             sys.exit(code)
 
         if code == 1:
