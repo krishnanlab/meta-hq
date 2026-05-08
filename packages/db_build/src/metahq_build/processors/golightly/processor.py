@@ -271,7 +271,11 @@ class GolightlyProcessor(BaseProcessor):
                 }
             )
 
-        result = pl.concat(parts, how="diagonal_relaxed").unique().sort(COL_ACCESSION)
+        result = (
+            pl.concat(parts, how="diagonal_relaxed")
+            .unique()
+            .sort([COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME])
+        )
 
         self.logger.info("Processed %d annotations from Golightly", len(result))
 

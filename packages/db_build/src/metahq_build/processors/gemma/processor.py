@@ -176,7 +176,9 @@ class GemmaProcessor(BaseProcessor):
         )
 
         before = len(df)
-        df = df.filter(pl.col(COL_ACCESSION).str.starts_with("GSE")).sort(COL_ACCESSION)
+        df = df.filter(pl.col(COL_ACCESSION).str.starts_with("GSE")).sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
         self.logger.info(
             "Filtered %d non-GSE annotations (kept %d)",
             before - len(df),

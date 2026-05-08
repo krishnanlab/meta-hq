@@ -83,7 +83,7 @@ class Sirota2011Processor(BaseProcessor):
         tissue_records = self._build_tissue(samples)
 
         result_df = pl.concat([disease_records, tissue_records], how="vertical").sort(
-            COL_ACCESSION
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
         )
 
         self.logger.info(

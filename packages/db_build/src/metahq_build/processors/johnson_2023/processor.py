@@ -81,11 +81,15 @@ class Johnson2023Processor(BaseProcessor):
 
         # Process microarray data (GPL570/GEO)
         self.logger.info("Processing microarray dataset...")
-        microarray_df = self._process_microarray(microarray_path).sort(COL_ACCESSION)
+        microarray_df = self._process_microarray(microarray_path).sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
 
         # Process RNA-seq data (refine.bio/SRA)
         self.logger.info("Processing RNA-seq dataset...")
-        rnaseq_df = self._process_rnaseq(rnaseq_path).sort(COL_ACCESSION)
+        rnaseq_df = self._process_rnaseq(rnaseq_path).sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
 
         self.logger.info(
             "Produced %s microarray and %s RNA-seq annotations.",

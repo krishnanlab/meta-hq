@@ -29,6 +29,7 @@ from typing import Any
 
 import bson
 import polars as pl
+from numpy._core.fromnumeric import sort
 
 from metahq_build.combiners._term_filterer import TermFilterer
 from metahq_build.config.config import (
@@ -57,6 +58,14 @@ from metahq_build.util.logging import setup_logger
 
 # Values treated as absent / undesired during the clean step.
 UNDESIRED: frozenset = frozenset({"na", "", "NA", "none", "not annotated"})
+
+
+def sort_dict_by_keys(item: dict):
+    """Recursively sort a nested dictionary by keys."""
+    return {
+        k: sort_dict_by_keys(v) if isinstance(v, dict) else v
+        for k, v in sorted(item.items())
+    }
 
 
 class BaseAnnotationCombiner:
@@ -224,7 +233,7 @@ class BaseAnnotationCombiner:
             output_path (Path):
                 Destination file path (parent directories are created if needed).
         """
-        self.anno = dict(sorted(self.anno.items()))
+        self.anno = sort_dict_by_keys(self.anno)
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
