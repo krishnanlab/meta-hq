@@ -1,5 +1,5 @@
 [tool.uv.workspace]
-members = ["packages/core", "packages/cli", "packages/build"]
+members = ["packages/core", "packages/cli", "packages/db_build"]
 
 [tool.uv.sources]
 metahq-core = { workspace = true }

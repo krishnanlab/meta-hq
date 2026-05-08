@@ -24,7 +24,7 @@ dev = [
     { name = "isort" },
     { name = "marimo", specifier = ">=0.23.3" },
     { name = "matplotlib", specifier = ">=3.10.9" },
-    { name = "metahq-build", editable = "packages/build" },
+    { name = "metahq-build", editable = "packages/db_build" },
     { name = "metahq-cli", editable = "packages/cli" },
     { name = "metahq-core", editable = "packages/core" },
     { name = "mkdocs", specifier = ">=1.6.1" },
@@ -1004,7 +1004,7 @@ wheels = [
 [[package]]
 name = "metahq-build"
 version = "0.1.0"
-source = { editable = "packages/build" }
+source = { editable = "packages/db_build" }
 dependencies = [
     { name = "click" },
     { name = "duckdb" },
