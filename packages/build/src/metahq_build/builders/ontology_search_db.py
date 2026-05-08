@@ -13,6 +13,7 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
+from metahq_build.config import ONTOLOGY_DIR, ONTOLOGY_SEARCH_DB
 from metahq_build.util.logging import setup_logger
 
 _TABLE_TERMS = "ontology_terms"
@@ -88,13 +89,10 @@ class OntologySearchDbBuilder:
         )
 
     def _resolve_paths(self) -> tuple[Path, Path, Path]:
-        from metahq_core.util.supported import get_ontology_dirs, get_ontology_search_db
 
-        mondo = self.mondo or get_ontology_dirs("mondo") / "names_synonyms.json"
-        uberon_cl = (
-            self.uberon_cl or get_ontology_dirs("uberon") / "names_synonyms.json"
-        )
-        out_db = self.out_db or get_ontology_search_db()
+        mondo = self.mondo or ONTOLOGY_DIR / "mondo" / "names_synonyms.json"
+        uberon_cl = self.uberon_cl or ONTOLOGY_DIR / "uberon" / "names_synonyms.json"
+        out_db = self.out_db or ONTOLOGY_SEARCH_DB
         return mondo, uberon_cl, out_db
 
     def _load_namelists(self, mondo: Path, uberon_cl: Path) -> list[dict]:
@@ -210,8 +208,7 @@ class OntologySearchDbBuilder:
                 f"CREATE OR REPLACE TABLE {_quote_ident(_TABLE_DOCS)} AS SELECT * FROM df_docs"
             )
 
-            conn.execute(
-                f"""
+            conn.execute(f"""
             PRAGMA create_fts_index('{_quote_ident(_TABLE_DOCS)}', 'term_id',
                 'name',
                 'syn_exact',
@@ -220,7 +217,6 @@ class OntologySearchDbBuilder:
                 'syn_related',
                 stemmer = 'none', stopwords = 'none', ignore = '([^0-9a-z+/-])+',
                 strip_accents = 1, lower = 1, overwrite = 1)
-            """
-            )
+            """)
 
             conn.execute(_SEARCH_MACRO_SQL.read_text())
