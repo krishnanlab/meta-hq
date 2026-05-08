@@ -299,7 +299,7 @@ class DiSignAtlasProcessor(BaseProcessor):
 
         # only keep GSM sample annotations
         result_df = result_df.filter(pl.col(COL_ACCESSION).str.starts_with("GSM")).sort(
-            COL_ACCESSION
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
         )
 
         self.logger.info(

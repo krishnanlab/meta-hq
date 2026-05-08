@@ -125,7 +125,9 @@ class BgeeProcessor(BaseProcessor):
                 }
             )
 
-        result_df = pl.concat(all_species_data, how="vertical").sort(COL_ACCESSION)
+        result_df = pl.concat(all_species_data, how="vertical").sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
 
         self.logger.info(
             "Produced %s total annotations across %s species",

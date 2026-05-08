@@ -143,7 +143,9 @@ class CREEDSProcessor(BaseProcessor):
                 skipped_system_level,
             )
 
-        result_df = pl.DataFrame(records).sort(COL_ACCESSION)
+        result_df = pl.DataFrame(records).sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
 
         self.logger.info(
             "Produced %s disease annotations from CREEDS (%s perturbation + %s control)",

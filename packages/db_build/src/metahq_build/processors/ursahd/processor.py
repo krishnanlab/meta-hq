@@ -100,7 +100,7 @@ class URSAHDProcessor(BaseProcessor):
         result_df = pl.concat(
             [disease_records, tissue_records, age_records, sex_records],
             how="vertical",
-        ).sort(COL_ACCESSION)
+        ).sort([COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME])
 
         self.logger.info(
             "Produced %s total annotations from URSA-HD.", result_df.height

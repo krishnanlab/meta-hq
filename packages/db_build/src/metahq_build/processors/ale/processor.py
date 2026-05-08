@@ -100,7 +100,7 @@ class ALEProcessor(BaseProcessor):
         age_df = self._build_age(df)
 
         result = pl.concat([tissue_df, sex_df, age_df], how="vertical").sort(
-            COL_ACCESSION
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
         )
 
         self.logger.info("Processed %d annotations from ALE", len(result))

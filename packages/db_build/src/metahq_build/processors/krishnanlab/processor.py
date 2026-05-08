@@ -70,7 +70,9 @@ class KrishnanLabProcessor(BaseProcessor):
         tissue_records = self._build_tissue(df)
         disease_records = self._build_disease(df)
 
-        result_df = pl.concat([tissue_records, disease_records], how="vertical")
+        result_df = pl.concat([tissue_records, disease_records], how="vertical").sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
 
         self.logger.info(
             "Produced %s total annotations from KrishnanLab.", result_df.height

@@ -130,7 +130,7 @@ class CellOProcessor(BaseProcessor):
             pl.col(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
             pl.lit(ECODE_EXPERT).alias(COL_ECODE),
-        ).sort(COL_ACCESSION)
+        ).sort([COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME])
 
         self.logger.info(
             "Produced %s tissue annotations across %s unique samples.",
