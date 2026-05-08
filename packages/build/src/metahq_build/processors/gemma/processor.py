@@ -94,7 +94,7 @@ class GemmaProcessor(BaseProcessor):
 
         self.logger.info("Processing Gemma annotations from %s...", input_path)
 
-        with open(input_path) as f:
+        with open(input_path, "r", encoding="utf-8") as f:
             raw_data = json.load(f)
 
         records = []
