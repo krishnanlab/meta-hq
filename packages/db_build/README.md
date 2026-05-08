@@ -18,7 +18,7 @@ Key capabilities:
 
 ```bash
 # Install from source (within the monorepo)
-cd packages/setup
+cd packages/db_build
 pip install -e .
 
 # With development dependencies
@@ -29,12 +29,12 @@ pip install -e ".[dev]"
 
 The pipeline expects a specific directory layout under `data/`. Before running:
 
-| Required file | Source | Notes |
-|---|---|---|
-| `data/omicidx.duckdb` | OmicIDX project | Provides SRA→GSM ID mapping and GEO/SRA metadata |
-| `data/ontology/mondo/mondo.obo.gz` | [MONDO releases](https://github.com/monarch-initiative/mondo/releases) | Used to extract disease relations |
-| `data/ontology/uberon_ext/uberon_ext.obo.gz` | [UBERON releases](https://github.com/obophenotype/uberon/releases) | Used to extract tissue/cell-type relations |
-| `data/unprocessed/` | See `data/unprocessed/README.md` | Raw input files for each processor |
+| Required file                                | Source                                                                 | Notes                                            |
+| -------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------ |
+| `data/omicidx.duckdb`                        | OmicIDX project                                                        | Provides SRA→GSM ID mapping and GEO/SRA metadata |
+| `data/ontology/mondo/mondo.obo.gz`           | [MONDO releases](https://github.com/monarch-initiative/mondo/releases) | Used to extract disease relations                |
+| `data/ontology/uberon_ext/uberon_ext.obo.gz` | [UBERON releases](https://github.com/obophenotype/uberon/releases)     | Used to extract tissue/cell-type relations       |
+| `data/unprocessed/`                          | See `data/unprocessed/README.md`                                       | Raw input files for each processor               |
 
 OBO files must be present before running `extract__mondo__relations` and `extract__uberon__relations` stages. The `data/unprocessed/README.md` lists download links for every raw source file.
 
@@ -43,7 +43,7 @@ OBO files must be present before running `extract__mondo__relations` and `extrac
 ### 1. Copy and edit the configuration
 
 ```bash
-cp packages/setup/metahq_build.yaml my_config.yaml
+cp packages/db_build/metahq_build.yaml my_config.yaml
 # Edit params, processors, and stages to suit your environment
 ```
 
@@ -86,12 +86,12 @@ The pipeline is driven entirely by a `metahq_build.yaml` file. The command `meta
 # Parameters
 # -----------------------------------------------------------------
 params:
-  data_dir: ./data             # root for all input data (unprocessed/, helpers/, ontology/, etc.)
-  output_dir: ./data/data_packages  # where finished packages are written
+  data_dir: ./data # root for all input data (unprocessed/, helpers/, ontology/, etc.)
+  output_dir: ./data/data_packages # where finished packages are written
   package_name: metahq_data__v1.0.2 # directory name for the built package
   omicidx_path: ./data/omicidx.duckdb
-  specific: true               # filter for most-specific ontology annotations per sample
-  overwrite: false             # overwrite an existing package with the same name
+  specific: true # filter for most-specific ontology annotations per sample
+  overwrite: false # overwrite an existing package with the same name
   temp_dir: /tmp/metahq_build
   checkpoint_dir: .checkpoints
   log_dir: .log
@@ -100,8 +100,8 @@ params:
 # Validation
 # -----------------------------------------------------------------
 validation:
-  strict: true        # fail on any validation error
-  warn_only: false    # set true to log errors without stopping
+  strict: true # fail on any validation error
+  warn_only: false # set true to log errors without stopping
   check_ontology_coverage: true
 
 # -----------------------------------------------------------------
@@ -204,14 +204,14 @@ verbose: false
 
 ### Key parameters
 
-| Parameter | Description |
-|---|---|
-| `data_dir` | Root directory containing `unprocessed/`, `processed/`, `ontology/`, `helpers/`, `metadata/` subdirectories |
-| `output_dir` | Where the assembled data package directory is written |
-| `package_name` | Name of the output package directory |
-| `omicidx_path` | Path to the OmicIDX DuckDB file (required for SRA ID mapping and metadata) |
-| `specific` | When `true`, the combiner keeps only the most-specific ontology term per sample per attribute |
-| `overwrite` | When `false` (default), the pipeline exits if the output package already exists |
+| Parameter      | Description                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| `data_dir`     | Root directory containing `unprocessed/`, `processed/`, `ontology/`, `helpers/`, `metadata/` subdirectories |
+| `output_dir`   | Where the assembled data package directory is written                                                       |
+| `package_name` | Name of the output package directory                                                                        |
+| `omicidx_path` | Path to the OmicIDX DuckDB file (required for SRA ID mapping and metadata)                                  |
+| `specific`     | When `true`, the combiner keeps only the most-specific ontology term per sample per attribute               |
+| `overwrite`    | When `false` (default), the pipeline exits if the output package already exists                             |
 
 ### Environment variable overrides
 
@@ -301,19 +301,19 @@ metahq-build clear-checkpoints --from-stage combine__geo  # clear from a specifi
 
 Stages run in this order. Each stage name is the key used in the `stages:` config block and with `--start-from` / `--end-at`.
 
-| Stage name | Description |
-|---|---|
-| `extract__mondo__relations` | Parse MONDO OBO and write `relations.parquet` |
-| `extract__uberon__relations` | Parse UBERON OBO and write `relations.parquet` |
-| `build__ontology_search` | Build the DuckDB ontology term search database |
-| `process__<source_name>` | Run each enabled processor (e.g., `process__ALE`, `process__BGee`) |
-| `combine__geo` | Combine all GEO-sourced Parquets into `geo_combined.bson` |
-| `combine__sra` | Map SRA IDs to GSM and combine into `sra_combined.bson` |
-| `combine__sample` | Merge GEO + SRA BSONs into `combined__level-sample.bson` |
-| `combine__series` | Aggregate samples to series level in `combined__level-series.bson` |
-| `build__shield_endpoints` | Generate shield.io JSON badge endpoints |
-| `build__metadata` | Query OmicIDX and write sample/series metadata Parquets |
-| `build__data_package` | Copy all outputs to the final package directory structure |
+| Stage name                   | Description                                                        |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `extract__mondo__relations`  | Parse MONDO OBO and write `relations.parquet`                      |
+| `extract__uberon__relations` | Parse UBERON OBO and write `relations.parquet`                     |
+| `build__ontology_search`     | Build the DuckDB ontology term search database                     |
+| `process__<source_name>`     | Run each enabled processor (e.g., `process__ALE`, `process__BGee`) |
+| `combine__geo`               | Combine all GEO-sourced Parquets into `geo_combined.bson`          |
+| `combine__sra`               | Map SRA IDs to GSM and combine into `sra_combined.bson`            |
+| `combine__sample`            | Merge GEO + SRA BSONs into `combined__level-sample.bson`           |
+| `combine__series`            | Aggregate samples to series level in `combined__level-series.bson` |
+| `build__shield_endpoints`    | Generate shield.io JSON badge endpoints                            |
+| `build__metadata`            | Query OmicIDX and write sample/series metadata Parquets            |
+| `build__data_package`        | Copy all outputs to the final package directory structure          |
 
 Completed stages are checkpointed. Re-running the pipeline skips them unless `use_checkpoint: false` is set for that stage or checkpoints are cleared.
 
@@ -338,28 +338,28 @@ metahq_build/
 
 Annotations keyed by GSM or GSE IDs. Combined by `GeoCombiner`.
 
-| Source name | Processor class | Annotations |
-|---|---|---|
-| `ALE` | `ALEProcessor` | tissue, sex, age |
-| `CREEDS` | `CREEDSProcessor` | disease |
-| `DiSignAtlas` | `DiSignAtlasProcessor` | disease, tissue |
-| `Gemma` | `GemmaProcessor` | tissue, disease, sex, age |
-| `Golightly_2018` | `GolightlyProcessor` | sex |
-| `Johnson_2023` | `Johnson2023Processor` | disease, tissue, sex, age |
-| `KrishnanLab` | `KrishnanLabProcessor` | tissue, disease |
-| `Sirota_2011` | `Sirota2011Processor` | disease, tissue |
-| `URSA` | `URSAProcessor` | tissue |
-| `URSA_HD` | `URSAHDProcessor` | disease, tissue, age, sex |
+| Source name      | Processor class        | Annotations               |
+| ---------------- | ---------------------- | ------------------------- |
+| `ALE`            | `ALEProcessor`         | tissue, sex, age          |
+| `CREEDS`         | `CREEDSProcessor`      | disease                   |
+| `DiSignAtlas`    | `DiSignAtlasProcessor` | disease, tissue           |
+| `Gemma`          | `GemmaProcessor`       | tissue, disease, sex, age |
+| `Golightly_2018` | `GolightlyProcessor`   | sex                       |
+| `Johnson_2023`   | `Johnson2023Processor` | disease, tissue, sex, age |
+| `KrishnanLab`    | `KrishnanLabProcessor` | tissue, disease           |
+| `Sirota_2011`    | `Sirota2011Processor`  | disease, tissue           |
+| `URSA`           | `URSAProcessor`        | tissue                    |
+| `URSA_HD`        | `URSAHDProcessor`      | disease, tissue, age, sex |
 
 ### SRA sources
 
 Annotations keyed by SRR/SRX IDs, mapped to GSM before combining. Combined by `SraCombiner`.
 
-| Source name | Processor class | Annotations |
-|---|---|---|
-| `BGee` | `BgeeProcessor` | tissue |
-| `Cello` | `CellOProcessor` | tissue |
-| `Gu_2023` | `GuProcessor` | disease, tissue |
+| Source name    | Processor class        | Annotations               |
+| -------------- | ---------------------- | ------------------------- |
+| `BGee`         | `BgeeProcessor`        | tissue                    |
+| `Cello`        | `CellOProcessor`       | tissue                    |
+| `Gu_2023`      | `GuProcessor`          | disease, tissue           |
 | `Johnson_2023` | `Johnson2023Processor` | disease, tissue, sex, age |
 
 ---
@@ -442,13 +442,13 @@ class MySourceProcessor(BaseProcessor):
 
 Every processor must return a Polars DataFrame with exactly these five columns:
 
-| Column | Type | Values |
-|---|---|---|
-| `accession` | `str` | GEO sample ID (`GSM…`) or SRA run/experiment ID (`SRR…`, `SRX…`) |
-| `attribute` | `str` | `"tissue"` \| `"disease"` \| `"sex"` \| `"age"` |
-| `term_id` | `str` | Ontology term ID (e.g., `UBERON:0000948`, `MONDO:0004994`), or `"M"` / `"F"` for sex, or an age group string for age |
-| `term_name` | `str` | Human-readable term label |
-| `ecode` | `str` | `"expert-curated"` \| `"crowd-sourced"` |
+| Column      | Type  | Values                                                                                                               |
+| ----------- | ----- | -------------------------------------------------------------------------------------------------------------------- |
+| `accession` | `str` | GEO sample ID (`GSM…`) or SRA run/experiment ID (`SRR…`, `SRX…`)                                                     |
+| `attribute` | `str` | `"tissue"` \| `"disease"` \| `"sex"` \| `"age"`                                                                      |
+| `term_id`   | `str` | Ontology term ID (e.g., `UBERON:0000948`, `MONDO:0004994`), or `"M"` / `"F"` for sex, or an age group string for age |
+| `term_name` | `str` | Human-readable term label                                                                                            |
+| `ecode`     | `str` | `"expert-curated"` \| `"crowd-sourced"`                                                                              |
 
 Control/normal samples in disease annotations use `term_id = "MONDO:0000000"` and `term_name = "control"`.
 
@@ -541,7 +541,7 @@ mypy src/metahq_build
 
 ## Documentation
 
-Source Code: [https://github.com/krishnanlab/meta-hq/tree/main/packages/setup](https://github.com/krishnanlab/meta-hq/tree/main/packages/setup)
+Source Code: [https://github.com/krishnanlab/meta-hq/tree/main/packages/db_build](https://github.com/krishnanlab/meta-hq/tree/main/packages/db_build)
 
 ## License
 
