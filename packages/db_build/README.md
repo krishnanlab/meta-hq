@@ -16,6 +16,15 @@ Key capabilities:
 
 ## Installation
 
+Use the repo `uv environment` (preferred)
+
+```bash
+# from meta-hq repo root
+uv sync --dev
+```
+
+Or pip:
+
 ```bash
 # Install from source (within the monorepo)
 cd packages/db_build
@@ -43,7 +52,7 @@ OBO files must be present before running `extract__mondo__relations` and `extrac
 ### 1. Copy and edit the configuration
 
 ```bash
-cp packages/db_build/metahq_build.yaml my_config.yaml
+cp data/build_config.yaml my_config.yaml
 # Edit params, processors, and stages to suit your environment
 ```
 
