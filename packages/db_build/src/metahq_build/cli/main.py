@@ -427,7 +427,13 @@ def combine_sra(output, metadata_db):
     default=None,
     help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
 )
-def combine_sample(output, geo, sra, metadata_db):
+@click.option(
+    "--specific",
+    type=bool,
+    default=True,
+    help="Apply to filter for specific annotations.",
+)
+def combine_sample(output, geo, sra, metadata_db, specific):
     """
     Merge GEO and SRA combined annotations into a single sample-level BSON.
 
@@ -464,9 +470,9 @@ def combine_sample(output, geo, sra, metadata_db):
         click.echo("")
 
         combiner = SampleCombiner()
-        combiner.combine(
-            geo_bson=geo_path, sra_bson=sra_path, db_path=db_path
-        ).clean().save(output_path)
+        combiner.combine(geo_bson=geo_path, sra_bson=sra_path, db_path=db_path).clean(
+            specific=specific
+        ).save(output_path)
 
         click.secho(f"✓ Saved to {output_path}", fg="green")
 
@@ -489,14 +495,22 @@ def combine_sample(output, geo, sra, metadata_db):
     default=None,
     help="Path to sample combined BSON (default: data/processed/combined__level-sample.bson)",
 )
-def combine_series(sample, output):
+@click.option(
+    "--specific",
+    type=bool,
+    default=True,
+    help="Apply to filter for specific annotations.",
+)
+def combine_series(sample, output, specific):
     from metahq_build.combiners.study import StudyCombiner
     from metahq_build.config import SAMPLE_COMBINED_BSON, SERIES_COMBINED_BSON
 
     output_path = Path(output) if output else SERIES_COMBINED_BSON
     sample_path = Path(sample) if sample else SAMPLE_COMBINED_BSON
     combiner = StudyCombiner()
-    combiner.combine(sample_combined_bson=sample_path).save(output_path)
+    combiner.combine(sample_combined_bson=sample_path).clean(specific=specific).save(
+        output_path
+    )
 
 
 @main.group()
