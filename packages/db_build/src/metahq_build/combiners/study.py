@@ -79,9 +79,11 @@ class StudyCombiner(BaseAnnotationCombiner):
         )
 
         for study, samples in study2sample.items():
+
             study_anno = (
                 {} if study not in self.anno else self.anno[study]
             )  # don't override existing annotations
+
             for sample in samples:
 
                 if sample not in sample_anno:
@@ -195,6 +197,14 @@ class StudyCombiner(BaseAnnotationCombiner):
             data = pl.read_parquet(data)
             self.add_source(source_name, data)
 
+        self._remove_deleted_studies()
+
+    def _remove_deleted_studies(self):
+        """Remove any deleted studies from the annotations."""
+        self.anno = {
+            k: v for k, v in self.anno.items() if k not in self.deleted_studies
+        }
+
     def _enrich_study_forward_annotations(self, db_path: Path):
         self.logger.info("Enriching study-forward accession IDs...")
         if len(self.anno) == 0:
@@ -205,18 +215,32 @@ class StudyCombiner(BaseAnnotationCombiner):
             studies = [
                 study for study in self.anno if study not in self.deleted_studies
             ]
+
             if len(studies) != len(self.anno):
                 self.logger.info(
                     "Removed %d studies deleted from GEO.",
                     len(self.anno) - len(studies),
                 )
-            accession_map, organism_map = self._build_enrichment_map(studies, db_path)
+            accession_map = self._build_enrichment_map(studies, db_path)
 
             enriched = 0
-            for gse, ids in accession_map.items():
+            for row in accession_map.iter_rows(named=True):
+                gse = row[ACCESSIONS_KEY]
+                srp = row[SRP_ACCESSION_KEY]
+                platform = row[PLATFORM_ACCESSION_KEY]
+                accession_ids = {
+                    STUDY_ACCESSION_KEY: gse,
+                    SRP_ACCESSION_KEY: srp,
+                    PLATFORM_ACCESSION_KEY: platform,
+                }
+                accession_ids = {
+                    k: v for k, v in accession_ids.items() if v is not None
+                }
+                organism = row[ORGANISM_KEY]
+
                 if gse in self.anno:
-                    self.anno[gse]["accession_ids"].update(ids)
-                    self.anno[gse]["organism"] = organism_map[gse]
+                    self.anno[gse]["accession_ids"].update(accession_ids)
+                    self.anno[gse]["organism"] = organism
                     enriched += 1
 
             self.logger.info(
@@ -225,39 +249,45 @@ class StudyCombiner(BaseAnnotationCombiner):
                 ", ".join(PROCESSED_STUDY_ANNOTATIONS),
             )
 
-    def _build_enrichment_map(
-        self, gse_ids: list[str], db_path: Path
-    ) -> tuple[dict, dict]:
+    def _build_enrichment_map(self, gse_ids: list[str], db_path: Path) -> pl.DataFrame:
         """Retrieve SRP/project IDs and organism information from OmicIDX."""
         with duckdb.connect(db_path, read_only=True) as conn:
-            rows = conn.execute(
-                """
-                    SELECT accession, sra_studies, platform_id, sample_organism
+            accession_map = (
+                conn.execute(
+                    f"""
+                    SELECT
+                        accession AS {ACCESSIONS_KEY},
+                        sra_studies AS {SRP_ACCESSION_KEY},
+                        platform_id AS {PLATFORM_ACCESSION_KEY},
+                        sample_organism AS {ORGANISM_KEY}
                     FROM src_geo_series
                     WHERE accession = ANY($1)
+                    ORDER BY accession
                 """,
-                [gse_ids],
-            ).fetchall()
-
-        accession_map: dict[str, dict[str, str]] = {}
-        organism_map: dict[str, str] = {}
-        for series, srp, platforms, organisms in rows:
-            ids: dict[str, str] = {}
-            if series:
-                ids["series"] = series.strip()
-            if platforms:
-                ids["platform"] = DELIMITER.join(platforms).strip()
-            if srp:
-                ids["srp"] = DELIMITER.join(srp).strip(
-                    '"'
-                )  # for some reason OmicIDX stores SRPs with double quotations
-            if ids:
-                accession_map[series] = ids
-
-            if organisms:
-                organism_map[series] = DELIMITER.join(
-                    [organism.lower() for organism in organisms]
+                    [gse_ids],
                 )
+                .pl()
+                .lazy()
+            )
+
+        # convert empty lists to null join filled lists
+        accession_map = (
+            accession_map.with_columns(
+                pl.when(pl.col(pl.List).list.len() == 0)
+                .then(None)
+                .otherwise(
+                    pl.col(pl.List)
+                    .list.join(separator=DELIMITER)
+                    .str.strip_chars()
+                    .str.strip_chars(
+                        '"'
+                    )  # for some reason OmicIDX stores SRPs with double quotations
+                )
+                .name.keep()
+            )
+            .with_columns(pl.col(ORGANISM_KEY).str.to_lowercase().name.keep())
+            .sort(ACCESSIONS_KEY)
+        ).collect(engine="streaming")
 
         self.logger.info(
             "Retrieved accession IDs for %d of %d study-forward annotations from OmicIDX",
@@ -267,11 +297,11 @@ class StudyCombiner(BaseAnnotationCombiner):
         if not len(accession_map) == len(gse_ids):
             self.logger.warning(
                 "Unable to enrich %d studies: %s. Check if these have been deleted or retired from GEO.",
-                len(gse_ids) - len(accession_map),
-                set(gse_ids) - set(accession_map.keys()),
+                len(gse_ids) - accession_map.height,
+                set(gse_ids) - set(accession_map[ACCESSIONS_KEY].to_list()),
             )
 
-        return accession_map, organism_map
+        return accession_map
 
     def _study2sample_map(self, anno) -> dict[str, list[str]]:
         """Retrieve all studies represented in the combined sample annotations."""
