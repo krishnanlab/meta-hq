@@ -8,17 +8,20 @@ import bson
 import polars as pl
 
 from metahq_build.config import (
+    COL_ACCESSION,
+    DELIMITER,
     OMICIDX_DB,
     OMICIDX_SAMPLE_TABLE,
     OMICIDX_SERIES_TABLE,
+    SAMPLE_ACCESSION_KEY,
     SAMPLE_COMBINED_BSON,
     SAMPLE_METADATA,
     SAMPLE_METADATA_FIELDS,
     SERIES_COMBINED_BSON,
     SERIES_METADATA,
     SERIES_METADATA_FIELDS,
+    STUDY_ACCESSION_KEY,
 )
-from metahq_build.config.config import COL_ACCESSION, DELIMITER
 from metahq_build.metadata.sample import SampleMetadataRetriever
 from metahq_build.metadata.series import SeriesMetadataRetriever
 from metahq_build.util.logging import setup_logger
@@ -65,16 +68,18 @@ class MetadataBuilder:
         # build sample metadata
         self.logger.info("Building sample metadata...")
         samples = self._load_metahq_db_entries(sample_db)
-        self.sample_metadata = self._query_sample(
-            samples, SAMPLE_METADATA_FIELDS
-        ).rename({COL_ACCESSION: "sample"})
+        self.sample_metadata = (
+            self._query_sample(samples, SAMPLE_METADATA_FIELDS)
+            .rename({COL_ACCESSION: SAMPLE_ACCESSION_KEY})
+            .sort(SAMPLE_ACCESSION_KEY)
+        )
 
         # build series metadata
         self.logger.info("Building series metadata...")
         series = self._load_metahq_db_entries(series_db)
         self.series_metadata = (
             self._query_series(series, SERIES_METADATA_FIELDS)
-            .rename({COL_ACCESSION: "series"})
+            .rename({COL_ACCESSION: STUDY_ACCESSION_KEY})
             .with_columns(
                 pl.concat_str(
                     ["Title: " + pl.col("title"), "Summary: " + pl.col("summary")],
@@ -83,7 +88,7 @@ class MetadataBuilder:
                 .alias("description")
                 .cast(pl.String)
             )  # add description column for backwards compatibility
-        )
+        ).sort(STUDY_ACCESSION_KEY)
 
         return self
 
