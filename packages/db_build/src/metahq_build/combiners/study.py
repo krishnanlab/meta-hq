@@ -25,6 +25,7 @@ from metahq_build.config.config import (
     SAMPLE_COMBINED_BSON,
     SRP_ACCESSION_KEY,
     STUDY_ACCESSION_KEY,
+    VALID_ORGANISMS,
 )
 
 
@@ -58,6 +59,8 @@ class StudyCombiner(BaseAnnotationCombiner):
 
         # add collapsed to new study-forward annotations
         self._add_collapsed_sample_annotations(sample_combined_bson)
+
+        self._remove_invalid_organisms()
 
         return self
 
@@ -326,6 +329,34 @@ class StudyCombiner(BaseAnnotationCombiner):
             data = bson.decode(f.read())
 
         return data
+
+    def _remove_invalid_organisms(self) -> None:
+        """Remove study annotations to organisms not included in MetaHQ."""
+        before = len(self.anno)
+
+        new_anno = {}
+        for series, entry in self.anno.items():
+            organisms = entry[ORGANISM_KEY].split(DELIMITER)
+
+            updated_organisms: set[str] = set()
+            for organism in organisms:
+                if organism in VALID_ORGANISMS:
+                    updated_organisms.add(organism)
+
+            # drop the series annotation if there are no valid organisms
+            if len(updated_organisms) > 0:
+                new_anno[series] = entry
+                new_anno[series][ORGANISM_KEY] = DELIMITER.join(
+                    sorted(updated_organisms)
+                )
+
+        self.anno = new_anno
+
+        after = len(self.anno)
+        diff = before - after
+
+        if diff > 0:
+            self.logger.info("Removed %d series based on organism filtering.", diff)
 
     @property
     def deleted_studies(self) -> list[str]:
