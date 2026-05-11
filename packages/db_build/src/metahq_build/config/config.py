@@ -23,7 +23,21 @@ ACCESSIONS_KEY: str = "accession_ids"
 STUDY_ACCESSION_KEY: str = "series"
 SAMPLE_ACCESSION_KEY: str = "sample"
 PLATFORM_ACCESSION_KEY: str = "platform"
+SRX_ACCESSION_KEY: str = "srx"
+SRS_ACCESSION_KEY: str = "srs"
 SRP_ACCESSION_KEY: str = "srp"
+
+# all accession IDs stored in the ACCESSIONS_KEY in a MetaHQ database
+ACCESSION_ID_KEYS: frozenset = frozenset(
+    {
+        STUDY_ACCESSION_KEY,
+        SAMPLE_ACCESSION_KEY,
+        PLATFORM_ACCESSION_KEY,
+        SRX_ACCESSION_KEY,
+        SRS_ACCESSION_KEY,
+        SRP_ACCESSION_KEY,
+    }
+)
 
 # MetaHQ BSON database key sets
 ATTRIBUTE_KEYS: frozenset[str] = frozenset({TISSUE_KEY, DISEASE_KEY, SEX_KEY, AGE_KEY})
@@ -40,6 +54,18 @@ DELIMITER: str = "|"
 ATTRIBUTE_ANNOTATION_KEYS: list[str] = [ID_KEY, VALUE_KEY, ECODE_KEY]
 
 ALL_METAHQ_KEYS: list[str] = list(ATTRIBUTE_KEYS) + [ORGANISM_KEY, ACCESSIONS_KEY]
+
+# Organisms to include
+VALID_ORGANISMS: frozenset[str] = frozenset(
+    {
+        "homo sapiens",
+        "mus musculus",
+        "caenorhabditis elegans",
+        "rattus norvegicus",
+        "danio rerio",
+        "drosophila melanogaster",
+    }
+)
 
 # Control IDs
 CONTROL_ID: str = "MONDO:0000000"
@@ -190,6 +216,9 @@ BGEE_FLY: Path = (
 # Samples deleted from GEO to remove from MetaHQ
 DELTED_SAMPLES: Path = HELPERS_DIR / "deleted_samples.txt"
 DELTED_STUDIES: Path = HELPERS_DIR / "deleted_studies.txt"
+
+# Miscellaneous samples to remove. See helpers README for explanations
+MISC_SAMPLES_TO_REMOVE: Path = HELPERS_DIR / "misc_samples_to_remove.txt"
 
 # Study-forward annotations
 PROCESSED_STUDY_ANNOTATIONS: dict[str, Path] = {"Gemma": GEMMA_PROCESSED}
