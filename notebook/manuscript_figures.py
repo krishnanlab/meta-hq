@@ -410,18 +410,18 @@ def _(ATTRIBUTES, record_entries_per_attribute, sample_db, series_db):
 
     # ========== Sample ============
     sample_records_microarray = record_entries_per_attribute(
-        sample_db, ATTRIBUTES, verbose=True, title="Sample Records:", tech="microarray"
+        sample_db, ATTRIBUTES, verbose=True, title="Sample Records (microarray):", tech="microarray"
     )
     sample_records_rnaseq = record_entries_per_attribute(
-        sample_db, ATTRIBUTES, verbose=True, title="Sample Records:", tech="rnaseq"
+        sample_db, ATTRIBUTES, verbose=True, title="Sample Records (rnaseq):", tech="rnaseq"
     )
 
     # ========== Study ============
     study_records_microarray = record_entries_per_attribute(
-        series_db, ATTRIBUTES, verbose=True, title="Study Records:", tech="microarray"
+        series_db, ATTRIBUTES, verbose=True, title="Study Records (microarray):", tech="microarray"
     )
     study_records_rnaseq = record_entries_per_attribute(
-        series_db, ATTRIBUTES, verbose=True, title="Study Records:", tech="rnaseq"
+        series_db, ATTRIBUTES, verbose=True, title="Study Records (rnaseq):", tech="rnaseq"
     )
     return (
         sample_records_microarray,
@@ -635,12 +635,12 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
         import matplotlib.colors as mcolors
         from matplotlib.patches import Patch
 
-        # Function to lighten a color
+        TECHNOLOGY_COLORS = {
+            "microarray": "dimgrey",
+            "rnaseq": "lightgrey",
+        }
+
         def lighten_color(color, amount=0.5):
-            """
-            Lightens the given color by multiplying (1-luminosity) by the given amount.
-            amount=0 returns black, amount=1 returns white, amount=0.5 is a good default.
-            """
             try:
                 c = mcolors.to_rgb(color)
             except ValueError:
@@ -648,37 +648,39 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
             c = [(1 - amount) * comp + amount for comp in c]
             return c
 
+        def get_tech_color(tech, base_color):
+            if tech == "microarray":
+                return base_color  # dark (original color)
+            elif tech == "rnaseq":
+                return lighten_color(base_color, amount=0.6)  # light
+            else:
+                return base_color  # fallback
+
         fig, axes = plt.subplots(2, 2, figsize=figsize)
         axes = axes.flatten()
 
-        # Get unique technologies to determine labels
         technologies = df["technology"].unique().sort().to_list()
-
-        # Get all unique sources and sort alphabetically
         all_sources = sorted(df["source"].unique().to_list())
 
         for idx, attribute in enumerate(attributes):
             df_filtered = df.filter(pl.col("attribute") == attribute)
 
-            # Cast source to Enum with alphabetical order
             df_plot = df_filtered.with_columns(
                 pl.col("source").cast(pl.Enum(all_sources))
             ).sort("source")
 
-            # Create dark and light versions of the attribute color
             dark_color = COLORS[attribute]
-            light_color = lighten_color(COLORS[attribute], amount=0.6)
+            palette = {tech: get_tech_color(tech, dark_color) for tech in technologies}
 
             sns.barplot(
-                data=df_plot.to_pandas(), 
-                y="count", 
-                x="source", 
+                data=df_plot.to_pandas(),
+                y="count",
+                x="source",
                 hue="technology",
                 ax=axes[idx],
-                palette=[light_color, dark_color]  # Dark for first tech, light for second
+                palette=palette,
             )
 
-            # Remove legend from individual subplots
             if axes[idx].get_legend():
                 axes[idx].get_legend().remove()
 
@@ -688,7 +690,7 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
             axes[idx].set_title(f'{attribute.capitalize()}', fontsize=14)
             axes[idx].set_xlabel('', fontsize=12)
             axes[idx].set_ylabel(ylabel, fontsize=12)
-            axes[idx].set_ylim(0, (ceil(df_plot['count'].max() / ylim_scale) * ylim_scale))  
+            axes[idx].set_ylim(0, (ceil(df_plot['count'].max() / ylim_scale) * ylim_scale))
             axes[idx].grid(axis='y', alpha=0.3)
 
             axes[idx].yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f'{int(x):,}'))
@@ -701,13 +703,16 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
                     tech_total = df_filtered.filter(pl.col("technology") == tech)["count"].sum()
                     print(f"  {tech}: {tech_total:,}")
 
-        # Create custom legend with black/grey to represent dark/light
+        # Legend reflects actual technology colors
         legend_elements = [
-            Patch(facecolor='dimgrey', label=technologies[0]),  # Dark grey for first technology
-            Patch(facecolor='lightgrey', label=technologies[1])  # Light grey for second technology
+            Patch(
+                facecolor=get_tech_color(tech, "dimgrey"),  # use grey as neutral base for legend
+                label=tech
+            )
+            for tech in technologies
         ]
 
-        fig.legend(handles=legend_elements, title='Technology', loc='upper right', 
+        fig.legend(handles=legend_elements, title='Technology', loc='upper right',
                    bbox_to_anchor=(0.98, 0.86), fontsize=10)
 
         plt.suptitle(title, fontsize=14, fontweight='bold')
@@ -723,7 +728,7 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
 @app.cell
 def _(mo):
     mo.md(r"""
-    ## Sample
+    "\"## Sample
     """)
     return
 
@@ -763,7 +768,7 @@ def _(ATTRIBUTES, FMT, plot_source_counts_by_attribute, study_source_counts):
         save=True,
         outfile=f"figures/source_counts_by_attribute__level-study__tech-all.{FMT}",
         dpi=500,
-        ylim_scale=5000,
+        ylim_scale=1000,
     )
     return
 
