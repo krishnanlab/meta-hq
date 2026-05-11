@@ -4,10 +4,11 @@
 
 levels=("sample" "series")
 attributes=("tissues" "diseases")
-technologies=("rnaseq", "microarray")
+technologies=("rnaseq" "microarray")
 organisms=("human" "mouse" "rat" "zebrafish" "worm" "fly")
 
 outdir="results/mass_query"
+[ -d "$outdir" ] || mkdir "$outdir"
 
 for level in "${levels[@]}"; do
     echo "Level: ${level}"
@@ -19,10 +20,8 @@ for level in "${levels[@]}"; do
                 echo "Species: ${species}"
                 metahq retrieve "$attribute" \
                     --terms "all" --output "${outdir}/level-${level}__attribute-${attribute}__tech-${tech}__species-${species}" \
-                    --filters "species=${species},tech=${tech},ecode=any" --level "$level" --mode annotate \
+                    --filters "species=${species},tech=${tech},ecode=any" --level "$level" --mode annotate
             done
         done
     done
 done
-
-python scripts/combine_tissue_disease_annotations.py

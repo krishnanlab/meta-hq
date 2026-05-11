@@ -15,12 +15,12 @@ import polars as pl
 TERM_PREFIXES: list[str] = ["UBERON", "CL", "MONDO"]
 
 
-def save_unique_terms(terms: set[str], outfile: Path):
+def save_unique_terms(terms: set[str] | list[str], outfile: Path):
     """Save unique terms to txt file."""
     if not outfile.parent.exists():
         outfile.parent.mkdir(exist_ok=True, parents=True)
 
-    with open(outfile, "r", encoding="utf-8") as f:
+    with open(outfile, "w", encoding="utf-8") as f:
         for term in terms:
             f.write(f"{term}\n")
 
@@ -54,10 +54,12 @@ def main():
         term_columns = [col for col in columns if col.split(":")[0] in TERM_PREFIXES]
 
         lf = lf.select(term_columns)
-        valid_terms = set(lf.select(pl.col("*").is_in([1]).any()).collect().columns)
+        has_anno = lf.select(pl.col("*").is_in([1]).any()).collect()
+
+        valid_terms = {col for col, val in has_anno.row(0, named=True).items() if val}
         all_terms.update(valid_terms)
 
-    save_unique_terms(all_terms, args.outfile)
+    save_unique_terms(sorted(all_terms), args.outfile)
 
 
 if __name__ == "__main__":
