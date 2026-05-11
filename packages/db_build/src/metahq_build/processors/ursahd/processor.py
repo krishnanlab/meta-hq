@@ -13,6 +13,7 @@ from pathlib import Path
 import polars as pl
 
 from metahq_build.config.config import (
+    ATTRIBUTE_KEYS,
     COL_ACCESSION,
     COL_ATTRIBUTE,
     COL_ECODE,
@@ -349,7 +350,7 @@ class URSAHDProcessor(BaseProcessor):
             .select(
                 pl.col("GSMID").alias(COL_ACCESSION),
                 pl.lit("age").alias(COL_ATTRIBUTE),
-                pl.lit("na").alias(COL_TERM_ID),
+                pl.col("age_group").alias(COL_TERM_ID),
                 pl.col("age_group").alias(COL_TERM_NAME),
                 pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
@@ -418,6 +419,17 @@ class URSAHDProcessor(BaseProcessor):
                 pl.col("sex").alias(COL_TERM_NAME),
                 pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
+        )
+
+        sex_df = sex_df.with_columns(
+            pl.when(pl.col(COL_TERM_NAME) == SEX_FEMALE_ID)
+            .then(pl.lit(SEX_FEMALE_ID))
+            .otherwise(
+                pl.when(pl.col(COL_TERM_NAME) == SEX_MALE_ID)
+                .then(pl.lit(SEX_MALE_ID))
+                .otherwise(pl.lit(None))
+            )
+            .alias(COL_TERM_ID),
         )
 
         self.logger.info(
