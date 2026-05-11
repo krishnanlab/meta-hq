@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script will retrieve all tissue and disease LABELS in MetaHQ
+# This script will retrieve all propagated tissue and disease annotations in MetaHQ
 
 levels=("sample" "series")
 attributes=("tissues" "diseases")
@@ -19,7 +19,7 @@ for level in "${levels[@]}"; do
                 echo "Species: ${species}"
                 metahq retrieve "$attribute" \
                     --terms "all" --output "${outdir}/level-${level}__attribute-${attribute}__tech-${tech}__species-${species}" \
-                    --filters "species=${species},tech=${tech},ecode=any" --level "$level" --mode label \
+                    --filters "species=${species},tech=${tech},ecode=any" --level "$level" --mode annotate \
             done
         done
     done
