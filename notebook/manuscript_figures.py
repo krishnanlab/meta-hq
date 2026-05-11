@@ -56,7 +56,12 @@ def _(Any, BSON, Path):
         with open(file, "rb") as bf:
             return BSON(bf.read()).decode(**kwargs)
 
-    return (load_bson,)
+    def load_txt(file: Path | str, **kwargs) -> list[str]:
+        """Load txt file."""
+        with open(file, "r", **kwargs) as f:
+            return [line.strip() for line in f.readlines()]
+
+    return load_bson, load_txt
 
 
 @app.cell
@@ -64,18 +69,29 @@ def _(Path):
     # define constants
     ANNOTATIONS_DIR = Path("data/processed")
     ATTRIBUTES = ["tissue", "disease", "sex", "age"]
+
     METADATA_DIR = Path("data/metadata")
     PLATFORMS_FILE = METADATA_DIR / "technologies.parquet"
+
+    RESULTS_DIR: Path = Path("results")
+    UNIQUE_PROPAGATED_TERMS: Path = RESULTS_DIR / "unique_propagated_tissue_disease_terms.txt"
 
     # plotting
     COLORS = {'tissue': 'steelblue', 'disease': 'coral', 'sex': 'mediumseagreen', 'age': 'mediumpurple'}
     FMT = "png"
-    return ANNOTATIONS_DIR, ATTRIBUTES, COLORS, FMT, PLATFORMS_FILE
+    return (
+        ANNOTATIONS_DIR,
+        ATTRIBUTES,
+        COLORS,
+        FMT,
+        PLATFORMS_FILE,
+        UNIQUE_PROPAGATED_TERMS,
+    )
 
 
 @app.cell
 def _(ANNOTATIONS_DIR, load_bson):
-    # load the databases
+    ""# load the databases
     sample_db = load_bson(ANNOTATIONS_DIR / "combined__level-sample.bson")
     series_db = load_bson(ANNOTATIONS_DIR / "combined__level-series.bson")
 
@@ -650,11 +666,11 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
 
         def get_tech_color(tech, base_color):
             if tech == "microarray":
-                return base_color  # dark (original color)
+                return base_color
             elif tech == "rnaseq":
-                return lighten_color(base_color, amount=0.6)  # light
+                return lighten_color(base_color, amount=0.6)
             else:
-                return base_color  # fallback
+                return base_color
 
         fig, axes = plt.subplots(2, 2, figsize=figsize)
         axes = axes.flatten()
@@ -703,10 +719,9 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
                     tech_total = df_filtered.filter(pl.col("technology") == tech)["count"].sum()
                     print(f"  {tech}: {tech_total:,}")
 
-        # Legend reflects actual technology colors
         legend_elements = [
             Patch(
-                facecolor=get_tech_color(tech, "dimgrey"),  # use grey as neutral base for legend
+                facecolor=get_tech_color(tech, "dimgrey"),
                 label=tech
             )
             for tech in technologies
@@ -728,7 +743,7 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
 @app.cell
 def _(mo):
     mo.md(r"""
-    "\"## Sample
+    ## Sample
     """)
     return
 
@@ -835,19 +850,19 @@ def _(mo):
 
 
 @app.cell
-def _(pl):
-    all_propagated_annotations = pl.scan_parquet("results/all_tissue_disease_propagated_annotations.parquet")
+def _(UNIQUE_PROPAGATED_TERMS: "Path", load_txt):
+    unique_propagated_terms = load_txt(UNIQUE_PROPAGATED_TERMS)
 
     for attribute in ["tissue", "disease"]:
-        n_unique = (
-            all_propagated_annotations
-            .filter(pl.col("attribute") == attribute)
-            .select("variable")
-            .unique()
-            .collect()
-            .height
-        )
-        print(f"Number of unique {attribute}s in propagated annotations: {n_unique}")
+
+        terms = set()
+        for term in unique_propagated_terms:
+            if (attribute == "tissue") and (term.startswith("UBERON") or term.startswith("CL")):
+                terms.add(term)
+            if (attribute == "disease") and (term.startswith("MONDO")):
+                terms.add(term)
+
+        print(f"Number of unique {attribute}s in propagated annotations: {len(terms)}")
     return
 
 
