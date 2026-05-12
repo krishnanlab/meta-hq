@@ -22,7 +22,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./packages/db_build
+        working-directory: .
 
     steps:
       - uses: actions/checkout@v4
@@ -36,5 +36,5 @@ jobs:
         run: uv sync --all-packages
 
       - name: Run tests
-        working-directory: ./packages/db_build
-        run: uv run pytest tests/ -v
+        working-directory: .
+        run: uv run pytest ./packages/db_build/tests/ -v
