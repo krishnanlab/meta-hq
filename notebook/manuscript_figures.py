@@ -19,6 +19,7 @@ def _(mo):
 
 @app.cell
 def _():
+    import re
     from collections import defaultdict
     from math import ceil
     from pathlib import Path
@@ -26,6 +27,7 @@ def _():
 
     import marimo as mo
     import matplotlib.pyplot as plt
+    import numpy as np
     import polars as pl
     import seaborn as sns
     from bson import BSON
@@ -42,8 +44,10 @@ def _():
         defaultdict,
         from_contents,
         mo,
+        np,
         pl,
         plt,
+        re,
         sns,
         ticker,
     )
@@ -75,6 +79,7 @@ def _(Path):
 
     RESULTS_DIR: Path = Path("results")
     UNIQUE_PROPAGATED_TERMS: Path = RESULTS_DIR / "unique_propagated_tissue_disease_terms.txt"
+    OVERLAP_RESULTS = list(RESULTS_DIR.glob("overlap*"))
 
     # plotting
     COLORS = {'tissue': 'steelblue', 'disease': 'coral', 'sex': 'mediumseagreen', 'age': 'mediumpurple'}
@@ -85,6 +90,7 @@ def _(Path):
         COLORS,
         FMT,
         PLATFORMS_FILE,
+        RESULTS_DIR,
         UNIQUE_PROPAGATED_TERMS,
     )
 
@@ -863,6 +869,238 @@ def _(UNIQUE_PROPAGATED_TERMS: "Path", load_txt):
                 terms.add(term)
 
         print(f"Number of unique {attribute}s in propagated annotations: {len(terms)}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Annotation overlap across sources
+    """)
+    return
+
+
+@app.cell
+def _(Literal, Path, RESULTS_DIR: "Path", pl, pmi_from_cooccurrence, re):
+    def match_pattern(text: str, pattern: str) -> str:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1)
+        else:
+            return ""
+
+
+    def get_overlap_results(
+        dir: Path,
+        overlap_type: str,
+        level: Literal["sample", "series"],
+        attribute_pattern: str = r"attribute-(tissue|disease|sex|age)",
+        level_pattern: str = r"level-(sample|series)",
+        pmi: bool = False,
+        separator="\t",
+        **pmi_kwargs,
+    ) -> dict[str, pl.DataFrame]:
+        results: dict[str, pl.DataFrame] = {}
+
+        files = list(RESULTS_DIR.glob(f"{overlap_type}*"))
+
+        for file in files:
+
+            file_level = match_pattern(file.stem, level_pattern)
+            if file_level != level:
+                continue
+
+            attribute = match_pattern(file.stem, attribute_pattern)
+            df = pl.read_csv(file, separator=separator)
+            if pmi:
+                values = pmi_from_cooccurrence(df.to_numpy(), **pmi_kwargs)
+                print(values)
+                df = pl.DataFrame(values, schema=df.columns)
+                print(df)
+            
+            results[attribute] = df
+
+        if len(results) == 0:
+            print("No files found that met conditions:")
+            print(f"Directory: {dir}")
+            print(f"Overlap type: {overlap_type}")
+            print(f"Level: {level}")
+            print(f"Attribute pattern: {attribute_pattern}")
+            print(f"Level pattern: {level_pattern}")
+            print(f"Files: {files}")
+            raise RuntimeError()
+
+        return results
+
+    return (get_overlap_results,)
+
+
+@app.cell
+def _(np):
+    def pmi_from_cooccurrence(x: np.typing.NDArray, positive: bool = False):
+        """Compute pointwise mutual information for all pairs from a 
+        symmetric co-occurrence matrix.
+    
+        Arguments:
+            x (NDArray):
+                2D array-like, symmetric count matrix
+            positive (bool):
+                If True, return PPMI
+    
+        Returns:
+            (NDArray): square 2D numpy array of PMI values
+        """
+        x = np.array(x, dtype=float)
+
+        total = x.sum()
+        marginals = x.sum(axis=1)
+
+        joint = x / total
+        outer_marginals = np.outer(marginals, marginals) / (total ** 2)
+
+        with np.errstate(divide='ignore', invalid='ignore'):
+            pmi = np.where(
+                joint > 0,
+                np.log2(joint / outer_marginals),
+                -np.inf
+            )
+
+        if positive:
+            pmi = np.maximum(pmi, 0)
+
+        np.fill_diagonal(pmi, np.nan)
+        return pmi
+
+    return (pmi_from_cooccurrence,)
+
+
+@app.cell
+def _(np, pl, plt, sns):
+    def plot_overlap_heatmap(
+        overlap_results: dict[str, pl.DataFrame],
+        subplot_shape: tuple[int, int] = (2, 2),
+        figsize_per_plot: tuple[int, int] = (5, 5),
+        order: list[str] | None = None,
+        **heatmap_kwargs,
+    ):
+        nrows, ncols = subplot_shape
+        fig, axes = plt.subplots(
+            nrows,
+            ncols,
+            figsize=(figsize_per_plot[0] * ncols, figsize_per_plot[1] * nrows),
+        )
+
+        if isinstance(axes, np.ndarray):
+            axes_flat = axes.flatten()
+        else:
+            axes_flat = [axes]
+
+        if isinstance(order, list):
+            overlap_results = {k: overlap_results[k] for k in order}
+
+        for ax, (group_name, df) in zip(axes_flat, overlap_results.items()):
+            df = (
+                df.with_columns(pl.Series("source", df.columns))
+                .to_pandas()
+                .set_index("source", drop=True)
+            )
+
+            sns.heatmap(df, ax=ax, **heatmap_kwargs)
+            ax.set_title(group_name.capitalize())
+
+            xticks = ax.get_xticklabels()
+            ax.set_xticklabels(labels=xticks, rotation=45, ha='right', rotation_mode='anchor')
+
+        for ax in axes_flat[len(overlap_results):]:
+            ax.axis("off")
+
+        plt.tight_layout()
+        plt.show()
+
+    return (plot_overlap_heatmap,)
+
+
+@app.cell
+def _():
+    OVERLAP_ORDER = ["tissue", "disease", "sex", "age"]
+    OVERLAP_CMAP = "Blues"
+    return OVERLAP_CMAP, OVERLAP_ORDER
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Sample
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Absolute counts
+    """)
+    return
+
+
+@app.cell
+def _(
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    RESULTS_DIR: "Path",
+    get_overlap_results,
+    plot_overlap_heatmap,
+):
+    sample_overlap_count = get_overlap_results(RESULTS_DIR, overlap_type="overlap_count", level="sample")
+    plot_overlap_heatmap(sample_overlap_count, order=OVERLAP_ORDER, cmap=OVERLAP_CMAP)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Percent overlap
+    """)
+    return
+
+
+@app.cell
+def _(
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    RESULTS_DIR: "Path",
+    get_overlap_results,
+    plot_overlap_heatmap,
+):
+    sample_overlap_percent = get_overlap_results(RESULTS_DIR, overlap_type="overlap_percent", level="sample")
+    plot_overlap_heatmap(sample_overlap_percent, order=OVERLAP_ORDER, cmap=OVERLAP_CMAP)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### PMI
+    """)
+    return
+
+
+@app.cell
+def _(
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    RESULTS_DIR: "Path",
+    get_overlap_results,
+    plot_overlap_heatmap,
+):
+    sample_overlap_pmi = get_overlap_results(
+        RESULTS_DIR,
+        overlap_type="overlap_count",
+        level="sample",
+        pmi=True,
+        positive=True,
+    )
+    plot_overlap_heatmap(sample_overlap_pmi, order=OVERLAP_ORDER, cmap=OVERLAP_CMAP)
     return
 
 
