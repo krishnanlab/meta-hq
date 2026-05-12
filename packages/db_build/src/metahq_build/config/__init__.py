@@ -8,6 +8,7 @@ for loading configuration from files, environment variables, and overrides.
 from metahq_build.config.config import (
     ACCESSION_ID_KEYS,
     ACCESSIONS_KEY,
+    AGE_GROUPS,
     ATTRIBUTE_KEYS,
     COL_ACCESSION,
     COL_ATTRIBUTE,
@@ -63,7 +64,11 @@ from metahq_build.config.config import (
     UBERON_OBO,
     UBERON_RELATIONS,
     UBERON_SYSTEMS,
+    VALID_AGE_GROUPS,
+    VALID_ECODES,
+    VALID_ONTOLOGIES,
     VALID_ORGANISMS,
+    VALID_SEXES,
     VALUE_KEY,
 )
 from metahq_build.config.loader import (
@@ -105,6 +110,7 @@ __all__ = [
     # Constants
     "ACCESSION_ID_KEYS",
     "ACCESSIONS_KEY",
+    "AGE_GROUPS",
     "ATTRIBUTE_KEYS",
     "COL_ACCESSION",
     "COL_ATTRIBUTE",
@@ -160,6 +166,10 @@ __all__ = [
     "UBERON_CL_NAMES_SYNONYMS",
     "UBERON_RELATIONS",
     "UBERON_SYSTEMS",
+    "VALID_AGE_GROUPS",
+    "VALID_ECODES",
+    "VALID_ONTOLOGIES",
     "VALID_ORGANISMS",
+    "VALID_SEXES",
     "VALUE_KEY",
 ]

@@ -55,7 +55,15 @@ ATTRIBUTE_ANNOTATION_KEYS: list[str] = [ID_KEY, VALUE_KEY, ECODE_KEY]
 
 ALL_METAHQ_KEYS: list[str] = list(ATTRIBUTE_KEYS) + [ORGANISM_KEY, ACCESSIONS_KEY]
 
-# Organisms to include
+# Control IDs
+CONTROL_ID: str = "MONDO:0000000"
+CONTROL_VALUE: str = "control"
+
+# Standardized annotation values
+## Ontologies
+VALID_ONTOLOGIES: frozenset[str] = frozenset({"UBERON", "CL", "MONDO"})
+
+## Organisms
 VALID_ORGANISMS: frozenset[str] = frozenset(
     {
         "homo sapiens",
@@ -67,16 +75,27 @@ VALID_ORGANISMS: frozenset[str] = frozenset(
     }
 )
 
-# Control IDs
-CONTROL_ID: str = "MONDO:0000000"
-CONTROL_VALUE: str = "control"
-
-# Standardized annotation values
+## Ecodes
 ECODE_EXPERT: str = "expert-curated"
 ECODE_CROWD: str = "crowd-sourced"
+VALID_ECODES: frozenset[str] = frozenset({ECODE_EXPERT, ECODE_CROWD})
 
+## Sexes
 SEX_MALE_ID: str = "M"
 SEX_FEMALE_ID: str = "F"
+VALID_SEXES: frozenset[str] = frozenset({SEX_MALE_ID, SEX_FEMALE_ID})
+
+## Age groups
+AGE_GROUPS = [
+    {"name": "fetus", "min_age": -1, "max_age": 0},
+    {"name": "infant", "min_age": 0, "max_age": 2},
+    {"name": "child", "min_age": 2, "max_age": 10},
+    {"name": "adolescent", "min_age": 10, "max_age": 20},
+    {"name": "adult", "min_age": 20, "max_age": 50},
+    {"name": "older_adult", "min_age": 50, "max_age": 80},
+    {"name": "elderly_adult", "min_age": 80, "max_age": 150},
+]
+VALID_AGE_GROUPS: frozenset[str] = frozenset({v["name"] for v in AGE_GROUPS})
 
 # ===============================================
 # ====== Processor output schema column names
