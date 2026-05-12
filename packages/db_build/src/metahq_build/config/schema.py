@@ -9,6 +9,271 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
+from metahq_build.config import (
+    DELIMITER,
+    VALID_AGE_GROUPS,
+    VALID_ECODES,
+    VALID_ONTOLOGIES,
+    VALID_ORGANISMS,
+    VALID_SEXES,
+)
+
+
+class SampleAnnotationEntry(BaseModel):
+    """Configuration for a sample-level entry from a source in MetaHQ.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., UBERON:0000948, F, elderly_adult)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry id is a valid sex, age, tissue, or disease entry."""
+        allowed_sex_age = set(VALID_SEXES) | set(VALID_AGE_GROUPS)
+
+        if not (
+            (v in allowed_sex_age)
+            or (any(v.startswith(onto) for onto in VALID_ONTOLOGIES))
+        ):
+            raise ValueError(f"Invalid id: {v!r}")
+
+    @field_validator("ecode", mode="after")
+    @classmethod
+    def validate_ecode(cls, v):
+        """Ensure ecodes were entered correctly."""
+        if not v in VALID_ECODES:
+            raise ValueError(f"Invalid id: {v!r}")
+
+
+class SeriesAnnotationEntry(BaseModel):
+    """Configuration for a series-level entry from a source in MetaHQ.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., UBERON:0000948, F, elderly_adult)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry id is a valid sex, age, tissue, or disease entry."""
+        allowed_sex_age = set(VALID_SEXES) | set(VALID_AGE_GROUPS)
+
+        for id_ in v.split(DELIMITER):
+            if not (
+                (id_ in allowed_sex_age)
+                or (any(id_.startswith(onto) for onto in VALID_ONTOLOGIES))
+            ):
+                raise ValueError(f"Invalid id: {id_!r}")
+
+    @field_validator("ecode", mode="after")
+    @classmethod
+    def validate_ecode(cls, v):
+        """Ensure ecodes were entered correctly."""
+        if not v in VALID_ECODES:
+            raise ValueError(f"Invalid id: {v!r}")
+
+
+SampleSourceAnnotations = dict[str, SampleAnnotationEntry]
+SeriesSourceAnnotations = dict[str, SeriesAnnotationEntry]
+
+
+class SampleAccessionIDs(BaseModel):
+    """Configuration for accession IDs for a sample entry.
+
+    Attributes:
+        sample (str):
+            Sample ID starting with GSM.
+        series (str):
+            Series ID starting with GSE.
+        platform (str):
+            Platform ID starting with GPL.
+        srx (str | None):
+            An SRA experiment ID.
+        srs (str | None):
+            An SRA sample ID.
+        srp (str | None):
+            An SRA project ID.
+    """
+
+    sample: str
+    series: str
+    platform: str
+    srx: str | None = None
+    srs: str | None = None
+    srp: str | None = None
+
+    @field_validator("sample")
+    @classmethod
+    def validate_sample_prefix(cls, v):
+        """Ensure all sample IDs start with GSM."""
+        if not v.startswith("GSM"):
+            raise ValueError(f"Invalid id: {v!r}")
+
+    @field_validator("series")
+    @classmethod
+    def validate_series_prefix(cls, v):
+        """Ensure all series IDs start with GSE."""
+        if not v.startswith("GSE"):
+            raise ValueError(f"Invalid id: {v!r}")
+
+    @field_validator("platform")
+    @classmethod
+    def validate_platform_prefix(cls, v):
+        """Ensure all platform IDs start with GPL."""
+        if not v.startswith("GPL"):
+            raise ValueError(f"Invalid id: {v!r}")
+
+    @field_validator("srx")
+    @classmethod
+    def validate_xxx_prefix(cls, v):
+        """Ensure all SRX IDs start with SRX, ERX, or DRX."""
+        allowed = {"SRX", "ERX", "DRX"}
+        if not any(v.startswith(prefix) for prefix in allowed):
+            raise ValueError(f"Invalid id: {v!r}")
+
+    @field_validator("srs")
+    @classmethod
+    def validate_xxs_prefix(cls, v):
+        """Ensure all SRS IDs start with SRS, ERS, or DRS."""
+        allowed = {"SRS", "ERS", "DRS"}
+        if not any(v.startswith(prefix) for prefix in allowed):
+            raise ValueError(f"Invalid id: {v!r}")
+
+    @field_validator("srp")
+    @classmethod
+    def validate_xxp_prefix(cls, v):
+        """Ensure all SRP IDs start with SRP, ERP, or DRP."""
+        allowed = {"SRP", "ERP", "DRP"}
+        if not any(v.startswith(prefix) for prefix in allowed):
+            raise ValueError(f"Invalid id: {v!r}")
+
+
+class SeriesAccessionIDs(BaseModel):
+    """Configuration for accession IDs for a sample entry.
+
+    Attributes:
+        series (str):
+            Series ID starting with GSE.
+        platform (str):
+            Platform ID starting with GPL.
+        srp (str | None):
+            An SRA project ID.
+    """
+
+    series: str
+    platform: str
+    srp: str | None = None
+
+    @field_validator("series")
+    @classmethod
+    def validate_series_prefix(cls, v):
+        """Ensure all series IDs start with GSE."""
+        if not v.startswith("GSE"):
+            raise ValueError(f"Invalid id: {v!r}")
+
+    @field_validator("platform")
+    @classmethod
+    def validate_platform_prefix(cls, v):
+        """Ensure all platform IDs start with GPL."""
+        if not v.startswith("GPL"):
+            raise ValueError(f"Invalid id: {v!r}")
+
+    @field_validator("srp")
+    @classmethod
+    def validate_xxp_prefix(cls, v):
+        """Ensure all SRP IDs start with SRP, ERP, or DRP."""
+        allowed = {"SRP", "ERP", "DRP"}
+        if not any(v.startswith(prefix) for prefix in allowed):
+            raise ValueError(f"Invalid id: {v!r}")
+
+
+class SampleEntry(BaseModel):
+    """Configuration for a sample entry in the database.
+
+    Attributes:
+        accession_ids (SampleAccessionIDs):
+            Accession IDs required for a sample entry.
+        organism (str):
+            The lowercase genus and species of an organism.
+        tissue (SourceAnnotations | None):
+            Tissue annotations across sources.
+        disease (SourceAnnotations | None):
+            Disease annotations across sources.
+        sex (SourceAnnotations | None):
+            Sex annotations across sources.
+        age (SourceAnnotations | None):
+            Age group annotations across sources.
+    """
+
+    accession_ids: SampleAccessionIDs
+    organism: str
+    tissue: SampleSourceAnnotations | None = None
+    disease: SampleSourceAnnotations | None = None
+    sex: SampleSourceAnnotations | None = None
+    age: SampleSourceAnnotations | None = None
+
+    @field_validator("organism")
+    @classmethod
+    def verify_organism(cls, v):
+        """Check that the organism for a particular entry is valid."""
+        if v not in VALID_ORGANISMS:
+            raise ValueError(f"Unknown organism: {v!r}")
+        return v
+
+
+class SeriesEntry(BaseModel):
+    """Configuration for a series entry in the database.
+
+    Attributes:
+        accession_ids (SeriesAccessionIDs):
+            Accession IDs required for a sample entry.
+        organism (str):
+            The lowercase genus and species of an organism.
+        tissue (SourceAnnotations | None):
+            Tissue annotations across sources.
+        disease (SourceAnnotations | None):
+            Disease annotations across sources.
+        sex (SourceAnnotations | None):
+            Sex annotations across sources.
+        age (SourceAnnotations | None):
+            Age group annotations across sources.
+    """
+
+    accession_ids: SeriesAccessionIDs
+    organism: str
+    tissue: SeriesSourceAnnotations | None = None
+    disease: SeriesSourceAnnotations | None = None
+    sex: SeriesSourceAnnotations | None = None
+    age: SeriesSourceAnnotations | None = None
+
+    @field_validator("organism")
+    @classmethod
+    def verify_organism(cls, v):
+        """Check that the organism for a particular entry is valid."""
+        for organism in v.split(DELIMITER):
+            if organism not in VALID_ORGANISMS:
+                raise ValueError(f"Unknown organism: {v!r}")
+            return v
+
 
 class ProcessorConfig(BaseModel):
     """
