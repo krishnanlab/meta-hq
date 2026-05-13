@@ -16,6 +16,8 @@ from metahq_build.config import (
 )
 from metahq_build.util.logging import setup_logger
 
+LEVEL_NAMES: dict[str, str] = {"series": "Study", "sample": "Sample"}
+
 
 @dataclass
 class EndpointParams:
@@ -70,7 +72,7 @@ class ShieldEndpointBuilder:
         for level, counts in source_counts.items():
             for source, count in counts.items():
                 source_endpoint = EndpointParams(
-                    label="",  # information is present in the file name
+                    label=f"{LEVEL_NAMES[level]} annotations in MetaHQ",
                     message=format(count, ","),
                     filename=f"{source}__{level}.json",
                 )
