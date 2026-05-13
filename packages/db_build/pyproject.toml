@@ -1,6 +1,6 @@
 [project]
 name = "metahq-build"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Data pipeline package for building the MetaHQ database"
 readme = "README.md"
 requires-python = ">=3.11"
