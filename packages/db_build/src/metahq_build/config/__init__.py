@@ -65,10 +65,12 @@ from metahq_build.config.config import (
     UBERON_RELATIONS,
     UBERON_SYSTEMS,
     VALID_AGE_GROUPS,
+    VALID_DISEASE_ONTOLOGIES,
     VALID_ECODES,
     VALID_ONTOLOGIES,
     VALID_ORGANISMS,
     VALID_SEXES,
+    VALID_TISSUE_ONTOLOGIES,
     VALUE_KEY,
 )
 from metahq_build.config.loader import (
@@ -167,9 +169,11 @@ __all__ = [
     "UBERON_RELATIONS",
     "UBERON_SYSTEMS",
     "VALID_AGE_GROUPS",
+    "VALID_DISEASE_ONTOLOGIES",
     "VALID_ECODES",
     "VALID_ONTOLOGIES",
     "VALID_ORGANISMS",
     "VALID_SEXES",
+    "VALID_TISSUE_ONTOLOGIES",
     "VALUE_KEY",
 ]

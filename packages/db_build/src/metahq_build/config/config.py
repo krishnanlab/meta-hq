@@ -62,6 +62,8 @@ CONTROL_VALUE: str = "control"
 # Standardized annotation values
 ## Ontologies
 VALID_ONTOLOGIES: frozenset[str] = frozenset({"UBERON", "CL", "MONDO"})
+VALID_TISSUE_ONTOLOGIES: frozenset[str] = frozenset({"UBERON", "CL"})
+VALID_DISEASE_ONTOLOGIES: frozenset[str] = frozenset({"MONDO"})
 
 ## Organisms
 VALID_ORGANISMS: frozenset[str] = frozenset(

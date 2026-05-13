@@ -6,17 +6,30 @@ sensible defaults and clear documentation.
 """
 
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel, Field, field_validator
 
 from metahq_build.config import (
     DELIMITER,
     VALID_AGE_GROUPS,
+    VALID_DISEASE_ONTOLOGIES,
     VALID_ECODES,
     VALID_ONTOLOGIES,
     VALID_ORGANISMS,
     VALID_SEXES,
+    VALID_TISSUE_ONTOLOGIES,
 )
+
+# Below are validators for sample- and series-level annotations. There is a unique
+# class per attribute. Sample- and series-level annotation need different validators
+# since sample annotations must adhere to constraints that series annotation do not.
+# For example, a single sample cannot be annotated to both male and female, but a series
+# can.
+
+# ========================================================
+# ==== Sample source annotations
+# ========================================================
 
 
 class SampleAnnotationEntry(BaseModel):
@@ -53,6 +66,113 @@ class SampleAnnotationEntry(BaseModel):
         """Ensure ecodes were entered correctly."""
         if not v in VALID_ECODES:
             raise ValueError(f"Invalid id: {v!r}")
+
+
+class SampleTissueAnnotationEntry(SampleAnnotationEntry):
+    """Configuration for sample-level tissue annotation entries.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., UBERON:0000948, UBERON:0000955)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @override
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry ID has UBERON or CL annotations."""
+        for tissue in v.split(DELIMITER):
+            if not tissue.startswith(tuple(VALID_TISSUE_ONTOLOGIES)):
+                raise ValueError(f"Invalid id: {v!r}")
+
+
+class SampleDiseaseAnnotationEntry(SampleAnnotationEntry):
+    """Configuration for sample-level disease annotation entries.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., MONDO:0004994, MONDO:0004992)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @override
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry ID has MONDO annotations."""
+        for disease in v.split(DELIMITER):
+            if not disease.startswith(tuple(VALID_DISEASE_ONTOLOGIES)):
+                raise ValueError(f"Invalid id: {v!r}")
+
+
+class SampleSexAnnotationEntry(SampleAnnotationEntry):
+    """Configuration for sample-level sex annotation entries.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., M or F)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @override
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry ID has valid sex ID annotations."""
+        if not v in VALID_SEXES:
+            raise ValueError(f"Invalid id: {v!r}")
+
+
+class SampleAgeAnnotationEntry(SampleAnnotationEntry):
+    """Configuration for sample-level age annotation entries.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., adult, elderly_adult)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @override
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry ID has valid age group ID annotations."""
+        if not v in VALID_AGE_GROUPS:
+            raise ValueError(f"Invalid id: {v!r}")
+
+
+# ========================================================
+# ==== Series source annotations
+# ========================================================
 
 
 class SeriesAnnotationEntry(BaseModel):
@@ -92,8 +212,128 @@ class SeriesAnnotationEntry(BaseModel):
             raise ValueError(f"Invalid id: {v!r}")
 
 
-SampleSourceAnnotations = dict[str, SampleAnnotationEntry]
-SeriesSourceAnnotations = dict[str, SeriesAnnotationEntry]
+class SeriesTissueAnnotationEntry(SeriesAnnotationEntry):
+    """Configuration for series-level tissue annotation entries.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., UBERON:0000948, UBERON:0000955)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @override
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry ID has UBERON or CL annotations."""
+        for tissue in v.split(DELIMITER):
+            if not tissue.startswith(tuple(VALID_TISSUE_ONTOLOGIES)):
+                raise ValueError(f"Invalid id: {v!r}")
+
+
+class SeriesDiseaseAnnotationEntry(SeriesAnnotationEntry):
+    """Configuration for series-level disease annotation entries.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., MONDO:0004994, MONDO:0004992, or
+                MONDO:0004994|MONDO:0004992)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @override
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry ID has MONDO annotations."""
+        for disease in v.split(DELIMITER):
+            if not disease.startswith(tuple(VALID_DISEASE_ONTOLOGIES)):
+                raise ValueError(f"Invalid id: {v!r}")
+
+
+class SeriesSexAnnotationEntry(SeriesAnnotationEntry):
+    """Configuration for series-level sex annotation entries.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., M, F, or M|F)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @override
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry ID has valid sex ID annotations."""
+        for sex in v.split(DELIMITER):
+            if not sex in VALID_SEXES:
+                raise ValueError(f"Invalid id: {v!r}")
+
+
+class SeriesAgeAnnotationEntry(SeriesAnnotationEntry):
+    """Configuration for series-level age annotation entries.
+
+    Attributes:
+        id (str):
+            The ID of an annotation (e.g., adult, elderly_adult, or adult|elderly_adult)
+        ecode (str):
+            The annotation's evidence code (e.g., expert-curated, crowd-sourced)
+        value (str | None):
+            The value of an annotation. Defualt is None.
+    """
+
+    id: str
+    ecode: str
+    value: str | None = None
+
+    @override
+    @field_validator("id", mode="after")
+    @classmethod
+    def validate_id(cls, v):
+        """Ensure an entry ID has valid age group ID annotations."""
+        for age in v.split(DELIMITER):
+            if not age in VALID_AGE_GROUPS:
+                raise ValueError(f"Invalid id: {v!r}")
+
+
+# ========================================================
+# ==== Attribute configurations across sources
+# ========================================================
+
+SampleTissueAnnotations = dict[str, SampleTissueAnnotationEntry]
+SampleDiseaseAnnotations = dict[str, SampleDiseaseAnnotationEntry]
+SampleSexAnnotations = dict[str, SampleSexAnnotationEntry]
+SampleAgeAnnotations = dict[str, SampleAgeAnnotationEntry]
+
+SeriesTissueAnnotations = dict[str, SeriesTissueAnnotationEntry]
+SeriesDiseaseAnnotations = dict[str, SeriesDiseaseAnnotationEntry]
+SeriesSexAnnotations = dict[str, SeriesSexAnnotationEntry]
+SeriesAgeAnnotations = dict[str, SeriesAgeAnnotationEntry]
+
+# ========================================================
+# ==== Accession IDs
+# ========================================================
 
 
 class SampleAccessionIDs(BaseModel):
@@ -226,10 +466,10 @@ class SampleEntry(BaseModel):
 
     accession_ids: SampleAccessionIDs
     organism: str
-    tissue: SampleSourceAnnotations | None = None
-    disease: SampleSourceAnnotations | None = None
-    sex: SampleSourceAnnotations | None = None
-    age: SampleSourceAnnotations | None = None
+    tissue: SampleTissueAnnotations | None = None
+    disease: SampleDiseaseAnnotations | None = None
+    sex: SampleSexAnnotations | None = None
+    age: SampleAgeAnnotations | None = None
 
     @field_validator("organism")
     @classmethod
@@ -260,10 +500,10 @@ class SeriesEntry(BaseModel):
 
     accession_ids: SeriesAccessionIDs
     organism: str
-    tissue: SeriesSourceAnnotations | None = None
-    disease: SeriesSourceAnnotations | None = None
-    sex: SeriesSourceAnnotations | None = None
-    age: SeriesSourceAnnotations | None = None
+    tissue: SeriesTissueAnnotations | None = None
+    disease: SeriesDiseaseAnnotations | None = None
+    sex: SeriesSexAnnotations | None = None
+    age: SeriesAgeAnnotations | None = None
 
     @field_validator("organism")
     @classmethod
@@ -273,6 +513,11 @@ class SeriesEntry(BaseModel):
             if organism not in VALID_ORGANISMS:
                 raise ValueError(f"Unknown organism: {v!r}")
             return v
+
+
+# ========================================================
+# ==== Data package config validators
+# ========================================================
 
 
 class ProcessorConfig(BaseModel):
