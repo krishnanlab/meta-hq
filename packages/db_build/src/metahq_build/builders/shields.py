@@ -82,7 +82,7 @@ class ShieldEndpointBuilder:
         # build version shield
         self.logger.info("Constructing shields.io JSON endpoint for package version...")
         version_endpoint = EndpointParams(
-            label="build",
+            label="repo",
             message=f"v{__version__}",
             filename="metahq_build__version.json",
         )

@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "label": "build",
+    "label": "repo",
     "message": "v0.1.0",
     "color": "lightgray",
     "labelColor": "gray",
