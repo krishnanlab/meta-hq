@@ -24,10 +24,11 @@ See [Terms and Conditions](docs/about/terms_conditions.md).
 
 ## Status
 
-| Package | Version                                                            | Tests                                                                                  |
-| ------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| core    | ![metahq-core pypi](https://img.shields.io/pypi/v/metahq-core.svg) | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg) |
-| cli     | ![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)   | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)  |
+| Package | Version                                                                                                                                                                  | Tests                                                                                            |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| core    | ![metahq-core pypi](https://img.shields.io/pypi/v/metahq-core.svg)                                                                                                       | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg)           |
+| cli     | ![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)                                                                                                         | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)            |
+| build   | ![metahq-build local](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/krishnanlab/meta-hq/refs/heads/main/data/shields/metahq_build__version.json) | ![DB-Build Tests](https://github.com/krishnanlab/meta-hq/workflows/DB%20Build%20Tests/badge.svg) |
 
 ## Setup
 
