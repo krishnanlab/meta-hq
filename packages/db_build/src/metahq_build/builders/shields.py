@@ -8,6 +8,7 @@ from pathlib import Path
 
 import bson
 
+from metahq_build.__version__ import __version__
 from metahq_build.config import (
     ATTRIBUTE_KEYS,
     SAMPLE_COMBINED_BSON,
@@ -66,7 +67,9 @@ class ShieldEndpointBuilder:
 
         self.logger.info("Found %d sources in total: %s", len(all_sources), all_sources)
 
-        self.logger.info("Constructing shields.io JSON endpoints...")
+        self.logger.info(
+            "Constructing shields.io JSON endpoints for annotation sources..."
+        )
         for level, counts in source_counts.items():
             for source, count in counts.items():
                 source_endpoint = EndpointParams(
@@ -75,6 +78,15 @@ class ShieldEndpointBuilder:
                     filename=f"{source}__{level}.json",
                 )
                 self._endpoints.append(source_endpoint)
+
+        # build version shield
+        self.logger.info("Constructing shields.io JSON endpoint for package version...")
+        version_endpoint = EndpointParams(
+            label="build",
+            message=f"v{__version__}",
+            filename="metahq_build__version.json",
+        )
+        self._endpoints.append(version_endpoint)
 
         return self
 
