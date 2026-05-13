@@ -148,6 +148,11 @@ class GemmaProcessor(BaseProcessor):
         df = self._map_age_groups(df)
         df = self._map_sex(df)
 
+        # GSE197511 has a sex annotation to UBERON:0007222 (late adult stage). Remove this
+        df = df.remove(
+            (pl.col(COL_ATTRIBUTE) == "sex") & (pl.col(COL_TERM_ID) == "UBERON:0007222")
+        )
+
         self.logger.info("Parsed %d annotations from Gemma", len(df))
 
         # Filter tissue and disease annotations to descendants of system-level terms.
