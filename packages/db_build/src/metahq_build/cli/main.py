@@ -577,6 +577,13 @@ def list_fields(level, metadata_db):
     help="A comma-delimited string of fields to query",
 )
 @click.option(
+    "--outfile",
+    "-o",
+    type=click.Path(path_type=Path),
+    default="sample_metadata.parquet",
+    help="Path to parquet outfile.",
+)
+@click.option(
     "--sample-bson",
     type=click.Path(exists=True, path_type=Path),
     default=None,
@@ -588,7 +595,13 @@ def list_fields(level, metadata_db):
     default=None,
     help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
 )
-def retrieve_sample_metadata(fields, sample_bson, metadata_db):
+@click.option(
+    "--null-values",
+    type=str,
+    default=None,
+    help="Values for which to fill null values.",
+)
+def retrieve_sample_metadata(fields, outfile, sample_bson, metadata_db, null_values):
     """Retrieve sample-level metadata from OmicIDX for samples in a MetaHQ BSON database."""
     import bson
 
@@ -603,7 +616,8 @@ def retrieve_sample_metadata(fields, sample_bson, metadata_db):
         samples = list(bson.decode(f.read()).keys())
 
     retriever = SampleMetadataRetriever(db_path=db_path, table="src_geo_samples")
-    retriever.retrieve(fields=query_fields, samples=samples)
+    retriever.retrieve(fields=query_fields, samples=samples, null_values=null_values)
+    retriever.save(outfile)
 
 
 @metadata.command(name="series")
@@ -613,6 +627,13 @@ def retrieve_sample_metadata(fields, sample_bson, metadata_db):
     type=str,
     default="accession,title,summary,overall_design",
     help="A comma-delimited string of fields to query",
+)
+@click.option(
+    "--outfile",
+    "-o",
+    type=click.Path(path_type=Path),
+    default="series_metadata.parquet",
+    help="Path to parquet outfile.",
 )
 @click.option(
     "--series-bson",
@@ -626,7 +647,13 @@ def retrieve_sample_metadata(fields, sample_bson, metadata_db):
     default=None,
     help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
 )
-def retrieve_series_metadata(fields, series_bson, metadata_db):
+@click.option(
+    "--null-values",
+    type=str,
+    default=None,
+    help="Values for which to fill null values.",
+)
+def retrieve_series_metadata(fields, outfile, series_bson, metadata_db, null_values):
     """Retrieve series-level metadata from OmicIDX for series in a MetaHQ BSON database."""
     import bson
 
@@ -641,7 +668,8 @@ def retrieve_series_metadata(fields, series_bson, metadata_db):
         series = list(bson.decode(f.read()).keys())
 
     retriever = SeriesMetadataRetriever(db_path=db_path, table="src_geo_series")
-    retriever.retrieve(fields=query_fields, series=series)
+    retriever.retrieve(fields=query_fields, series=series, null_values=null_values)
+    retriever.save(outfile)
 
 
 @main.command()
