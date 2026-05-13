@@ -29,7 +29,6 @@ from typing import Any
 
 import bson
 import polars as pl
-from numpy._core.fromnumeric import sort
 
 from metahq_build.combiners._term_filterer import TermFilterer
 from metahq_build.config.config import (
@@ -52,7 +51,6 @@ from metahq_build.config.config import (
     STUDY_ID_PREFIX,
     UBERON_RELATIONS,
     UBERON_SYSTEMS,
-    VALUE_KEY,
 )
 from metahq_build.util.logging import setup_logger
 
@@ -151,8 +149,7 @@ class BaseAnnotationCombiner:
                 continue
 
             self.anno[accession][annotation_type][source_name] = {
-                ID_KEY: row[COL_TERM_ID],
-                VALUE_KEY: row[COL_TERM_NAME],
+                ID_KEY: DELIMITER.join(sorted(row[COL_TERM_ID].split(DELIMITER))),
                 ECODE_KEY: row[COL_ECODE],
             }
 
