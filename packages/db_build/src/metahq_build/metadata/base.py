@@ -67,14 +67,17 @@ class BaseMetadataRetriever:
 
             return fields, channel_fields
 
-    def save(self, file: Path):
+    def save(self, file: Path, null_values: str | None = None):
         """Save metadata to parquet file."""
         dir_ = file.resolve().parents[0]
 
         if not dir_.exists():
             dir_.mkdir(exist_ok=True, parents=True)
 
-        self.metadata.write_parquet(file)
+        if isinstance(null_values, str):
+            self.metadata = self.metadata.fill_null(null_values)
+
+        self.metadata.sort(OMICIDX_COL_ACCESSION).write_parquet(file)
 
     def show_available_fields(self):
         """Print available fields to logger."""
@@ -91,6 +94,10 @@ class BaseMetadataRetriever:
 
         formatted_fields = ", ".join(fields)
         return f"""SELECT {formatted_fields} FROM {self.table} WHERE {accession_name} = ANY($1)"""
+
+    def validate(self):
+        """Validate the retrieved metadata DataFrame."""
+        self._validate_columns()
 
     def _check_fields(self, queried_fields: list[str], available_fields: list[str]):
         ok_fields = []
@@ -114,3 +121,11 @@ class BaseMetadataRetriever:
         with duckdb.connect(self.db_path, read_only=True) as conn:
             self.logger.debug("Query: %s", query)
             self.metadata = conn.execute(query, [entries]).pl()
+
+    def _validate_columns(self):
+        """Ensure all columns are of type str."""
+        for col, dtype in self.metadata.schema.items():
+            if not dtype == pl.String:
+                raise TypeError(
+                    "Expected column %s as type pl.String. Got %s", col, dtype
+                )

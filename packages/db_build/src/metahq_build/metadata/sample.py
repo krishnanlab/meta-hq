@@ -27,6 +27,8 @@ class SampleMetadataRetriever(BaseMetadataRetriever):
         fields: list[str],
         samples: list[str],
         accession_name: str = OMICIDX_COL_ACCESSION,
+        null_values: str | None = None,
+        validate: bool = True,
     ):
         """Retrieve sample metadata from OmicIDX."""
         if accession_name not in fields:
@@ -62,6 +64,12 @@ class SampleMetadataRetriever(BaseMetadataRetriever):
         else:
             query = self._build_base_query(fields, accession_name=accession_name)
             self._execute_query(query=query, entries=samples)
+
+        if isinstance(null_values, str):
+            self.metadata = self.metadata.fill_null(null_values)
+
+        if validate:
+            self.validate()
 
     def _build_channels_query(self, fields: list[str], accession_name: str) -> str:
         sep = ", "
@@ -109,22 +117,22 @@ class SampleMetadataRetriever(BaseMetadataRetriever):
 
         # unnest and join characteristic structs if applicable
         if "characteristics" in all_queried_fields:
-            self._unnest_characteristics(all_queried_fields)
+            self._unnest_characteristics()
 
-    def _unnest_characteristics(self, all_queried_fields: list[str]):
+    def _unnest_characteristics(self):
         """Characteristics for each channel are stored as [{tag: tag1, value: value1}, ...] pairs.
         Join these into 'tag1: value1|tag2: value2|...'
         """
         for characteristics in ["characteristics_ch1", "characteristics_ch2"]:
-            if characteristics in all_queried_fields:
-                self.metadata = self.metadata.with_columns(
-                    pl.col(characteristics)
-                    .list.eval(
-                        pl.concat_str(
-                            pl.element().struct.field("tag"),
-                            pl.element().struct.field("value"),
-                            separator=": ",
-                        )
+            self.metadata = self.metadata.with_columns(
+                pl.col(characteristics)
+                .list.eval(
+                    pl.concat_str(
+                        pl.element().struct.field("tag"),
+                        pl.element().struct.field("value"),
+                        separator=": ",
+                        ignore_nulls=True,
                     )
-                    .list.join(DELIMITER)
                 )
+                .list.join(DELIMITER)
+            )

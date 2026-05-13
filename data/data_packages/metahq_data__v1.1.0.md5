@@ -8,7 +8,7 @@ dbf3e5566b4dd80e458b2cd5813ad693  ontology/mondo/systems.txt
 a449bed0812bacfa35d9b83628da594e  ontology/uberon_ext/id_map.parquet
 8e2b4b0943ae52720463257d67ec8fbf  ontology/uberon_ext/systems.txt
 9e9fd448715929351e8c0e4b9561d56c  ontology/uberon_ext/names_synonyms.json
-9fc6fb13d7d17852f43576e439b1134f  ontology/ontology_search.duckdb
-9e2bf4dd6ddbbaf12d17d2eef1fa4de1  metadata/metadata__level-sample.parquet
-c3382fd3f6a5486f4561d608fbb26fed  metadata/metadata__level-series.parquet
+8db9dd64a4a8d5290994aa7088c82e69  ontology/ontology_search.duckdb
+f48a2aba28c9a78ba9a59985e53c55f6  metadata/metadata__level-sample.parquet
+362afe5b528b7ad6082067782e23a308  metadata/metadata__level-series.parquet
 a7cd45dc7db09d30fe35676d8d449b32  metadata/technologies.parquet

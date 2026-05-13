@@ -23,6 +23,8 @@ class SeriesMetadataRetriever(BaseMetadataRetriever):
         fields: list[str],
         series: list[str],
         accession_name: str = OMICIDX_COL_ACCESSION,
+        null_values: str | None = None,
+        validate: bool = True,
     ):
         """Retrieve series-level metadata from OmicIDX."""
         if accession_name not in fields:
@@ -47,3 +49,9 @@ class SeriesMetadataRetriever(BaseMetadataRetriever):
             self.metadata = self.metadata.with_columns(
                 pl.col("platform_id").list.join(DELIMITER).alias("platform_id")
             )
+
+        if isinstance(null_values, str):
+            self.metadata = self.metadata.fill_null(null_values)
+
+        if validate:
+            self.validate()

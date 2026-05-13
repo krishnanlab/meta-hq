@@ -114,27 +114,23 @@ class MetadataBuilder:
         self.logger.info("Series metadata saved to: %s", series_outfile)
 
     def _query_sample(
-        self,
-        samples: list[str],
-        fields: list[str],
+        self, samples: list[str], fields: list[str], null_values: str | None = "NA"
     ):
         """Retrieve sample metadata."""
         retriever = SampleMetadataRetriever(
             db_path=self.db_path, table=self.sample_table
         )
-        retriever.retrieve(fields=fields, samples=samples)
+        retriever.retrieve(fields=fields, samples=samples, null_values=null_values)
         return retriever.metadata
 
     def _query_series(
-        self,
-        series: list[str],
-        fields: list[str],
+        self, series: list[str], fields: list[str], null_values: str | None = "NA"
     ):
         """Retrieve series metadata."""
         retriever = SeriesMetadataRetriever(
             db_path=self.db_path, table=self.series_table
         )
-        retriever.retrieve(fields=fields, series=series)
+        retriever.retrieve(fields=fields, series=series, null_values=null_values)
         return retriever.metadata
 
     def _load_metahq_db_entries(self, file: Path) -> list[str]:
