@@ -136,7 +136,8 @@ class RelationsLazyFrame:
             (pl.DataFrame): pl.DataFrame with an additional temporary 'index' column indicating
                 the term ID for each row.
 
-        Raises: pl.exceptions.PolarsError if file reading fails.
+        Raises:
+            (pl.exceptions.PolarsError): if file reading fails.
 
         """
         try:

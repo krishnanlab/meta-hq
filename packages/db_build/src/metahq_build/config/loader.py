@@ -2,7 +2,7 @@
 Configuration loading and merging utilities.
 
 Handles loading configuration from YAML files, environment variables,
-and command-line overrides with proper priority handling.
+and command-line overrides.
 """
 
 import os

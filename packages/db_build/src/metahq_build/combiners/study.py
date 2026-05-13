@@ -34,8 +34,9 @@ class StudyCombiner(BaseAnnotationCombiner):
     Collapses sample-level annotations to the series-level and adds study-forward annotations.
 
     Example:
+
         >>> combiner = StudyCombiner()
-        >>> combiner.combine(SAMPLE_COMBINED_BSON).clean().save(STUDY_COMBINED_BSON)
+        >>> combiner.combine(SAMPLE_COMBINED_BSON).clean().save(SERIES_COMBINED_BSON)
     """
 
     def combine(

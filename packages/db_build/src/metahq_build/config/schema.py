@@ -1,8 +1,7 @@
 """
 Configuration schemas for metahq-build pipeline.
 
-Defines Pydantic models for validating pipeline configuration with
-sensible defaults and clear documentation.
+Defines Pydantic models for validating pipeline configuration.
 """
 
 from pathlib import Path

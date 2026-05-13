@@ -70,6 +70,7 @@ class SraCombiner(BaseAnnotationCombiner):
     (GSM) via ``src_geo_samples`` in the OmicIDX DuckDB database.
 
     Example:
+
         >>> combiner = SraCombiner()
         >>> combiner.combine().clean().save(SRA_COMBINED_BSON)
     """

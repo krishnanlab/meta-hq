@@ -45,7 +45,7 @@ class GeoCombiner(BaseAnnotationCombiner):
     All sources in this combiner use GEO accession IDs (GSM or GSE) as
     their primary sample identifier. No ID mapping is required.
 
-    Example:
+    Example
         >>> combiner = GeoCombiner()
         >>> combiner.combine().clean().save(GEO_COMBINED_BSON)
     """

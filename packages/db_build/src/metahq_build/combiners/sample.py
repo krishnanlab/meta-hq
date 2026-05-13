@@ -52,6 +52,7 @@ class SampleCombiner(BaseAnnotationCombiner):
     Merges GEO and SRA combined annotation BSONs into a single sample-level DB.
 
     Example:
+
         >>> combiner = SampleCombiner()
         >>> combiner.combine().clean().save(SAMPLE_COMBINED_BSON)
     """

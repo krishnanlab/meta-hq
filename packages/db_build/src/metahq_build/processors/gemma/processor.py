@@ -52,11 +52,7 @@ class GemmaProcessor(BaseProcessor):
     """
     Processor for Gemma database annotations.
 
-    Gemma is a database of gene expression studies with curated annotations
-    for tissues, diseases, developmental stages, sex, and age.
-
-    Raw data must be downloaded before processing:
-        metahq-build download gemma
+    Raw data must be downloaded before processing using ``metahq-build download gemma``.
     """
 
     source_name = "Gemma"
@@ -83,7 +79,7 @@ class GemmaProcessor(BaseProcessor):
                 ``term_label``, and ``ecode``.
 
         Raises:
-            ProcessorError: If the raw Gemma file has not been downloaded.
+            (ProcessorError): If the raw Gemma file has not been downloaded.
         """
         input_path = Path(kwargs.get("input_path", GEMMA_RAW))
 

@@ -179,6 +179,7 @@ def process(source_name, output_dir, no_validate):
     SOURCE_NAME is the name of the data source processor (e.g., gemma, ale, cello).
 
     Examples:
+
         # Process with default output directory (data/processed/)
         metahq-build process disign_atlas
 
@@ -309,7 +310,7 @@ def combine():
     """
     Combine processed annotations from multiple sources into a BSON file.
 
-    Run 'metahq-build process' for each source before combining.
+    Run ``metahq-build process`` for each source before combining.
     """
     pass
 

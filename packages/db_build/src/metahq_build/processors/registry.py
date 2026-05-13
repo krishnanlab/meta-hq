@@ -29,7 +29,8 @@ class ProcessorRegistry:
         """
         Register a processor class.
 
-        Used as a class decorator:
+        Used as a class decorator::
+
             @ProcessorRegistry.register
             class MyProcessor(BaseProcessor):
                 ...
@@ -42,7 +43,7 @@ class ProcessorRegistry:
             (Type[BaseProcessor]): The processor class (unchanged)
 
         Raises:
-            ValueError: If processor with same source_name already registered
+            (ValueError): If processor with same source_name already registered
         """
         if not hasattr(processor_class, "source_name"):
             raise ValueError(
