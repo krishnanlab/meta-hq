@@ -132,7 +132,7 @@ class StudyCombiner(BaseAnnotationCombiner):
                                 ]
                             )
                             study_anno[key][PLATFORM_ACCESSION_KEY] = DELIMITER.join(
-                                existing
+                                sorted(existing)
                             )
                             continue
 
@@ -147,7 +147,7 @@ class StudyCombiner(BaseAnnotationCombiner):
 
                         existing = set(study_anno[key].split(DELIMITER))
                         existing.add(sample_anno[sample][key])
-                        study_anno[key] = DELIMITER.join(existing)
+                        study_anno[key] = DELIMITER.join(sorted(existing))
                         continue
 
                     # ==============================================================
@@ -396,11 +396,11 @@ class StudyCombiner(BaseAnnotationCombiner):
 
             new: list[str] = source_anno[key].split(DELIMITER)
             if key not in study_anno:
-                merged_annotations[key] = DELIMITER.join(new)
+                merged_annotations[key] = DELIMITER.join(sorted(new))
                 continue
 
             existing: list[str] = study_anno[key].split(DELIMITER)
             existing.extend(new)
-            merged_annotations[key] = DELIMITER.join(set(existing))
+            merged_annotations[key] = DELIMITER.join(sorted(set(existing)))
 
         return merged_annotations
