@@ -8,6 +8,7 @@ Processes annotations downloaded from the Gemma database
 
 import json
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -62,7 +63,7 @@ class GemmaProcessor(BaseProcessor):
     version = "1.32.6"
     description = "Gemma database annotations for gene expression studies"
 
-    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs: Any) -> pl.DataFrame:
         """
         Process Gemma annotations into standardized format.
 

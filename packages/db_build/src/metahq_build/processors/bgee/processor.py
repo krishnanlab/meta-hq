@@ -8,6 +8,7 @@ Reference: https://bgee.org/
 """
 
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -66,7 +67,7 @@ class BgeeProcessor(BaseProcessor):
         "fly": BGEE_FLY,
     }
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """Process Bgee RNA-Seq library data into standardized annotations.
 
         Arguments:

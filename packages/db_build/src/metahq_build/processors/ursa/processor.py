@@ -6,6 +6,7 @@ UBERON/CL term IDs for GEO samples.
 """
 
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -39,7 +40,7 @@ class URSAProcessor(BaseProcessor):
     version = "1.0.0"
     description = "URSA expert-curated tissue annotations"
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """
         Process the URSA CSV into standardized sample annotations.
 

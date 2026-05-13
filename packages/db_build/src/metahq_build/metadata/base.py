@@ -36,12 +36,9 @@ class BaseMetadataRetriever:
         """Identify the available metadata fields to query.
 
         Arguments:
-            db_path (Path):
-                Path to the OmicIDX database.
-            table (str):
-                Name of the table in OmicIDX to query.
             channel_name (str):
                 Name of the channels column.
+
         Returns:
             (tuple[list[str], list[str]]): All fields available to query and
                 channel specific fields are those are hidden in a struct in

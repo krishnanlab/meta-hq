@@ -10,6 +10,7 @@ descendants. Control samples receive term_id = MONDO:0000000.
 """
 
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -47,7 +48,7 @@ class Sirota2011Processor(BaseProcessor):
     version = "1.0.0"
     description = "Sirota 2011 expert-curated disease and tissue annotations"
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """
         Process Sirota 2011 CSV into standardized sample annotations.
 

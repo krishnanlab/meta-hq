@@ -9,6 +9,7 @@ been formatted as ``"CL:XXXXXXX"`` strings.
 
 import json
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -47,7 +48,7 @@ class CellOProcessor(BaseProcessor):
     version = "1.0.0"
     description = "CellO automated cell type annotations for bulk RNA-seq"
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """Process the CellO JSON file into standardized sample annotations.
 
         Reads the JSON source, builds one row per (sample, CL term), maps each

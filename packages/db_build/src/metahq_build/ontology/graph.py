@@ -16,7 +16,8 @@ class Graph(Ontology):
     See Ontology documentation for inherited attributes and methods.
 
     Example:
-        >>> from txt2onto.ontology import Graph
+
+        >>> from  metahq_build.ontology import Graph
         >>> ontograph = Graph.from_obo("mondo.obo")
         >>> ontograph.graph
         DiGraph with 23314 nodes and 35351 edges
@@ -101,7 +102,8 @@ class Graph(Ontology):
                 Mapping between parents (keys) and their children (values).
 
         Example:
-            >>> from txt2onto.ontology import Graph
+
+            >>> from  metahq_build.ontology import Graph
             >>> ontograph = Graph.from_obo("mondo.obo")
             >>> ontograph.descendants_from(['MONDO:0005071', 'MONDO:0043543'])
             {'MONDO:0005071': ['MONDO:0019438' ... 'MONDO:0100070'],
@@ -132,7 +134,8 @@ class Graph(Ontology):
                 Mapping between parents (keys) and their children (values).
 
         Example:
-            >>> from txt2onto.ontology import Graph
+
+            >>> from  metahq_build.ontology import Graph
             >>> ontograph = Graph.from_obo("mondo.obo")
             >>> ontograph.ancestors_from(['MONDO:0008791', 'MONDO:0043209'])
             {'MONDO:0008791': ['MONDO:0019042' ... 'MONDO:0021147'],
@@ -192,7 +195,7 @@ class Graph(Ontology):
         """Find the deepest node using breadth first search from root nodes.
 
         Arguments:
-            query (list[str])
+            query (list[str]):
                 An array of nodes for which to find the deepest node.
 
         Returns:

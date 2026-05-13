@@ -8,6 +8,7 @@ the second column.
 """
 
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -102,7 +103,7 @@ class DiSignAtlasProcessor(BaseProcessor):
     version = "1.0.0"
     description = "DiSignAtlas disease and tissue annotations"
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """Process the DiSignAtlas GMT file into standardized sample annotations.
 
         Reads the GMT file, parses the pipe-delimited description field, expands

@@ -7,6 +7,7 @@ microarray (GPL570/GEO) and RNA-seq (refine.bio/SRA) datasets.
 """
 
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -55,7 +56,7 @@ class Johnson2023Processor(BaseProcessor):
     version = "1.0.0"
     description = "Johnson 2023 manually curated annotations for microarray and RNA-seq"
 
-    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs: Any) -> pl.DataFrame:
         """Process Johnson 2023 datasets into standardized annotations.
 
         Arguments:

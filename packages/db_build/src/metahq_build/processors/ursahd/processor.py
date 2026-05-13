@@ -9,6 +9,7 @@ GEO Sample Description using regex.
 """
 
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -66,7 +67,7 @@ class URSAHDProcessor(BaseProcessor):
     version = "1.0.0"
     description = "URSA-HD expert-curated disease, tissue, age, and sex annotations"
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """
         Process the URSA-HD CSV into standardized sample annotations.
 

@@ -6,6 +6,7 @@ tissue (mapped from BTO to UBERON/CL), sex, and age annotations.
 """
 
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -50,7 +51,7 @@ class ALEProcessor(BaseProcessor):
     version = "1.0.0"
     description = "ALE (Giles et al.) manually curated GEO sample annotations"
 
-    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs: Any) -> pl.DataFrame:
         """
         Process ALE annotations into standardized format.
 

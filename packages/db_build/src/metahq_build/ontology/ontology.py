@@ -22,7 +22,8 @@ class Ontology:
             Term ID to term name mapping (e.g., {MONDO:0006858: 'mouth disorder'}).
 
     Example:
-        >>> from ontology.ontology import Ontology
+
+        >>> from  metahq_build.ontology import Ontology
         >>> op = Ontology.from_obo("mondo.obo", ontology="mondo")
     """
 
@@ -77,7 +78,8 @@ class Ontology:
                 Mapping between terms in the ontology and the xref ontology.
 
         Example:
-            >>> from txt2onto.ontology import Ontology
+
+            >>> from metahq_build.ontology import Ontology
             >>> op = Ontology.from_obo("mondo.obo")
             >>> op.xref("MESH").pop("MONDO:0100340")
             MESH:C565561
@@ -120,10 +122,10 @@ class Ontology:
                 Name of the ontology (e.g., MONDO, UBERON, CL). Required to choose the appropriate
                 mapping function.
 
-             _from (str):
+            _from (str):
                 The ontology type of the IDs in terms.
 
-             _to (str):
+            _to (str):
                 The ontology type you want to map those terms to.
 
         Returns:
@@ -131,7 +133,8 @@ class Ontology:
                 Mapping between terms in terms to _to.
 
         Example:
-            >>> from txt2onto.ontology import Ontology
+
+            >>> from metahq_build.ontology import Ontology
             >>> op = Ontology.from_obo("mondo.obo")
             >>> op.map_terms(mesh, ontology="MONDO", _from="MESH", _to="MONDO").pop("MESH:D007680")
             MONDO:0002367
@@ -165,7 +168,8 @@ class Ontology:
                 File type to read from.
 
         Example:
-            >>> from txt2onto.ontology import Ontology
+
+            >>> from  metahq_build.ontology import Ontology
             >>> op = Ontology()
             >>> op.read("mondo.obo", reader="obo")
             >>> op.entries[0]
@@ -240,7 +244,7 @@ class Ontology:
         """Maps a single DOID to MONDO id.
 
         Arguments:
-            mesh (str):
+            doid (str):
                 DOID id (e.g. DOID:0050700).
 
             _map (dict[str, str]):
@@ -251,7 +255,8 @@ class Ontology:
                 Mapped id.
 
         Example:
-            >>> from txt2onto.ontology import Ontology
+
+            >>> from  metahq_build.ontology import Ontology
             >>> op = Ontology.from_obo("mondo.obo")
             >>> _map = op.xref("DOID")
             >>> op.mesh_to_mondo("DOID:0050700", _map)
@@ -282,7 +287,8 @@ class Ontology:
                 Mapped id.
 
         Example:
-            >>> from txt2onto.ontology import Ontology
+
+            >>> from  metahq_build.ontology import Ontology
             >>> op = Ontology.from_obo("mondo.obo")
             >>> _map = op.xref("MESH")
             >>> op.mesh_to_mondo("MESH:D007680", _map)
@@ -302,7 +308,7 @@ class Ontology:
         """Maps a single UMLS to MONDO id.
 
         Arguments:
-            mesh (str):
+            umls (str):
                 UMLS id (e.g. D000324).
 
             _map (dict[str, str]):
@@ -313,7 +319,8 @@ class Ontology:
                 Mapped id.
 
         Example:
-            >>> from txt2onto.ontology import Ontology
+
+            >>> from  metahq_build.ontology import Ontology
             >>> op = Ontology.from_obo("mondo.obo")
             >>> _map = op.xref("UMLS")
             >>> op.mesh_to_mondo("UMLS:C2673913", _map)

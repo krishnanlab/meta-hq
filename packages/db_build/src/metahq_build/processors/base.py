@@ -7,6 +7,7 @@ to ensure consistency across the pipeline.
 
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -69,7 +70,7 @@ class BaseProcessor(ABC):
         self.logger = setup_logger(f"metahq_build.processors.{self.source_name}")
 
     @abstractmethod
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """
         Process raw data into standardized annotation format.
 
@@ -132,7 +133,7 @@ class BaseProcessor(ABC):
         self,
         output_dir: Path = PROCESSED_DIR,
         validate_output: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ) -> pl.DataFrame:
         """
         Run the complete processor workflow: process, validate.

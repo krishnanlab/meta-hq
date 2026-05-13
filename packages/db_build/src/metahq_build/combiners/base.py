@@ -179,8 +179,6 @@ class BaseAnnotationCombiner:
             specific (bool):
                 If True, will remove general annotations and find the most
                     specific from all sources.
-            filter_kwargs:
-
 
         Returns:
             (BaseAnnotationCombiner): self, for chaining.

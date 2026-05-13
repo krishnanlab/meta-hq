@@ -9,6 +9,7 @@ stored in per-study clinical text files inside a ZIP archive.
 import io
 import zipfile
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -167,7 +168,7 @@ class GolightlyProcessor(BaseProcessor):
     version = "1.0.0"
     description = "Golightly (2018) expert-curated GEO sample clinical annotations"
 
-    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path = PROCESSED_DIR, **kwargs: Any) -> pl.DataFrame:
         """
         Process Golightly annotations into standardized format.
 

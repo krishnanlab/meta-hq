@@ -72,6 +72,7 @@ def package(config, data_dir, output_dir, start_from, end_at, verbose):
     database files. Supports resuming from checkpoints.
 
     Examples:
+
         # Build with default configuration
         metahq-build build
 
@@ -79,10 +80,7 @@ def package(config, data_dir, output_dir, start_from, end_at, verbose):
         metahq-build build --config my_config.yaml
 
         # Resume from a specific stage
-        metahq-build build --start-from propagate
-
-        # Build with more workers
-        metahq-build build --num-workers 16
+        metahq-build build --start-from process__ALE
     """
     try:
         if config is None:
@@ -141,7 +139,8 @@ def package(config, data_dir, output_dir, start_from, end_at, verbose):
     help="Path to directory to save shields.",
 )
 def build_shields(sample_db, series_db, outdir):
-    """Build and save shield.io JSON endpoints storing counts for each source in MetaHQ
+    """
+    Build and save shield.io JSON endpoints storing counts for each source in MetaHQ
     sample and series BSON databases.
     """
     from metahq_build.builders import ShieldEndpointBuilder
@@ -279,6 +278,7 @@ def download_gemma(output, query, max_studies):
     'metahq-build process gemma'.
 
     Examples:
+
         # Download with defaults
         metahq-build download gemma
 
@@ -331,6 +331,7 @@ def combine_geo(output):
     krishnanlab, sirota_2011, ursa, ursahd). Missing sources are skipped.
 
     Examples:
+
         metahq-build combine geo
         metahq-build combine geo --output /data/geo_combined.bson
     """
@@ -376,6 +377,7 @@ def combine_sra(output, metadata_db):
     IDs via the OmicIDX DuckDB database. Missing sources are skipped.
 
     Examples:
+
         metahq-build combine sra
         metahq-build combine sra --output /data/sra_combined.bson
         metahq-build combine sra --metadata-db /data/omicidx.duckdb
@@ -444,6 +446,7 @@ def combine_sample(output, geo, sra, metadata_db, specific):
     for every sample in the combined database.
 
     Examples:
+
         metahq-build combine sample
         metahq-build combine sample --output /data/combined__level-sample.bson
         metahq-build combine sample --geo /data/geo.bson --sra /data/sra.bson
@@ -723,6 +726,7 @@ def init_config(output_path, data_dir, output_dir):
     customized for your pipeline.
 
     Examples:
+
         # Create default config
         metahq-build init-config my_pipeline.yaml
 

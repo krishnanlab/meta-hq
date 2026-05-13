@@ -7,6 +7,7 @@ which provides crowd-sourced disease perturbation annotations.
 
 import json
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -41,7 +42,7 @@ class CREEDSProcessor(BaseProcessor):
     version = "1.0.0"
     description = "CREEDS crowd-sourced perturbation annotations"
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """Process CREEDS annotations into standardized format.
 
         Arguments:

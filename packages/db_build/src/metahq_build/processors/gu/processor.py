@@ -6,6 +6,7 @@ which provides manual annotations for SRA samples.
 """
 
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -41,7 +42,7 @@ class GuProcessor(BaseProcessor):
     version = "1.0.0"
     description = "Gu et al. tissue and disease annotations"
 
-    def process(self, output_dir: Path, **kwargs) -> pl.DataFrame:
+    def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """Process Gu 2023 annotations into standardized format.
 
         Arguments:
