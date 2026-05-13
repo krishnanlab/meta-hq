@@ -2,6 +2,7 @@
 Class to build and validate a new MetaHQ data package.
 """
 
+import hashlib
 import shutil
 import sys
 
@@ -63,14 +64,32 @@ class DataPackageBuilder:
             )
             sys.exit(1)
 
+        hash_entries: list[str] = []
         for entry in self.config.structure:
             if not self.dry_run:
                 shutil.copy(entry.source, entry.destination)
+                with open(entry.destination, "rb") as f:
+                    digest = hashlib.file_digest(f, "md5")
+                    hash_ = digest.hexdigest()
+                    filepath = entry.destination.resolve().relative_to(
+                        self.config.data_package_path
+                    )
+                    hash_entries.append(f"{hash_}  {filepath}")
             self.logger.info(
                 "Copied [cyan]%s[/cyan] to [medium_purple1]%s[/medium_purple1]",
                 entry.source,
                 entry.destination,
             )
+
+        if not self.dry_run:
+            with open(self.config.md5_path, "w", encoding="utf-8") as f:
+                for entry in hash_entries:
+                    f.write(f"{entry}\n")
+
+        self.logger.info(
+            "MD5 checksums wrote to %s",
+            self.config.md5_path,
+        )
 
     def check_package_outdir(self) -> int | None:
         """Check outdir existence against overwrite setting.

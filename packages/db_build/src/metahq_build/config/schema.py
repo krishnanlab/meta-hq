@@ -794,6 +794,13 @@ class DataPackageConfig(BaseModel):
         """Return the full path to the data package directory."""
         return self.output_dir / self.package_name
 
+    @property
+    def md5_path(self) -> Path:
+        """Return the full path to the data package directory."""
+        return self.data_package_path.with_suffix(
+            self.data_package_path.suffix + ".md5"
+        )
+
     @classmethod
     def from_yaml(cls, file: Path) -> "DataPackageConfig":
         """Load and validate config from metahq_build.yaml.

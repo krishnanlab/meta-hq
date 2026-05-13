@@ -1,0 +1,14 @@
+bb6db3b78fd7c143cf7de23911019729  annotations/combined__level-sample.bson
+f19da03cb818c5c9146439f21c72a476  annotations/combined__level-series.bson
+743cb555c82752c19936471855a05c48  ontology/mondo/relations.parquet
+37230bd391ec3af4be4f710ab2d76707  ontology/mondo/id_map.parquet
+dbf3e5566b4dd80e458b2cd5813ad693  ontology/mondo/systems.txt
+24318fa528ded695943b53787c0c7b00  ontology/mondo/names_synonyms.json
+41986e2e0cb31be122720b59f41bbe56  ontology/uberon_ext/relations.parquet
+a449bed0812bacfa35d9b83628da594e  ontology/uberon_ext/id_map.parquet
+8e2b4b0943ae52720463257d67ec8fbf  ontology/uberon_ext/systems.txt
+9e9fd448715929351e8c0e4b9561d56c  ontology/uberon_ext/names_synonyms.json
+9fc6fb13d7d17852f43576e439b1134f  ontology/ontology_search.duckdb
+9e2bf4dd6ddbbaf12d17d2eef1fa4de1  metadata/metadata__level-sample.parquet
+c3382fd3f6a5486f4561d608fbb26fed  metadata/metadata__level-series.parquet
+a7cd45dc7db09d30fe35676d8d449b32  metadata/technologies.parquet
