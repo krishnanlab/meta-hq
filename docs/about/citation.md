@@ -22,6 +22,9 @@ To cite MetaHQ please use the following reference:
 Many annotations in the MetaHQ database are derived from external curation efforts. We require that users cite any sources
 that contributed to your retrieved annotation set.
 
+- **Note:** Sample and series annotation counts indicate how many individual sample- or series-level annotations a single source provides, not the number of samples or series.
+  For example, Johnson_2023 may annotate tissue, disease, sex, and age for a single sample. This counts as four sample-level annotations.
+
 ### 1. ALE
 
 - **Source:** Giles CB, et al. (2017) BMC Bioinformatics
@@ -31,7 +34,7 @@ that contributed to your retrieved annotation set.
 - **Rights Statement:** From Rights and Permissions in paper
 - **Access:** [https://github.com/wrenlab/label-extraction/blob/master/data/manual/geo_manual_labels_jdw.tsv](https://github.com/wrenlab/label-extraction/blob/master/data/manual/geo_manual_labels_jdw.tsv)
 - ![Sample annotations in MetaHQ](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/krishnanlab/meta-hq/refs/heads/setup-package/data/shields/ALE__sample.json)
-- ![Series annotations in MetaHQ](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/krishnanlab/meta-hq/refs/heads/setup-package/shields/ALE__series.json)
+- ![Series annotations in MetaHQ](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/krishnanlab/meta-hq/refs/heads/setup-package/data/shields/ALE__series.json)
 
 ### 2. Bgee
 
