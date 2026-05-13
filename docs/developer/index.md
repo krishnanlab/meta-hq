@@ -26,7 +26,8 @@ a cloned version of the repository. There is no PyPI release for `metahq-build`.
 | Package | Version                                                            | Tests                                                                                  |
 | ------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
 | core    | ![metahq-core pypi](https://img.shields.io/pypi/v/metahq-core.svg) | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/Core%20Tests/badge.svg) |
-| cli     | ![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)   | ![CLI Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)  |
+| cli     | ![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)   | ![CLI Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)   |
 | build   | ![metahq-build local](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/krishnanlab/meta-hq/refs/heads/setup-package/data/shields/metahq_build__version.json)                                                              | ![DB-Build Tests](https://github.com/krishnanlab/meta-hq/workflows/DB%20Build%20Tests/badge.svg)  |
-https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/krishnanlab/meta-hq/refs/heads/setup-package/data/shields/ALE__sample.json
+
+
 Open an issue on [GitHub](https://github.com/krishnan/meta-hq/issues) if you encounter any issues or have questions.
