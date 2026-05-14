@@ -71,6 +71,7 @@ class MetadataBuilder:
         self.sample_metadata = (
             self._query_sample(samples, SAMPLE_METADATA_FIELDS)
             .rename({COL_ACCESSION: SAMPLE_ACCESSION_KEY})
+            .with_columns(pl.col(pl.String).str.replace_all("\n", " "))
             .sort(SAMPLE_ACCESSION_KEY)
         )
 
@@ -88,6 +89,7 @@ class MetadataBuilder:
                 .alias("description")
                 .cast(pl.String)
             )  # add description column for backwards compatibility
+            .with_columns(pl.col(pl.String).str.replace_all("\n", " "))
         ).sort(STUDY_ACCESSION_KEY)
 
         return self
