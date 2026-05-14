@@ -1,3 +1,4 @@
+*.ipynb -linguist-detectable=false
 data/unprocessed/disign_atlas.gmt filter=lfs diff=lfs merge=lfs -text
 data/unprocessed/gemma.json filter=lfs diff=lfs merge=lfs -text
 data/processed/geo_combined.bson filter=lfs diff=lfs merge=lfs -text
