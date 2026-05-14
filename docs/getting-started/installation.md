@@ -53,7 +53,7 @@ Install through `pip`:
 pip install packages/core packages/cli
 
 # or from a tar build
-pip install metahq_core-1.0.0.tar.gz metahq_cli-1.0.0.tar.gz
+pip install metahq_core-1.1.0.tar.gz metahq_cli-1.1.1.tar.gz
 ```
 
 ## 2) Download the Database
