@@ -52,7 +52,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [packages/core/src, packages/cli/src]
+          paths: [packages/core/src, packages/cli/src, packages/db_build/src]
           options:
             docstring_style: google
             show_source: false
@@ -145,9 +145,69 @@ nav:
               - QueryConfig: packages/cli/api/configs/query.md
               - CurationConfig: packages/cli/api/configs/curation.md
               - OutputConfig: packages/cli/api/configs/output.md
-            - Setup: 
+            - Setup:
               - Config: packages/cli/api/setup/config.md
               - Downloader: packages/cli/api/setup/download.md
+          - metahq-build:
+            - Commands:
+              - Package: packages/db_build/commands/package.md
+              - Shields: packages/db_build/commands/shields.md
+              - Process: packages/db_build/commands/process.md
+              - List Sources: packages/db_build/commands/list_sources.md
+              - Download: packages/db_build/commands/download.md
+              - Combine: packages/db_build/commands/combine.md
+              - Metadata: packages/db_build/commands/metadata.md
+              - Ontology: packages/db_build/commands/ontology.md
+              - Status: packages/db_build/commands/status.md
+            - Pipeline:
+              - Orchestrator: packages/db_build/api/pipeline/orchestrator.md
+            - Config:
+              - Constants: packages/db_build/api/config/config.md
+              - Schema: packages/db_build/api/config/schema.md
+              - Loader: packages/db_build/api/config/loader.md
+            - Processors:
+              - Base: packages/db_build/api/processors/base.md
+              - Registry: packages/db_build/api/processors/registry.md
+              - ALE: packages/db_build/api/processors/ale.md
+              - Bgee: packages/db_build/api/processors/bgee.md
+              - CellO: packages/db_build/api/processors/cello.md
+              - CREEDS: packages/db_build/api/processors/creeds.md
+              - DiSignAtlas: packages/db_build/api/processors/disign_atlas.md
+              - Gemma: packages/db_build/api/processors/gemma.md
+              - Golightly: packages/db_build/api/processors/golightly.md
+              - Gu: packages/db_build/api/processors/gu.md
+              - Johnson 2023: packages/db_build/api/processors/johnson_2023.md
+              - KrishnanLab: packages/db_build/api/processors/krishnanlab.md
+              - Sirota 2011: packages/db_build/api/processors/sirota_2011.md
+              - URSA: packages/db_build/api/processors/ursa.md
+              - URSAHD: packages/db_build/api/processors/ursahd.md
+            - Combiners:
+              - Base: packages/db_build/api/combiners/base.md
+              - GEO: packages/db_build/api/combiners/geo.md
+              - SRA: packages/db_build/api/combiners/sra.md
+              - Sample: packages/db_build/api/combiners/sample.md
+              - Study: packages/db_build/api/combiners/study.md
+              - Term Filterer: packages/db_build/api/combiners/term_filterer.md
+            - Builders:
+              - Data Package: packages/db_build/api/builders/data_package.md
+              - Metadata: packages/db_build/api/builders/metadata.md
+              - Ontology Search DB: packages/db_build/api/builders/ontology_search_db.md
+              - Shields: packages/db_build/api/builders/shields.md
+            - Ontology:
+              - Ontology: packages/db_build/api/ontology/ontology.md
+              - Graph: packages/db_build/api/ontology/graph.md
+              - Relations: packages/db_build/api/ontology/relations.md
+            - Metadata Retrievers:
+              - Base: packages/db_build/api/metadata/base.md
+              - Sample: packages/db_build/api/metadata/sample.md
+              - Series: packages/db_build/api/metadata/series.md
+            - Fetchers:
+              - Gemma: packages/db_build/api/fetchers/gemma.md
+            - Utilities:
+              - Age Groups: packages/db_build/api/util/age_groups.md
+              - Checkpointing: packages/db_build/api/util/checkpointing.md
+              - Logging: packages/db_build/api/util/logging.md
+              - Progress: packages/db_build/api/util/progress.md
   - About:
       - Citations: about/citation.md 
       - Database License: about/database_license.md

@@ -1,0 +1,89 @@
+﻿raw_tissue,tissue_uberon,uberon_id
+substantia nigra,substantia nigra,UBERON:0002038
+substantia nigra pars compacta,substantia nigra pars compacta,UBERON:0001965
+biceps,biceps brachii,UBERON:0001507
+quadriceps,quadriceps femoris,UBERON:0001377
+deltoid,deltoid,UBERON:0001476
+adipose_tissue_omental,omental fat pad,UBERON:0010414
+amygdala,amygdala,UBERON:0001876
+putamen,putamen,UBERON:0001874
+accumbens,nucleus accumbens,UBERON:0001882
+bone_marrow,bone marrow,UBERON:0002371
+bronchus,bronchus,UBERON:0002185
+adipose_tissue,adipose tissue,UBERON_0001013
+adipose_tissue_subcutaneous,subcutaneous adipose tissue,UBERON_0002190
+amygdala0,amygdala,UBERON:0001876
+putamen0,putamen,UBERON:0001874
+accumbens0,nucleus accumbens,UBERON:0001882
+bone_marrow0,bone marrow,UBERON:0002371
+adrenal_gland_cortex,adrenal gland cortex zone,UBERON:0009753
+coronary_artery,coronary artery,UBERON_0001621
+dorsal_root_ganglia,dorsal root ganglion,UBERON_0000044
+cervix,uterine cervix,UBERON_0000002
+cerebellum,cerebellum,UBERON_0002037
+corpus_callosum,corpus callosum,UBERON_0002336
+colon_cecum,ascending colon,UBERON_0001156
+cerebral_cortex,cerebral hemisphere,UBERON:0001869
+dorsal_root_ganglia0,dorsal root ganglion,UBERON_0000044
+colon_cecum0,ascending colon,UBERON_0001156
+cervix0,uterine cervix,UBERON_0000002
+cerebellum0,cerebellum,UBERON_0002037
+cerebral_cortex0,cerebral hemisphere,UBERON:0001869
+corpus_callosum0,corpus callosum,UBERON_0002336
+heart_atrium,cardiac atrium,UBERON_0002081
+heart_ventricle,cardiac ventricle,UBERON_0002082
+frontal_lobe,frontal lobe,UBERON_0016525
+hippocampus,layer of hippocampus,UBERON:0002305
+hypothalamus,hypothalamus,UBERON_0001898
+endometrium,endometrium,UBERON_0001295
+endometrium0,endometrium,UBERON_0001295
+frontal_lobe0,frontal lobe,UBERON_0016525
+hippocampus0,layer of hippocampus,UBERON:0002305
+hypothalamus0,hypothalamus,UBERON_0001898
+kidney_cortex,cortex of kidney,UBERON_0001225
+esophagus,esophagus,UBERON_0001043
+midbrain,midbrain,UBERON_0001891
+midbrain0,midbrain,UBERON_0001891
+lung,lung,UBERON:0002048
+medulla,medulla oblongata,UBERON_0001896
+mammary_gland0,mammary gland,UBERON_0001911
+myometrium,myometrium,UBERON_0001296
+myometrium0,myometrium,UBERON_0001296
+medulla0,medulla oblongata,UBERON_0001896
+mammary_gland,mammary gland,UBERON_0001911
+liver,liver,UBERON:0002107
+kidney_medulla,renal medulla,UBERON:0000362
+lymph_nodes,lymph node,UBERON_0000029
+nipple_cross-section,nipple,UBERON:0002030
+parietal_lobe,parietal lobe,UBERON:0001872
+pharyngeal_mucosa,paharyngeal mucosa,UBERON_0000355
+nodose_nucleus,inferior vagus X ganglion,UBERON:0005363
+occipital_lobe,occipital lobe,UBERON_0002021
+ovary,ovary,UBERON:0000992
+oral_mucosa,mouth mucosa,UBERON_0003729
+stomach_cardiac,cardiac stomach,UBERON_0008250
+spinal_cord,spinal cord,UBERON_0002240
+saphenous_vein,saphenous vein,UBERON_0007318
+skeletal_muscle,skeletal muscle tissue,UBERON:0001134
+pituitary_gland,pituitary gland,UBERON_0000007
+prostate_gland,prostate gland,UBERON:0002367
+spleen,spleen,UBERON_0002106
+stomach_fundus,fundus of stomach,UBERON_0001160
+stomach_pyloric,pyloric stomach,UBERON_0008246
+salivary_gland,saliva-secreting gland,UBERON:0001044
+subthalamic_nucleus,subthalamic nucleus,UBERON_0001906
+substantia_nigra,substantia nigra,UBERON:0002038
+temporal_lobe,temporal lobe,UBERON_0001871
+thalamus,dorsal plus ventral thalamus,UBERON:0001897
+tongue_main_corpus,body of tongue,UBERON_0011876
+testes,testis,UBERON_0000473
+thyroid_gland,thyroid gland,UBERON_0002046
+ventral_tegmental_area,ventral tegmental area,UBERON_0002691
+vagina,vagina,UBERON_0000996
+trigeminal_ganglia,trigeminal ganglion,UBERON_0001675
+vestibular_nuclei_superior,superior vestibular nucleus,UBERON_0007227
+tongue_superior_part_w/_papillae,superior surface of tongue,UBERON_0007371
+tonsil,tonsil,UBERON_0002372
+trachea,trachea,UBERON_0003126
+vulva,mammalian vulva,UBERON_0000997
+urethra,urethra,UBERON_0000057

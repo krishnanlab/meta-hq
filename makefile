@@ -10,10 +10,10 @@ clean:
 uv_install: clean
 	uv venv
 	uv sync
-	. .venv/bin/activate 
 
-uv_dev: uv_install
-	. .venv/bin/activate && uv sync --dev
+uv_dev:
+	uv venv
+	uv sync --dev
 
 install: clean
 	cd packages/core && pip install -e .

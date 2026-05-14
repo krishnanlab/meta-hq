@@ -1,0 +1,209 @@
+﻿original_label,doid,do_name,mondo_id,mondo_name
+normal,DOID:000000,control,MONDO:000000,control
+Healthy,DOID:000000,control,MONDO:000000,control
+DOID:4,DOID:4,disease,MONDO:0000001,disease or disorder
+DOID:11723,DOID:11723,Duchenne muscular dystrophy,MONDO:0010679,Duchenne muscular dystrophy
+DOID:1240,DOID:1240,leukemia,MONDO:0005059,leukemia
+DOID:8584,DOID:8584,Burkitt lymphoma,MONDO:0007243,Burkitt lymphoma
+DOID:769,DOID:769,neuroblastoma,MONDO:0005072,neuroblastoma
+DOID:2355,DOID:2355,anemia,MONDO:0002280,anemia
+DOID:5183,DOID:5183,hereditary Wilms's tumor,MONDO:0003321,hereditary Wilms tumor
+DOID:8778,DOID:8778,Crohn's disease,MONDO:0005011,Crohn disease
+DOID:3070,DOID:3070,high grade glioma,MONDO:0021042,glioma
+DOID:3347,DOID:3347,osteosarcoma,MONDO:0009807,osteosarcoma
+DOID:8577,DOID:8577,ulcerative colitis,MONDO:0005101,ulcerative colitis
+DOID:12849,DOID:12849,autistic disorder,MONDO:0005258,autism spectrum disorder
+DOID:423,DOID:423,myopathy,MONDO:0005336,myopathy
+DOID:14566,DOID:14566,disease of cellular proliferation,MONDO:0004992,cancer
+DOID:9065,DOID:9065,leishmaniasis,MONDO:0011989,leishmaniasis
+DOID:7148,DOID:7148,rheumatoid arthritis,MONDO:0008383,rheumatoid arthritis
+DOID:1115,DOID:1115,sarcoma,MONDO:0005089,sarcoma
+DOID:11612,DOID:11612,polycystic ovary syndrome,MONDO:0008487,polycystic ovary syndrome
+DOID:9351,DOID:9351,diabetes mellitus,MONDO:0005015,diabetes mellitus
+DOID:2047,DOID:2047,hepatitis D,MONDO:0005789,hepatitis D virus infection
+DOID:1883,DOID:1883,hepatitis C,MONDO:0005231,hepatitis C virus infection
+DOID:289,DOID:289,endometriosis,MONDO:0005133,endometriosis
+DOID:4029,DOID:4029,gastritis,MONDO:0004966,gastritis
+DOID:1574,DOID:1574,alcohol use disorder,MONDO:0002046,alcohol abuse
+DOID:3069,DOID:3069,malignant astrocytoma,MONDO:0021631,brain astrocytoma
+DOID:8893,DOID:8893,psoriasis,MONDO:0005083,psoriasis
+DOID:0050873,DOID:0050873,follicular lymphoma,MONDO:0018906,follicular lymphoma
+DOID:162,DOID:162,cancer,MONDO:0004992,cancer
+DOID:1781,DOID:1781,thyroid gland cancer,MONDO:0002108,thyroid cancer
+DOID:684,DOID:684,hepatocellular carcinoma,MONDO:0007256,hepatocellular carcinoma
+DOID:3910,DOID:3910,lung adenocarcinoma,MONDO:0005061,lung adenocarcinoma
+DOID:3181,DOID:3181,oligodendroglioma,MONDO:0016695,oligodendroglioma
+DOID:1380,DOID:1380,endometrial cancer,MONDO:0011962,endometrial cancer
+DOID:3250,DOID:3250,pleomorphic rhabdomyosarcoma,MONDO:0017386,pleomorphic rhabdomyosarcoma
+DOID:2377,DOID:2377,multiple sclerosis,MONDO:0005301,multiple sclerosis
+DOID:988,DOID:988,mitral valve prolapse,MONDO:0004910,mitral valve prolapse
+DOID:0050741,DOID:0050741,alcohol dependence,MONDO:0007079,alcohol dependence
+DOID:8567,DOID:8567,Hodgkin's lymphoma,MONDO:0004952,Hodgkins lymphoma
+DOID:1909,DOID:1909,melanoma,MONDO:0005105,melanoma
+DOID:2801,DOID:2801,nonspecific interstitial pneumonia,MONDO:0019622,non-specific interstitial pneumonia
+DOID:409,DOID:409,liver disease,MONDO:0005154,liver disorder
+DOID:219,DOID:219,colon cancer,MONDO:0005575,colorectal cancer
+DOID:299,DOID:299,adenocarcinoma,MONDO:0004970,adenocarcinoma
+DOID:0001816,DOID:0001816,angiosarcoma,MONDO:0016982,angiosarcoma
+DOID:9256,DOID:9256,colorectal cancer,MONDO:0005575,colorectal cancer
+DOID:3908,DOID:3908,lung non-small cell carcinoma,MONDO:0005233,non-small cell lung carcinoma
+DOID:3083,DOID:3083,chronic obstructive pulmonary disease,MONDO:0005002,chronic obstructive pulmonary disease
+DOID:3068,DOID:3068,glioblastoma,MONDO:0018177,glioblastoma
+DOID:169,DOID:169,neuroendrocrine tumor,MONDO:0002120,neuroendocrine carcinoma
+DOID:0050156,DOID:0050156,idiopathic pulmonary fibrosis,MONDO:0002771,pulmonary fibrosis
+DOID:8866,DOID:8866,actinic keratosis,MONDO:0005173,actinic keratosis
+DOID:1967,DOID:1967,leiomyosarcoma,MONDO:0005058,leiomyosarcoma
+DOID:9538,DOID:9538,multiple myeloma,MONDO:0009693,plasma cell myeloma
+DOID:657,DOID:657,adenoma,MONDO:0004972,adenoma
+DOID:1612,DOID:1612,breast cancer,MONDO:0007254,breast cancer
+DOID:999,DOID:999,hypereosinophilic syndrome,MONDO:0015691,hypereosinophilic syndrome
+DOID:0050908,DOID:0050908,myelodysplastic syndrome,MONDO:0018881,myelodysplastic syndrome
+DOID:1749,DOID:1749,squamous cell carcinoma,MONDO:0005096,squamous cell carcinoma
+DOID:2394,DOID:2394,ovarian cancer,MONDO:0008170,ovarian cancer
+DOID:3071,DOID:3071,gliosarcoma,MONDO:0016681,gliosarcoma
+DOID:9206,DOID:9206,Barrett's esophagus,MONDO:0013662,Barrett esophagus
+ulcerative colitis,DOID:8577,ulcerative colitis,MONDO:0005101,ulcerative colitis
+control,DOID:000000,control,MONDO:000000,control
+doid:10941,DOID:10941,intracranial aneurysm,MONDO:0016483,intracranial berry aneurysm
+healthy,DOID:000000,control,MONDO:000000,control
+ra ifx treatment,DOID:7148,rheumatoid arthritis,MONDO:0008383,rheumatoid arthritis
+ra non treatment,DOID:7148,rheumatoid arthritis,MONDO:0008384,rheumatoid arthritis
+ra mtx treatment,DOID:7148,rheumatoid arthritis,MONDO:0008385,rheumatoid arthritis
+ra tcz treatment,DOID:7148,rheumatoid arthritis,MONDO:0008386,rheumatoid arthritis
+ra synovial fluid,DOID:7148,rheumatoid arthritis,MONDO:0008387,rheumatoid arthritis
+atn,DOID:12556,acute kidney tubular necrosis,MONDO:0006637,acute kidney tubular necrosis
+mixed atn and ain,DOID:12556|DOID:10952,acute kidney tubular necrosis|nephritis,MONDO:0006637|MONDO:0001166,acute kidney tubular necrosis|nephritis
+ain,DOID:10952,nephritis,MONDO:0001166,nephritis
+nash,DOID:0080547,non-alcoholic steatohepatitis,MONDO:0007027,non-alcoholic steatohepatitis
+cancer - sarcoma,DOID:1115,sarcoma,MONDO:0005089,sarcoma
+cancer - myelofibrosis,DOID:4971,myelofibrosis,MONDO:0044903,myelofibrosis
+heart transplant,DOID:114,heart disease,MONDO:0005267,heart disorder
+cancer - adenoic cystic carcinoma,DOID:0080202,adenoid cystic carcinoma,MONDO:0004971,adenoid cystic carcinoma
+bariatric surgery,DOID:9970,obesity,MONDO:0011122,obesity disorder
+celiac disease,DOID:10608,celiac disease,MONDO:0005130,celiac disease
+cancer - lung squamous cell carcinoma,DOID:3907,lung squamous cell carcinoma,MONDO:0005097,squamous cell lung carcinoma
+asthma,DOID:2841,asthma,MONDO:0004979,asthma
+asthma - obese,DOID:2841|DOID:9970,asthma|obesity,MONDO:0004979|MONDO:0011122,asthma|obesity disorder
+kidney transplant,DOID:557,kidney disease,MONDO:0005240,kidney disorder
+systemic lupus erythematosus,DOID:9074,systemic lupus erythematosus,MONDO:0007915,systemic lupus erythematosus
+nephrectomy,DOID:557,kidney disease,MONDO:0005240,kidney disorder
+Crohn's disease,DOID:8778,Crohn's disease,MONDO:0005011,Crohn disease
+cocaine dependence,DOID:9975,cocaine dependence,MONDO:0005186,cocaine dependence
+cancer - papillary thyroid carcinoma,DOID:3969,thyroid gland papillary carcinoma,MONDO:0005075,thyroid gland papillary carcinoma
+cancer - breast carcinoma,DOID:3459,breast carcinoma,MONDO:0004989,breast carcinoma
+cancer - ovarian carcinoma,DOID:4001,ovarian carcinoma,MONDO:0005140,ovarian carcinoma
+dilated cardiomyopathy,DOID:12930,dilated cardiomyopathy,MONDO:0005021,dilated cardiomyopathy
+Henoch-Schnlein purpura nephritis,DOID:11123,Henoch-Schoenlein purpura,MONDO:0002610,purpura
+mycobacterium,DOID:2755,Mycobacterium avium complex disease,MONDO:0005866,mycobacterium avium complex disease
+cancer - squamous cell lung carcinoma,DOID:3907,lung squamous cell carcinoma,MONDO:0005097,squamous cell lung carcinoma
+prostate tumor,DOID:10283,prostate cancer,MONDO:0008315,prostate cancer
+nonobstructive azoospermia,DOID:14227,azoospermia,MONDO:0100459,azoospermia
+hepatoblastoma,DOID:687,hepatoblastoma,MONDO:0018666,hepatoblastoma
+fracture - neck of femur,na,na,na,na
+tumor,DOID:162,cancer,MONDO:0004992,cancer
+HIV,DOID:526,human immunodeficiency virus infectious disease,MONDO:0005109,HIV infectious disease
+cancer - acute myeloid leukemia,DOID:9119,acute myeloid leukemia,MONDO:0018874,acute myeloid leukemia
+cancer - intrahepatic cholangiocarcinoma,DOID:4928,intrahepatic cholangiocarcinoma,MONDO:0003210,intrahepatic cholangiocarcinoma
+heart failure,DOID:6000,heart failure,MONDO:0005252,heart failure
+LPS,DOID:9352|DOID:114|DOID:557,type 2 diabetes mellitus|heart disease|kidney disease,MONDO:0005148|MONDO:0005267|MONDO:0005240,type 2 diabetes mellitus|heart disorder|kidney disorder
+untreated,na,na,na,na
+cancer - hepatocellular carcinoma,DOID:684,hepatocellular carcinoma,MONDO:0007256,hepatocellular carcinoma
+round cell carcinomas,DOID:6785,desmoplastic small round cell tumor,MONDO:0019373,desmoplastic small round cell tumor
+cancer - pulmonary sarcomatoid carcinomas,DOID:0080777,lung sarcomatoid carcinoma,MONDO:0006279,lung sarcomatoid carcinoma
+MS,DOID:2377,multiple sclerosis,MONDO:0005301,multiple sclerosis
+T1 diabetes,DOID:9744,type 1 diabetes mellitus,MONDO:0005147,type 1 diabetes mellitus
+cancer - gastric,DOID:10534,stomach cancer,MONDO:0001056,gastric cancer
+cancer - lymphoma,DOID:0060058,lymphoma,MONDO:0005062,lymphoma
+cancer - esophageal sqaumous cell carcinoma,DOID:5625,esophageal adenosquamous carcinoma,MONDO:0003550,esophageal adenosquamous carcinoma
+rheumatoid arthritis,DOID:7148,rheumatoid arthritis,MONDO:0008384,rheumatoid arthritis
+cancer,DOID:162,cancer,MONDO:0004992,cancer
+nonalcoholic fatty liver disease,DOID:0080208,nonalcoholic fatty liver disease,MONDO:0013209,non-alcoholic fatty liver disease
+nanoalcoholic steatohepatitis,DOID:0080547,non-alcoholic steatohepatitis,MONDO:0007027,non-alcoholic steatohepatitis
+focal cortical dysplasia,DOID:0090130,focal cortical dysplasia,MONDO:0019009,isolated focal cortical dysplasia
+cancer - leiomyosarcoma,DOID:1967,"	leiomyosarcoma",MONDO:0005058,"	leiomyosarcoma"
+carotid paragangliomas,DOID:8731,carotid body cancer,MONDO:0004650,malignant carotid body paraganglioma
+cancer - carcinoma,DOID:305,carcinoma,MONDO:0004993,carcinoma
+obesity,DOID:9970,obesity,MONDO:0011122,obesity disorder
+sporadic amyotrophic lateral sclerosis,DOID:0080917,sporadic amyotrophic lateral sclerosis,MONDO:0005145,sporadic amyotrophic lateral sclerosis
+ruptured aneurysm,DOID:10941,intracranial aneurysm,MONDO:0016483,intracranial berry aneurysm
+unruptured aneurysm,DOID:10941,intracranial aneurysm,MONDO:0016483,intracranial berry aneurysm
+cancer - lung adenocarcinoma,DOID:3910,lung adenocarcinoma,MONDO:0005061,lung adenocarcinoma
+hyperparathyroidism,DOID:13543,hyperparathyroidism,MONDO:0001741,hyperparathyroidism
+thyroid cancer,DOID:1781,thyroid gland cancer,MONDO:0002108,thyroid cancer
+systemic sclerosis,DOID:418,systemic scleroderma,MONDO:0019340,schleroderma
+atherosclerotic coronary artery disease,DOID:3393,atherosclerotic coronary artery disease,MONDO:0005010,coronary artery disorder
+varicose vein,DOID:799,varicose veins,MONDO:0008638,varicose disease
+Friedreich's ataxia,DOID:12705,Friedreich's ataxia,MONDO:0100339,Friedreich ataxia
+CANVAS disease,DOID:0050753,cerebellar ataxia,MONDO:0000437,cerebellar ataxia
+Fuch's endothelial dystrophy,DOID:11555,Fuch's endothelial dystrophy,MONDO:0005321,Fuch's endothelial dystrophy
+Williams Syndrome,DOID:1928,Williams-Beuren syndrome,MONDO:0008678,Williams syndrome
+clear-cell renal cell carcinoma,DOID:4467,clear cell renal cell carcinoma,MONDO:0005005,clear cell renal carcinoma
+cholesteatoma,DOID:869,cholesteatoma,MONDO:0006530,cholesteatoma
+Control,DOID:000000,control,MONDO:000000,control
+Major Depression,DOID:1470,Major Depression,MONDO:0002009,major depressive disorder
+Bipolar Disorder,DOID:3312,bipolar disorder,MONDO:0004985,bipolar disorder
+Schizophrenia,DOID:5419,Schizophrenia,MONDO:0005090,schizophrenia
+latent TB,DOID:399,tuberculosis,MONDO:0018076,tuberculosis
+Active_TB,DOID:399,tuberculosis,MONDO:0018077,tuberculosis
+LTBI_Progressor,DOID:399,tuberculosis,MONDO:0018078,tuberculosis
+LTBI,DOID:399,tuberculosis,MONDO:0018079,tuberculosis
+Negative_PTSD,DOID:000000,control,MONDO:000000,control
+Positive_PTSD,DOID:2055,post-traumatic stress disorder,MONDO:0005146,post-traumatic stress disorder
+Normal,DOID:000000,control,MONDO:000000,control
+Background,na,na,na,na
+Hepatoblastoma,DOID:687,hepatoblastoma,MONDO:0018666,hepatoblastoma
+tumorous prostate tissue,DOID:10283,tumorous prostate tissue,MONDO:0008315,prostate cancer
+normal prostate tissue,DOID:000000,control,MONDO:000000,control
+adenomatous prostate tissue,DOID:11132,prostatic hypertrophy,MONDO:0010811,benign prostatic hyperplasia
+DOID:9146,DOID:9146,visceral leishmaniasis,MONDO:0005445,visceral leishmaniasis
+DOID:4051,DOID:4051,alveolar rhabdomyosarcoma,MONDO:0009994,alveolar rhabdomyosarcoma
+DOID:0060041,DOID:0060041,autism spectrum disorder,MONDO:0005258,autism spectrum disorder
+DOID:3246,DOID:3246,embryonal rhabdomyosarcoma,MONDO:0009993,embryonal rhabdomyosarcoma
+DOID:0050012,DOID:0050012,chikungunya,MONDO:0017941,chikungunya
+DOID:0060180,DOID:0060180,colitis,MONDO:0005292,colitis
+DOID:8398,DOID:8398,osteoarthritis,MONDO:0005178,osteoarthritis
+DOID:10608,DOID:10608,celiac disease,MONDO:0005130,celiac disease
+DOID:526,DOID:526,human immunodeficiency virus infectious disease,MONDO:0005109,HIV infectious disease
+DOID:2043,DOID:2043,hepatitis B,MONDO:0005344,hepatitis B virus infection
+DOID:0050700,DOID:0050700,cardiomyopathy,MONDO:0004994,cardiomyopathy
+DOID:9744,DOID:9744,type 1 diabetes mellitus,MONDO:0005147,type 1 diabetes mellitus
+DOID:1324,DOID:1324,lung cancer,MONDO:0008903,lung cancer
+DOID:13406,DOID:13406,pulmonary sarcoidosis,MONDO:0001708,pulmonary sarcoidosis
+DOID:10763,DOID:10763,hypertension,MONDO:0005044,hypertensive disorder
+DOID:9352,DOID:9352,type 2 diabetes mellitus,MONDO:0005148,type 2 diabetes mellitus
+DOID:593,DOID:593,aroraphobia,MONDO:0003699,phobic disorder
+DOID:9253,DOID:9253,gastrointestinal stromal tumor,MONDO:0011719,gastrointestinal stromal tumor
+DOID:12858,DOID:12858,Huntington's disease,MONDO:0007739,Huntington disease
+DOID:14464,DOID:14464,neuroleptic malignant syndrome,MONDO:0019790,neuroleptic malignant syndrome
+DOID:552,DOID:552,pneumonia,MONDO:0005249,pneumonia
+DOID:1040,DOID:1040,chronic lymphocytic leukemia,MONDO:0003864,chronic lymphocytic leukemia/small lymphocytic lymphoma
+DOID:332,DOID:332,amyotrophic lateral sclerosis,MONDO:0004976,amyotrophic lateral sclerosis
+DOID:5940,DOID:5940,malignant peripheral nerve sheath tumor,MONDO:0017827,malignant peripheral nerve sheath tumor
+DOID:1307,DOID:1307,dementia,MONDO:0001627,dementia
+DOID:1993,DOID:1993,rectum cancer,MONDO:0006519,rectal cancer
+DOID:178,DOID:178,vascular disease,MONDO:0005385,vascular disorder
+DOID:305,DOID:305,carcinoma,MONDO:0004993,carcinoma
+DOID:7475,DOID:7475,diverticulitis,MONDO:0004235,diverticulitis
+DOID:5758,DOID:5758,malignant mesenchymoma,MONDO:0003633,malignant mesenchymoma
+DOID:3247,DOID:3247,rhabdomyosarcoma,MONDO:0005212,rhabdomyosarcoma
+DOID:1793,DOID:1793,pancreatic cancer,MONDO:0002116,malignant exocrine pancreas neoplasm
+DOID:5419,DOID:5419,schizophrenia,MONDO:0005090,schizophrenia
+DOID:9884,DOID:9884,muscular dystrophy,MONDO:0020121,muscular dystrophy
+DOID:848,DOID:848,arthritis,MONDO:0005578,arthritic joint disease
+DOID:4235,DOID:4235,spindle cell sarcoma,MONDO:0002927,spindle cell sarcoma
+DOID:4411,DOID:4411,hepatitis E,MONDO:0005788,hepatitis E virus infection
+DOID:9970,DOID:9970,obesity,MONDO:0011122,obesity disorder
+DOID:0060058,DOID:0060058,lymphoma,MONDO:0005062,lymphoma
+DOID:0060205,DOID:0060205,frontotemporal dementia and/or amyotrophic lateral sclerosis-6,MONDO:0013501,frontotemporal dementia and/or amyotrophic lateral sclerosis 6
+DOID:0060201,DOID:0060201,amyotrophic lateral sclerosis type 10,MONDO:0012790,amyotrophic lateral sclerosis type 10
+DOID:0060469,DOID:0060469,Miller-Dieker lissencephaly syndrome,MONDO:0009532,Miller-Dieker lissencephaly syndrome
+DOID:0060194,DOID:0060194,amyotrophic lateral sclerosis type 2,MONDO:0008780,"amyotrophic lateral sclerosis type 2, juvenile"
+DOID:0060193,DOID:0060193,amyotrophic lateral sclerosis type 1,MONDO:0007103,amyotrophic lateral sclerosis type 1
+DOID:0060200,DOID:0060200,amyotrophic lateral sclerosis type 9,MONDO:0012753,amyotrophic lateral sclerosis type 9
+DOID:0060195,DOID:0060195,amyotrophic lateral sclerosis type 3,MONDO:0011691,amyotrophic lateral sclerosis type 3
+DOID:184,DOID:184,bone cancer,MONDO:0002129,bone cancer
+DOID:4074,DOID:4074,pancreatic adenocarcinoma,MONDO:0006047,pancreatic adenocarcinoma
+DOID:5485,DOID:5485,synovial sarcoma,MONDO:0010434,synovial sarcoma
+DOID:2668,DOID:2668,mesenchymoma,MONDO:0006854,mesenchymoma
+DOID:0070004,DOID:0070004,myeloid neoplasm,MONDO:0005170,myeloid neoplasm
+DOID:12549,DOID:12549,hepatitis A,MONDO:0005790,hepatitis A virus infection

@@ -1,0 +1,3 @@
+- omicidx.duckdb
+  - Database from [https://github.com/omicidx/omicidx](https://github.com/omicidx/omicidx) storing NCBI metadata
+  - Downloaded with `curl https://raw.githubusercontent.com/omicidx/omicidx-etl/refs/heads/main/omicidx_etl/sql/020_base_parquet_views.sql | duckdb omicidx.duckdb`

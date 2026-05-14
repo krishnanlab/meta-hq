@@ -1,25 +1,32 @@
 [tool.uv.workspace]
-members = ["packages/core", "packages/cli"]
+members = ["packages/core", "packages/cli", "packages/db_build"]
 
 [tool.uv.sources]
 metahq-core = { workspace = true }
 metahq-cli = { workspace = true }
+metahq-build = { workspace = true }
 
 [tool.uv]
 dev-dependencies = [
     "pytest>=8.0",
     "pytest-cov",
     "pytest-benchmark",
-    "black",
-    "isort",
+    "black>=26.3.1",
+    "isort>=8.0.1",
     "flake8",
     "mypy",
     "vulture",
     "metahq-cli",
     "metahq-core",
+    "metahq-build",
     "mkdocs>=1.6.1",
     "pymdown-extensions",
     "mkdocstrings[python]",
     "mkdocs-material",
     "mkdocs-click",
+    "marimo>=0.23.3",
+    "matplotlib>=3.10.9",
+    "seaborn>=0.13.2",
+    "scipy>=1.17.1",
+    "pylint>=4.0.5",
 ]
