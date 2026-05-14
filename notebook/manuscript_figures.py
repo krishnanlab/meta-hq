@@ -12,7 +12,7 @@ def _(mo):
 
     Author: Parker Hicks <br>
     Date: 2026-01-17 <br>
-    Last updated: 2026-05-08 by Parker Hicks
+    Last updated: 2026-05-13 by Parker Hicks
     """)
     return
 
@@ -70,8 +70,8 @@ def _(Any, BSON, Path):
 
 @app.cell
 def _(Path):
-    # define constants
-    ANNOTATIONS_DIR = Path("data/processed")
+    # constants
+    ANNOTATIONS_DIR = Path("data/processed")  # MetaHQ database v1.1.0
     ATTRIBUTES = ["tissue", "disease", "sex", "age"]
 
     METADATA_DIR = Path("data/metadata")
@@ -86,13 +86,19 @@ def _(Path):
     # plotting
     COLORS = {'tissue': 'steelblue', 'disease': 'coral', 'sex': 'mediumseagreen', 'age': 'mediumpurple'}
     FMT = "png"
+    OVERLAP_ORDER = ["tissue", "disease", "sex", "age"]
+    OVERLAP_CMAP = "Blues"
+    PMI_CMAP = "vlag"
     return (
         ANNOTATIONS_DIR,
         ATTRIBUTES,
         COLORS,
         FIGURES_DIR,
         FMT,
+        OVERLAP_CMAP,
+        OVERLAP_ORDER,
         PLATFORMS_FILE,
+        PMI_CMAP,
         RESULTS_DIR,
         UNIQUE_PROPAGATED_TERMS,
     )
@@ -158,7 +164,7 @@ def _(COLORS, Path, pl, plt, sns, ticker):
 
         # x-axis
         plt.xlabel("")
-        ax.set_xticklabels(ax.get_xticklabels(), ha="right", rotation=45)
+        ax.tick_params("x", rotation=45)
 
         # y-axis
         plt.ylabel(ylabel)
@@ -184,6 +190,7 @@ def _(COLORS, Path, pl, plt, sns, ticker):
         verbose: bool = False,
         titles: list[str] | None = None,
         order: list[str] | None = None,
+        ylim_scale: int = 1,
     ):
         """Plot the total number of entries with each attribute annotation."""
         colors = {k.capitalize(): v for k,v in COLORS.items()}
@@ -227,7 +234,15 @@ def _(COLORS, Path, pl, plt, sns, ticker):
 
             ax.set_xlabel(ylabel)
             ax.get_xaxis().set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
-            ax.set_xticklabels(ax.get_xticklabels(), ha="center", rotation=30)
+            ax.tick_params("x", rotation=30)
+
+            # sample ticks
+            if idx == 0:
+                ax.set_xticks([50000, 150000])
+
+            # study ticks
+            if idx == 1:
+                ax.set_xticks([5000, 15000])
 
             # y-axis (now shows categories)
             ax.set_ylabel("" if idx > 0 else "")  # Only show ylabel on leftmost plot
@@ -315,6 +330,7 @@ def _(plot_total_anno_sample_and_study, sample_db, series_db):
         outfile="figures/attribute_sample_and_study_count.svg",
         dpi=1000,
         order=["Tissue", "Disease", "Sex", "Age"],
+        ylim_scale=1,
     )
     return
 
@@ -420,7 +436,6 @@ def _(UpSet, from_contents, plt):
         plt.tight_layout()
 
         if save and isinstance(outfile, str):
-
             plt.savefig(outfile, dpi=dpi)
 
         plt.show()
@@ -944,15 +959,17 @@ def _(Literal, np):
 
         Arguments:
             x (NDArray):
-                2D array-like, symmetric count matrix
+                2D array-like, symmetric count matrix.
             positive (bool):
-                If True, return PPMI
+                If True, return PPMI.
+            method (Literal['positive', 'norm'] | None):
+                Compute ppmi or npmi.
 
         Returns:
             (NDArray): square 2D numpy array of PMI values
         """
         x = np.array(x, dtype=float)
-    
+
 
         total = x.sum()
 
@@ -1037,18 +1054,10 @@ def _(Path, np, pl, plt, sns):
 
         if save and isinstance(outfile, (str, Path)):
             plt.savefig(outfile, dpi=400)
-    
+
         plt.show()
 
     return (plot_overlap_heatmap,)
-
-
-@app.cell
-def _():
-    OVERLAP_ORDER = ["tissue", "disease", "sex", "age"]
-    OVERLAP_CMAP = "Blues"
-    PMI_CMAP = "vlag"
-    return OVERLAP_CMAP, OVERLAP_ORDER, PMI_CMAP
 
 
 @app.cell(hide_code=True)
@@ -1163,7 +1172,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Absolute counts
+    ### Absolute counts
     """)
     return
 
