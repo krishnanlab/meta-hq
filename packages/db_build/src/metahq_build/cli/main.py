@@ -73,14 +73,11 @@ def package(config, data_dir, output_dir, start_from, end_at, verbose):
 
     Examples:
 
-        # Build with default configuration
-        metahq-build build
-
         # Build with custom config
-        metahq-build build --config my_config.yaml
+        metahq-build build --config data/build_config.yaml
 
         # Resume from a specific stage
-        metahq-build build --start-from process__ALE
+        metahq-build build --config data/build_config.yaml --start-from process__ALE
     """
     try:
         if config is None:
