@@ -1068,7 +1068,6 @@ wheels = [
 
 [[package]]
 name = "metahq-build"
-version = "0.1.0"
 source = { editable = "packages/db_build" }
 dependencies = [
     { name = "click" },
