@@ -33,6 +33,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Arrow C++ (Windows ARM64)
+        if: runner.os == 'Windows' && runner.arch == 'ARM64'
+        run: |
+          vcpkg install arrow:arm64-windows
+          echo "CMAKE_PREFIX_PATH=C:/vcpkg/installed/arm64-windows" >> $env:GITHUB_ENV
+
       - name: Install dependencies
         run: |
           pip install pyinstaller
