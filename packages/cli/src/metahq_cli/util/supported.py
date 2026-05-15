@@ -4,16 +4,17 @@ Settings for supported CLI options.
 Author: Parker Hicks
 Date: 2025-09-05
 
-Last updated: 2026-02-02 by Parker Hicks
+Last updated: 2026-05-14 by Parker Hicks
 """
 
 from pathlib import Path
 
-LATEST_DATABASE: dict[str, str] = {"version": "v1.0.1", "doi": "18462463"}
+LATEST_DATABASE: dict[str, str] = {"version": "v1.1.0", "doi": "20186688"}
 DOIS = {
     "17663087": {"version": "v1.0.0-alpha", "filename": "metahq.tar.gz"},
     "17666183": {"version": "v1.0.0", "filename": "metahq_data.tar.gz"},
     "18462463": {"version": "v1.0.1", "filename": "metahq_data.tar.gz"},
+    "20186688": {"version": "v1.1.0", "filename": "metahq_data.tar.gz"},
 }
 
 
