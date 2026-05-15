@@ -67,6 +67,8 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
+
+      - name: Build packages
         run: |
           uv build packages/core
           uv build packages/cli
