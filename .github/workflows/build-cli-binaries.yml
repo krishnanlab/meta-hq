@@ -22,8 +22,6 @@ jobs:
             artifact_name: metahq-macos-intel
           - os: windows-latest
             artifact_name: metahq-windows-x86_64.exe
-          - os: windows-11-arm
-            artifact_name: metahq-windows-arm64.exe
 
     steps:
       - uses: actions/checkout@v4
@@ -32,12 +30,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Install Arrow C++ (Windows ARM64)
-        if: runner.os == 'Windows' && runner.arch == 'ARM64'
-        run: |
-          vcpkg install arrow:arm64-windows
-          echo "CMAKE_PREFIX_PATH=C:/vcpkg/installed/arm64-windows" >> $env:GITHUB_ENV
 
       - name: Install dependencies
         run: |
