@@ -22,8 +22,6 @@ jobs:
             artifact_name: metahq-macos-intel
           - os: windows-latest
             artifact_name: metahq-windows-x86_64.exe
-          - os: windows-11-arm
-            artifact_name: metahq-windows-arm64.exe
 
     steps:
       - uses: actions/checkout@v4
