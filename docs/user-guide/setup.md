@@ -24,8 +24,8 @@ Download the latest MetaHQ database and save to a custom directory:
 metahq setup --data-dir "/path/to/custom_dir"
 ```
 
-Download MetaHQ database v1.0.1:
+Download MetaHQ database v1.1.0:
 
 ```bash
-metahq setup --doi 18462463
+metahq setup --doi 20186688
 ```

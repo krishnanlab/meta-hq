@@ -29,4 +29,5 @@ dev-dependencies = [
     "seaborn>=0.13.2",
     "scipy>=1.17.1",
     "pylint>=4.0.5",
+    "pyinstaller>=6.20.0",
 ]
