@@ -65,7 +65,13 @@ def _(Any, BSON, Path):
         with open(file, "r", **kwargs) as f:
             return [line.strip() for line in f.readlines()]
 
-    return load_bson, load_txt
+    def combine_bsons(a: Path | str, b: Path | str) -> dict:
+        """Load and combine two BSON dictionaries a and b."""
+        _a = load_bson(a)
+        _b = load_bson(b)
+        return _a | _b
+
+    return combine_bsons, load_bson, load_txt
 
 
 @app.cell
@@ -82,6 +88,8 @@ def _(Path):
     OVERLAP_RESULTS = list(RESULTS_DIR.glob("overlap*"))
 
     FIGURES_DIR: Path = Path("figures")
+
+    ATTRIBUTES = ["tissue", "disease", "sex", "age"]
 
     # plotting
     COLORS = {'tissue': 'steelblue', 'disease': 'coral', 'sex': 'mediumseagreen', 'age': 'mediumpurple'}
@@ -105,8 +113,17 @@ def _(Path):
 
 
 @app.cell
+def _(Path):
+    # Source annotation files
+    PROCESSED_DIR = Path("data/processed")
+    SRA_PROCESSED = PROCESSED_DIR / "sra_combined.bson"
+    GEO_PROCESSED = PROCESSED_DIR / "geo_combined.bson"
+    return GEO_PROCESSED, SRA_PROCESSED
+
+
+@app.cell
 def _(ANNOTATIONS_DIR, load_bson):
-    ""# load the databases
+    # load the databases
     sample_db = load_bson(ANNOTATIONS_DIR / "combined__level-sample.bson")
     series_db = load_bson(ANNOTATIONS_DIR / "combined__level-series.bson")
 
@@ -1263,6 +1280,63 @@ def _(
         save=True,
         outfile=FIGURES_DIR / "overlap__level-series__metric-pmi.png",
     )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Annotation improvement
+    The following plots show the annotation coverage improvement for samples and studies post-harmonization.
+
+    You may notice that the files used as the pre-harmonization files have "processed" in their name. Here, "processed" simply means that we converted the annotations to a standardized format and removed annotations that we deemed too general (e.g., anatomical entity , surface groove, etc) or annotations that are unharmonizable (e.g., sex annotated as "tuberculosis").
+    """)
+    return
+
+
+@app.cell
+def _(pl):
+    def collect_db_anno(
+        db: dict,
+        attributes: list[str],
+        entry_prefix: str | tuple[str, ...],
+    ) -> pl.DataFrame:
+        results = {"accession": [], "attribute": [], "source": []}
+        for entry, contents in db.items():
+
+            if not entry.startswith(entry_prefix):
+                continue
+        
+            for attribute in attributes:
+                if attribute not in contents:
+                    continue
+
+                for source in contents[attribute]:
+                    results["accession"].append(entry)
+                    results["attribute"].append(attribute)
+                    results["source"].append(source)
+
+        return pl.DataFrame(results).group_by(["source", "attribute"]).len(name="num_old").sort(["source", "attribute"])
+
+    return (collect_db_anno,)
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    GEO_PROCESSED,
+    SRA_PROCESSED,
+    collect_db_anno,
+    combine_bsons,
+):
+    raw_annotations = combine_bsons(GEO_PROCESSED, SRA_PROCESSED)
+    collect_db_anno(raw_annotations, ATTRIBUTES, entry_prefix=("GSM", "SRR", "SRX"))
+    return
+
+
+@app.cell
+def _(ATTRIBUTES, collect_db_anno, sample_db):
+    collect_db_anno(sample_db, ATTRIBUTES, entry_prefix="GSM")
     return
 
 
