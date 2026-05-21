@@ -27,6 +27,9 @@ def _():
 
     import marimo as mo
     import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    import matplotlib.colors as mcolors
+    from matplotlib.patches import Patch
     import numpy as np
     import polars as pl
     import seaborn as sns
@@ -38,12 +41,15 @@ def _():
         Any,
         BSON,
         Literal,
+        Patch,
         Path,
         UpSet,
         ceil,
         defaultdict,
         from_contents,
+        mcolors,
         mo,
+        mpatches,
         np,
         pl,
         plt,
@@ -65,13 +71,7 @@ def _(Any, BSON, Path):
         with open(file, "r", **kwargs) as f:
             return [line.strip() for line in f.readlines()]
 
-    def combine_bsons(a: Path | str, b: Path | str) -> dict:
-        """Load and combine two BSON dictionaries a and b."""
-        _a = load_bson(a)
-        _b = load_bson(b)
-        return _a | _b
-
-    return combine_bsons, load_bson, load_txt
+    return load_bson, load_txt
 
 
 @app.cell
@@ -118,6 +118,9 @@ def _(Path):
     PROCESSED_DIR = Path("data/processed")
     SRA_PROCESSED = PROCESSED_DIR / "sra_combined.bson"
     GEO_PROCESSED = PROCESSED_DIR / "geo_combined.bson"
+
+    # helpers
+    SRA2GEO = Path("data/metadata/sra2geo.parquet")
     return GEO_PROCESSED, SRA_PROCESSED
 
 
@@ -164,12 +167,9 @@ def _(COLORS, Path, pl, plt, sns, ticker):
         df = pl.DataFrame(
             {"attribute": list(total.keys()), "count": list(total.values())}
         )
-
-        colors = {k.capitalize(): v for k,v in COLORS.items()}
-
-        # capitalize attribute names
         df = df.with_columns(pl.col("attribute").str.to_titlecase().alias("attribute"))
 
+        colors = {k.capitalize(): v for k,v in COLORS.items()}
         plt.figure(figsize=figsize)
         ax = sns.barplot(
             df, x="attribute",
@@ -676,7 +676,15 @@ def _(mo):
 
 
 @app.cell
-def _(COLORS, ceil, pl, plt, sns, ticker):
+def _(COLORS, Patch, ceil, mcolors, pl, plt, sns, ticker):
+    def lighten_color(color, amount=0.5):
+        try:
+            c = mcolors.to_rgb(color)
+        except ValueError:
+            c = mcolors.to_rgb(mcolors.cnames[color])
+        c = [(1 - amount) * comp + amount for comp in c]
+        return c
+
     def plot_source_counts_by_attribute(
         df: pl.DataFrame,
         ylabel: str,
@@ -689,21 +697,11 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
         ylim_scale: int = 1,
         verbose: bool = False,
     ):
-        import matplotlib.colors as mcolors
-        from matplotlib.patches import Patch
 
         TECHNOLOGY_COLORS = {
             "microarray": "dimgrey",
             "rnaseq": "lightgrey",
         }
-
-        def lighten_color(color, amount=0.5):
-            try:
-                c = mcolors.to_rgb(color)
-            except ValueError:
-                c = mcolors.to_rgb(mcolors.cnames[color])
-            c = [(1 - amount) * comp + amount for comp in c]
-            return c
 
         def get_tech_color(tech, base_color):
             if tech == "microarray":
@@ -778,7 +776,7 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
             plt.savefig(outfile, dpi=dpi, bbox_inches="tight")
         plt.show()
 
-    return (plot_source_counts_by_attribute,)
+    return lighten_color, plot_source_counts_by_attribute
 
 
 @app.cell
@@ -1289,7 +1287,13 @@ def _(mo):
     # Annotation improvement
     The following plots show the annotation coverage improvement for samples and studies post-harmonization.
 
-    You may notice that the files used as the pre-harmonization files have "processed" in their name. Here, "processed" simply means that we converted the annotations to a standardized format and removed annotations that we deemed too general (e.g., anatomical entity , surface groove, etc) or annotations that are unharmonizable (e.g., sex annotated as "tuberculosis").
+        \[
+            \frac{|X_A \cap O|}{|X \cap O|}
+        \]
+
+    * X = set of samples annotated by source X
+    * X_A = set of samples in source X that have an annotation to attribute A
+    * O = set of samples annotated by at least one other source (i.e. any source ≠ X) regardless of attribute
     """)
     return
 
@@ -1306,7 +1310,7 @@ def _(pl):
 
             if not entry.startswith(entry_prefix):
                 continue
-        
+
             for attribute in attributes:
                 if attribute not in contents:
                     continue
@@ -1316,7 +1320,7 @@ def _(pl):
                     results["attribute"].append(attribute)
                     results["source"].append(source)
 
-        return pl.DataFrame(results).group_by(["source", "attribute"]).len(name="num_old").sort(["source", "attribute"])
+        return pl.DataFrame(results).sort(["accession", "source", "attribute"])
 
     return (collect_db_anno,)
 
@@ -1327,16 +1331,440 @@ def _(
     GEO_PROCESSED,
     SRA_PROCESSED,
     collect_db_anno,
-    combine_bsons,
+    load_bson,
+    pl,
 ):
-    raw_annotations = combine_bsons(GEO_PROCESSED, SRA_PROCESSED)
-    collect_db_anno(raw_annotations, ATTRIBUTES, entry_prefix=("GSM", "SRR", "SRX"))
+    geo_anno = load_bson(GEO_PROCESSED)
+    geo_anno = collect_db_anno(geo_anno, ATTRIBUTES, entry_prefix="GSM")
+
+    sra_anno = load_bson(SRA_PROCESSED)
+    sra_anno = collect_db_anno(sra_anno, ATTRIBUTES, entry_prefix="GSM")
+
+    raw_sample_df = pl.concat([geo_anno, sra_anno], how="vertical").unique()
+    return (raw_sample_df,)
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    GEO_PROCESSED,
+    collect_db_anno,
+    load_bson,
+    sample_db,
+    series_db,
+):
+    new_sample_df = (
+        collect_db_anno(sample_db, ATTRIBUTES, entry_prefix="GSM")
+            .unique(["accession", "attribute", "source"])
+    )
+
+    raw_series_df = collect_db_anno(load_bson(GEO_PROCESSED), ATTRIBUTES, entry_prefix="GSE")
+    new_series_df = (
+        collect_db_anno(series_db, ATTRIBUTES, entry_prefix="GSE")
+            .unique(["accession", "attribute", "source"])
+    )
+    return new_sample_df, new_series_df, raw_series_df
+
+
+@app.cell
+def _(ATTRIBUTES, pl):
+    def add_missing_attribute_counts(df: pl.DataFrame, col_count: str, attributes: list[str]) -> pl.DataFrame:
+        additional_rows = {"attribute": [], col_count: []}
+        for attribute in attributes:
+            if attribute not in df["attribute"]:
+                additional_rows["attribute"].append(attribute)
+                additional_rows[col_count].append(0)
+
+        additional_df = pl.DataFrame(additional_rows, schema=df.schema)
+        return pl.concat([df, additional_df], how="vertical").sort("attribute")
+
+
+    def extract_annotation_count_differences(
+        old: pl.DataFrame, new: pl.DataFrame, attributes: list[str]
+    ) -> pl.DataFrame:
+
+        results: list[pl.DataFrame] = []
+        for i, source in enumerate(old["source"].unique()):
+
+            shared_entries = old.join(new, on="accession")["accession"].unique().to_list()
+            entries_in_other_sources = (
+                new
+                .filter(~pl.col("source").is_in([source]))
+                ["accession"].unique().to_list()
+            )
+
+            old_source = (
+                old
+                .filter(pl.col("source") == source)
+                .filter(pl.col("accession").is_in(shared_entries))
+            )
+            new_source = (
+                new
+                .drop("source")
+                .unique()
+                .filter(
+                    pl.col("accession").is_in(shared_entries) &
+                    pl.col("accession").is_in(entries_in_other_sources)
+                )
+            )
+
+            n_shared_samples = len(shared_entries)
+            total = old_source["accession"].unique().len()
+
+            old_counts = old_source.group_by("attribute").len(name="num_old")
+            new_counts = new_source.group_by("attribute").len(name="num_new")
+
+            old_counts = add_missing_attribute_counts(
+                old_counts, col_count="num_old", attributes=ATTRIBUTES
+            )
+            new_counts = add_missing_attribute_counts(
+                new_counts, col_count="num_new", attributes=ATTRIBUTES
+            )
+
+            old_counts = old_counts.with_columns(
+                (pl.col("num_old") / n_shared_samples).alias("percent_old")
+            )
+            new_counts = new_counts.with_columns(
+                (pl.col("num_new") / n_shared_samples).alias("percent_new")
+            )
+
+            results.append(
+                old_counts
+                .join(new_counts, on="attribute")
+                .with_columns(pl.lit(source).alias("source"))
+            )
+
+        return pl.concat(results, how="vertical")
+
+    return (extract_annotation_count_differences,)
+
+
+@app.cell
+def _(pl):
+    def extract_source_annotation_count_differences(
+        raw: pl.DataFrame, new: pl.DataFrame, attributes: list[str], source: str
+    ) -> pl.DataFrame:
+        shared_entries = set(
+            raw
+            .filter(pl.col("source") == source)
+            .join(new, on="accession", how="inner")
+            ["accession"]
+            .unique()
+            .to_list()
+        )
+        n_shared_entries = len(shared_entries)
+
+        results = {"attribute": [], "num_old": [], "percent_old": [], "num_new": [], "percent_new": []}
+        for attribute in attributes:
+            # all annotations in source S
+            S = set(
+                raw
+                .filter(pl.col("source") == source)
+                ["accession"]
+                .unique()
+                .to_list()
+            )
+
+            # all annotations to attribute A in source S
+            S_A = set(
+                raw
+                .filter(
+                    (pl.col("source") == source) & (pl.col("attribute") == attribute)
+                )
+                ["accession"]
+                .unique()
+                .to_list()
+            )
+
+            # entries in the database that have an annotation from any other source
+            O_not_S = set(
+                new
+                .filter(~pl.col("source").is_in([source]))
+                ["accession"]
+                .unique()
+                .to_list()
+            )
+
+            # entries in the database with an annotation to attribute A 
+            O_A = set(
+                new
+                .filter(pl.col("attribute") == attribute)
+                ["accession"]
+                .unique()
+                .to_list()
+            )
+
+
+            num_old = len(S_A & O_not_S)
+            percent_old = num_old / n_shared_entries
+
+            num_new = len(S & O_A)
+            percent_new = num_new / n_shared_entries
+        
+            results["attribute"].append(attribute)
+            results["num_old"].append(num_old)
+            results["percent_old"].append(percent_old)
+            results["num_new"].append(num_new)
+            results["percent_new"].append(percent_new)
+
+        return pl.DataFrame(results)
+
+    return (extract_source_annotation_count_differences,)
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    extract_source_annotation_count_differences,
+    new_sample_df,
+    raw_sample_df,
+):
+    r = extract_source_annotation_count_differences(raw_sample_df, new_sample_df, ATTRIBUTES, source="KrishnanLab")
+    r
     return
 
 
 @app.cell
-def _(ATTRIBUTES, collect_db_anno, sample_db):
-    collect_db_anno(sample_db, ATTRIBUTES, entry_prefix="GSM")
+def _(pl):
+    def new_extract_source_annotation_count_differences(
+        raw: pl.DataFrame, new: pl.DataFrame, attributes: list[str], source: str
+    ) -> pl.DataFrame:
+        shared_entries = set(
+            raw.filter(pl.col("source") == source)
+            .join(new, on="accession", how="inner")["accession"]
+            .unique()
+            .to_list()
+        )
+        n_shared_entries = len(shared_entries)
+
+        results = {
+            "attribute": [],
+            "num_old": [],
+            "percent_old": [],
+            "num_new": [],
+            "percent_new": [],
+        }
+        for attribute in attributes:
+            # shared entries that had attribute A annotated from source S (in raw)
+            S_A_shared = set(
+                raw.filter(
+                    (pl.col("source") == source)
+                    & (pl.col("attribute") == attribute)
+                    & (pl.col("accession").is_in(shared_entries))
+                )["accession"]
+                .unique()
+                .to_list()
+            )
+
+            # shared entries that have attribute A annotated from any source in new (O)
+            O_A_shared = set(
+                new.filter(
+                    (pl.col("attribute") == attribute)
+                    & (pl.col("accession").is_in(shared_entries))
+                    & (~pl.col("accession").is_in(S_A_shared))
+                )["accession"]
+                .unique()
+                .to_list()
+            )
+
+            num_old = len(S_A_shared)
+            percent_old = num_old / n_shared_entries
+
+            num_new = len(O_A_shared)
+            percent_new = num_new / n_shared_entries
+
+            print(n_shared_entries)
+
+            results["attribute"].append(attribute)
+            results["num_old"].append(num_old)
+            results["percent_old"].append(percent_old)
+            results["num_new"].append(num_new)
+            results["percent_new"].append(percent_new)
+
+        return pl.DataFrame(results)
+
+    return (new_extract_source_annotation_count_differences,)
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    new_extract_source_annotation_count_differences,
+    new_sample_df,
+    raw_sample_df,
+):
+    new_r = new_extract_source_annotation_count_differences(raw_sample_df, new_sample_df, ATTRIBUTES, source="KrishnanLab")
+    new_r
+    return
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    extract_annotation_count_differences,
+    new_sample_df,
+    new_series_df,
+    pl,
+    raw_sample_df,
+    raw_series_df,
+):
+    source_harmonization_improvements_sample = extract_annotation_count_differences(
+        raw_sample_df, new_sample_df, ATTRIBUTES
+    )
+    source_harmonization_improvements_series = extract_annotation_count_differences(
+        raw_series_df, new_series_df, ATTRIBUTES
+    )
+
+    source_harmonization_improvements_all = pl.concat(
+        [source_harmonization_improvements_sample, source_harmonization_improvements_series], 
+        how="vertical",
+    )
+    return (source_harmonization_improvements_all,)
+
+
+@app.cell
+def _(new_series_df, pl):
+    new_series_df.filter(~pl.col("source").is_in(["Gemma"]))
+    return
+
+
+@app.cell
+def _(Path, lighten_color, mpatches, pl, plt, sns):
+    def plot_coverage_by_attribute(
+        df: pl.DataFrame,
+        attribute_color_map: dict,
+        attributes: list[str] = None,
+        figsize: tuple[int, int] = (12, 10),
+        title: str = "",
+        save: bool = False,
+        outfile: str | None = None,
+        dpi: int = 500,
+    ) -> plt.Figure:
+
+        if attributes is None:
+            attributes = df["attribute"].unique(maintain_order=True).to_list()
+
+        sources = sorted(df["source"].unique().to_list())
+
+        fig, axes = plt.subplots(2, 2, figsize=figsize)
+        axes = axes.flatten()
+
+        for idx, attr in enumerate(attributes):
+            ax = axes[idx]
+
+            subset_pd = (
+                df.filter(pl.col("attribute") == attr)
+                  .select(["source", "percent_old", "percent_new"])
+                  .unpivot(
+                      on=["percent_old", "percent_new"],
+                      index="source",
+                      variable_name="coverage_type",
+                      value_name="percent",
+                  )
+                  .with_columns(pl.col("source").cast(pl.Enum(sources)))
+                  .sort("source")
+                  .to_pandas()
+            )
+
+            dark_color = attribute_color_map.get(attr, "dimgrey")
+            light_color = lighten_color(dark_color, amount=0.6)
+            palette = {"percent_old": dark_color, "percent_new": light_color}
+
+            sns.barplot(
+                data=subset_pd,
+                y="source",
+                x="percent",
+                hue="coverage_type",
+                palette=palette,
+                hue_order=["percent_old", "percent_new"],
+                order=sources,
+                orient="h",
+                saturation=1.0,
+                ax=ax,
+            )
+
+            ax.set_xlim(0, 1)
+            ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0%}"))
+            ax.set_xlabel("Coverage", fontsize=12)
+            ax.set_ylabel("", fontsize=12)
+            ax.set_title(attr.capitalize(), fontsize=14)
+            ax.tick_params(axis="y", length=0)
+            ax.grid(axis="x", alpha=0.3)
+            sns.despine(ax=ax, left=True)
+
+            if ax.get_legend():
+                ax.get_legend().remove()
+
+        for idx in range(len(attributes), len(axes)):
+            axes[idx].set_visible(False)
+
+        dark_color_fallback  = "dimgrey"
+        light_color_fallback = lighten_color(dark_color_fallback, amount=0.6)
+        legend_elements = [
+            mpatches.Patch(facecolor=dark_color_fallback,  label="Raw"),
+            mpatches.Patch(facecolor=light_color_fallback, label="Post-harmonization"),
+        ]
+
+        fig.legend(
+            handles=legend_elements,
+            title="Coverage",
+            loc="upper right",
+            bbox_to_anchor=(0.98, 0.4),
+            fontsize=10,
+        )
+
+        plt.suptitle(title, fontsize=14, fontweight="bold")
+        plt.tight_layout()
+
+        if save and isinstance(outfile, (str, Path)):
+            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
+
+        plt.show()
+
+    return (plot_coverage_by_attribute,)
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    COLORS,
+    FIGURES_DIR: "Path",
+    plot_coverage_by_attribute,
+    source_harmonization_improvements_all,
+):
+    plot_coverage_by_attribute(
+        source_harmonization_improvements_all,
+        COLORS,
+        ATTRIBUTES,
+        title="Post-harmonzation annotation coverage",
+        save=True,
+        outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source.png",
+    )
+    return
+
+
+@app.cell
+def _(Path, pl):
+    def format_and_save_table(df: pl.DataFrame, outfile: Path | str):
+        print(
+            df
+            .select(["source", "attribute", "percent_old", "percent_new"])
+            .with_columns(
+                [(pl.col(col)).round(2).cast(pl.String) for col in ["percent_old", "percent_new"]]
+            )
+        )
+
+    return (format_and_save_table,)
+
+
+@app.cell
+def _(format_and_save_table, source_harmonization_improvements_all):
+    format_and_save_table(source_harmonization_improvements_all, "test.tsv")
+    return
+
+
+@app.cell
+def _():
     return
 
 
