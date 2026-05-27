@@ -12,7 +12,7 @@ def _(mo):
 
     Author: Parker Hicks <br>
     Date: 2026-01-17 <br>
-    Last updated: 2026-05-13 by Parker Hicks
+    Last updated: 2026-05-27 by Parker Hicks
     """)
     return
 
@@ -20,6 +20,7 @@ def _(mo):
 @app.cell
 def _():
     import re
+    import warnings
     from collections import defaultdict
     from math import ceil
     from pathlib import Path
@@ -27,6 +28,9 @@ def _():
 
     import marimo as mo
     import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    import matplotlib.colors as mcolors
+    from matplotlib.patches import Patch
     import numpy as np
     import polars as pl
     import seaborn as sns
@@ -38,18 +42,22 @@ def _():
         Any,
         BSON,
         Literal,
+        Patch,
         Path,
         UpSet,
         ceil,
         defaultdict,
         from_contents,
+        mcolors,
         mo,
+        mpatches,
         np,
         pl,
         plt,
         re,
         sns,
         ticker,
+        warnings,
     )
 
 
@@ -71,7 +79,7 @@ def _(Any, BSON, Path):
 @app.cell
 def _(Path):
     # constants
-    ANNOTATIONS_DIR = Path("data/processed")  # MetaHQ database v1.1.0
+    ANNOTATIONS_DIR = Path("data/processed")
     ATTRIBUTES = ["tissue", "disease", "sex", "age"]
 
     METADATA_DIR = Path("data/metadata")
@@ -83,7 +91,18 @@ def _(Path):
 
     FIGURES_DIR: Path = Path("figures")
 
-    # plotting
+    ## Source annotation files
+    PROCESSED_DIR = Path("data/processed")
+    SRA_PROCESSED = PROCESSED_DIR / "sra_combined.bson"
+    GEO_PROCESSED = PROCESSED_DIR / "geo_combined.bson"
+    SEMI_PROCESSED_SERIES = Path("data/analysis/semi_processed__combined__level-series.bson")
+
+    ## helpers
+    SRA2GEO = Path("data/metadata/sra2geo.parquet")
+
+    ATTRIBUTES = ["tissue", "disease", "sex", "age"]
+
+    ## plotting
     COLORS = {'tissue': 'steelblue', 'disease': 'coral', 'sex': 'mediumseagreen', 'age': 'mediumpurple'}
     FMT = "png"
     OVERLAP_ORDER = ["tissue", "disease", "sex", "age"]
@@ -95,18 +114,21 @@ def _(Path):
         COLORS,
         FIGURES_DIR,
         FMT,
+        GEO_PROCESSED,
         OVERLAP_CMAP,
         OVERLAP_ORDER,
         PLATFORMS_FILE,
         PMI_CMAP,
         RESULTS_DIR,
+        SEMI_PROCESSED_SERIES,
+        SRA_PROCESSED,
         UNIQUE_PROPAGATED_TERMS,
     )
 
 
 @app.cell
 def _(ANNOTATIONS_DIR, load_bson):
-    ""# load the databases
+    # load the databases
     sample_db = load_bson(ANNOTATIONS_DIR / "combined__level-sample.bson")
     series_db = load_bson(ANNOTATIONS_DIR / "combined__level-series.bson")
 
@@ -126,58 +148,6 @@ def _(mo):
 
 @app.cell
 def _(COLORS, Path, pl, plt, sns, ticker):
-    def plot_total_anno(
-        data: dict,
-        attributes: list[str],
-        ylabel: str,
-        figsize: tuple[int, int]=(5,5),
-        save: bool=False,
-        outfile: str | Path | None = None,
-        dpi: int = 600,
-        order: list[str] | None = None,
-        verbose: bool = False,
-    ):
-        """Plot the total number of entries with each attribute annotation."""
-        total = {attribute: 0 for attribute in attributes}
-        for anno in data.values():
-            for attribute in attributes:
-                if attribute in anno:
-                    total[attribute] += 1
-
-        df = pl.DataFrame(
-            {"attribute": list(total.keys()), "count": list(total.values())}
-        )
-
-        colors = {k.capitalize(): v for k,v in COLORS.items()}
-
-        # capitalize attribute names
-        df = df.with_columns(pl.col("attribute").str.to_titlecase().alias("attribute"))
-
-        plt.figure(figsize=figsize)
-        ax = sns.barplot(
-            df, x="attribute",
-            y="count",
-            hue="attribute",
-            palette=colors,
-            order=order,
-        )
-
-        # x-axis
-        plt.xlabel("")
-        ax.tick_params("x", rotation=45)
-
-        # y-axis
-        plt.ylabel(ylabel)
-        ax.get_yaxis().set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
-
-        sns.despine(right=True, top=True)
-        plt.tight_layout()
-
-        if save and isinstance(outfile, str):
-            plt.savefig(outfile, dpi=dpi)
-
-        plt.show()
-
     def plot_total_anno_sample_and_study(
         sample_data: dict,
         study_data: dict,
@@ -208,7 +178,6 @@ def _(COLORS, Path, pl, plt, sns, ticker):
                     {"attribute": list(total.keys()), "count": list(total.values())}
             )
 
-            # convert attributes to uppercase
             df = (
                 df
                     .with_columns(
@@ -217,9 +186,7 @@ def _(COLORS, Path, pl, plt, sns, ticker):
             )
             dfs.append(df)
 
-        # figure with subplots
         fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
-
         for idx, (df, ax) in enumerate(zip(dfs, axes)):
             sns.barplot(
                 df, 
@@ -236,18 +203,15 @@ def _(COLORS, Path, pl, plt, sns, ticker):
             ax.get_xaxis().set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
             ax.tick_params("x", rotation=30)
 
-            # sample ticks
+            # sample
             if idx == 0:
                 ax.set_xticks([50000, 150000])
 
-            # study ticks
+            # study
             if idx == 1:
                 ax.set_xticks([5000, 15000])
 
-            # y-axis (now shows categories)
-            ax.set_ylabel("" if idx > 0 else "")  # Only show ylabel on leftmost plot
-
-            # Add title if provided
+            ax.set_ylabel("" if idx > 0 else "") 
             if titles and idx < len(titles):
                 ax.set_title(titles[idx])
 
@@ -260,59 +224,13 @@ def _(COLORS, Path, pl, plt, sns, ticker):
 
         plt.show()
 
-    return plot_total_anno, plot_total_anno_sample_and_study
+    return (plot_total_anno_sample_and_study,)
 
 
 @app.cell
 def _(mo):
     mo.md(r"""
-    ## Samples
-    """)
-    return
-
-
-@app.cell
-def _(plot_total_anno, sample_db):
-    plot_total_anno(
-        sample_db,
-        attributes=["disease", "tissue", "sex", "age"],
-        ylabel="Samples",
-        figsize=(2.5,2),
-        save=True,
-        outfile="figures/attribute_sample_count.svg",
-        dpi=1000,
-        order=["Tissue", "Disease", "Sex", "Age"],
-    )
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(r"""
-    ## Studies
-    """)
-    return
-
-
-@app.cell
-def _(plot_total_anno, series_db):
-    plot_total_anno(
-        series_db,
-        attributes=["disease", "tissue", "sex", "age"],
-        ylabel="Studies",
-        figsize=(2.5,2),
-        save=True,
-        outfile="figures/attribute_study_count.svg",
-        dpi=1000,
-        order=["Tissue", "Disease", "Sex", "Age"],
-    )
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(r"""
-    ## Both
+    ## Samples and studies in MetaHQ with attribute annotations
     """)
     return
 
@@ -433,8 +351,6 @@ def _(UpSet, from_contents, plt):
         if isinstance(ylim, int):
             plt.ylim(0, ylim)
 
-        plt.tight_layout()
-
         if save and isinstance(outfile, str):
             plt.savefig(outfile, dpi=dpi)
 
@@ -446,7 +362,6 @@ def _(UpSet, from_contents, plt):
 @app.cell
 def _(ATTRIBUTES, record_entries_per_attribute, sample_db, series_db):
     # get attribute sample/study counts
-
 
     # ========== Sample ============
     sample_records_microarray = record_entries_per_attribute(
@@ -479,46 +394,49 @@ def _(
     study_records_microarray,
     study_records_rnaseq,
     upset_plot,
+    warnings,
 ):
     # upset plots
     # Note: there is a bug in the Upsetplot package where pandas v3 raises errors. They're working on a fix: https://github.com/jnothman/UpSetPlot/issues/303, but it is not yet resolved. Use pandas <3.0.0.
 
-    # ========== Sample ============
-    upset_plot(
-        sample_records_microarray,
-        title="Sample annotation coverage (microarray)",
-        save=True,
-        outfile=f"figures/attribute_upset_plot__level-sample__tech-microarray.{FMT}",
-        dpi=500,
-        ylim=60_000,
-    )
-    upset_plot(
-        sample_records_rnaseq,
-        title="Sample annotation coverage (RNA-Seq)",
-        save=True,
-        outfile=f"figures/attribute_upset_plot__level-sample__tech-rnaseq.{FMT}",
-        dpi=500,
-        ylim=35_000,
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter(action='ignore', category=FutureWarning)
+        # ========== Sample ============
+        upset_plot(
+            sample_records_microarray,
+            title="Sample annotation coverage (microarray)",
+            save=True,
+            outfile=f"figures/attribute_upset_plot__level-sample__tech-microarray.{FMT}",
+            dpi=500,
+            ylim=60_000,
+        )
+        upset_plot(
+            sample_records_rnaseq,
+            title="Sample annotation coverage (RNA-Seq)",
+            save=True,
+            outfile=f"figures/attribute_upset_plot__level-sample__tech-rnaseq.{FMT}",
+            dpi=500,
+            ylim=35_000,
+        )
 
-    # ========== Study ============
-    upset_plot(
-        study_records_microarray,
-        title="Study annotation coverage (microarray)",
-        save=True,
-        outfile=f"figures/attribute_upset_plot__level-study__tech-microarray.{FMT}",
-        dpi=500,
-        ylim=5_000,
-    )
-    # ========== Study ============
-    upset_plot(
-        study_records_rnaseq,
-        title="Study annotation coverage (RNA-Seq)",
-        save=True,
-        outfile=f"figures/attribute_upset_plot__level-study__tech-rnaseq.{FMT}",
-        dpi=500,
-        ylim=5_000
-    )
+        # ========== Study ============
+        upset_plot(
+            study_records_microarray,
+            title="Study annotation coverage (microarray)",
+            save=True,
+            outfile=f"figures/attribute_upset_plot__level-study__tech-microarray.{FMT}",
+            dpi=500,
+            ylim=5_000,
+        )
+        # ========== Study ============
+        upset_plot(
+            study_records_rnaseq,
+            title="Study annotation coverage (RNA-Seq)",
+            save=True,
+            outfile=f"figures/attribute_upset_plot__level-study__tech-rnaseq.{FMT}",
+            dpi=500,
+            ylim=5_000
+        )
     return
 
 
@@ -557,27 +475,18 @@ def _(Literal, defaultdict, pl):
         platform_mapping_funcs = {"sample": acceptable_platform_sample, "study": acceptable_platform_study}
         is_acceptable_platform = platform_mapping_funcs[level]
 
-        UNDESIRED = [
-            "na",
-            "",
-            "NA",
-            "none",
-            None,
-            "not annotated",
-        ]
-
-        # Collect all unique sources across all attributes first
+        # collect all unique sources across all attributes first
         all_sources = set()
         for id_, data in database.items():
             for attribute in ["tissue", "disease", "sex", "age"]:
                 if attribute in data:
                     all_sources.update(data[attribute].keys())
 
-        # Store results for each technology
+        # store results for each technology
         all_results = []
         attributes = ["tissue", "disease", "sex", "age"]
 
-        # Count sources for each attribute across all GSM IDs, separated by technology
+        # count sources for each attribute across all GSM IDs, separated by technology
         for technology in platforms["technology"].unique():
             ok_platforms = platforms.filter(pl.col("technology") == technology)["id"].to_list()
 
@@ -595,29 +504,25 @@ def _(Literal, defaultdict, pl):
                 if "tissue" in data:
                     for source, source_data in data["tissue"].items():
                         if "id" in source_data:
-                            if source_data["id"] not in UNDESIRED:
-                                tissue_sources[source] += 1
+                            tissue_sources[source] += 1
 
                 # Count disease sources
                 if "disease" in data:
                     for source, source_data in data["disease"].items():
                         if "id" in source_data:
-                            if source_data["id"] not in UNDESIRED:
-                                disease_sources[source] += 1
+                            disease_sources[source] += 1
 
                 # Count sex sources
                 if "sex" in data:
                     for source, source_data in data["sex"].items():
                         if "id" in source_data:
-                            if source_data["id"] not in UNDESIRED:
-                                sex_sources[source] += 1
+                            sex_sources[source] += 1
 
                 # Count age sources
                 if "age" in data:
                     for source, source_data in data["age"].items():
                         if "id" in source_data:
-                            if source_data["id"] not in UNDESIRED:
-                                age_sources[source] += 1
+                            age_sources[source] += 1
 
             # Create dataframes for this technology, ensuring all sources appear
             for attribute, source_dict in [
@@ -659,7 +564,15 @@ def _(mo):
 
 
 @app.cell
-def _(COLORS, ceil, pl, plt, sns, ticker):
+def _(COLORS, Patch, ceil, mcolors, pl, plt, sns, ticker):
+    def lighten_color(color, amount=0.5):
+        try:
+            c = mcolors.to_rgb(color)
+        except ValueError:
+            c = mcolors.to_rgb(mcolors.cnames[color])
+        c = [(1 - amount) * comp + amount for comp in c]
+        return c
+
     def plot_source_counts_by_attribute(
         df: pl.DataFrame,
         ylabel: str,
@@ -672,21 +585,11 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
         ylim_scale: int = 1,
         verbose: bool = False,
     ):
-        import matplotlib.colors as mcolors
-        from matplotlib.patches import Patch
 
         TECHNOLOGY_COLORS = {
             "microarray": "dimgrey",
             "rnaseq": "lightgrey",
         }
-
-        def lighten_color(color, amount=0.5):
-            try:
-                c = mcolors.to_rgb(color)
-            except ValueError:
-                c = mcolors.to_rgb(mcolors.cnames[color])
-            c = [(1 - amount) * comp + amount for comp in c]
-            return c
 
         def get_tech_color(tech, base_color):
             if tech == "microarray":
@@ -761,7 +664,7 @@ def _(COLORS, ceil, pl, plt, sns, ticker):
             plt.savefig(outfile, dpi=dpi, bbox_inches="tight")
         plt.show()
 
-    return (plot_source_counts_by_attribute,)
+    return lighten_color, plot_source_counts_by_attribute
 
 
 @app.cell
@@ -969,11 +872,7 @@ def _(Literal, np):
             (NDArray): square 2D numpy array of PMI values
         """
         x = np.array(x, dtype=float)
-
-
         total = x.sum()
-
-
         col_sums = x.sum(axis=1)
 
         joint = x / total
@@ -1009,6 +908,7 @@ def _(Path, np, pl, plt, sns):
         overlap_results: dict[str, pl.DataFrame],
         subplot_shape: tuple[int, int] = (2, 2),
         figsize_per_plot: tuple[int, int] = (5, 5),
+        title: str = "",
         order: list[str] | None = None,
         save: bool = False,
         outfile: Path | str | None = None,
@@ -1050,6 +950,7 @@ def _(Path, np, pl, plt, sns):
         for ax in axes_flat[len(overlap_results):]:
             ax.axis("off")
 
+        plt.suptitle(title, fontsize=14, fontweight="bold")
         plt.tight_layout()
 
         if save and isinstance(outfile, (str, Path)):
@@ -1091,6 +992,7 @@ def _(
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP,
         vmax_percentile=95,
+        title="Absolute count overlap (level=sample)",
         save=True,
         outfile=FIGURES_DIR / "overlap__level-sample__metric-counts.png"
     )
@@ -1119,6 +1021,7 @@ def _(
         sample_overlap_percent,
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP,
+        title="Percent overlap (level=sample)",
         save=True,
         outfile=FIGURES_DIR / "overlap__level-sample__metric-percent.png",
         )
@@ -1155,6 +1058,7 @@ def _(
         cmap=PMI_CMAP,
         vmax=1,
         vmin=-1,
+        title="Normalized pointwise mutual information (level=sample)",
         save=True,
         outfile=FIGURES_DIR / "overlap__level-sample__metric-pmi.png",
     )
@@ -1194,6 +1098,7 @@ def _(
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP, 
         vmax_percentile=95,
+        title="Absolute count overlap (level=series)",
         save=True,
         outfile=FIGURES_DIR / "overlap__level-series__metric-counts.png",
     )
@@ -1224,6 +1129,7 @@ def _(
         series_overlap_percent,
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP,
+        title="Percent overlap (level=series)",
         save=True,
         outfile=FIGURES_DIR / "overlap__level-series__metric-percent.png",
     )
@@ -1260,8 +1166,460 @@ def _(
         cmap=PMI_CMAP,
         vmax=1,
         vmin=-1,
+        title="Normalized pointwise mutual information (level=series)",
         save=True,
         outfile=FIGURES_DIR / "overlap__level-series__metric-pmi.png",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Annotation coverage improvement analysis
+    The following plots show the annotation coverage improvement for samples and studies post-harmonization. The x-axis represents the total number of samples/studies from a particular annotation source that have an annotation for a particular attribute post-harmonization.
+    """)
+    return
+
+
+@app.cell
+def _(pl):
+    def collect_db_anno(
+        db: dict,
+        attributes: list[str],
+        entry_prefix: str | tuple[str, ...],
+    ) -> pl.DataFrame:
+        results = {"accession": [], "attribute": [], "source": []}
+        for entry, contents in db.items():
+
+            if not entry.startswith(entry_prefix):
+                continue
+
+            for attribute in attributes:
+                if attribute not in contents:
+                    continue
+
+                for source in contents[attribute]:
+                    results["accession"].append(entry)
+                    results["attribute"].append(attribute)
+                    results["source"].append(source)
+
+        return pl.DataFrame(results).sort(["accession", "source", "attribute"])
+
+    return (collect_db_anno,)
+
+
+@app.cell
+def _(pl):
+    def extract_source_annotation_count_differences(
+        raw: pl.DataFrame, new: pl.DataFrame, attributes: list[str], source: str
+    ) -> pl.DataFrame:
+        shared_entries = set(
+            raw.filter(pl.col("source") == source)
+            .join(new, on="accession", how="inner")["accession"]
+            .unique()
+            .to_list()
+        )
+        n_shared_entries = len(shared_entries)
+
+        results = {
+            "attribute": [],
+            "num_old": [],
+            "percent_old": [],
+            "num_new": [],
+            "percent_new": [],
+        }
+        for attribute in attributes:
+            # shared entries that had attribute A annotated from source S (in raw)
+            S_A_shared = set(
+                raw.filter(
+                    (pl.col("source") == source)
+                    & (pl.col("attribute") == attribute)
+                    & (pl.col("accession").is_in(shared_entries))
+                )["accession"]
+                .unique()
+                .to_list()
+            )
+
+            # shared entries that have attribute A annotated from any source in new (O)
+            O_A_shared = set(
+                new.filter(
+                    (pl.col("attribute") == attribute)
+                    & (pl.col("accession").is_in(shared_entries))
+                    & (~pl.col("accession").is_in(S_A_shared))
+                )["accession"]
+                .unique()
+                .to_list()
+            )
+
+            num_old = len(S_A_shared)
+            num_new = len(O_A_shared)
+            total = num_old + num_new
+            percent_old = num_old / total
+
+            num_new = len(O_A_shared)
+            percent_new = num_new / total
+
+            results["attribute"].append(attribute)
+            results["num_old"].append(num_old)
+            results["percent_old"].append(percent_old)
+            results["num_new"].append(num_new)
+            results["percent_new"].append(percent_new)
+
+        return pl.DataFrame(results)
+
+    return (extract_source_annotation_count_differences,)
+
+
+@app.cell
+def _(extract_source_annotation_count_differences, pl):
+    def add_missing_attribute_counts(df: pl.DataFrame, col_count: str, attributes: list[str]) -> pl.DataFrame:
+        additional_rows = {"attribute": [], col_count: []}
+        for attribute in attributes:
+            if attribute not in df["attribute"]:
+                additional_rows["attribute"].append(attribute)
+                additional_rows[col_count].append(0)
+
+        additional_df = pl.DataFrame(additional_rows, schema=df.schema)
+        return pl.concat([df, additional_df], how="vertical").sort("attribute")
+
+
+    def _extract_source_annotation_count_differences(
+        raw: pl.DataFrame, new: pl.DataFrame, attributes: list[str], source: str
+    ) -> pl.DataFrame:
+        shared_entries = set(
+            raw.filter(pl.col("source") == source)
+            .join(new, on="accession", how="inner")["accession"]
+            .unique()
+            .to_list()
+        )
+        n_shared_entries = len(shared_entries)
+
+        results = {
+            "attribute": [],
+            "num_old": [],
+            "percent_old": [],
+            "num_new": [],
+            "percent_new": [],
+        }
+        for attribute in attributes:
+            # shared entries that had attribute A annotated from source S (in raw)
+            S_A_shared = set(
+                raw.filter(
+                    (pl.col("source") == source)
+                    & (pl.col("attribute") == attribute)
+                    & (pl.col("accession").is_in(shared_entries))
+                )["accession"]
+                .unique()
+                .to_list()
+            )
+
+            # shared entries that have attribute A annotated from any source in new (O)
+            O_A_shared = set(
+                new.filter(
+                    (pl.col("attribute") == attribute)
+                    & (pl.col("accession").is_in(shared_entries))
+                    & (~pl.col("accession").is_in(S_A_shared))
+                )["accession"]
+                .unique()
+                .to_list()
+            )
+
+            num_old = len(S_A_shared)
+            percent_old = num_old / n_shared_entries
+
+            num_new = len(O_A_shared)
+            percent_new = num_new / n_shared_entries
+
+            results["attribute"].append(attribute)
+            results["num_old"].append(num_old)
+            results["percent_old"].append(percent_old)
+            results["num_new"].append(num_new)
+            results["percent_new"].append(percent_new)
+
+        return pl.DataFrame(results)
+
+
+    def extract_annotation_count_differences(
+        raw: pl.DataFrame, new: pl.DataFrame, attributes: list[str]
+    ) -> pl.DataFrame:
+        results: list[pl.DataFrame] = []
+        for source in raw["source"].unique():
+            result = extract_source_annotation_count_differences(raw, new, attributes, source=source)
+            results.append(
+                result.with_columns(pl.lit(source).alias("source"))
+            )
+        return pl.concat(results, how="vertical")
+
+    return (extract_annotation_count_differences,)
+
+
+@app.cell
+def _(Path, lighten_color, mpatches, pl, plt, sns):
+    def plot_coverage_by_attribute_stacked(
+        df: pl.DataFrame,
+        attribute_color_map: dict,
+        attributes: list[str] = None,
+        figsize: tuple[int, int] = (12, 10),
+        title: str = "",
+        save: bool = False,
+        outfile: str | None = None,
+        dpi: int = 500,
+    ) -> plt.Figure:
+
+        if attributes is None:
+            attributes = df["attribute"].unique(maintain_order=True).to_list()
+
+        sources = sorted(df["source"].unique().to_list())
+
+        fig, axes = plt.subplots(2, 2, figsize=figsize)
+        axes = axes.flatten()
+
+        for idx, attr in enumerate(attributes):
+            ax = axes[idx]
+
+            subset_pd = (
+                df.filter(pl.col("attribute") == attr)
+                  .select(["source", "percent_old", "percent_new", "num_old", "num_new"])
+                  .with_columns(pl.col("source").cast(pl.Enum(sources)))
+                  .sort("source")
+                  .to_pandas()
+            )
+
+            dark_color = attribute_color_map.get(attr, "dimgrey")
+            light_color = lighten_color(dark_color, amount=0.6)
+
+            # pre-harmonization
+            sns.barplot(
+                data=subset_pd,
+                y="source",
+                x=subset_pd["percent_old"] + subset_pd["percent_new"],
+                color=light_color,
+                order=sources,
+                orient="h",
+                saturation=1.0,
+                label="Post-harmonization",
+                ax=ax,
+            )
+
+            # post-harmonization
+            sns.barplot(
+                data=subset_pd,
+                y="source",
+                x="percent_old",
+                color=dark_color,
+                order=sources,
+                orient="h",
+                saturation=1.0,
+                label="Raw",
+                ax=ax,
+            )
+
+            # add numbers to bars
+            n = len(sources)
+            patches = ax.patches
+            light_patches = patches[:n]
+            dark_patches  = patches[n:]
+
+            tol = 0.01  # tolerance for considering two widths the same
+
+            for light_patch, dark_patch, num_new, num_old in zip(
+                light_patches, dark_patches,
+                subset_pd["num_new"], subset_pd["num_old"],
+            ):
+                light_width = light_patch.get_width()
+                dark_width  = dark_patch.get_width()
+                y_center    = light_patch.get_y() + light_patch.get_height() / 2
+
+                zero_dark  = dark_width < tol
+                same_width = abs(light_width - dark_width) < tol
+
+                if zero_dark:
+                    # only light bar visible: show just num_new to the right
+                    ax.text(
+                        light_width + 0.01, y_center,
+                        f"{int(num_new):,}",
+                        va="center", ha="left", fontsize=8, color=dark_color,
+                    )
+                elif same_width:
+                    # percent_new ~ 0%: show num_old in the middle of the dark bar only
+                    ax.text(
+                        dark_width / 2, y_center,
+                        f"{int(num_old):,}",
+                        va="center", ha="center", fontsize=8, color="white",
+                    )
+                else:
+                    # normal: num_old in the middle of dark bar, num_new to the right
+                    ax.text(
+                        dark_width / 2, y_center,
+                        f"{int(num_old):,}",
+                        va="center", ha="center", fontsize=8, color="white",
+                    )
+                    ax.text(
+                        light_width + 0.01, y_center,
+                        f"{int(num_new):,}",
+                        va="center", ha="left", fontsize=8, color=dark_color,
+                    )
+
+            ax.set_xlim(0, 1)
+            ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0%}"))
+            ax.set_xlabel("Coverage", fontsize=12)
+            ax.set_ylabel("", fontsize=12)
+            ax.set_title(attr.capitalize(), fontsize=14)
+            ax.tick_params(axis="y", length=0)
+            ax.grid(axis="x", alpha=0.3)
+            sns.despine(ax=ax, left=True)
+
+            if ax.get_legend():
+                ax.get_legend().remove()
+
+        for idx in range(len(attributes), len(axes)):
+            axes[idx].set_visible(False)
+
+        dark_color_fallback = "dimgrey"
+        light_color_fallback = lighten_color(dark_color_fallback, amount=0.6)
+        legend_elements = [
+            mpatches.Patch(facecolor=dark_color_fallback, label="Original source"),
+            mpatches.Patch(facecolor=light_color_fallback, label="Post-harmonization"),
+        ]
+
+        fig.legend(
+            handles=legend_elements,
+            title="Coverage",
+            loc="upper right",
+            bbox_to_anchor=(0.88, 0.4),
+            fontsize=10,
+        )
+
+        plt.suptitle(title, fontsize=14, fontweight="bold")
+        plt.tight_layout()
+
+        if save and isinstance(outfile, (str, Path)):
+            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
+
+        plt.show()
+
+    return (plot_coverage_by_attribute_stacked,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Get pre-harmonized annotations.
+
+    These are annotations that have been formatted into the same schema. Some annotations from the original sources have been removed based on our inclusion criteria:
+
+    * If an annotation can map to UBERON/CL (tissue), MONDO (diseas´), M/F (sex), or an age group (age) either autonomously or manually.
+    * Annotations to very high level tissue or disease terms (e.g., anatomical system) since we posit that these are not informative annotations and are essentially equivalent to not having an annotation.
+    * If an entry accession ID cannot be mapped to a GEO accession ID.
+    * If annotations are for an entry that is not from microarray or RNA-Seq.
+    """)
+    return
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    GEO_PROCESSED,
+    SEMI_PROCESSED_SERIES,
+    SRA_PROCESSED,
+    collect_db_anno,
+    load_bson,
+    pl,
+    sample_db,
+    series_db,
+):
+    # geo_anno contains annotations from sources that provided annotations for GEO accession IDs.
+    geo_anno = load_bson(GEO_PROCESSED)
+    geo_anno = collect_db_anno(geo_anno, ATTRIBUTES, entry_prefix="GSM")
+
+    # sra_anno contains annotations from sources that provided from annotations for SRA accession
+    # IDs, but are now mapped to GEO IDs.
+    sra_anno = load_bson(SRA_PROCESSED)
+    sra_anno = collect_db_anno(sra_anno, ATTRIBUTES, entry_prefix="GSM")
+
+    # convert dictionary format to DataFrame - sample
+    raw_sample_df = pl.concat([geo_anno, sra_anno], how="vertical").unique() 
+    new_sample_df = (
+        collect_db_anno(sample_db, ATTRIBUTES, entry_prefix="GSM")
+            .unique(["accession", "attribute", "source"])
+    )
+
+    # convert dictionary format to DataFrame - series
+    raw_series_df = collect_db_anno(load_bson(SEMI_PROCESSED_SERIES), ATTRIBUTES, entry_prefix="GSE")
+    new_series_df = (
+        collect_db_anno(series_db, ATTRIBUTES, entry_prefix="GSE")
+            .unique(["accession", "attribute", "source"])
+    )
+    return new_sample_df, new_series_df, raw_sample_df, raw_series_df
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    extract_annotation_count_differences,
+    new_sample_df,
+    new_series_df,
+    raw_sample_df,
+    raw_series_df,
+):
+    # get count differences between the pre- and post-harmonized annotations
+    source_harmonization_improvements_sample = extract_annotation_count_differences(
+        raw_sample_df, new_sample_df, ATTRIBUTES
+    )
+    source_harmonization_improvements_series = extract_annotation_count_differences(
+        raw_series_df, new_series_df, ATTRIBUTES
+    )
+    return (
+        source_harmonization_improvements_sample,
+        source_harmonization_improvements_series,
+    )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Plots
+    """)
+    return
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    COLORS,
+    FIGURES_DIR: "Path",
+    plot_coverage_by_attribute_stacked,
+    source_harmonization_improvements_sample,
+):
+    # plot sample
+    plot_coverage_by_attribute_stacked(
+        source_harmonization_improvements_sample,
+        COLORS,
+        ATTRIBUTES,
+        title="Post-harmonzation annotation coverage (level=sample)",
+        save=True,
+        outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source__level-sample.png",
+    )
+    return
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    COLORS,
+    FIGURES_DIR: "Path",
+    plot_coverage_by_attribute_stacked,
+    source_harmonization_improvements_series,
+):
+    # plot series
+    plot_coverage_by_attribute_stacked(
+        source_harmonization_improvements_series,
+        COLORS,
+        ATTRIBUTES,
+        title="Post-harmonzation annotation coverage (level=series)",
+        save=True,
+        outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source__level-series.png",
     )
     return
 
