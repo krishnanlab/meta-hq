@@ -12,7 +12,7 @@ def _(mo):
 
     Author: Parker Hicks <br>
     Date: 2026-01-17 <br>
-    Last updated: 2026-05-13 by Parker Hicks
+    Last updated: 2026-05-27 by Parker Hicks
     """)
     return
 
@@ -118,10 +118,11 @@ def _(Path):
     PROCESSED_DIR = Path("data/processed")
     SRA_PROCESSED = PROCESSED_DIR / "sra_combined.bson"
     GEO_PROCESSED = PROCESSED_DIR / "geo_combined.bson"
+    SEMI_PROCESSED_SERIES = Path("data/analysis/semi_processed__combined__level-series.bson")
 
     # helpers
     SRA2GEO = Path("data/metadata/sra2geo.parquet")
-    return GEO_PROCESSED, SRA_PROCESSED
+    return GEO_PROCESSED, SEMI_PROCESSED_SERIES, SRA_PROCESSED
 
 
 @app.cell
@@ -1285,15 +1286,7 @@ def _(
 def _(mo):
     mo.md(r"""
     # Annotation coverage improvement analysis
-    The following plots show the annotation coverage improvement for samples and studies post-harmonization.
-
-        \[
-            \frac{|X_A \cap O|}{|X \cap O|}
-        \]
-
-    * X = set of samples annotated by source X
-    * X_A = set of samples in source X that have an annotation to attribute A
-    * O = set of samples annotated by at least one other source (i.e. any source ≠ X) regardless of attribute
+    The following plots show the annotation coverage improvement for samples and studies post-harmonization. The x-axis represents the total number of samples/studies from a particular annotation source that have an annotation for a particular attribute post-harmonization.
     """)
     return
 
@@ -1621,7 +1614,7 @@ def _(Path, lighten_color, mpatches, pl, plt, sns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Get pre-harmonized annotations.
+    ## Get pre-harmonized annotations.
 
     These are annotations that have been formatted into the same schema. Some annotations from the original sources have been removed based on our inclusion criteria:
 
@@ -1637,6 +1630,7 @@ def _(mo):
 def _(
     ATTRIBUTES,
     GEO_PROCESSED,
+    SEMI_PROCESSED_SERIES,
     SRA_PROCESSED,
     collect_db_anno,
     load_bson,
@@ -1661,7 +1655,7 @@ def _(
     )
 
     # convert dictionary format to DataFrame - series
-    raw_series_df = collect_db_anno(load_bson(GEO_PROCESSED), ATTRIBUTES, entry_prefix="GSE")
+    raw_series_df = collect_db_anno(load_bson(SEMI_PROCESSED_SERIES), ATTRIBUTES, entry_prefix="GSE")
     new_series_df = (
         collect_db_anno(series_db, ATTRIBUTES, entry_prefix="GSE")
             .unique(["accession", "attribute", "source"])
@@ -1675,7 +1669,6 @@ def _(
     extract_annotation_count_differences,
     new_sample_df,
     new_series_df,
-    pl,
     raw_sample_df,
     raw_series_df,
 ):
@@ -1686,13 +1679,18 @@ def _(
     source_harmonization_improvements_series = extract_annotation_count_differences(
         raw_series_df, new_series_df, ATTRIBUTES
     )
-
-    # combine sample and series differences
-    source_harmonization_improvements_all = pl.concat(
-        [source_harmonization_improvements_sample, source_harmonization_improvements_series], 
-        how="vertical",
+    return (
+        source_harmonization_improvements_sample,
+        source_harmonization_improvements_series,
     )
-    return (source_harmonization_improvements_all,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Plots
+    """)
+    return
 
 
 @app.cell
@@ -1701,265 +1699,36 @@ def _(
     COLORS,
     FIGURES_DIR: "Path",
     plot_coverage_by_attribute_stacked,
-    source_harmonization_improvements_all,
+    source_harmonization_improvements_sample,
 ):
-    # plot
+    # plot sample
     plot_coverage_by_attribute_stacked(
-        source_harmonization_improvements_all,
+        source_harmonization_improvements_sample,
         COLORS,
         ATTRIBUTES,
-        title="Post-harmonzation annotation coverage",
+        title="Post-harmonzation annotation coverage (level=sample)",
         save=True,
-        outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source.png",
+        outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source__level-sample.png",
     )
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    # Tissue and disease annotation specificity improvements
-    """)
-    return
-
-
-@app.cell
-def _(pl):
-    def get_source_attribute_annotation_counts(df: pl.DataFrame, name: str) -> pl.DataFrame:
-        return (
-            df
-            .unique()
-            .group_by(["source", "attribute"])
-            .len(name=f"num_{name}")
-            .with_columns(pl.col(f"num_{name}").cast(pl.Int32))
-            .sort("source")
-        )
-
-    def find_tissue_disease_specificity_improvements(old: pl.DataFrame, new: pl.DataFrame, attributes: list[str]):
-        # Remove invalid annotations
-        # See section above (Get pre-harmonized annotations) for inclusion criteria
-        shared = list(set(old["accession"].to_list()) & set(new["accession"].to_list()))
-
-        old = old.filter(
-            (pl.col("accession").is_in(shared))
-            & (pl.col("attribute").is_in(attributes))
-        )
-        new = new.filter(pl.col("attribute").is_in(attributes))
-
-        old = get_source_attribute_annotation_counts(old, "old")
-        new = get_source_attribute_annotation_counts(new, "new")
-
-        results = (
-            old
-            .join(new, on=["source", "attribute"], how="inner")
-            .with_columns(
-                (
-                    pl.col("num_old") - pl.col("num_new")
-                ).alias("difference")
-            )
-            .with_columns([
-                (pl.col("difference") / pl.col("num_old")).alias("percent_updated"),
-                (pl.col("num_new") / pl.col("num_old")).alias("percent_original"),
-            ])
-        )
-        return results.filter(pl.col("num_old") > 0)
-
-    return (find_tissue_disease_specificity_improvements,)
-
-
-@app.cell
-def _(Path, lighten_color, mpatches, pl, plt, sns):
-    def plot_updates_by_attribute(
-        df: pl.DataFrame,
-        attribute_color_map: dict,
-        attributes: list[str] = None,
-        figsize: tuple[int, int] = (12, 10),
-        title: str = "",
-        save: bool = False,
-        outfile: str | None = None,
-        dpi: int = 500,
-    ) -> plt.Figure:
-
-        if attributes is None:
-            attributes = df["attribute"].unique(maintain_order=True).to_list()
-
-        sources = sorted(df["source"].unique().to_list())
-
-        fig, axes = plt.subplots(2, 2, figsize=figsize)
-        axes = axes.flatten()
-
-        for idx, attr in enumerate(attributes):
-            ax = axes[idx]
-
-            subset = (
-                df
-                .filter(pl.col("attribute") == attr)
-                .filter(pl.col("num_old") > 0)
-                .select(["source", "percent_original", "percent_updated", "num_old", "difference"])
-            )
-            non_zero_sources = subset["source"].unique().sort().to_list()
-
-            subset_pd = (
-                subset
-                .with_columns(pl.col("source").cast(pl.Enum(non_zero_sources)))
-                .sort("source")
-                .to_pandas()
-            )
-
-            dark_color  = attribute_color_map.get(attr, "dimgrey")
-            light_color = lighten_color(dark_color, amount=0.6)
-
-            # First layer: full cumulative width in light color
-            sns.barplot(
-                data=subset_pd,
-                y="source",
-                x=subset_pd["percent_original"] + subset_pd["percent_updated"],
-                color=light_color,
-                order=non_zero_sources,
-                orient="h",
-                saturation=1.0,
-                label="Updated",
-                ax=ax,
-            )
-
-            # Second layer: percent_original on top
-            sns.barplot(
-                data=subset_pd,
-                y="source",
-                x="percent_original",
-                color=dark_color,
-                order=non_zero_sources,
-                orient="h",
-                saturation=1.0,
-                label="Original",
-                ax=ax,
-            )
-
-            # Annotate bars
-            n = len(subset_pd["source"])
-            patches = ax.patches
-            light_patches = patches[:n]
-            dark_patches  = patches[n:]
-
-            tol = 0.01
-
-            for light_patch, dark_patch, difference, num_old in zip(
-                light_patches, dark_patches,
-                subset_pd["difference"], subset_pd["num_old"],
-            ):
-                light_width = light_patch.get_width()
-                dark_width  = dark_patch.get_width()
-                y_center    = light_patch.get_y() + light_patch.get_height() / 2
-
-                zero_dark  = dark_width < tol
-                same_width = abs(light_width - dark_width) < tol
-
-                if zero_dark:
-                    ax.text(
-                        light_width + 0.01, y_center,
-                        f"{int(difference):,}",
-                        va="center", ha="left", fontsize=8, color=dark_color,
-                    )
-                    if num_old > 0:
-                        ax.text(
-                            0.01, y_center,
-                            f"{int(num_old):,}",
-                            va="center", ha="left", fontsize=8, color=dark_color,
-                        )
-                elif same_width:
-                    ax.text(
-                        dark_width / 2, y_center,
-                        f"{int(num_old):,}",
-                        va="center", ha="center", fontsize=8, color="white",
-                    )
-                else:
-                    ax.text(
-                        dark_width / 2, y_center,
-                        f"{int(num_old):,}",
-                        va="center", ha="center", fontsize=8, color="white",
-                    )
-                    ax.text(
-                        light_width + 0.01, y_center,
-                        f"{int(difference):,}",
-                        va="center", ha="left", fontsize=8, color=dark_color,
-                    )
-
-            ax.set_xlim(0, max(
-                (subset_pd["percent_original"] + subset_pd["percent_updated"]).max(),
-                1.0
-            ) + 0.15)
-            ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0%}"))
-            ax.set_xlabel("Percent of entries annotated by a source", fontsize=12)
-            ax.set_ylabel("", fontsize=12)
-            ax.set_title(attr.capitalize(), fontsize=14)
-            ax.tick_params(axis="y", length=0)
-            ax.grid(axis="x", alpha=0.3)
-            sns.despine(ax=ax, left=True)
-
-            if ax.get_legend():
-                ax.get_legend().remove()
-
-        for idx in range(len(attributes), len(axes)):
-            axes[idx].set_visible(False)
-
-        dark_color_fallback  = "dimgrey"
-        light_color_fallback = lighten_color(dark_color_fallback, amount=0.6)
-        legend_elements = [
-            mpatches.Patch(facecolor=dark_color_fallback,  label="Original"),
-            mpatches.Patch(facecolor=light_color_fallback, label="Updated"),
-        ]
-
-        fig.legend(
-            handles=legend_elements,
-            title="Coverage",
-            loc="upper right",
-            bbox_to_anchor=(0.98, 0.4),
-            fontsize=10,
-        )
-
-        plt.suptitle(title, fontsize=14, fontweight="bold")
-        plt.tight_layout()
-
-        if save and isinstance(outfile, (str, Path)):
-            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
-
-        plt.show()
-
-    return (plot_updates_by_attribute,)
-
-
 @app.cell
 def _(
-    find_tissue_disease_specificity_improvements,
-    new_sample_df,
-    new_series_df,
-    pl,
-    raw_sample_df,
-    raw_series_df,
-):
-    sample_tissue_disease_specificity_improvements = find_tissue_disease_specificity_improvements(
-        raw_sample_df, new_sample_df, ["tissue", "disease"]
-    )
-    series_tissue_disease_specificity_improvements = find_tissue_disease_specificity_improvements(
-        raw_series_df, new_series_df, ["tissue", "disease"]
-    )
-    tissue_disease_specificity_improvements = pl.concat([sample_tissue_disease_specificity_improvements, series_tissue_disease_specificity_improvements], how="vertical")
-    return (tissue_disease_specificity_improvements,)
-
-
-@app.cell
-def _(
+    ATTRIBUTES,
     COLORS,
     FIGURES_DIR: "Path",
-    plot_updates_by_attribute,
-    tissue_disease_specificity_improvements,
+    plot_coverage_by_attribute_stacked,
+    source_harmonization_improvements_series,
 ):
-    plot_updates_by_attribute(
-        tissue_disease_specificity_improvements,
-        {attribute: color for attribute, color in COLORS.items() if attribute in ["tissue", "disease"]},
+    # plot series
+    plot_coverage_by_attribute_stacked(
+        source_harmonization_improvements_series,
+        COLORS,
+        ATTRIBUTES,
+        title="Post-harmonzation annotation coverage (level=series)",
         save=True,
-        outfile=FIGURES_DIR / "post_harmonization_specificity_improvements.png",
-        dpi=500,
+        outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source__level-series.png",
     )
     return
 
