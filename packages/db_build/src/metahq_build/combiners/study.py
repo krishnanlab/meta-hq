@@ -58,22 +58,23 @@ class StudyCombiner(BaseAnnotationCombiner):
         self._initialize_study_forward_annotations()
         self._enrich_study_forward_annotations(db_path)
 
+        self.logger.info("Loading annotations from %s", sample_combined_bson)
+        sample_anno = self._load_bson(sample_combined_bson)
+
         # add collapsed to new study-forward annotations
-        self._add_collapsed_sample_annotations(sample_combined_bson)
+        self._add_collapsed_sample_annotations(sample_anno)
 
         self._remove_invalid_organisms()
 
         return self
 
-    def _add_collapsed_sample_annotations(self, sample_combined_bson: Path):
-        sample_anno = self._load_bson(sample_combined_bson)
+    def _add_collapsed_sample_annotations(self, sample_anno: dict):
 
         study2sample = self._study2sample_map(sample_anno)
         self.logger.info(
-            "Found %d samples from %d studies in %s",
+            "Found %d samples from %d studies",
             len(sample_anno),
             len(study2sample),
-            sample_combined_bson,
         )
 
         self.logger.info(
@@ -405,3 +406,78 @@ class StudyCombiner(BaseAnnotationCombiner):
             merged_annotations[key] = DELIMITER.join(sorted(set(existing)))
 
         return merged_annotations
+
+    def combine_from_unprocessed(
+        self,
+        unprocessed_combined_geo_bson: Path,
+        unprocessed_combined_sra_bson: Path,
+        processed_combined_bson: Path = SAMPLE_COMBINED_BSON,
+        db_path: Path = OMICIDX_DB,
+    ) -> "StudyCombiner":
+        """
+        Load sample annotations from an unprocessed collection (e.g., GEO_COMBINED_BSON,
+        SRA_COMBINED_BSON), collect sample->series relationships, collapse them, and
+        combine with study-forward annotations.
+
+        This should only be used for anlaysis to generate "unprocessed" study-level annotations.
+
+        Arguments:
+            unprocessed_combined_geo_bson (Path):
+                Path to the combined GEO MetaHQ BSON annotations output from the GeoCombiner
+                    module.
+            unprocessed_combined_sra_bson (Path):
+                Path to the combined GEO MetaHQ BSON annotations output from the SraCombiner
+                    module.
+            processed_combined_bson (Path):
+                Path to the combined sample annotations BSON file generated from the SampleCombiner
+                    or SraCombiner modules.
+            db_path (Path):
+                Path to OmicIDX duckdb.
+
+        Returns:
+            (StudyCombiner): self, for chaining.
+
+        """
+
+        def prepare_unprocessed(unprocessed: Path, processed: dict):
+            """Subset semi-processed annotations for valid samples and copy
+            metadata over from processed annotations for compatability with
+            self._add_collapsed_sample_annotations.
+            """
+
+            self.logger.info("Loading annotations from %s", unprocessed)
+            unprocessed_anno = self._load_bson(unprocessed)
+
+            before = len(unprocessed_anno)
+            sample_anno = {k: v for k, v in unprocessed_anno.items() if k in processed}
+            diff = before - len(sample_anno)
+
+            if diff > 0:
+                self.logger.warning(
+                    "Removed %d invalid entries from the unprocessed annotations."
+                )
+
+            for entry, values in sample_anno.items():
+                values["accession_ids"] = processed_sample_anno[entry]["accession_ids"]
+                values["organism"] = processed_sample_anno[entry]["organism"]
+
+            return sample_anno
+
+        self._initialize_study_forward_annotations()
+        self._enrich_study_forward_annotations(db_path)
+
+        processed_sample_anno = self._load_bson(processed_combined_bson)
+
+        geo_combined_series = prepare_unprocessed(
+            unprocessed_combined_geo_bson, processed_sample_anno
+        )
+        sra_combined_series = prepare_unprocessed(
+            unprocessed_combined_sra_bson, processed_sample_anno
+        )
+
+        self._add_collapsed_sample_annotations(geo_combined_series)
+        self._add_collapsed_sample_annotations(sra_combined_series)
+
+        self._remove_invalid_organisms()
+
+        return self
