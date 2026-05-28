@@ -394,3 +394,9 @@ def get_id_map(obo_file: Path) -> pl.DataFrame:
     """Return a term ID to name mapping."""
     onto = Ontology.from_obo(obo_file)
     return onto.id_map(struct="polars")
+
+
+def get_xref(obo_file: Path, to: str, **kwargs):
+    """Return a cross-reference dictionary to ontology 'to'."""
+    onto = Ontology.from_obo(obo_file)
+    return onto.xref(to, **kwargs)
