@@ -74,26 +74,29 @@ class XRefMappings:
                 "Attempted to add value to XRef mapping, but key does not exist. Skipping..."
             )
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(anchor={self.anchor!r}, to={self.to!r}, mapping={self.mapping!r})"
+
 
 class XRefExtractor:
     """Ontology cross reference extractor.
 
     Attributes:
-        prefix (str):
-            The ontology prefix for IDs (e.g., MONDO for MONDO:0004994).
         entries (list[OboEntry]):
             A list of OboEntry objects.
     """
 
-    def __init__(self, entries, levels):
+    def __init__(self, entries):
         self.logger = setup_logger("metahq_build.ontology.relations.XRef")
 
         self.entries: list[OboEntry] = entries
-        self.levels: set[XRefLevel] = self._parse_levels(
-            levels, valid_levels=XREF_LEVELS
-        )
 
-    def get(self, ref: str, keep_anchors: list[str] | None = None) -> XRefMappings:
+    def get(
+        self,
+        ref: str,
+        keep_anchors: list[str] | None = None,
+        source_keys: list[str] | set[str] | None = None,
+    ) -> XRefMappings:
         """Extract cross references from a set of obo entries.
 
         Arguments:
@@ -105,21 +108,19 @@ class XRefExtractor:
                     from other ontologies. If left as 'None', all mappings will be returned,
                     otherwise only mappings between the 'keep_anchors' values and ref will be
                     returned.
+            source_keys (list[str] | set[str] | None):
+                Source keys by which to collect cross-references (e.g., 'equivalentTo',
+                    "shared-umls-xref").
 
         Returns:
             (XRefMappings): Structured mappings between the anchor ontology and ref.
 
         """
-        xrefs = {}
-        for entry in self.entries:
-            entry_xrefs = [xref for xref in entry.xrefs if xref.ref_id.startswith(ref)]
-            if len(entry_xrefs) == 0:
-                continue
-
-            levels = {f"{entry.id_prefix}:{level}" for level in self.levels}
-            mappings = self._resolve_entry_xrefs(entry_xrefs, levels)
-            if len(mappings) > 0:
-                xrefs[entry.id] = mappings
+        if isinstance(source_keys, (list, set)):
+            valid_source_keys = self._parse_levels(source_keys)
+            xrefs = self._get_restrictive(ref, valid_source_keys)
+        else:
+            xrefs = self._get(ref)
 
         if isinstance(keep_anchors, list):
             xrefs = {k: v for k, v in xrefs if k.split(":") in keep_anchors}
@@ -127,17 +128,50 @@ class XRefExtractor:
         xrefs = XRefMappings(anchor="anchor", to=ref, mapping=xrefs)
         return xrefs
 
-    def _resolve_entry_xrefs(self, xrefs: list[XRef], levels: set[str]) -> list[str]:
+    def _get(self, ref: str) -> dict[str, list[str]]:
+        """Collect xrefs without any source filtering."""
+        xrefs = {}
+        for entry in self.entries:
+            entry_xrefs = [
+                xref.ref_id for xref in entry.xrefs if xref.ref_id.startswith(ref)
+            ]
+            if len(entry_xrefs) > 0:
+                xrefs[entry.id] = entry_xrefs
+
+        return xrefs
+
+    def _get_restrictive(
+        self, ref: str, source_keys: set[XRefLevel]
+    ) -> dict[str, list[str]]:
+        """Collect xrefs with source filtering."""
+        xrefs = {}
+        for entry in self.entries:
+            entry_xrefs = [xref for xref in entry.xrefs if xref.ref_id.startswith(ref)]
+            if len(entry_xrefs) == 0:
+                continue
+
+            valid_source_keys = {f"{entry.id_prefix}:{key}" for key in source_keys}
+            mappings = self._resolve_entry_xrefs(entry_xrefs, valid_source_keys)
+            if len(mappings) > 0:
+                xrefs[entry.id] = mappings
+
+        return xrefs
+
+    def _resolve_entry_xrefs(
+        self, xrefs: list[XRef], source_keys: set[str]
+    ) -> list[str]:
         """Idnetify acceptable xrefs given a set of acceptable levels."""
         mappings: list[str] = []
         for xref in xrefs:
-            if len(set(xref.sources) & levels) > 0:
+            if len(set(xref.sources) & source_keys) > 0:
                 mappings.append(xref.ref_id)
 
         return mappings
 
     def _parse_levels(
-        self, levels: list[str] | set[str], valid_levels: tuple[XRefLevel, ...]
+        self,
+        levels: list[str] | set[str],
+        valid_levels: tuple[XRefLevel, ...] = XREF_LEVELS,
     ) -> set[XRefLevel]:
         """Check passed levels attribute values."""
         accepted = set()
@@ -191,7 +225,7 @@ class Ontology:
     def xref(
         self,
         ref: str,
-        levels: list[XRefLevel] | tuple[XRefLevel, ...] = DEFAULT_XREF_LEVELS,
+        **xref_kwargs,
     ) -> XRefMappings:
         """Finds cross references to other ontology terms.
 
@@ -201,6 +235,8 @@ class Ontology:
         Arguments:
             ref (str):
                 The cross referenced ontology (e.g., MESH).
+            **xref_kwargs:
+                Any keyword arguments used in the XRefExtractor.get method.
 
         Returns:
             _map (dict[str, str]):
@@ -214,8 +250,8 @@ class Ontology:
             ['MESH:C565561']
         """
 
-        extractor = XRefExtractor(self.entries, levels=levels)
-        mapping = extractor.get(ref)
+        extractor = XRefExtractor(self.entries)
+        mapping = extractor.get(ref, **xref_kwargs)
 
         return mapping
 
@@ -248,11 +284,14 @@ class Ontology:
                 _reader = self.obo_reader
                 loaded = _reader(file)
                 self.entries = self.get_entries(loaded)
+
             else:
                 raise ValueError(
                     f"Unknown reader {reader!r}, available options are [obo]",
                 )
-        self.logger.info("Built ontology from %s", file)
+        self.logger.info(
+            "Built ontology from %s with %d entries", file, len(self.entries)
+        )
 
     def id_map(self, struct: str = "polars") -> dict[str, str] | pl.DataFrame:
         """Returns class_dict as specified data structure."""
