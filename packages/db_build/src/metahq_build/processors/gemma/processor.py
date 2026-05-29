@@ -150,16 +150,37 @@ class GemmaProcessor(BaseProcessor):
             (pl.col(COL_ATTRIBUTE) == "sex") & (pl.col(COL_TERM_ID) == "UBERON:0007222")
         )
 
-        terms = (
-            df.filter(pl.col(COL_ATTRIBUTE) == "disease")[COL_TERM_ID]
-            .unique()
-            .to_list()
-        )
+        for attribute, onto_obo in {"tissue": UBERON_OBO, "disease": MONDO_OBO}.items():
+            terms = (
+                df.filter(pl.col(COL_ATTRIBUTE) == attribute)[COL_TERM_ID]
+                .unique()
+                .to_list()
+            )
 
-        ontos = sorted({term.split(":")[0] for term in terms})
-        self.logger.info(
-            "Found %d unique ontologies represented: %s", len(ontos), ontos
-        )
+            ontos = set(sorted({term.split(":")[0] for term in terms}))
+            self.logger.info(
+                "Found %d unique ontologies represented: %s", len(ontos), ontos
+            )
+            mapping = self._collect_ontology_mappings(
+                Ontology.from_obo(onto_obo), ontos, terms
+            ).with_columns(pl.lit(attribute).alias(COL_ATTRIBUTE))
+            counts = mapping.with_columns(
+                pl.col(COL_TERM_ID).str.split(":").list.get(0)
+            )[COL_TERM_ID].value_counts()
+
+            counts = dict(counts.iter_rows())
+            msg = f"Found mappings to ontologies: {counts}"
+            self.logger.info(msg)
+
+            df = (
+                df.join(
+                    mapping,
+                    on=[COL_ATTRIBUTE, COL_TERM_ID],
+                    how="left",
+                )
+                .with_columns(pl.coalesce(["mapped", COL_TERM_ID]).alias(COL_TERM_ID))
+                .drop("mapped")
+            )
 
         self.logger.info("Parsed %d annotations from Gemma", len(df))
 
@@ -294,15 +315,15 @@ class GemmaProcessor(BaseProcessor):
         mappings: list[pl.DataFrame] = []
         for onto in ontologies:
             terms = [term for term in query_terms if term.startswith(onto)]
-            xref = ontology.xref(onto)
-            xref = {k: v for k, v in xref.mapping.items() if v in terms}
-            if len(xref) == 0:
+            xref = (
+                ontology.xref(onto).pl(explode=True).filter(pl.col(onto).is_in(terms))
+            ).rename({"anchor": "mapped", onto: COL_TERM_ID})
+            if xref.is_empty():
                 self.logger.info("No mappings to %s", onto)
                 continue
 
-            mappings.append(
-                pl.DataFrame(
-                    {"mapped": list(xref.keys()), COL_TERM_ID: list(xref.values())}
-                )
-            )
-        return pl.concat(mappings, how="vertical")
+            mappings.append(xref)
+
+        return (
+            pl.concat(mappings, how="vertical") if len(mappings) > 0 else pl.DataFrame()
+        )
