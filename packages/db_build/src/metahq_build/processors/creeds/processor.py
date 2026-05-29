@@ -80,9 +80,11 @@ class CREEDSProcessor(BaseProcessor):
         self.logger.info("Found %s unique valid DOIDs to map", len(valid_doids))
 
         # Map DOID to MONDO
-        doid_to_mondo = mondo.map_terms(
-            terms=list(valid_doids), ontology="MONDO", _from="DOID", _to="MONDO"
-        )
+        xref_mappings = mondo.xref("DOID")
+        # Add custom control mapping
+        xref_mappings.add({"MONDO:0000000": ["DOID:0000000"]})
+        reverse_map = xref_mappings.reverse()
+        doid_to_mondo = {term: reverse_map.get(term, "NA") for term in valid_doids}
 
         # Load MONDO system descendants for filtering
         self.logger.info("Loading MONDO system descendants for filtering...")

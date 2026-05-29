@@ -295,7 +295,7 @@ class GemmaProcessor(BaseProcessor):
         for onto in ontologies:
             terms = [term for term in query_terms if term.startswith(onto)]
             xref = ontology.xref(onto)
-            xref = {k: v for k, v in xref.items() if v in terms}
+            xref = {k: v for k, v in xref.mapping.items() if v in terms}
             if len(xref) == 0:
                 self.logger.info("No mappings to %s", onto)
                 continue

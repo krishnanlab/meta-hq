@@ -131,14 +131,13 @@ class URSAHDProcessor(BaseProcessor):
         mondo = Ontology.from_obo(MONDO_OBO)
         mesh_ids = disease_df["mesh_id"].unique().to_list()
         prefixed = ["MESH:" + mid for mid in mesh_ids]
-        mesh_to_mondo = mondo.map_terms(
-            prefixed, ontology="MONDO", _from="MESH", _to="MONDO"
-        )
+        xref_mappings = mondo.xref("MESH")
+        # Add custom control mapping
+        xref_mappings.add({"MONDO:0000000": ["MESH:D000000"]})
+        reverse_map = xref_mappings.reverse()
+        mesh_to_mondo = {term: reverse_map.get(term, "NA") for term in prefixed}
         bare_to_mondo = {
-            mid.removeprefix("MESH:"): (
-                "MONDO:0000000" if mondo_id == "control" else mondo_id
-            )
-            for mid, mondo_id in mesh_to_mondo.items()
+            mid.removeprefix("MESH:"): mondo_id for mid, mondo_id in mesh_to_mondo.items()
         }
 
         disease_df = disease_df.with_columns(

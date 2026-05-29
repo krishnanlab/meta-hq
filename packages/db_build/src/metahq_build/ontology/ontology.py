@@ -352,6 +352,6 @@ def get_id_map(obo_file: Path) -> pl.DataFrame:
 
 
 def get_xref(obo_file: Path, to: str, **kwargs):
-    """Return a cross-reference dictionary to ontology 'to'."""
+    """Return a XRefMappings object with cross-references to ontology 'to'."""
     onto = Ontology.from_obo(obo_file)
     return onto.xref(to, **kwargs)
