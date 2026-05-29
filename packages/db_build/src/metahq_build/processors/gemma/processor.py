@@ -29,7 +29,7 @@ from metahq_build.config.config import (
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
-from metahq_build.ontology import get_system_descendants
+from metahq_build.ontology import Ontology, get_system_descendants
 from metahq_build.processors.base import BaseProcessor, ProcessorError
 from metahq_build.processors.registry import ProcessorRegistry
 
@@ -150,6 +150,17 @@ class GemmaProcessor(BaseProcessor):
             (pl.col(COL_ATTRIBUTE) == "sex") & (pl.col(COL_TERM_ID) == "UBERON:0007222")
         )
 
+        terms = (
+            df.filter(pl.col(COL_ATTRIBUTE) == "disease")[COL_TERM_ID]
+            .unique()
+            .to_list()
+        )
+
+        ontos = sorted({term.split(":")[0] for term in terms})
+        self.logger.info(
+            "Found %d unique ontologies represented: %s", len(ontos), ontos
+        )
+
         self.logger.info("Parsed %d annotations from Gemma", len(df))
 
         # Filter tissue and disease annotations to descendants of system-level terms.
@@ -241,3 +252,57 @@ class GemmaProcessor(BaseProcessor):
     def _map_sex(self, df: pl.DataFrame) -> pl.DataFrame:
         """Map PATO terms to MetaHQ sex ID constants."""
         return df.with_columns(pl.col(COL_TERM_ID).replace(PATO_SEX_MAP))
+
+    def map_ontology_terms(
+        self,
+        df: pl.DataFrame,
+        attribute: str,
+        ontology: str,
+        obo: Path | str,
+        delimiter: str = ":",
+    ) -> pl.DataFrame:
+        """Identify unique ontologies represented in a set of term IDs."""
+        onto = Ontology.from_obo(obo)
+
+        all_terms = (
+            df.filter(pl.col(COL_ATTRIBUTE) == attribute)[COL_TERM_ID]
+            .unique()
+            .to_list()
+        )
+        unique_ontologies = {term.split(delimiter)[0] for term in all_terms}
+        self.logger.info(
+            "Found %d unique ontologies represented: %s",
+            len(unique_ontologies),
+            unique_ontologies,
+        )
+        mappings = self._collect_ontology_mappings(
+            onto,
+            ontologies=unique_ontologies,
+            query_terms=[
+                term for term in all_terms if not term.startswith(ontology)
+            ],  # exclude self terms
+        )
+
+        return df.join(mappings, on=COL_TERM_ID, how="left").with_columns(
+            pl.coalesce(["mapped", COL_TERM_ID]).alias(COL_TERM_ID)
+        )
+
+    def _collect_ontology_mappings(
+        self, ontology: Ontology, ontologies: set[str], query_terms: list[str]
+    ) -> pl.DataFrame:
+        """Collect all term mappings."""
+        mappings: list[pl.DataFrame] = []
+        for onto in ontologies:
+            terms = [term for term in query_terms if term.startswith(onto)]
+            xref = ontology.xref(onto)
+            xref = {k: v for k, v in xref.items() if v in terms}
+            if len(xref) == 0:
+                self.logger.info("No mappings to %s", onto)
+                continue
+
+            mappings.append(
+                pl.DataFrame(
+                    {"mapped": list(xref.keys()), COL_TERM_ID: list(xref.values())}
+                )
+            )
+        return pl.concat(mappings, how="vertical")
