@@ -1,9 +1,156 @@
 import gzip
+import warnings
 from pathlib import Path
+from typing import Literal, TypeAlias, get_args
 
 import polars as pl
 
+from metahq_build.ontology._obo_entry import OboEntry, XRef
 from metahq_build.util.logging import setup_logger
+
+XRefLevel: TypeAlias = Literal[
+    "equivalentTo", "relatedTo", "otherHierarchy", "Redundant", "shared-umls-xref"
+]
+XREF_LEVELS: tuple[XRefLevel, ...] = get_args(XRefLevel)
+DEFAULT_XREF_LEVELS: tuple[XRefLevel, ...] = (
+    "equivalentTo",
+    "relatedTo",
+    "shared-umls-xref",
+)
+
+
+class XRefMappings:
+    """Structured mappings between ontology terms.
+
+    Attributes:
+        anchor (str):
+            The prefix of the main ontology for which xrefs were collected.
+        to (str):
+            The prefix of the ontology mapped from the anchor.
+        mapping (dict[str, list[str]]):
+            A mapping between anchor terms and their cross references.
+    """
+
+    def __init__(self, anchor, to, mapping):
+        self.anchor: str = anchor
+        self.to: str = to
+        self.mapping: dict[str, list[str]] = mapping
+
+    def pl(self, explode: bool = False):
+        """Export xref mappings to a polars DataFrame."""
+        df = pl.DataFrame(
+            {
+                self.anchor: list(self.mapping.keys()),
+                self.to: list(self.mapping.values()),
+            }
+        ).sort(self.anchor)
+        if explode:
+            return df.explode(self.to).select([self.anchor, self.to])
+
+        return df.select([self.anchor, self.to])
+
+    def reverse(self) -> dict[str, str]:
+        """Export the mappings as a to: anchor dictionary."""
+        df = self.pl(explode=True)
+        return {row[1]: row[0] for row in df.iter_rows()}
+
+    def add(self, new: dict[str, list[str]]) -> None:
+        """Add a new key and value to the mapping."""
+        for k, v in new.items():
+            if k in self.mapping:
+                self.add_existing(k, v)
+            else:
+                self.mapping[k] = v
+
+    def add_existing(self, key: str, val: list[str]) -> None:
+        """Add another mapping to an existing anchor term."""
+        if key in self.mapping:
+            existing: list[str] = self.mapping[key]
+            existing.extend(val)
+            self.mapping.update({key: list(set(existing))})
+
+        else:
+            warnings.warn(
+                "Attempted to add value to XRef mapping, but key does not exist. Skipping..."
+            )
+
+
+class XRefExtractor:
+    """Ontology cross reference extractor.
+
+    Attributes:
+        prefix (str):
+            The ontology prefix for IDs (e.g., MONDO for MONDO:0004994).
+        entries (list[OboEntry]):
+            A list of OboEntry objects.
+    """
+
+    def __init__(self, entries, levels):
+        self.logger = setup_logger("metahq_build.ontology.relations.XRef")
+
+        self.entries: list[OboEntry] = entries
+        self.levels: set[XRefLevel] = self._parse_levels(
+            levels, valid_levels=XREF_LEVELS
+        )
+
+    def get(self, ref: str, keep_anchors: list[str] | None = None) -> XRefMappings:
+        """Extract cross references from a set of obo entries.
+
+        Arguments:
+            ref (str):
+                The prefix of an ontology to map to (e.g., MONDO, DOID, MESH).
+            keep_anchors (list[str] | None):
+                Prefixs of the anchor ontologies (e.g., ['UBERON', 'CL']). This exists
+                    because ontology OBO files can contain entries for terms that are imported
+                    from other ontologies. If left as 'None', all mappings will be returned,
+                    otherwise only mappings between the 'keep_anchors' values and ref will be
+                    returned.
+
+        Returns:
+            (XRefMappings): Structured mappings between the anchor ontology and ref.
+
+        """
+        xrefs = {}
+        for entry in self.entries:
+            entry_xrefs = [xref for xref in entry.xrefs if xref.ref_id.startswith(ref)]
+            if len(entry_xrefs) == 0:
+                continue
+
+            levels = {f"{entry.id_prefix}:{level}" for level in self.levels}
+            mappings = self._resolve_entry_xrefs(entry_xrefs, levels)
+            if len(mappings) > 0:
+                xrefs[entry.id] = mappings
+
+        if isinstance(keep_anchors, list):
+            xrefs = {k: v for k, v in xrefs if k.split(":") in keep_anchors}
+
+        xrefs = XRefMappings(anchor="anchor", to=ref, mapping=xrefs)
+        return xrefs
+
+    def _resolve_entry_xrefs(self, xrefs: list[XRef], levels: set[str]) -> list[str]:
+        """Idnetify acceptable xrefs given a set of acceptable levels."""
+        mappings: list[str] = []
+        for xref in xrefs:
+            if len(set(xref.sources) & levels) > 0:
+                mappings.append(xref.ref_id)
+
+        return mappings
+
+    def _parse_levels(
+        self, levels: list[str] | set[str], valid_levels: tuple[XRefLevel, ...]
+    ) -> set[XRefLevel]:
+        """Check passed levels attribute values."""
+        accepted = set()
+        for level in levels:
+            if level not in valid_levels:
+                self.logger.warning("%s not in supported levels. Skipping...", level)
+            accepted.add(level)
+
+        if len(accepted) == 0:
+            raise ValueError(f"XRef levels must be in {valid_levels}")
+
+        self.logger.info("Using xref levels: %s", accepted)
+        return accepted
 
 
 class Ontology:
@@ -11,10 +158,6 @@ class Ontology:
     ontologies stored in obo files.
 
     Attributes:
-        ontology (str):
-            Name of the ontology (e.g., mondo, MONDO, uberon, CL). Default is 'none'. If ontology
-            is left as 'none' cross-reference functions will not be available.
-
         entries (list[str]):
             Entries from the ontology that begin with the pattern [Term].
 
@@ -28,12 +171,12 @@ class Ontology:
     """
 
     def __init__(self):
-        self._entries: list[str] = []
+        self._entries: list[OboEntry] = []
         self._class_dict: dict[str, str] = {}
 
         self.logger = setup_logger("metahq_build.ontology")
 
-    def get_class_dict(self, verbose: bool = False):
+    def get_class_dict(self):
         """
         Fills the _class_dict attribute with id: name pairs.
 
@@ -43,21 +186,13 @@ class Ontology:
 
         """
         for entry in self.entries:
-            lines = entry.split("\n")
-            for line in lines:
-                line = line.rstrip()
-                if line.startswith("id:"):
-                    _id = line.split("id: ")[1]
-                elif line.startswith("name:"):
-                    name = line.split("name: ")[1]
-                    if _id not in self._class_dict:
-                        self._class_dict[_id] = name.lower()
-                    elif verbose:
-                        print(f"{_id} showing up more than once")
+            self._class_dict[entry.id] = entry.name.lower()
 
     def xref(
-        self, ref: str, reverse: bool = False, verbose: bool = False
-    ) -> dict[str, str]:
+        self,
+        ref: str,
+        levels: list[XRefLevel] | tuple[XRefLevel, ...] = DEFAULT_XREF_LEVELS,
+    ) -> XRefMappings:
         """Finds cross references to other ontology terms.
 
         If there are cross references, this function will just choose the first
@@ -66,12 +201,6 @@ class Ontology:
         Arguments:
             ref (str):
                 The cross referenced ontology (e.g., MESH).
-
-            reverse (bool):
-                If True, will return {xref: term} instead of {term: xref}.
-
-            verbose (bool):
-                If True, will print redundant cross references.
 
         Returns:
             _map (dict[str, str]):
@@ -82,80 +211,13 @@ class Ontology:
             >>> from metahq_build.ontology import Ontology
             >>> op = Ontology.from_obo("mondo.obo")
             >>> op.xref("MESH").pop("MONDO:0100340")
-            MESH:C565561
-
-            >>> op.xref("MESH", verbose=True)
-            MESH:D006966 showing up more than once (duplicate: MONDO:0024305)
-            MESH:C537897 showing up more than once (duplicate: MONDO:0043176)
-            ...
-            MESH:D000086382 showing up more than once (duplicate: MONDO:0100096)
-
+            ['MESH:C565561']
         """
-        _map = {}
-        for entry in self.entries:
-            lines = entry.split("\n")
-            for line in lines:
-                line = line.rstrip()
-                if line.startswith("id:"):
-                    _id = line.split("id: ")[1]
-                elif line.startswith(f"xref: {ref}:"):
-                    __id = line.split(" ")[1]
-                    if _id not in _map:
-                        _map[_id] = __id
-                    elif verbose:
-                        print(f"{__id} showing up more than once (duplicate: {_id})")
-        if reverse:
-            _map = self.reverse_dict(_map)
 
-        return _map
+        extractor = XRefExtractor(self.entries, levels=levels)
+        mapping = extractor.get(ref)
 
-    def map_terms(
-        self, terms: list[str], ontology: str, _from: str, _to: str
-    ) -> dict[str, str]:
-        """Maps term IDs from a list of terms to another ontology.
-
-        Arguments:
-            terms (list[str]):
-                Array of term IDs to map.
-
-            ontology (str):
-                Name of the ontology (e.g., MONDO, UBERON, CL). Required to choose the appropriate
-                mapping function.
-
-            _from (str):
-                The ontology type of the IDs in terms.
-
-            _to (str):
-                The ontology type you want to map those terms to.
-
-        Returns:
-            mapped (dict[str, str]):
-                Mapping between terms in terms to _to.
-
-        Example:
-
-            >>> from metahq_build.ontology import Ontology
-            >>> op = Ontology.from_obo("mondo.obo")
-            >>> op.map_terms(mesh, ontology="MONDO", _from="MESH", _to="MONDO").pop("MESH:D007680")
-            MONDO:0002367
-            >>> op.map_terms(mesh, ontology="MONDO", _from="MONDO", _to="MESH").pop("MONDO:0002367")
-            MESH:D007680
-        """
-        if _to == ontology:
-            reverse = True
-            ref = _from
-        else:
-            reverse = False
-            ref = _to
-
-        _map = self.xref(ref=ref, reverse=reverse)
-
-        mapped = {}
-        mapper = self.mapping_func(_from, _to, ontology)
-        for term in terms:
-            mapped[term] = mapper(term, _map)
-
-        return mapped
+        return mapping
 
     def read(self, file: Path | str, reader: str = "obo") -> None:
         """
@@ -173,12 +235,13 @@ class Ontology:
             >>> op = Ontology()
             >>> op.read("mondo.obo", reader="obo")
             >>> op.entries[0]
-            [Term]
-            id: MONDO:0000001
-            name: disease
-            def: "A diease is a disposition to ..."
-            ...
-            property_value: exactMatch Orphannet:377788
+            OboEntry(
+                id="MONDO:0000001",
+                name="disease",
+                def="A diease is a disposition to ...",
+                ...,
+                xrefs=[XRef(...), ...],
+            )
         """
         if isinstance(reader, str):
             if reader == "obo":
@@ -217,7 +280,7 @@ class Ontology:
         return self._class_dict
 
     @property
-    def entries(self) -> list[str]:
+    def entries(self) -> list[OboEntry]:
         """Returns entries from the ontology."""
         return self._entries
 
@@ -226,114 +289,23 @@ class Ontology:
         """Sets self.entries value."""
         if not isinstance(val, list):
             raise TypeError(f"Expected list, not {type(val)}.")
+
+        for entry in val:
+            if not isinstance(entry, OboEntry):
+                raise TypeError(f"Expected OboEntry. Got {type(entry)}.")
+
         self._entries = val
 
     @staticmethod
-    def get_entries(obo_text: str) -> list:
+    def get_entries(obo_text: str) -> list[OboEntry]:
         """Returns a list of entries from entries combined by \n\n"""
         entries = [
-            entry
+            OboEntry.from_text(entry)
             for entry in obo_text.split("\n\n")
             if (entry.startswith("[Term]")) and ("is_obsolete: true" not in entry)
         ]
 
         return entries
-
-    @staticmethod
-    def doid_to_mondo(doid: str, _map: dict) -> str:
-        """Maps a single DOID to MONDO id.
-
-        Arguments:
-            doid (str):
-                DOID id (e.g. DOID:0050700).
-
-            _map (dict[str, str]):
-                Dict with DOID keys and MONDO values.
-
-        Returns:
-            _id (str)
-                Mapped id.
-
-        Example:
-
-            >>> from  metahq_build.ontology import Ontology
-            >>> op = Ontology.from_obo("mondo.obo")
-            >>> _map = op.xref("DOID")
-            >>> op.mesh_to_mondo("DOID:0050700", _map)
-            MONDO:0004994
-        """
-        if doid == "DOID:0000000":
-            _id = "MONDO:0000000"
-        elif doid in _map.keys():
-            _id = _map[doid]
-        else:
-            _id = "NA"
-
-        return _id
-
-    @staticmethod
-    def mesh_to_mondo(mesh: str, _map: dict) -> str:
-        """Maps a single MESH to MONDO id.
-
-        Arguments:
-            mesh (str):
-                MESH id (e.g. D000324).
-
-            _map (dict[str, str]):
-                Dict with MESH keys and MONDO values.
-
-        Returns:
-            _id (str)
-                Mapped id.
-
-        Example:
-
-            >>> from  metahq_build.ontology import Ontology
-            >>> op = Ontology.from_obo("mondo.obo")
-            >>> _map = op.xref("MESH")
-            >>> op.mesh_to_mondo("MESH:D007680", _map)
-            MONDO:0002367
-        """
-        if mesh == "MESH:D000000":
-            _id = "MONDO:0000000"
-        elif mesh in _map.keys():
-            _id = _map[mesh]
-        else:
-            _id = "NA"
-
-        return _id
-
-    @staticmethod
-    def umls_to_mondo(umls: str, _map: dict) -> str:
-        """Maps a single UMLS to MONDO id.
-
-        Arguments:
-            umls (str):
-                UMLS id (e.g. D000324).
-
-            _map (dict[str, str]):
-                Dict with UMLS keys and MONDO values.
-
-        Returns:
-            _id (str):
-                Mapped id.
-
-        Example:
-
-            >>> from  metahq_build.ontology import Ontology
-            >>> op = Ontology.from_obo("mondo.obo")
-            >>> _map = op.xref("UMLS")
-            >>> op.mesh_to_mondo("UMLS:C2673913", _map)
-            MONDO:0000104
-        """
-        if umls == "UMLS:C0000000":
-            _id = "MONDO:0000000"
-        elif umls in _map.keys():
-            _id = _map[umls]
-        else:
-            _id = "NA"
-
-        return _id
 
     @staticmethod
     def obo_reader(obo: Path | str) -> str:
@@ -371,23 +343,6 @@ class Ontology:
         parser = cls()
         parser.read(obo, reader="obo")
         return parser
-
-    @classmethod
-    def mapping_func(cls, _from: str, _to: str, ontology: str) -> object:
-        """Assigns the correct mapping function for mapping xref terms."""
-        if _from == "MESH" and _to == "MONDO" and ontology == "MONDO":
-            return cls.mesh_to_mondo
-
-        if _from == "UMLS" and _to == "MONDO" and ontology == "MONDO":
-            return cls.umls_to_mondo
-
-        if _from == "DOID" and _to == "MONDO" and ontology == "MONDO":
-            return cls.doid_to_mondo
-
-        if _from == "MONDO" and _to == "MESH" and ontology == "MONDO":
-            return cls.select_from_xref
-
-        raise NotImplementedError("No mapping function for {_from}->{_to}.")
 
 
 def get_id_map(obo_file: Path) -> pl.DataFrame:
