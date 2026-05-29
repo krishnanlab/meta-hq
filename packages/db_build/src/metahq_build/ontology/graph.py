@@ -52,39 +52,28 @@ class Graph(Ontology):
         edge (fiber network is parent of fiber) on Line 100.
         """
         self.logger.info("Constructing the ontology graph...")
-        # ID entries have at least 1 capital letter, a colon, and at least 1 digit
-        id_pattern = re.compile(r"[A-Za-z]+:\S+")
 
         for entry in self.entries:
-            if "is_obsolete: true" in entry:
-                continue  # skip obsolete entries
+            if (
+                ("UBERON" not in entry.id)
+                and ("CL" not in entry.id)
+                and ("MONDO" not in entry.id)
+            ):
+                continue
 
-            lines = entry.split("\n")
-            for line in lines:
+            # Get is_a connection from the reference term to another
+            for parent in entry.is_a:
+                if ("UBERON" in parent) or ("CL" in parent) or ("MONDO" in entry.id):
+                    self._graph.add_edge(parent, entry.id)
 
-                # Get ID of the term
-                if line.startswith("id:"):
-                    _id = line.split("id: ")[1]
-                    if ("UBERON" in _id) or ("CL" in _id) or ("MONDO" in _id):
-                        pass
-                    else:
-                        break
-
-                # Get is_a connection from the reference term to another
-                elif line.startswith("is_a:"):
-                    parent = id_pattern.search(line).group(0)
-                    if ("UBERON" in parent) or ("CL" in parent) or ("MONDO" in _id):
-                        self._graph.add_edge(parent, _id)
-
-                # Get part_of connections
-                # Ignoring 'develops from' and 'related to'
-                elif line.startswith("relationship: part_of"):
-                    parent = id_pattern.search(line).group(0)
-                    if ("UBERON" in parent) or ("CL" in parent) or ("MONDO" in _id):
-                        # If parent is the fiber and child is the fiber network, then leave that edge out
-                        if _id == "UBERON:8000009" and parent == "UBERON:0002354":
-                            continue
-                        self._graph.add_edge(parent, _id)
+            # Get part_of connections
+            # Ignoring 'develops from' and 'related to'
+            for parent in entry.part_of:
+                if ("UBERON" in parent) or ("CL" in parent) or ("MONDO" in entry.id):
+                    # If parent is the fiber and child is the fiber network, then leave that edge out
+                    if entry.id == "UBERON:8000009" and parent == "UBERON:0002354":
+                        continue
+                    self._graph.add_edge(parent, entry.id)
 
     def descendants_from(
         self, nodes: list[str], verbose: bool = False

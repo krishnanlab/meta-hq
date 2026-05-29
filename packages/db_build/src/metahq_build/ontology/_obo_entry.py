@@ -7,7 +7,7 @@ import warnings
 from dataclasses import dataclass, field
 
 
-@dataclass
+@dataclass(slots=True)
 class Synonym:
     """Ontology term synonyms."""
 
@@ -16,7 +16,7 @@ class Synonym:
     sources: list[str]
 
 
-@dataclass
+@dataclass(slots=True)
 class XRef:
     """Ontology term cross-references"""
 
@@ -24,7 +24,15 @@ class XRef:
     sources: list[str]
 
 
-@dataclass
+@dataclass(slots=True)
+class GraphConnections:
+    """Ontology is_a / part_of relationships."""
+
+    is_a: list[str]
+    part_of: list[str]
+
+
+@dataclass(slots=True)
 class OboEntry:
     """OBO ontology term entry."""
 
@@ -34,6 +42,8 @@ class OboEntry:
     def_sources: list[str] = field(default_factory=list)
     synonyms: list[Synonym] = field(default_factory=list)
     xrefs: list[XRef] = field(default_factory=list)
+    is_a: list[str] = field(default_factory=list)
+    part_of: list[str] = field(default_factory=list)
     property_values: dict[str, list[str]] = field(default_factory=dict)
 
     @classmethod
@@ -42,6 +52,8 @@ class OboEntry:
         def_sources = []
         synonyms = []
         xrefs = []
+        is_a = []
+        part_of = []
         property_values = {}
 
         for line in text.strip().splitlines():
@@ -95,6 +107,16 @@ class OboEntry:
                 pkey, _, pvalue = value.partition(" ")
                 property_values.setdefault(pkey, []).append(pvalue)
 
+            elif key == "is_a":
+                m = re.match(r"(\S+)(?:\s*\{([^}]*)\})?", value)
+                if m:
+                    is_a.append(m.group(1))
+
+            elif key == "relationship":
+                m = re.match(r".*?([A-Z]+:\d+)", value)
+                if m:
+                    part_of.append(m.group(1))
+
         if not id_ or not name:
             warnings.warn("Initializing OboEntry without a name or id.", RuntimeWarning)
             return cls(
@@ -104,6 +126,8 @@ class OboEntry:
                 def_sources=def_sources,
                 synonyms=synonyms,
                 xrefs=xrefs,
+                is_a=is_a,
+                part_of=part_of,
                 property_values=property_values,
             )
 
@@ -114,6 +138,8 @@ class OboEntry:
             def_sources=def_sources,
             synonyms=synonyms,
             xrefs=xrefs,
+            is_a=is_a,
+            part_of=part_of,
             property_values=property_values,
         )
 
