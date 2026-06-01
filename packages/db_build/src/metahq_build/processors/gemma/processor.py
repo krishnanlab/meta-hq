@@ -142,6 +142,8 @@ class GemmaProcessor(BaseProcessor):
                 COL_ECODE: pl.Utf8,
             },
         )
+
+        df = self._map_mondo_tissue_to_disease(df)
         df = self._map_age_groups(df)
         df = self._map_sex(df)
 
@@ -326,4 +328,32 @@ class GemmaProcessor(BaseProcessor):
 
         return (
             pl.concat(mappings, how="vertical") if len(mappings) > 0 else pl.DataFrame()
+        )
+
+    def _map_mondo_tissue_to_disease(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Some tissue annotations are to MONDO terms because they originated
+        from a diseased tissue (e.g., brain neoplasm). We convert these to disease
+        annotations to retain the annotations while respecting the MetaHQ schema and requirements.
+        """
+        mismatched = df.filter(
+            (pl.col(COL_ATTRIBUTE) == "tissue")
+            & (pl.col(COL_TERM_ID).str.starts_with("MONDO"))
+        ).height
+
+        self.logger.info(
+            "Found %d studies annotated to tissue with MONDO or DOID terms."
+            " Converting to disease annotations...",
+            mismatched,
+        )
+
+        return df.with_columns(
+            pl.when(
+                (pl.col(COL_ATTRIBUTE) == "tissue")
+                & (
+                    (pl.col(COL_TERM_ID).str.starts_with("MONDO"))
+                    | (pl.col(COL_TERM_ID).str.starts_with("DOID"))
+                )
+            )
+            .then(pl.lit("disease").alias(COL_ATTRIBUTE))
+            .otherwise(pl.col(COL_ATTRIBUTE))
         )
