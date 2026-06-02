@@ -165,7 +165,12 @@ class GemmaProcessor(BaseProcessor):
             )
             mapping = self._collect_ontology_mappings(
                 Ontology.from_obo(onto_obo), ontos, terms
-            ).with_columns(pl.lit(attribute).alias(COL_ATTRIBUTE))
+            )
+            if mapping.is_empty():
+                self.logger.info("No cross-ontology mappings found for %s; skipping.", attribute)
+                continue
+
+            mapping = mapping.with_columns(pl.lit(attribute).alias(COL_ATTRIBUTE))
             counts = mapping.with_columns(
                 pl.col(COL_TERM_ID).str.split(":").list.get(0)
             )[COL_TERM_ID].value_counts()
