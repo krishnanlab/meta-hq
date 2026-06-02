@@ -180,8 +180,8 @@ class XRefExtractor:
         for level in levels:
             if level not in valid_levels:
                 self.logger.warning("%s not in supported levels. Skipping...", level)
+                continue
             accepted.add(level)
-
         if len(accepted) == 0:
             raise ValueError(f"XRef levels must be in {valid_levels}")
 
