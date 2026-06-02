@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 import networkx as nx
@@ -42,24 +41,49 @@ class Graph(Ontology):
 
         self.logger = setup_logger("metahq_build.ontology.graph.Graph")
 
-    def construct_graph(self):
-        """Constructs an ontology graph from entries from an ontology file.
+    def construct_graph(self, keep_anchors: list[str] | set[str] | None = None):
+        """Constructs an ontology graph from entries from an ontology file. This
+        method is automatically called when accessing the `graph` property if it
+        has not already been called.
 
         A simple cycle occurs between 2 nodes UBERON:8000009 and UBERON:0002354
         (cardiac Purkinje fiber network and cardiac Purkinje fiber)
         They are both parents and children of eachother, so to preserve the
         directed acyclic structure of the edgelist, we intentionally keep only one
         edge (fiber network is parent of fiber) on Line 100.
+
+        Arguments:
+            keep_anchors (list[str] | set[str] | None):
+                Ontology prefixes to include in the graph. Discard all others.
+                    Passing ['UBERON', 'CL'] will dicard other terms that are
+                    not from those ontologies.
+
+        Examples:
+
+            >>> from metahq_build.ontology import Graph
+            >>> graph = Graph.from_obo('/path/to/mondo.obo')
+            >>> graph.construct_graph()
+            >>> graph.graph
+            DiGraph with 42891 nodes and 68389 edges
+
+            Only retain relationships between MONDO ontology terms.
+
+            >>> graph.construct_graph(keep_anchors=['MONDO'])
+            >>> graph.graph
+            DiGraph with 37105 nodes and 58725 edges
+
+            This method is also automatically called by accessing the `graph` property.
+
+            >>> graph = Graph.from_obo('/path/to/mondo.obo')
+            >>> graph.graph
+            DiGraph with 42891 nodes and 68389 edges
         """
         self.logger.info("Constructing the ontology graph...")
 
         for entry in self.entries:
-            if (
-                ("UBERON" not in entry.id)
-                and ("CL" not in entry.id)
-                and ("MONDO" not in entry.id)
-            ):
-                continue
+            if isinstance(keep_anchors, (list, set)):
+                if not any(anchor in entry.id for anchor in keep_anchors):
+                    continue
 
             # Get is_a connection from the reference term to another
             for parent in entry.is_a:
