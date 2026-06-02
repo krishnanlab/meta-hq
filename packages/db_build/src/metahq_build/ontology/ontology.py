@@ -123,7 +123,9 @@ class XRefExtractor:
             xrefs = self._get(ref)
 
         if isinstance(keep_anchors, list):
-            xrefs = {k: v for k, v in xrefs if k.split(":") in keep_anchors}
+            xrefs = {
+                k: v for k, v in xrefs.items() if k.split(":")[0] in keep_anchors
+            }
 
         xrefs = XRefMappings(anchor="anchor", to=ref, mapping=xrefs)
         return xrefs
