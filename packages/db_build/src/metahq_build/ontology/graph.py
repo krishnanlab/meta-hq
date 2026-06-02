@@ -33,18 +33,19 @@ class Graph(Ontology):
         bone sarcoma
     """
 
-    def __init__(self):
-        """Initialize Graph object as a child of Ontology"""
+    def __init__(
+        self,
+    ):
+        """Initialize Graph object as a child of Ontology."""
         super().__init__()
         self._graph = nx.DiGraph()
         self._nodes: list[str] = []
 
         self.logger = setup_logger("metahq_build.ontology.graph.Graph")
 
-    def construct_graph(self, keep_anchors: list[str] | set[str] | None = None):
-        """Constructs an ontology graph from entries from an ontology file. This
-        method is automatically called when accessing the `graph` property if it
-        has not already been called.
+    def construct(self, include: list[str] | set[str] | None = None):
+        """Constructs an ontology graph from entries from an ontology file. This must be called
+        to utilize any functionalities, otherwise the graph will remain empty.
 
         A simple cycle occurs between 2 nodes UBERON:8000009 and UBERON:0002354
         (cardiac Purkinje fiber network and cardiac Purkinje fiber)
@@ -53,7 +54,7 @@ class Graph(Ontology):
         edge (fiber network is parent of fiber) on Line 100.
 
         Arguments:
-            keep_anchors (list[str] | set[str] | None):
+            include (list[str] | set[str] | None):
                 Ontology prefixes to include in the graph. Discard all others.
                     Passing ['UBERON', 'CL'] will dicard other terms that are
                     not from those ontologies.
@@ -80,9 +81,11 @@ class Graph(Ontology):
         """
         self.logger.info("Constructing the ontology graph...")
 
+        self._graph = nx.DiGraph()
+
         for entry in self.entries:
-            if isinstance(keep_anchors, (list, set)):
-                if not any(anchor in entry.id for anchor in keep_anchors):
+            if isinstance(include, (list, set)):
+                if not any(anchor in entry.id for anchor in include):
                     continue
 
             # Get is_a connection from the reference term to another
@@ -268,12 +271,17 @@ class Graph(Ontology):
         """Gets descendants of a single term"""
         return list(nx.descendants(self.graph, term))
 
+    @classmethod
+    def from_obo(cls, obo: Path | str, include: list[str] | set[str] | None = None):
+        """Create Ontology class from an obo file."""
+        parser = cls()
+        parser.read(obo, reader="obo")  # from Ontology parent
+        parser.construct(include)
+        return parser
+
     @property
     def graph(self) -> nx.DiGraph:
         """Return the ontology DiGraph"""
-        if self._graph.number_of_nodes() == 0:
-            self.construct_graph()
-
         return self._graph
 
     @property
