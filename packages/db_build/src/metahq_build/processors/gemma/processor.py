@@ -342,7 +342,10 @@ class GemmaProcessor(BaseProcessor):
         """
         mismatched = df.filter(
             (pl.col(COL_ATTRIBUTE) == "tissue")
-            & (pl.col(COL_TERM_ID).str.starts_with("MONDO"))
+            & (
+                (pl.col(COL_TERM_ID).str.starts_with("MONDO"))
+                | (pl.col(COL_TERM_ID).str.starts_with("DOID"))
+            )
         ).height
 
         self.logger.info(
