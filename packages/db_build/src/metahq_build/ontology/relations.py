@@ -85,7 +85,7 @@ class RelationsLazyFrame:
             lf = lf.select(subset + [ROW_ID])
 
         relations = self._collect_relations(lf, group_by=COL_ID, agg=ROW_ID)
-        relations = dict(zip(relations[COL_ID], set(relations[ROW_ID])))
+        relations = dict(zip(relations[COL_ID], relations[ROW_ID]))
 
         if rm_self:
             self.logger.info("Removing self terms from ancestors query...")
