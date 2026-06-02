@@ -789,14 +789,24 @@ def ontology():
     "-i",
     type=click.Path(exists=True, path_type=Path),
     help="Path to ontology .obo or .obo.gz file.",
+    required=True,
+)
+@click.option(
+    "--ontology",
+    "-n",
+    "ontology_",
+    type=click.Choice(["UBERON", "MONDO", "CL"]),
+    help="The ontology of the passes obo file.",
+    required=True,
 )
 @click.option(
     "--outfile",
     "-o",
     type=click.Path(path_type=Path),
     help="Path to .parquet outfile storing ontology relations.",
+    required=True,
 )
-def ontology_relations(obo_file, outfile):
+def ontology_relations(obo_file, ontology_, outfile):
     """Extract a terms x terms ontology relations matrix.
 
     You may interpret the output matrix as the following: For any row, column pair, if the
@@ -812,7 +822,20 @@ def ontology_relations(obo_file, outfile):
         click.echo(f"Out file: {outfile}")
         click.echo("")
 
-        graph = Graph.from_obo(obo_file)
+        match ontology_:
+            case "UBERON":
+                include = ["UBERON", "CL"]
+            case "CL":
+                include = ["CL"]
+            case "MONDO":
+                include = ["MONDO"]
+            case _:
+                click.secho(
+                    "Error: You must provide an ontology name through -n or --ontology."
+                )
+                sys.exit(1)
+
+        graph = Graph.from_obo(obo_file, include=include)
         graph.relations_matrix().save(outfile)
 
         click.secho(f"✓ Relations saved to {outfile}", fg="green")
