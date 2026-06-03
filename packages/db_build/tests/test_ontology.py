@@ -11,7 +11,6 @@ from metahq_build.ontology.graph import Graph
 from metahq_build.ontology.ontology import Ontology, XRefExtractor, XRefMappings
 from metahq_build.ontology.relations import RelationsLazyFrame, RelationsMatrix
 
-
 # ---------------------------------------------------------------------------
 # Synthetic OBO fixtures
 # ---------------------------------------------------------------------------
@@ -565,7 +564,7 @@ class TestRelationsLazyFrame:
 
     def test_get_descendants_leaf_has_no_descendants(self, simple_relations_lf):
         result = simple_relations_lf.get_descendants()
-        assert result["MONDO:0000003"] == set()
+        assert result["MONDO:0000003"] == list()
 
     def test_get_descendants_subset_limits_output_keys(self, simple_relations_parquet):
         lf = RelationsLazyFrame.from_parquet(simple_relations_parquet)
@@ -573,7 +572,9 @@ class TestRelationsLazyFrame:
         assert set(result.keys()) == {"MONDO:0000001"}
         assert set(result["MONDO:0000001"]) == {"MONDO:0000002", "MONDO:0000003"}
 
-    def test_get_descendants_rm_self_false_includes_self(self, simple_relations_parquet):
+    def test_get_descendants_rm_self_false_includes_self(
+        self, simple_relations_parquet
+    ):
         lf = RelationsLazyFrame.from_parquet(simple_relations_parquet)
         result = lf.get_descendants(subset=["MONDO:0000001"], rm_self=False)
         assert "MONDO:0000001" in result["MONDO:0000001"]
@@ -583,7 +584,9 @@ class TestRelationsLazyFrame:
         result = lf.get_ancestors(rm_self=True)
         assert set(result["MONDO:0000003"]) == {"MONDO:0000001", "MONDO:0000002"}
 
-    def test_get_ancestors_intermediate_has_one_ancestor(self, simple_relations_parquet):
+    def test_get_ancestors_intermediate_has_one_ancestor(
+        self, simple_relations_parquet
+    ):
         lf = RelationsLazyFrame.from_parquet(simple_relations_parquet)
         result = lf.get_ancestors(rm_self=True)
         assert set(result["MONDO:0000002"]) == {"MONDO:0000001"}
@@ -591,7 +594,7 @@ class TestRelationsLazyFrame:
     def test_get_ancestors_root_has_no_ancestors(self, simple_relations_parquet):
         lf = RelationsLazyFrame.from_parquet(simple_relations_parquet)
         result = lf.get_ancestors(rm_self=True)
-        assert result["MONDO:0000001"] == set()
+        assert result["MONDO:0000001"] == list()
 
     def test_get_ancestors_subset_limits_output_keys(self, simple_relations_parquet):
         lf = RelationsLazyFrame.from_parquet(simple_relations_parquet)
