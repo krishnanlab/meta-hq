@@ -1,0 +1,479 @@
+name,id
+"""penis, nos""",UBERON:0000989
+adipose stem cells,CL:0000034
+"aggressive lymphoma, brd2 trangenic",na
+airway epithelial cells,CL:0002368  
+alveolar macrophage,CL:1001603
+anaplastic thyroid carcinoma tissue and normal thyroid tissue,na
+anterior prefrontal cortex - postmortem - female,UBERON:0000451
+anterior prefrontal cortex - postmortem - male,UBERON:0000451
+articular condrocytes from osteoarthritic knees of sprague-dawley males and normal contralateral control,CL:1001607|UBERON:0001465
+articular condrocytes from osteoarthritic knees of sprague-dawley males and sham control,CL:1001607|UBERON:0001465
+at2 e/r positive bcp all cell line (following e/r -etv6/runx1- knockdown),na
+b cell lymphocyte,CL:0000236
+b cells (sorted peripheral blood lymphocytes),CL:0000236|CL:4030030
+b cells - derived from the spleen (mm model xbp-1s overexpression),CL:0000236|UBERON:0002106
+b lymphocytes,CL:0000236
+back skin ( imiquimod -imq- psoriasis model),UBERON:0001068
+back skin (k5-stat3c psoriasis model),UBERON:0001068
+back skin (k5-tgfbeta1 psoriasis model),UBERON:0001068
+back skin (k5-tie2 psoriasis model),UBERON:0001068
+beta cells of pancreas,
+bicep,
+biceps biopsies,
+biopsy,
+bladder tissue,
+blood lymphocytes,
+blood monocyte,
+blood myelomonocytic cells from rcc and healthy blood myelomonocytic cells,
+blood neutrophil,
+bone marrow mesenchymal stromal cells,
+bone marrow plasma cells,
+bone marrow stem cell,
+brain from adult (postnatal day 70) male offspring prenatally exposed to alcohol via voluntary maternal consumption from gestational day 0 to pup postnatal day 10,
+brain lesion (ms after demyelination - active inflammation),
+brain lesion (ms after inflammation - late stage),
+brain tissue,
+brain tissue (dorsolateral prefrontal cortex and orbitofrontal cortex),
+brain tissue (frontal cortex),
+brain tumor tissue samples of human gliomas and normal brain - grade:aii - primary tumor,
+brain tumor tissue samples of human gliomas and normal brain - grade:aiii - primary tumor,
+brain tumor tissue samples of human gliomas and normal brain - grade:iv - primary tumor,
+brain tumor tissue samples of human gliomas and normal brain - grade:iv - secundary tumor,
+brain tumor tissue samples of human gliomas and normal brain - grade:ogiii - primary tumor,
+bronchial biopsies,
+bronchial epithelial cells,
+bronchial epithelial cells - female - mild asthma,
+bronchial epithelial cells - female - severe asthma,
+bronchial epithelial cells - male - mild asthma,
+bronchial epithelial cells - male - severe asthma,
+cd19+ b cells,
+cd20+ b cells - european-american sle patients,
+cd3+ t cells,
+cd33+ myeloid cells,
+cd34+ cells (refractory anemia with excess blasts),
+cd34+ cells (refractory anemia with ringed sideroblasts),
+cd34+ cells (refractory anemia),
+cd34+ hematopoietic stem and progenitor cells from the bone marrow of untreated patients,
+cd34+ hematopoietic stem cells (refractory anemia with excess blasts 1),
+cd34+ hematopoietic stem cells (refractory anemia with excess blasts 2),
+cd34+ hematopoietic stem cells (refractory anemia with ringed sideroblasts),
+cd34+ hematopoietic stem cells (refractory anemia),
+cd4+ t cells,
+cd4+ t cells - european-american sle patients,
+cd4+ t cells lymphocytes (sorted from pbmcs from monozygotic twin pairs discordant for rrms),
+cd4t cells (sorted peripheral blood lymphocytes),
+cd8+ t cells - african-american sle patients,
+cd8+ t cells - european-american sle patients,
+cd8t cells (sorted peripheral blood lymphocytes),
+"cerebellum, hdhq111 knock-in model of huntington's disease",
+cervical cancer cell line and normal cervical epithelium,
+cervical cancer primary tumors and normal cervical epithelium,
+chondrocytes monolayer culture,
+circulating cd4+ t-cells (non-severe asthma),
+circulating cd4+ t-cells (severe asthma),
+circulating cd8+ t-cells (non-severe asthma),
+circulating cd8+ t-cells (severe asthma),
+cirrhotic livers and normal kidneys from the same patients,
+cns - brain (mmhcc),
+cns - brain - cerebellum (mmhcc),
+cns - brain - hippocampus (mmhcc),
+cns - brain - hypothalamus (mmhcc),
+cns - brain - olfactory bulb (mmhcc),
+cns - spinal cord (mmhcc),
+colon (dss - induced colitis),
+colon biopsy,
+colon mucosa - colorectal adenocarcinomas with microsatellite instability (msi crcs),
+colonic mucosa - inflamed,
+colonic mucosa - non-inflamed,
+connective tissue in joints,
+"cultured cerebellar granule cells, cystatin b knockout model of progressive myoclonus epilepsy",
+cumulus cells cultured (lean patients),
+cumulus cells cultured (obese patients),
+dental pulp cells,
+dental pulp stem cell culture,
+derma (skin),
+dermal fibroblast (from childhood cerebral adrenoleukodystrophy (ccald) patient) and healthy fibroblasts,
+dorsal root ganglia,
+ear skin ( k14-areg psoriasis model),
+embryonic fibroblasts - balb/cbyj animals,
+embryonic fibroblasts - mbt/pas animals,
+embryonic stem,
+embryonic stem cells,
+endocrine pancreas - islet cell of langerhans - beta cell (mmhcc),
+endometrial cells,
+endometrial specimens from women with endometriosis - early secretory,
+endometrial specimens from women with endometriosis - mid secretory,
+endometrial specimens from women with endometriosis - proliferative,
+endometrial tissue,
+endometrial tissue  (endometrioma tissue and eutopic endometrium controls),
+endothelial cells,
+endothelial cells - male,
+endothelial cells and neurons from dorsolateral prefrontal cortex,
+entorhinal cortex neurons,
+epidermal punch biopsies,
+epithelial cells,
+epithelial cells (pancreatic duct),
+epithelial cells (pancreatic duct)),
+esopahgus endoscopic biopsies,
+esophageal normal adjacent tissue,
+esophageal tissue,
+eye - lacrimal gland (mmhcc),
+female bronchial epithelial cell,
+female frontal cortex,
+female hippocampus,
+female temporal cortex,
+fibroblast cell lines - 3 years,
+fibroblasts,
+fra-1 null mice,
+ganglioneuroblastoma,
+gastric tissue,
+glomeruli,
+gracilis and semitendinosus muscle,
+granulosa cells,
+haematopoietic stem cell,
+hcc tumor and matched non-tumor surrounding tissues,
+head and neck squamous cell (normal vs. tumor),
+heart (from cvb3-infected females - day 10 postinfection),
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 1 hour,
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 1 week,
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 24 hours,
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 4 hours,
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 48 hours,
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 8 weeks,
+"heart, left ventricle apex",
+hek293e,
+hematopoietic cd34+ stem cells,
+hepatic tissue,
+hepatocellular carcinoma and adjacent non-tumorous liver tissues,
+hsc cells,
+ht29 colo205,
+huh-7,
+huh7 hepatoma cells (infected with jfh-1 hcv) - 12 hours post-infection,
+huh7 hepatoma cells (infected with jfh-1 hcv) - 18 hours post-infection,
+huh7 hepatoma cells (infected with jfh-1 hcv) - 24 hours post-infection,
+huh7 hepatoma cells (infected with jfh-1 hcv) - 48 hours post-infection,
+huh7 hepatoma cells (infected with jfh-1 hcv) - 6 hours post-infection,
+human prolactinomas,
+hyaff-11 scaffold culture,
+hypothalmus,
+induced pluripotent stem cell-derived neurons - female,
+induced pluripotent stem cell-derived neurons - male,
+induced pluripotent stem cells,
+induced pluripotent stem cells -ipsc- (derived from childhood cerebral adrenoleukodystrophy patient dermal fibroblasts) and healthy fibroblasts,
+intestinal biopsies,
+intestinal polyps model (generated by the deletion of the phosphatase pten gene from the intestine),
+intestine - large intestine - colon (mmhcc),
+intestine - small intestine - duodenum (mmhcc),
+"invasive ductal carcinoma (idc) cells,  and their normal counterpart",
+ion (inferior olivary nucleus),
+kyse human esophageal squamous cell carcinoma cell line and normal esophageal tissue,
+left ventricle apex tissue,
+leukemic cell,
+leukocyte - lymphocyte - b-lymphocyte - plasma cell (mmhcc),
+leukocyte - monocyte - macrophage (mmhcc),
+liver tissue,
+livers (atp7b null - wilson disease model),
+lncap,
+low-grade serous ovarian carcinomas (tumors from patients with matched border control),
+lung (from b6d2f1 females) - 42 days post infection,
+lung (from b6d2f1 females) - 63 days post infection,
+lung - lower lobe - advanced idiopathic pulmonary fibrosis - female,
+lung - lower lobe - advanced idiopathic pulmonary fibrosis - male,
+lung - lower lobe - early idiopathic pulmonary fibrosis - male,
+lung - upper lobe - advanced idiopathic pulmonary fibrosis - female,
+lung - upper lobe - advanced idiopathic pulmonary fibrosis - male,
+lung fibroblasts (rapid progressing fibrosis),
+lung fibroblasts (slow progressing fibrosis),
+lung tissue,
+lung tumor cells,
+lymphoblast,
+lymphoblast cell lines,
+lymphoblastoid cells,
+lymphocytes from patients with moderate stage huntington's disease - female,
+lymphocytes from patients with moderate stage huntington's disease - male,
+male bronchial epithelial cell,
+male frontal cortex,
+male hippocampus,
+male temporal cortex,
+mammary arterial tissue,
+mammary gland tissue,
+mammary tumors,
+"marginal lymphoma, brd2 transgenic",
+mast cells,
+mda-mb-231 breast cancer cells,
+mda-mb231 cells,
+mesenchymal cells,
+mesodermal precursor cells,
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t1n0,
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t1n1,
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t2n1,
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t2n2,
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t3n2,
+minor salivary glands - early sjogren's syndrome,
+minor salivary glands - moderate sjogren's syndrome,
+monocytes - heterozygous fh,
+monocytes - homozygous fh,
+"motor neurons, 120 days old",
+"motor neurons, 60 days old",
+muscle - striated (skeletal) (mmhcc),
+muscle - striated (skeletal) - diaphragm (mmhcc),
+myocardial tissue,
+nasal olfactory stem cells,
+nasopharyngeal biopsies (with epstein-barr virus (ebv)-positive undifferentiated npc),
+natural killer (nk) cells (sorted peripheral blood lymphocytes),
+neural precursor cells,
+neurons - female,
+neurons - male,
+nickel-allergic patients whose skins were exposed to nickel - 48 hours,
+nickel-allergic patients whose skins were exposed to nickel - 7 hours,
+nickel-allergic patients whose skins were exposed to nickel - 96 hours,
+nickel-allergic patients whose skins were not exposed to nickel,
+non-lesional (nl) skin,
+non-lesional (nl) skin - (uninvolved samples),
+non-lesional skin,
+nonlesional epithelium,
+normal prostate epithelial cells and primary epithelial cell culture (gleason 6 score tumor),
+normal prostate epithelial cells and primary epithelial cell culture (gleason 7 score tumor),
+normal resting b cell,
+normal skin and actinic keratotic (ak) lesion,
+normal skin and squamous cell carcinoma (scc) tumor biopsies,
+normal urothelium cells and cis cells,
+"ocular motor neurons, 10 weeks old",
+osteoblastic lineage cells,
+ovarian epithelial cells,
+ove26 type 1,
+panc-1 pancreatic adenocarcinoma cell line,
+pancreas (advanced stage of murine pdac and control pancreas),
+pancreatic tissue,
+pancreatic tumor cells (bitransgenic pdx1-cre/kras*a mice) and pancreatic cells (wt mice),
+papillary thyroid carcinoma tumors (with a braf mutation) and normal thyroid specimens,
+papillary thyroid carcinoma tumors (without a braf mutation) and normal thyroid specimens,
+pathological skeletal muscle fibers,
+pbmc,
+pbmc (peripheral blood mononuclear cells),
+pd medullas,
+percutaneous needle liver biopsies - (hepatokines) - female,
+percutaneous needle liver biopsies - (hepatokines) - male,
+peripheral blood,
+peripheral blood b cells (inactive lupus),
+peripheral blood expression profile - presymptomatic patients (hg-u133a),
+peripheral blood expression profile - symptomatic patients (hg-u133a),
+peripheral blood leukocytes,
+peripheral blood lymphocytes,
+peripheral blood monocytes,
+peripheral blood mononuclear cells,
+peripheral blood mononuclear cells (collected from is patients at least 6 months after the first and only stroke event),
+peripheral blood mononuclear cells (ischemic cardiomyopathy),
+peripheral blood mononuclear cells (non-ischemic cardiomyopathy),
+peripheral white blood cells,
+plasma cells,
+platelets,
+"postnatal day 30 cerebellum, cystatin b knockout model of progressive myoclonus epilepsy",
+"postnatal day 7 cerebellum, cystatin b knockout model of progressive myoclonus epilepsy",
+premature newborn umbilical cords - higher gestational age newborns,
+premature newborn umbilical cords - lower gestational age newborns,
+primary dermal fibroblasts (childhood cerebral adrenoleukodystrophy),
+primary lung bronchial epithelial cells,
+primary lung tumor and normal lung,
+primary retinal pigment epithelial (rpe) cells,
+prostate tissue (metastatic prostate tumor),
+prostate tissue (primary prostate tumor),
+radical prostatectomy tissue samples (tmprss2:erg gene fusion negative) and benign prostate tissue,
+radical prostatectomy tissue samples (tmprss2:erg gene fusion positive) and benign prostate tissue,
+rectal mucosal epithelia (cftr d508 mutation),
+renal tissue,
+retina (adult cd-1 animals) - 5 weeks,
+salivary tissue,
+sections from non-basal like cancer specimens,
+"sections from sporadic, primary basal like cancer specimens",
+sigmoid colons (mucosal biopsy),
+skeletal muscle (biceps &amp; deltoid),
+skeletal muscle (from obese women with polycystic ovary syndrome),
+skeletal muscle (triceps),
+skeletal muscle (whole gastrocnemius muscle) from colon cancer bearing mice and non-tumor bearing mice,
+skeletal muscle - diaphragm - 10 months,
+skeletal muscle - extensor digitorum longus - 7 months,
+skeletal muscle - gastrocnemius - 7 months,
+skeletal muscle - gracilis muscle biopsies,
+skeletal muscle - plantaris - 7 months,
+skeletal muscle - semitendinosus muscle biopsies,
+skeletal muscle - tibialis anterior - 10 months,
+skeletal muscle - tibialis anterior - 7 months,
+skeletal muscle biopsies - long duration,
+skeletal muscle biopsies - short duration,
+skeletal myocyte,
+skin (lesional atopic dermatitis (al) skin lesions),
+skin from sccs and normal human epidermis,
+skin tissue,
+"soleus muscle, in the basal state, from five-month-old ts65dn down syndrome (ds) males",
+sperm cells - from males with consistent and severe teratozoospermia (terastospermia) - (hg-u133 2.0 ),
+spinal cord grey matter - sporadic als,
+"spinal cord, 10 weeks old",
+spleen (mmhcc),
+splenic tissue,
+striatal cells,
+"striatum, hdhq111 knock-in model of huntington's disease",
+stromal cells,
+substantia nigra - braak &icirc;&plusmn;-synuclein stage 1-2,
+substantia nigra - braak &icirc;&plusmn;-synuclein stage 3-4,
+substantia nigra - braak &icirc;&plusmn;-synuclein stage 5-6,
+substantia nigra - female,
+substantia nigra - male,
+superior temporal cortex - postmortem - female,
+superior temporal cortex - postmortem - male,
+synovial biopsies from affected knees,
+synovial fluid macrophages,
+t lymphocyte,
+t lymphocytes - heterozygous fh,
+t lymphocytes - homozygous fh,
+tail skin ( k14-areg psoriasis model),
+temporal lobes,
+tendons,
+terminal ileum,
+testicular seminoma tumors (at pt1) and normal testicular tissue,
+testicular seminoma tumors (at pt2) and normal testicular tissue,
+testicular seminoma tumors (at pt3) and normal testicular tissue,
+testicular tissue,
+thrombocyte,
+thymocytes (ikaros mutant thymic tumors),
+thyroid gland (mmhcc),
+tonsillar lymphoid tissue,
+"transitional lymphoma, brd2 transgenic",
+tumor tissues and adjacent non-tumorous tissues of hepatocellular carcinoma,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ia-g1,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ia-g2,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ia-g3,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ib-g1,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ib-g2,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ib-g3,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ic-g1,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ic-g2,
+uterine tumors (endometrioid histologic subtype) - stage-grade:ic-g3,
+uterine tumors (papillary serous histologic subtype) - stage-grade:ia-g2,
+uterine tumors (papillary serous histologic subtype) - stage-grade:ia-g3,
+uterine tumors (papillary serous histologic subtype) - stage-grade:ib-g3,
+uterus - cervix (mmhcc),
+uterus - myometrium (mmhcc),
+"ventral spinal cord, motor neurons",
+vulvar intraepithelial neoplasia (vin) lesions,
+white blood cells - female mild asthma,
+white blood cells - female severe asthma,
+white blood cells - male mild asthma,
+white blood cells - male severe asthma,
+whole blood (cutaneous psoriasis),
+whole blood cells,
+"whole blood, female",
+whole heart,
+whole heart (myocardium) from colon cancer bearing mice and non-tumor bearing mice,
+whole lung - early idiopathic pulmonary fibrosis - male,
+wrist muscles - extensor,
+wrist muscles - flexor,
+fibroblast,CL:0000057
+epithelial cell,CL:0000066
+endothelial cell,CL:0000115
+astrocyte,CL:0000127
+chondrocyte,CL:0000138
+hepatocyte,CL:0000182
+macrophage,CL:0000235
+sebocyte,CL:0000317
+dendritic cell,CL:0000451
+neuron,CL:0000540
+lymphocyte,CL:0000542
+megakaryocyte,CL:0000556
+leukocyte,CL:0000738
+cardiomyocyte,CL:0000746
+mesangial cell,CL:0000777
+mononuclear leukocyte,CL:0000842
+thymic epithelial cell,CL:0002293
+skin fibroblast,CL:0002620
+peripheral blood mononuclear cell,CL:2000001
+splenocyte,CL:2000074
+pancreatic islet,UBERON:0000006
+pituitary gland,UBERON:0000007
+lungs,UBERON:0000170
+amniotic fluid,UBERON:0000173
+blood,UBERON:0000178
+whole blood,UBERON:0000178
+colon mucosa,UBERON:0000317
+prefrontal cortex,UBERON:0000451
+testis,UBERON:0000473
+stomach,UBERON:0000945
+aorta,UBERON:0000947
+cerebral cortex,UBERON:0000956
+retina,UBERON:0000966
+uterus,UBERON:0000995
+adipose tissue,UBERON:0001013
+appendix,UBERON:0001154
+colon,UBERON:0001155
+ascending colon,UBERON:0001156
+descending colon,UBERON:0001158
+sigmoid colon,UBERON:0001159
+intestinal mucosa,UBERON:0001242
+intestinal epithelium,UBERON:0001277
+sciatic nerve,UBERON:0001322
+quadriceps,UBERON:0001377
+extensor digitorum longus muscle,UBERON:0001386
+gastrocnemius muscle,UBERON:0001388
+soleus muscle,UBERON:0001389
+deltoid,UBERON:0001476
+extraocular muscle,UBERON:0001601
+nasopharynx,UBERON:0001728
+dental pulp,UBERON:0001754
+optic disk,UBERON:0001783
+optic nerve head,UBERON:0001783
+gingiva,UBERON:0001828
+amygdala,UBERON:0001876
+nucleus accumbens,UBERON:0001882
+hypothalamus,UBERON:0001898
+tracheal epithelium,UBERON:0001901
+mammary gland,UBERON:0001911
+oropharynx epithelium,UBERON:0001952
+esophagus epithelium,UBERON:0001976
+placenta,UBERON:0001987
+bronchial epithelium,UBERON:0002031
+cerebellum,UBERON:0002037
+lung,UBERON:0002048
+umbilical vein,UBERON:0002066
+spleen,UBERON:0002106
+liver,UBERON:0002107
+kidney,UBERON:0002113
+integument,UBERON:0002199
+skin,UBERON:0002199
+prostate,UBERON:0002367
+adrenal gland,UBERON:0002369
+thymus,UBERON:0002370
+bone marrow,UBERON:0002371
+connective tissue,UBERON:0002384
+muscle tissue,UBERON:0002385
+endometrium,UBERON:0002450
+dorsal motor nucleus of vagus nerve,UBERON:0002870
+hippocampus,UBERON:0002961
+trachea,UBERON:0003126
+mammary epithelium,UBERON:0003244
+pleura,UBERON:0003390
+femur,UBERON:0003826
+fallopian tube,UBERON:0003889
+neuroretina,UBERON:0003902
+aorta smooth muscle tissue,UBERON:0004178
+cerebral artery,UBERON:0004449
+urothelium,UBERON:0004645
+embryonic tissue,UBERON:0005291
+striatum,UBERON:0005383
+carotid artery,UBERON:0005396
+trabecular meshwork,UBERON:0005969
+esophageal squamous epithelium,UBERON:0006920
+fetus,UBERON:0007220
+epidermis,UBERON:0007376
+synovial membrane,UBERON:0007616
+nose,UBERON:0007827
+tibialis muscle,UBERON:0008230
+breast epithelium,UBERON:0008367
+skeletal muscle,UBERON:0014895
+heart,UBERON:0015228
+esophagus,UBERON:0015232
+frontal cortex,UBERON:0016525
+temporal cortex,UBERON:0016538
+adrenal gland tissue,UBERON:0018303
+pancreas,UBERON:3011040
+brain,UBERON:6110636
