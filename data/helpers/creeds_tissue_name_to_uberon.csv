@@ -18,103 +18,103 @@ back skin ( imiquimod -imq- psoriasis model),UBERON:0001068
 back skin (k5-stat3c psoriasis model),UBERON:0001068
 back skin (k5-tgfbeta1 psoriasis model),UBERON:0001068
 back skin (k5-tie2 psoriasis model),UBERON:0001068
-beta cells of pancreas,
-bicep,
-biceps biopsies,
-biopsy,
-bladder tissue,
-blood lymphocytes,
-blood monocyte,
-blood myelomonocytic cells from rcc and healthy blood myelomonocytic cells,
-blood neutrophil,
-bone marrow mesenchymal stromal cells,
-bone marrow plasma cells,
-bone marrow stem cell,
-brain from adult (postnatal day 70) male offspring prenatally exposed to alcohol via voluntary maternal consumption from gestational day 0 to pup postnatal day 10,
-brain lesion (ms after demyelination - active inflammation),
-brain lesion (ms after inflammation - late stage),
-brain tissue,
-brain tissue (dorsolateral prefrontal cortex and orbitofrontal cortex),
-brain tissue (frontal cortex),
-brain tumor tissue samples of human gliomas and normal brain - grade:aii - primary tumor,
-brain tumor tissue samples of human gliomas and normal brain - grade:aiii - primary tumor,
-brain tumor tissue samples of human gliomas and normal brain - grade:iv - primary tumor,
-brain tumor tissue samples of human gliomas and normal brain - grade:iv - secundary tumor,
-brain tumor tissue samples of human gliomas and normal brain - grade:ogiii - primary tumor,
-bronchial biopsies,
-bronchial epithelial cells,
-bronchial epithelial cells - female - mild asthma,
-bronchial epithelial cells - female - severe asthma,
-bronchial epithelial cells - male - mild asthma,
-bronchial epithelial cells - male - severe asthma,
-cd19+ b cells,
-cd20+ b cells - european-american sle patients,
-cd3+ t cells,
-cd33+ myeloid cells,
-cd34+ cells (refractory anemia with excess blasts),
-cd34+ cells (refractory anemia with ringed sideroblasts),
-cd34+ cells (refractory anemia),
-cd34+ hematopoietic stem and progenitor cells from the bone marrow of untreated patients,
-cd34+ hematopoietic stem cells (refractory anemia with excess blasts 1),
-cd34+ hematopoietic stem cells (refractory anemia with excess blasts 2),
-cd34+ hematopoietic stem cells (refractory anemia with ringed sideroblasts),
-cd34+ hematopoietic stem cells (refractory anemia),
-cd4+ t cells,
-cd4+ t cells - european-american sle patients,
-cd4+ t cells lymphocytes (sorted from pbmcs from monozygotic twin pairs discordant for rrms),
-cd4t cells (sorted peripheral blood lymphocytes),
-cd8+ t cells - african-american sle patients,
-cd8+ t cells - european-american sle patients,
-cd8t cells (sorted peripheral blood lymphocytes),
-"cerebellum, hdhq111 knock-in model of huntington's disease",
-cervical cancer cell line and normal cervical epithelium,
-cervical cancer primary tumors and normal cervical epithelium,
-chondrocytes monolayer culture,
-circulating cd4+ t-cells (non-severe asthma),
-circulating cd4+ t-cells (severe asthma),
-circulating cd8+ t-cells (non-severe asthma),
-circulating cd8+ t-cells (severe asthma),
-cirrhotic livers and normal kidneys from the same patients,
-cns - brain (mmhcc),
-cns - brain - cerebellum (mmhcc),
-cns - brain - hippocampus (mmhcc),
-cns - brain - hypothalamus (mmhcc),
-cns - brain - olfactory bulb (mmhcc),
-cns - spinal cord (mmhcc),
-colon (dss - induced colitis),
-colon biopsy,
-colon mucosa - colorectal adenocarcinomas with microsatellite instability (msi crcs),
-colonic mucosa - inflamed,
-colonic mucosa - non-inflamed,
-connective tissue in joints,
-"cultured cerebellar granule cells, cystatin b knockout model of progressive myoclonus epilepsy",
-cumulus cells cultured (lean patients),
-cumulus cells cultured (obese patients),
-dental pulp cells,
-dental pulp stem cell culture,
-derma (skin),
-dermal fibroblast (from childhood cerebral adrenoleukodystrophy (ccald) patient) and healthy fibroblasts,
-dorsal root ganglia,
-ear skin ( k14-areg psoriasis model),
-embryonic fibroblasts - balb/cbyj animals,
-embryonic fibroblasts - mbt/pas animals,
-embryonic stem,
-embryonic stem cells,
-endocrine pancreas - islet cell of langerhans - beta cell (mmhcc),
-endometrial cells,
-endometrial specimens from women with endometriosis - early secretory,
-endometrial specimens from women with endometriosis - mid secretory,
-endometrial specimens from women with endometriosis - proliferative,
-endometrial tissue,
-endometrial tissue  (endometrioma tissue and eutopic endometrium controls),
-endothelial cells,
-endothelial cells - male,
-endothelial cells and neurons from dorsolateral prefrontal cortex,
-entorhinal cortex neurons,
-epidermal punch biopsies,
-epithelial cells,
-epithelial cells (pancreatic duct),
-epithelial cells (pancreatic duct)),
+beta cells of pancreas,CL:0000168|UBERON:0001264
+bicep,UBERON:0001507
+biceps biopsies,UBERON:0001507
+biopsy,na
+bladder tissue,UBERON:0001255
+blood lymphocytes,CL:4030029
+blood monocyte,CL:0000576
+blood myelomonocytic cells from rcc and healthy blood myelomonocytic cells,na
+blood neutrophil,CL:0000775
+bone marrow mesenchymal stromal cells,CL:0010001
+bone marrow plasma cells,CL:0000786|UBERON:0002371
+bone marrow stem cell,UBERON:0002371|CL:0000034
+brain from adult (postnatal day 70) male offspring prenatally exposed to alcohol via voluntary maternal consumption from gestational day 0 to pup postnatal day 10,UBERON:0000955
+brain lesion (ms after demyelination - active inflammation),UBERON:0000955
+brain lesion (ms after inflammation - late stage),UBERON:0000955
+brain tissue,UBERON:0000955
+brain tissue (dorsolateral prefrontal cortex and orbitofrontal cortex),UBERON:0000955
+brain tissue (frontal cortex),UBERON:0000955
+brain tumor tissue samples of human gliomas and normal brain - grade:aii - primary tumor,UBERON:0000955
+brain tumor tissue samples of human gliomas and normal brain - grade:aiii - primary tumor,UBERON:0000955
+brain tumor tissue samples of human gliomas and normal brain - grade:iv - primary tumor,UBERON:0000955
+brain tumor tissue samples of human gliomas and normal brain - grade:iv - secundary tumor,UBERON:0000955
+brain tumor tissue samples of human gliomas and normal brain - grade:ogiii - primary tumor,UBERON:0000955
+bronchial biopsies,UBERON:0002185
+bronchial epithelial cells,CL:0002328|UBERON:0002185
+bronchial epithelial cells - female - mild asthma,CL:0002328|UBERON:0002185
+bronchial epithelial cells - female - severe asthma,CL:0002328|UBERON:0002185
+bronchial epithelial cells - male - mild asthma,CL:0002328|UBERON:0002185
+bronchial epithelial cells - male - severe asthma,CL:0002328|UBERON:0002185
+cd19+ b cells,CL:0001201
+cd20+ b cells - european-american sle patients,CL:0000236
+cd3+ t cells,CL:0000084
+cd33+ myeloid cells,CL:0000763
+cd34+ cells (refractory anemia with excess blasts),na
+cd34+ cells (refractory anemia with ringed sideroblasts),na
+cd34+ cells (refractory anemia),na
+cd34+ hematopoietic stem and progenitor cells from the bone marrow of untreated patients,CL:0002092
+cd34+ hematopoietic stem cells (refractory anemia with excess blasts 1),CL:0001024
+cd34+ hematopoietic stem cells (refractory anemia with excess blasts 2),CL:0001024
+cd34+ hematopoietic stem cells (refractory anemia with ringed sideroblasts),CL:0001024
+cd34+ hematopoietic stem cells (refractory anemia),CL:0001024
+cd4+ t cells,CL:0000624
+cd4+ t cells - european-american sle patients,CL:0000624
+cd4+ t cells lymphocytes (sorted from pbmcs from monozygotic twin pairs discordant for rrms),CL:0000624
+cd4t cells (sorted peripheral blood lymphocytes),CL:0000624
+cd8+ t cells - african-american sle patients,CL:0000625
+cd8+ t cells - european-american sle patients,CL:0000625
+cd8t cells (sorted peripheral blood lymphocytes),CL:0000625
+"cerebellum, hdhq111 knock-in model of huntington's disease",UBERON:0002037
+cervical cancer cell line and normal cervical epithelium,na
+cervical cancer primary tumors and normal cervical epithelium,na
+chondrocytes monolayer culture,CL:0000138
+circulating cd4+ t-cells (non-severe asthma),CL:0000624
+circulating cd4+ t-cells (severe asthma),CL:0000624
+circulating cd8+ t-cells (non-severe asthma),CL:0000625
+circulating cd8+ t-cells (severe asthma),CL:0000625
+cirrhotic livers and normal kidneys from the same patients,na
+cns - brain (mmhcc),UBERON:0000955
+cns - brain - cerebellum (mmhcc),UBERON:0002037
+cns - brain - hippocampus (mmhcc),UBERON:0002421
+cns - brain - hypothalamus (mmhcc),UBERON:0001898
+cns - brain - olfactory bulb (mmhcc),UBERON:0002264
+cns - spinal cord (mmhcc),UBERON:0002240
+colon (dss - induced colitis),UBERON:0001155
+colon biopsy,UBERON:0001155
+colon mucosa - colorectal adenocarcinomas with microsatellite instability (msi crcs),UBERON:0000317
+colonic mucosa - inflamed,UBERON:0000317
+colonic mucosa - non-inflamed,UBERON:0000317
+connective tissue in joints,UBERON:0002384
+"cultured cerebellar granule cells, cystatin b knockout model of progressive myoclonus epilepsy",CL:0001031
+cumulus cells cultured (lean patients),CL:0000711
+cumulus cells cultured (obese patients),CL:0000711
+dental pulp cells,CL:0002148
+dental pulp stem cell culture,CL:4030035
+derma (skin),UBERON:0000014
+dermal fibroblast (from childhood cerebral adrenoleukodystrophy (ccald) patient) and healthy fibroblasts,CL:0020013
+dorsal root ganglia,UBERON:0000044
+ear skin ( k14-areg psoriasis model),UBERON:0001459
+embryonic fibroblasts - balb/cbyj animals,CL:2000042
+embryonic fibroblasts - mbt/pas animals,CL:2000042
+embryonic stem,CL:0002322
+embryonic stem cells,CL:0002322
+endocrine pancreas - islet cell of langerhans - beta cell (mmhcc),CL:0000169
+endometrial cells,UBERON:0001295
+endometrial specimens from women with endometriosis - early secretory,UBERON:0001295
+endometrial specimens from women with endometriosis - mid secretory,UBERON:0001295
+endometrial specimens from women with endometriosis - proliferative,UBERON:0001295
+endometrial tissue,UBERON:0001295
+endometrial tissue  (endometrioma tissue and eutopic endometrium controls),UBERON:0001295
+endothelial cells,CL:0000115
+endothelial cells - male,CL:0000115
+endothelial cells and neurons from dorsolateral prefrontal cortex,na
+entorhinal cortex neurons,UBERON:0002728|CL:0000540
+epidermal punch biopsies,UBERON:0000014
+epithelial cells,CL:0000066
+epithelial cells (pancreatic duct),CL:0000083
+epithelial cells (pancreatic duct)),CL:0000083
 esopahgus endoscopic biopsies,
 esophageal normal adjacent tissue,
 esophageal tissue,
