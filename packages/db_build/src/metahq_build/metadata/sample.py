@@ -160,7 +160,7 @@ def sra2gsm_map(
             Path to the OmicIDX DuckDB file.
 
     Returns:
-        (dict[str, str]): Mapping of original SRA ID → GSM accession.
+        (pl.DataFrame): Mapping of original SRA ID → GSM accession with columns [gsm, accession].
     """
     if not xxr_ids and not xxx_ids:
         return pl.DataFrame()
