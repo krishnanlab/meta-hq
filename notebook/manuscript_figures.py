@@ -87,7 +87,10 @@ def _(Path):
 
     RESULTS_DIR: Path = Path("results")
     UNIQUE_PROPAGATED_TERMS: Path = RESULTS_DIR / "unique_propagated_tissue_disease_terms.txt"
-    OVERLAP_RESULTS = list(RESULTS_DIR.glob("overlap*"))
+    PRE_HARMONIZATION_RESULTS = RESULTS_DIR / "pre_harmonization"
+    POST_HARMONIZATION_RESULTS = RESULTS_DIR / "post_harmonization"
+    PRE_OVERLAP_RESULTS = list(PRE_HARMONIZATION_RESULTS.glob("overlap*"))
+    POST_OVERLAP_RESULTS = list(POST_HARMONIZATION_RESULTS.glob("overlap*"))
 
     FIGURES_DIR: Path = Path("figures")
 
@@ -119,7 +122,8 @@ def _(Path):
         OVERLAP_ORDER,
         PLATFORMS_FILE,
         PMI_CMAP,
-        RESULTS_DIR,
+        POST_HARMONIZATION_RESULTS,
+        PRE_HARMONIZATION_RESULTS,
         SEMI_PROCESSED_SERIES,
         SRA_PROCESSED,
         UNIQUE_PROPAGATED_TERMS,
@@ -802,7 +806,7 @@ def _(mo):
 
 
 @app.cell
-def _(Literal, Path, RESULTS_DIR: "Path", pl, pmi_from_cooccurrence, re):
+def _(Literal, Path, pl, pmi_from_cooccurrence, re):
     def match_pattern(text: str, pattern: str) -> str:
         match = re.search(pattern, text)
         if match:
@@ -812,7 +816,7 @@ def _(Literal, Path, RESULTS_DIR: "Path", pl, pmi_from_cooccurrence, re):
 
 
     def get_overlap_results(
-        dir: Path,
+        dir_: Path,
         overlap_type: str,
         level: Literal["sample", "series"],
         attribute_pattern: str = r"attribute-(tissue|disease|sex|age)",
@@ -823,7 +827,7 @@ def _(Literal, Path, RESULTS_DIR: "Path", pl, pmi_from_cooccurrence, re):
     ) -> dict[str, pl.DataFrame]:
         results: dict[str, pl.DataFrame] = {}
 
-        files = list(RESULTS_DIR.glob(f"{overlap_type}*"))
+        files = list(dir_.glob(f"{overlap_type}*"))
 
         for file in files:
 
@@ -964,6 +968,86 @@ def _(Path, np, pl, plt, sns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    ## Pre-harmonization
+    """)
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    PRE_HARMONIZATION_RESULTS,
+    get_overlap_results,
+    plot_overlap_heatmap,
+):
+    pre_sample_overlap_count = get_overlap_results(PRE_HARMONIZATION_RESULTS, overlap_type="overlap_count", level="sample")
+    plot_overlap_heatmap(
+        pre_sample_overlap_count,
+        order=OVERLAP_ORDER,
+        cmap=OVERLAP_CMAP,
+        vmax_percentile=95,
+        title="Absolute count overlap (level=sample)",
+        save=True,
+        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-sample__metric-counts.png"
+    )
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    PRE_HARMONIZATION_RESULTS,
+    get_overlap_results,
+    plot_overlap_heatmap,
+):
+    pre_sample_overlap_percent = get_overlap_results(PRE_HARMONIZATION_RESULTS, overlap_type="overlap_percent", level="sample")
+    plot_overlap_heatmap(
+        pre_sample_overlap_percent,
+        order=OVERLAP_ORDER,
+        cmap=OVERLAP_CMAP,
+        title="Percent overlap (level=sample)",
+        save=True,
+        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-sample__metric-percent.png",
+        )
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_ORDER,
+    PMI_CMAP,
+    PRE_HARMONIZATION_RESULTS,
+    get_overlap_results,
+    plot_overlap_heatmap,
+):
+    pre_sample_overlap_pmi = get_overlap_results(
+        PRE_HARMONIZATION_RESULTS,
+        overlap_type="overlap_count",
+        level="sample",
+        pmi=True,
+        method="norm",
+    )
+    plot_overlap_heatmap(
+        pre_sample_overlap_pmi,
+        order=OVERLAP_ORDER,
+        cmap=PMI_CMAP,
+        vmax=1,
+        vmin=-1,
+        title="Normalized pointwise mutual information (level=sample)",
+        save=True,
+        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-sample__metric-pmi.png",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## Sample
     """)
     return
@@ -982,11 +1066,11 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    RESULTS_DIR: "Path",
+    POST_HARMONIZATION_RESULTS,
     get_overlap_results,
     plot_overlap_heatmap,
 ):
-    sample_overlap_count = get_overlap_results(RESULTS_DIR, overlap_type="overlap_count", level="sample")
+    sample_overlap_count = get_overlap_results(POST_HARMONIZATION_RESULTS, overlap_type="overlap_count", level="sample")
     plot_overlap_heatmap(
         sample_overlap_count,
         order=OVERLAP_ORDER,
@@ -1012,11 +1096,11 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    RESULTS_DIR: "Path",
+    POST_HARMONIZATION_RESULTS,
     get_overlap_results,
     plot_overlap_heatmap,
 ):
-    sample_overlap_percent = get_overlap_results(RESULTS_DIR, overlap_type="overlap_percent", level="sample")
+    sample_overlap_percent = get_overlap_results(POST_HARMONIZATION_RESULTS, overlap_type="overlap_percent", level="sample")
     plot_overlap_heatmap(
         sample_overlap_percent,
         order=OVERLAP_ORDER,
@@ -1041,12 +1125,12 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_ORDER,
     PMI_CMAP,
-    RESULTS_DIR: "Path",
+    POST_HARMONIZATION_RESULTS,
     get_overlap_results,
     plot_overlap_heatmap,
 ):
     sample_overlap_pmi = get_overlap_results(
-        RESULTS_DIR,
+        POST_HARMONIZATION_RESULTS,
         overlap_type="overlap_count",
         level="sample",
         pmi=True,
@@ -1086,12 +1170,12 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    RESULTS_DIR: "Path",
+    POST_HARMONIZATION_RESULTS,
     get_overlap_results,
     plot_overlap_heatmap,
 ):
     series_overlap_count = get_overlap_results(
-        RESULTS_DIR, overlap_type="overlap_count", level="series"
+        POST_HARMONIZATION_RESULTS, overlap_type="overlap_count", level="series"
     )
     plot_overlap_heatmap(
         series_overlap_count,
@@ -1118,12 +1202,12 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    RESULTS_DIR: "Path",
+    POST_HARMONIZATION_RESULTS,
     get_overlap_results,
     plot_overlap_heatmap,
 ):
     series_overlap_percent = get_overlap_results(
-        RESULTS_DIR, overlap_type="overlap_percent", level="series"
+        POST_HARMONIZATION_RESULTS, overlap_type="overlap_percent", level="series"
     )
     plot_overlap_heatmap(
         series_overlap_percent,
@@ -1149,12 +1233,12 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_ORDER,
     PMI_CMAP,
-    RESULTS_DIR: "Path",
+    POST_HARMONIZATION_RESULTS,
     get_overlap_results,
     plot_overlap_heatmap,
 ):
     series_overlap_pmi = get_overlap_results(
-        RESULTS_DIR,
+        POST_HARMONIZATION_RESULTS,
         overlap_type="overlap_count",
         level="series",
         pmi=True,
