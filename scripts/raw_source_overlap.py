@@ -51,11 +51,11 @@ DEFAULT_OUTDIR: Path = ROOT / "results"
 SOURCES: SourceMap = {
     "ALE": {"level": "sample", "file": ALE_PROCESSED},
     "BGee": {"level": "sample", "file": BGEE_PROCESSED},
-    "CellO": {"level": "sample", "file": CELLO_PROCESSED},
+    "Cello": {"level": "sample", "file": CELLO_PROCESSED},
     "CREEDS": {"level": "sample", "file": CREEDS_PROCESSED},
     "DiSignAtlas": {"level": "sample", "file": DISIGN_ATLAS_PROCESSED},
     "Gemma": {"level": "series", "file": GEMMA_PROCESSED},
-    "Golightly_2028": {"level": "sample", "file": GOLIGHTLY_PROCESSED},
+    "Golightly_2018": {"level": "sample", "file": GOLIGHTLY_PROCESSED},
     "Gu_2023": {"level": "sample", "file": GU_PROCESSED},
     "Johnson_2023_rnaseq": {"level": "sample", "file": JOHNSON_2023_RNASEQ_PROCESSED},
     "Johnson_2023_microarray": {
