@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.3"
+__generated_with = "0.23.9"
 app = marimo.App(width="medium", auto_download=["ipynb"])
 
 
@@ -12,7 +12,7 @@ def _(mo):
 
     Author: Parker Hicks <br>
     Date: 2026-01-17 <br>
-    Last updated: 2026-05-27 by Parker Hicks
+    Last updated: 2026-06-08 by Parker Hicks
     """)
     return
 
@@ -32,10 +32,14 @@ def _():
     import matplotlib.colors as mcolors
     from matplotlib.patches import Patch
     import numpy as np
+    import pandas as pd
     import polars as pl
     import seaborn as sns
     from bson import BSON
     from matplotlib import ticker
+    from scipy.cluster.hierarchy import linkage, leaves_list
+    from scipy.spatial.distance import squareform
+    from sklearn.preprocessing import StandardScaler
     from upsetplot import UpSet, from_contents
 
     return (
@@ -48,14 +52,18 @@ def _():
         ceil,
         defaultdict,
         from_contents,
+        leaves_list,
+        linkage,
         mcolors,
         mo,
         mpatches,
         np,
+        pd,
         pl,
         plt,
         re,
         sns,
+        squareform,
         ticker,
         warnings,
     )
@@ -973,16 +981,59 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Sample
+    """)
+    return
+
+
+@app.cell
+def _(PRE_HARMONIZATION_RESULTS, get_overlap_results):
+    # collect results
+    pre_sample_overlap_count = get_overlap_results(
+        PRE_HARMONIZATION_RESULTS,
+        overlap_type="overlap_count",
+        level="sample",
+    )
+
+    pre_sample_overlap_percent = get_overlap_results(
+        PRE_HARMONIZATION_RESULTS,
+        overlap_type="overlap_percent",
+        level="sample",
+    )
+
+    pre_sample_overlap_pmi = get_overlap_results(
+        PRE_HARMONIZATION_RESULTS,
+        overlap_type="overlap_count",
+        level="sample",
+        pmi=True,
+        method="norm",
+    )
+    return (
+        pre_sample_overlap_count,
+        pre_sample_overlap_percent,
+        pre_sample_overlap_pmi,
+    )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Absolute count overlap
+    """)
+    return
+
+
 @app.cell
 def _(
     FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    PRE_HARMONIZATION_RESULTS,
-    get_overlap_results,
     plot_overlap_heatmap,
+    pre_sample_overlap_count,
 ):
-    pre_sample_overlap_count = get_overlap_results(PRE_HARMONIZATION_RESULTS, overlap_type="overlap_count", level="sample")
     plot_overlap_heatmap(
         pre_sample_overlap_count,
         order=OVERLAP_ORDER,
@@ -995,24 +1046,40 @@ def _(
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Percent overlap
+    """)
+    return
+
+
 @app.cell
 def _(
     FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    PRE_HARMONIZATION_RESULTS,
-    get_overlap_results,
     plot_overlap_heatmap,
+    pre_sample_overlap_percent,
 ):
-    pre_sample_overlap_percent = get_overlap_results(PRE_HARMONIZATION_RESULTS, overlap_type="overlap_percent", level="sample")
     plot_overlap_heatmap(
         pre_sample_overlap_percent,
         order=OVERLAP_ORDER,
+        vmax=1.0,
+        vmin=0.0,
         cmap=OVERLAP_CMAP,
         title="Percent overlap (level=sample)",
         save=True,
         outfile=FIGURES_DIR / "pre_harmonization_overlap__level-sample__metric-percent.png",
-        )
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Normalized PMI
+    """)
     return
 
 
@@ -1021,17 +1088,9 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_ORDER,
     PMI_CMAP,
-    PRE_HARMONIZATION_RESULTS,
-    get_overlap_results,
     plot_overlap_heatmap,
+    pre_sample_overlap_pmi,
 ):
-    pre_sample_overlap_pmi = get_overlap_results(
-        PRE_HARMONIZATION_RESULTS,
-        overlap_type="overlap_count",
-        level="sample",
-        pmi=True,
-        method="norm",
-    )
     plot_overlap_heatmap(
         pre_sample_overlap_pmi,
         order=OVERLAP_ORDER,
@@ -1048,15 +1107,44 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Sample
+    ### Series
     """)
     return
+
+
+@app.cell
+def _(PRE_HARMONIZATION_RESULTS, get_overlap_results):
+    # collect results
+    pre_series_overlap_count = get_overlap_results(
+        PRE_HARMONIZATION_RESULTS,
+        overlap_type="overlap_count",
+        level="series",
+    )
+
+    pre_series_overlap_percent = get_overlap_results(
+        PRE_HARMONIZATION_RESULTS,
+        overlap_type="overlap_percent",
+        level="series",
+    )
+
+    pre_series_overlap_pmi = get_overlap_results(
+        PRE_HARMONIZATION_RESULTS,
+        overlap_type="overlap_count",
+        level="series",
+        pmi=True,
+        method="norm",
+    )
+    return (
+        pre_series_overlap_count,
+        pre_series_overlap_percent,
+        pre_series_overlap_pmi,
+    )
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Absolute counts
+    #### Absolute count overlap
     """)
     return
 
@@ -1066,19 +1154,17 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    POST_HARMONIZATION_RESULTS,
-    get_overlap_results,
     plot_overlap_heatmap,
+    pre_series_overlap_count,
 ):
-    sample_overlap_count = get_overlap_results(POST_HARMONIZATION_RESULTS, overlap_type="overlap_count", level="sample")
     plot_overlap_heatmap(
-        sample_overlap_count,
+        pre_series_overlap_count,
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP,
         vmax_percentile=95,
-        title="Absolute count overlap (level=sample)",
+        title="Absolute count overlap (level=series)",
         save=True,
-        outfile=FIGURES_DIR / "overlap__level-sample__metric-counts.png"
+        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-series__metric-counts.png"
     )
     return
 
@@ -1086,7 +1172,7 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Percent overlap
+    #### Percent overlap
     """)
     return
 
@@ -1096,26 +1182,26 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    POST_HARMONIZATION_RESULTS,
-    get_overlap_results,
     plot_overlap_heatmap,
+    pre_series_overlap_percent,
 ):
-    sample_overlap_percent = get_overlap_results(POST_HARMONIZATION_RESULTS, overlap_type="overlap_percent", level="sample")
     plot_overlap_heatmap(
-        sample_overlap_percent,
+        pre_series_overlap_percent,
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP,
-        title="Percent overlap (level=sample)",
+        vmax=1.0,
+        vmin=0.0,
+        title="Percent overlap (level=series)",
         save=True,
-        outfile=FIGURES_DIR / "overlap__level-sample__metric-percent.png",
-        )
+        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-series__metric-percent.png"
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Normalized PMI
+    #### Normalized PMI
     """)
     return
 
@@ -1125,26 +1211,480 @@ def _(
     FIGURES_DIR: "Path",
     OVERLAP_ORDER,
     PMI_CMAP,
-    POST_HARMONIZATION_RESULTS,
-    get_overlap_results,
     plot_overlap_heatmap,
+    pre_series_overlap_pmi,
 ):
-    sample_overlap_pmi = get_overlap_results(
+    plot_overlap_heatmap(
+        pre_series_overlap_pmi,
+        order=OVERLAP_ORDER,
+        cmap=PMI_CMAP,
+        vmax=1,
+        vmin=-1,
+        title="Normalized pointwise mutual information (level=series)",
+        save=True,
+        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-series__metric-pmi.png",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Post-harmonization
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Sample
+    """)
+    return
+
+
+@app.cell
+def _(POST_HARMONIZATION_RESULTS, get_overlap_results):
+    post_sample_overlap_count = get_overlap_results(
+        POST_HARMONIZATION_RESULTS,
+        overlap_type="overlap_count",
+        level="sample",
+    )
+
+    post_sample_overlap_percent = get_overlap_results(
+        POST_HARMONIZATION_RESULTS,
+        overlap_type="overlap_percent",
+        level="sample",
+    )
+
+    post_sample_overlap_pmi = get_overlap_results(
         POST_HARMONIZATION_RESULTS,
         overlap_type="overlap_count",
         level="sample",
         pmi=True,
         method="norm",
     )
+    return (
+        post_sample_overlap_count,
+        post_sample_overlap_percent,
+        post_sample_overlap_pmi,
+    )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Absolute count overlap
+    """)
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    plot_overlap_heatmap,
+    post_sample_overlap_count,
+):
     plot_overlap_heatmap(
-        sample_overlap_pmi,
+        post_sample_overlap_count,
+        order=OVERLAP_ORDER,
+        cmap=OVERLAP_CMAP,
+        vmax_percentile=95,
+        title="Absolute count overlap (level=sample)",
+        save=True,
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-sample__metric-counts.png"
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Percent overlap
+    """)
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    plot_overlap_heatmap,
+    post_sample_overlap_percent,
+):
+    plot_overlap_heatmap(
+        post_sample_overlap_percent,
+        order=OVERLAP_ORDER,
+        vmax=1.0,
+        vmin=0.0,
+        cmap=OVERLAP_CMAP,
+        title="Percent overlap (level=sample)",
+        save=True,
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-sample__metric-percent.png",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Normalized PMI
+    """)
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_ORDER,
+    PMI_CMAP,
+    plot_overlap_heatmap,
+    post_sample_overlap_pmi,
+):
+    plot_overlap_heatmap(
+        post_sample_overlap_pmi,
         order=OVERLAP_ORDER,
         cmap=PMI_CMAP,
         vmax=1,
         vmin=-1,
         title="Normalized pointwise mutual information (level=sample)",
         save=True,
-        outfile=FIGURES_DIR / "overlap__level-sample__metric-pmi.png",
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-sample__metric-pmi.png",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Series
+    """)
+    return
+
+
+@app.cell
+def _(POST_HARMONIZATION_RESULTS, get_overlap_results):
+    post_series_overlap_count = get_overlap_results(
+        POST_HARMONIZATION_RESULTS,
+        overlap_type="overlap_count",
+        level="series",
+    )
+
+    post_series_overlap_percent = get_overlap_results(
+        POST_HARMONIZATION_RESULTS,
+        overlap_type="overlap_percent",
+        level="series",
+    )
+
+    post_series_overlap_pmi = get_overlap_results(
+        POST_HARMONIZATION_RESULTS,
+        overlap_type="overlap_count",
+        level="series",
+        pmi=True,
+        method="norm",
+    )
+    return (
+        post_series_overlap_count,
+        post_series_overlap_percent,
+        post_series_overlap_pmi,
+    )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Absolute count overlap
+    """)
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    plot_overlap_heatmap,
+    post_series_overlap_count,
+):
+    plot_overlap_heatmap(
+        post_series_overlap_count,
+        order=OVERLAP_ORDER,
+        cmap=OVERLAP_CMAP,
+        vmax_percentile=95,
+        title="Absolute count overlap (level=series)",
+        save=True,
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-series__metric-counts.png"
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Percent overlap
+    """)
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    plot_overlap_heatmap,
+    post_series_overlap_percent,
+):
+    plot_overlap_heatmap(
+        post_series_overlap_percent,
+        order=OVERLAP_ORDER,
+        cmap=OVERLAP_CMAP,
+        vmax_percentile=95,
+        title="Percent overlap (level=series)",
+        save=True,
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-series__metric-percent.png"
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Normalized PMI
+    """)
+    return
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    OVERLAP_ORDER,
+    PMI_CMAP,
+    plot_overlap_heatmap,
+    post_series_overlap_pmi,
+):
+    plot_overlap_heatmap(
+        post_series_overlap_pmi,
+        order=OVERLAP_ORDER,
+        cmap=PMI_CMAP,
+        vmax=1,
+        vmin=-1,
+        title="Normalized pointwise mutual information (level=series)",
+        save=True,
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-series__metric-pmi.png",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Pre- vs post-harmonization
+    """)
+    return
+
+
+@app.cell
+def _(Path, leaves_list, linkage, np, pd, pl, plt, sns, squareform):
+    def plot_overlap_heatmap_comparison(
+        overlap_results_pre: dict[str, pl.DataFrame],
+        overlap_results_post: dict[str, pl.DataFrame],
+        figsize_per_plot: tuple[int, int] = (5, 5),
+        title: str = "",
+        pre_label: str = "Pre",
+        post_label: str = "Post",
+        order: list[str] | None = None,
+        save: bool = False,
+        outfile: Path | str | None = None,
+        vmax_percentile: float | int | None = None,
+        **heatmap_kwargs,
+    ):
+        # Determine row order from union of keys
+        if isinstance(order, list):
+            attributes = order
+        else:
+            attributes = list(overlap_results_pre.keys())
+            post_only = [k for k in overlap_results_post if k not in attributes]
+            attributes += post_only
+
+        nrows = len(attributes)
+        ncols = 2
+
+        fig, axes = plt.subplots(
+            nrows,
+            ncols,
+            figsize=(figsize_per_plot[0] * ncols, figsize_per_plot[1] * nrows),
+        )
+
+        # Normalize to 2D array for consistent indexing
+        if nrows == 1:
+            axes = np.array([axes])
+
+        # Add column headers
+        axes[0, 0].set_title(pre_label, fontsize=13, fontweight="bold", pad=12)
+        axes[0, 1].set_title(post_label, fontsize=13, fontweight="bold", pad=12)
+
+        def _df_to_pandas(df: pl.DataFrame) -> pd.DataFrame:
+            return (
+                df.with_columns(pl.Series("source", df.columns))
+                .to_pandas()
+                .set_index("source", drop=True)
+            )
+
+        def _optimal_leaf_order(df_pd: pd.DataFrame) -> list:
+            # Treat as a distance matrix (assuming similarity, convert accordingly)
+            matrix = df_pd.fillna(0).to_numpy()
+            linkage_matrix = linkage(squareform(matrix), method="average")
+            return list(df_pd.index[leaves_list(linkage_matrix)])
+
+        def _plot_single(ax, df_pd: pd.DataFrame, row_label: str, **kwargs):
+            sns.heatmap(df_pd, ax=ax, **kwargs)
+            ax.set_ylabel(row_label.capitalize(), fontsize=11, fontweight="bold")
+            xticks = ax.get_xticklabels()
+            ax.set_xticklabels(labels=xticks, rotation=45, ha="right", rotation_mode="anchor")
+
+            return xticks
+
+        row_vmax = heatmap_kwargs.pop("vmax", None)
+        for row_idx, attribute in enumerate(attributes):
+            ax_pre = axes[row_idx, 0]
+            ax_post = axes[row_idx, 1]
+
+            # Compute shared vmax from both dataframes if needed
+            if row_vmax and isinstance(vmax_percentile, (int, float)):
+                values = []
+                if attribute in overlap_results_pre:
+                    values.append(overlap_results_pre[attribute].to_numpy())
+                if attribute in overlap_results_post:
+                    values.append(overlap_results_post[attribute].to_numpy())
+                if values:
+                    row_vmax = np.percentile(np.concatenate([v.ravel() for v in values]), vmax_percentile)
+
+            pre_df_pd = _df_to_pandas(overlap_results_pre[attribute]) if attribute in overlap_results_pre else None
+            post_df_pd = _df_to_pandas(overlap_results_post[attribute]) if attribute in overlap_results_post else None
+        
+            # Align post to pre's row/column order
+            if pre_df_pd is not None and post_df_pd is not None:
+                post_df_index = [source for source in pre_df_pd.index if source in post_df_pd.index]
+                post_df_columns = [source for source in pre_df_pd.columns if source in post_df_pd.columns]
+                post_df_pd = post_df_pd.loc[post_df_index, post_df_columns]
+    
+            if pre_df_pd is not None:
+                _plot_single(ax_pre, pre_df_pd, attribute, vmax=row_vmax, **heatmap_kwargs)
+            else:
+                ax_pre.axis("off")
+    
+            if post_df_pd is not None:
+                _plot_single(ax_post, post_df_pd, "", vmax=row_vmax, **heatmap_kwargs)
+            else:
+                ax_post.axis("off")
+
+        plt.suptitle(title, fontsize=14, fontweight="bold", y=1)
+        plt.tight_layout()
+
+        if save and isinstance(outfile, (str, Path)):
+            plt.savefig(outfile, dpi=400)
+
+        plt.show()
+
+    return (plot_overlap_heatmap_comparison,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Sample
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Absolute count overlap
+    """)
+    return
+
+
+@app.cell
+def _(
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    plot_overlap_heatmap_comparison,
+    post_sample_overlap_count,
+    pre_sample_overlap_count,
+):
+    plot_overlap_heatmap_comparison(
+        pre_sample_overlap_count,
+        post_sample_overlap_count,
+        figsize_per_plot=(5,5),
+        order=OVERLAP_ORDER,
+        cmap=OVERLAP_CMAP,
+        vmax_percentile=95,
+        title="Absolute count overlap (level=sample)",
+        save=False,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Percent overlap
+    """)
+    return
+
+
+@app.cell
+def _(
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    plot_overlap_heatmap_comparison,
+    post_sample_overlap_percent,
+    pre_sample_overlap_percent,
+):
+    plot_overlap_heatmap_comparison(
+        pre_sample_overlap_percent,
+        post_sample_overlap_percent,
+        figsize_per_plot=(5,5),
+        order=OVERLAP_ORDER,
+        cmap=OVERLAP_CMAP,
+        vmax=1.0,
+        vmin=0.0,
+        title="Percent overlap (level=sample)",
+        save=False,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Normalized PMI
+    """)
+    return
+
+
+@app.cell
+def _(
+    OVERLAP_ORDER,
+    PMI_CMAP,
+    plot_overlap_heatmap_comparison,
+    post_sample_overlap_pmi,
+    pre_sample_overlap_pmi,
+):
+    plot_overlap_heatmap_comparison(
+        pre_sample_overlap_pmi,
+        post_sample_overlap_pmi,
+        figsize_per_plot=(5,5),
+        order=OVERLAP_ORDER,
+        cmap=PMI_CMAP,
+        vmax=1,
+        vmin=-1,
+        title="Normalized pointwise mutual information (level=sample)",
+        save=False,
     )
     return
 
@@ -1160,62 +1700,28 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Absolute counts
+    #### Absolute count overlap
     """)
     return
 
 
 @app.cell
 def _(
-    FIGURES_DIR: "Path",
     OVERLAP_CMAP,
     OVERLAP_ORDER,
-    POST_HARMONIZATION_RESULTS,
-    get_overlap_results,
-    plot_overlap_heatmap,
+    plot_overlap_heatmap_comparison,
+    post_series_overlap_count,
+    pre_series_overlap_count,
 ):
-    series_overlap_count = get_overlap_results(
-        POST_HARMONIZATION_RESULTS, overlap_type="overlap_count", level="series"
-    )
-    plot_overlap_heatmap(
-        series_overlap_count,
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP, 
-        vmax_percentile=95,
-        title="Absolute count overlap (level=series)",
-        save=True,
-        outfile=FIGURES_DIR / "overlap__level-series__metric-counts.png",
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Percent overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    POST_HARMONIZATION_RESULTS,
-    get_overlap_results,
-    plot_overlap_heatmap,
-):
-    series_overlap_percent = get_overlap_results(
-        POST_HARMONIZATION_RESULTS, overlap_type="overlap_percent", level="series"
-    )
-    plot_overlap_heatmap(
-        series_overlap_percent,
+    plot_overlap_heatmap_comparison(
+        pre_series_overlap_count,
+        post_series_overlap_count,
+        figsize_per_plot=(5,5),
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP,
-        title="Percent overlap (level=series)",
-        save=True,
-        outfile=FIGURES_DIR / "overlap__level-series__metric-percent.png",
+        vmax_percentile=95,
+        title="Absolute count overlap (level=series)",
+        save=False,
     )
     return
 
@@ -1223,36 +1729,59 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### PMI
+    #### Percent overlap
     """)
     return
 
 
 @app.cell
 def _(
-    FIGURES_DIR: "Path",
+    OVERLAP_CMAP,
+    OVERLAP_ORDER,
+    plot_overlap_heatmap_comparison,
+    post_series_overlap_percent,
+    pre_series_overlap_percent,
+):
+    plot_overlap_heatmap_comparison(
+        pre_series_overlap_percent,
+        post_series_overlap_percent,
+        figsize_per_plot=(5,5),
+        order=OVERLAP_ORDER,
+        cmap=OVERLAP_CMAP,
+        vmax=1.0,
+        vmin=0.0,
+        title="Percent overlap (level=series)",
+        save=False,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Normalized PMI
+    """)
+    return
+
+
+@app.cell
+def _(
     OVERLAP_ORDER,
     PMI_CMAP,
-    POST_HARMONIZATION_RESULTS,
-    get_overlap_results,
-    plot_overlap_heatmap,
+    plot_overlap_heatmap_comparison,
+    post_series_overlap_pmi,
+    pre_series_overlap_pmi,
 ):
-    series_overlap_pmi = get_overlap_results(
-        POST_HARMONIZATION_RESULTS,
-        overlap_type="overlap_count",
-        level="series",
-        pmi=True,
-        method="norm"
-    )
-    plot_overlap_heatmap(
-        series_overlap_pmi,
+    plot_overlap_heatmap_comparison(
+        pre_series_overlap_pmi,
+        post_series_overlap_pmi,
+        figsize_per_plot=(5,5),
         order=OVERLAP_ORDER,
         cmap=PMI_CMAP,
         vmax=1,
         vmin=-1,
         title="Normalized pointwise mutual information (level=series)",
-        save=True,
-        outfile=FIGURES_DIR / "overlap__level-series__metric-pmi.png",
+        save=False,
     )
     return
 
