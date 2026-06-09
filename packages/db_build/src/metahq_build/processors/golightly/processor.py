@@ -19,8 +19,11 @@ from metahq_build.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    CONTROL_ID,
     ECODE_EXPERT,
     GOLIGHTLY_ZIP,
+    MONDO_OBO,
+    MONDO_SYSTEMS,
     PROCESSED_DIR,
     SEX_FEMALE_ID,
     SEX_MALE_ID,
@@ -153,6 +156,158 @@ _FILE_METADATA: dict[str, tuple[str, str, str, str]] = {
 }
 
 
+# Per-file disease config: (disease_col, {raw_value: (mondo_id, term_name)}).
+# Column values absent from the inner map are silently skipped.
+_DISEASE_METADATA: dict[str, tuple[str, dict[str, tuple[str, str]]]] = {
+    "GSE15296_Clinical.txt": (
+        "phenotype",
+        {
+            "Acute Kidney Rejection": ("MONDO:1010185", "transplant rejection"),
+            "Well-functioning kidney transplant": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE19804_Clinical.txt": (
+        "tissue",
+        {
+            "lung cancer": ("MONDO:0008903", "lung cancer"),
+            "paired normal adjacent": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE21510_Clinical.txt": (
+        "tissue",
+        {
+            "cancer, LCM": ("MONDO:0005575", "colorectal cancer"),
+            "cancer, homogenized": ("MONDO:0005575", "colorectal cancer"),
+            "normal, homogenized": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE25507_Clinical.txt": (
+        "group",
+        {
+            "autism": ("MONDO:0005258", "autism spectrum disorder"),
+            "control": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE27342_Clinical.txt": (
+        "tissue",
+        {
+            "gastric cancer tissue": ("MONDO:0001056", "gastric cancer"),
+            "normal gastric tissue": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE30784_Clinical.txt": (
+        "status",
+        {
+            "cancer": ("MONDO:0005515", "oral cavity cancer"),
+            "control": ("MONDO:0000000", "control"),
+            # "dysplasia" is omitted — precancerous, too ambiguous to map
+        },
+    ),
+    "GSE37147_Clinical.txt": (
+        "copd",
+        {
+            "yes": ("MONDO:0005002", "chronic obstructive pulmonary disease"),
+            "no": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE38958_Clinical.txt": (
+        "diagnosis",
+        {
+            "Idiopathic pulmonary fibrosis (IPF)": (
+                "MONDO:0800504",
+                "idiopathic pulmonary fibrosis",
+            ),
+            "Healthy control": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE40292_Clinical.txt": (
+        "diagnosis",
+        {
+            "UC": ("MONDO:0005101", "ulcerative colitis"),
+            "FAP": ("MONDO:0021056", "familial adenomatous polyposis 1"),
+            # IC (indeterminate colitis, n=3) and MC (microscopic colitis, n=1)
+            # omitted — too few samples and abbreviations are ambiguous
+        },
+    ),
+    "GSE43176_Clinical.txt": (
+        "disease_state",
+        {
+            "AML": ("MONDO:0018874", "acute myeloid leukemia"),
+            "normal bone marrow sample": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE46449_Clinical.txt": (
+        "genotype",
+        {
+            "bipolar patient": ("MONDO:0004985", "bipolar disorder"),
+            "control subject": ("MONDO:0000000", "control"),
+        },
+    ),
+    "GSE46995_Clinical.txt": (
+        "condition",
+        {
+            "Biliary Atresia": ("MONDO:0008867", "biliary atresia"),
+            "Normal control": ("MONDO:0000000", "control"),
+            # Long GeneChip batch-normalization label is also a healthy control
+            "Sample for internal control to normalize each batch of GeneChip microarray run": (
+                "MONDO:0000000",
+                "control",
+            ),
+            # "Diseased control" omitted — disease identity unknown
+        },
+    ),
+    "GSE67784_Clinical.txt": (
+        "V30M_Carrier",
+        {
+            "V30M_Carrier": ("MONDO:0007100", "familial amyloid neuropathy"),
+            "Control": ("MONDO:0000000", "control"),
+        },
+    ),
+}
+
+# GSE20189 uses two columns: case_status (Case/Control) and morphology (lung
+# cancer subtype for cases). Handled separately because the disease term depends
+# on the morphology column rather than the case_status value itself.
+_GSE20189_MORPHOLOGY: dict[str, tuple[str, str]] = {
+    "Adenocarcinoma": ("MONDO:0005061", "lung adenocarcinoma"),
+    "Large Cell Carcinoma": ("MONDO:0005232", "large cell carcinoma"),
+    "Small Cell Carcinoma": ("MONDO:0008433", "small cell lung carcinoma"),
+    "Squamous Cell Carcinoma": ("MONDO:0005097", "squamous cell lung carcinoma"),
+}
+
+# All samples in these studies are disease cases; no healthy-control indicator
+# exists in the clinical columns, so a fixed disease term covers the whole file.
+_FIXED_DISEASE: dict[str, tuple[str, str]] = {
+    "GSE1456_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+    "GSE10320_Clinical.txt": ("MONDO:0002367", "kidney cancer"),
+    "GSE20181_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+    "GSE2109_Breast_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+    "GSE2109_Colon_Clinical.txt": ("MONDO:0005575", "colorectal cancer"),
+    "GSE2109_Endometrium_Clinical.txt": ("MONDO:0011962", "endometrial cancer"),
+    "GSE2109_Kidney_Clinical.txt": ("MONDO:0002367", "kidney cancer"),
+    "GSE2109_Lung_Clinical.txt": ("MONDO:0008903", "lung cancer"),
+    "GSE2109_Ovary_Clinical.txt": ("MONDO:0008170", "ovarian cancer"),
+    "GSE2109_Prostate_Clinical.txt": ("MONDO:0008315", "prostate cancer"),
+    "GSE2109_Uterus_Clinical.txt": ("MONDO:0002715", "uterine cancer"),
+    "GSE26682_U133A_Clinical.txt": ("MONDO:0005575", "colorectal cancer"),
+    "GSE26682_U133PLUS2_Clinical.txt": ("MONDO:0005575", "colorectal cancer"),
+    "GSE27854_Clinical.txt": ("MONDO:0005575", "colorectal cancer"),
+    "GSE32646_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+    "GSE37199_Clinical.txt": ("MONDO:0008315", "prostate cancer"),
+    "GSE37892_Clinical.txt": ("MONDO:0005575", "colorectal cancer"),
+    "GSE39582_Clinical.txt": ("MONDO:0005575", "colorectal cancer"),
+    "GSE4271_Clinical.txt": ("MONDO:0021042", "glioma"),
+    "GSE46691_Clinical.txt": ("MONDO:0008315", "prostate cancer"),
+    "GSE48391_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+    "GSE5460_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+    "GSE5462_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+    "GSE58697_Clinical.txt": ("MONDO:0007608", "desmoid tumor"),
+    "GSE63885_Clinical.txt": ("MONDO:0008170", "ovarian cancer"),
+    "GSE6532_U133A_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+    "GSE6532_U133PLUS2_Clinical.txt": ("MONDO:0007254", "breast cancer"),
+}
+
+
 @ProcessorRegistry.register
 class GolightlyProcessor(BaseProcessor):
     """
@@ -198,10 +353,13 @@ class GolightlyProcessor(BaseProcessor):
 
         self.logger.info("Loading UBERON system descendants for tissue filtering...")
         valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
+        self.logger.info("Loading MONDO system descendants for disease filtering...")
+        valid_mondo = get_system_descendants(MONDO_SYSTEMS, MONDO_OBO)
 
         tissue_frames: list[pl.DataFrame] = []
         sex_frames: list[pl.DataFrame] = []
         age_frames: list[pl.DataFrame] = []
+        disease_frames: list[pl.DataFrame] = []
 
         with zipfile.ZipFile(input_path) as zf:
             for filename in zf.namelist():
@@ -259,7 +417,46 @@ class GolightlyProcessor(BaseProcessor):
                         self._build_age(df.select([COL_ACCESSION, age_col]), age_col)
                     )
 
-        parts = tissue_frames + sex_frames + age_frames
+                # Disease annotations.
+                if filename in _DISEASE_METADATA:
+                    disease_col, value_map = _DISEASE_METADATA[filename]
+                    if disease_col in df.columns:
+                        disease_frames.append(
+                            self._build_disease_from_col(
+                                df.select([COL_ACCESSION, disease_col]),
+                                disease_col,
+                                value_map,
+                                valid_mondo,
+                            )
+                        )
+                elif filename == "GSE20189_Clinical.txt":
+                    if "case_status" in df.columns and "morphology" in df.columns:
+                        disease_frames.append(
+                            self._build_gse20189_disease(
+                                df.select([COL_ACCESSION, "case_status", "morphology"]),
+                                valid_mondo,
+                            )
+                        )
+                elif filename in _FIXED_DISEASE:
+                    mondo_id, term_name = _FIXED_DISEASE[filename]
+                    if mondo_id == CONTROL_ID or mondo_id in valid_mondo:
+                        disease_frames.append(
+                            df.select(COL_ACCESSION).with_columns(
+                                pl.lit("disease").alias(COL_ATTRIBUTE),
+                                pl.lit(mondo_id).alias(COL_TERM_ID),
+                                pl.lit(term_name).alias(COL_TERM_NAME),
+                                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
+                            )
+                        )
+                    else:
+                        self.logger.debug(
+                            "%s: fixed disease term %s (%s) not in MONDO system descendants, skipping.",
+                            filename,
+                            mondo_id,
+                            term_name,
+                        )
+
+        parts = tissue_frames + sex_frames + age_frames + disease_frames
         if not parts:
             self.logger.warning("No annotations produced from Golightly.")
             return pl.DataFrame(
@@ -303,8 +500,13 @@ class GolightlyProcessor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        if "tissue" not in data[COL_ATTRIBUTE].unique().to_list():
+        attribute_types = data[COL_ATTRIBUTE].unique().to_list()
+
+        if "tissue" not in attribute_types:
             raise ValidationError("No tissue annotations found in Golightly output.")
+
+        if "disease" not in attribute_types:
+            raise ValidationError("No disease annotations found in Golightly output.")
 
         return True
 
@@ -390,3 +592,97 @@ class GolightlyProcessor(BaseProcessor):
                 pl.lit(ECODE_EXPERT).alias(COL_ECODE),
             )
         )
+
+    @staticmethod
+    def _build_disease_from_col(
+        df: pl.DataFrame,
+        disease_col: str,
+        value_map: dict[str, tuple[str, str]],
+        valid_mondo: set[str],
+    ) -> pl.DataFrame:
+        """Build disease annotation records from a single disease column.
+
+        Column values absent from ``value_map`` are silently dropped.
+        Results are filtered to MONDO system descendants; ``MONDO:0000000``
+        (control) always passes through.
+
+        Arguments:
+            df (pl.DataFrame):
+                DataFrame with ``accession`` and ``disease_col`` columns.
+            disease_col (str):
+                Name of the disease column.
+            value_map (dict):
+                Maps raw column values to ``(MONDO_ID, term_name)`` tuples.
+            valid_mondo (set[str]):
+                MONDO system descendants from ``get_system_descendants``.
+
+        Returns:
+            (pl.DataFrame): Disease annotation records.
+        """
+        id_map = {v: pair[0] for v, pair in value_map.items()}
+        name_map = {v: pair[1] for v, pair in value_map.items()}
+        return (
+            df.filter(pl.col(disease_col).is_not_null())
+            .filter(pl.col(disease_col).is_in(list(value_map)))
+            .select(
+                pl.col(COL_ACCESSION),
+                pl.lit("disease").alias(COL_ATTRIBUTE),
+                pl.col(disease_col).replace(id_map).alias(COL_TERM_ID),
+                pl.col(disease_col).replace(name_map).alias(COL_TERM_NAME),
+                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
+            )
+            .filter(
+                pl.col(COL_TERM_ID).is_in(valid_mondo)
+                | (pl.col(COL_TERM_ID) == CONTROL_ID)
+            )
+        )
+
+    @staticmethod
+    def _build_gse20189_disease(
+        df: pl.DataFrame,
+        valid_mondo: set[str],
+    ) -> pl.DataFrame:
+        """Build disease annotations for GSE20189 using case_status + morphology.
+
+        Controls (``case_status == "Control"``) receive ``MONDO:0000000``.
+        Cases (``case_status == "Case"``) are mapped to lung-specific MONDO
+        terms via the ``morphology`` column.
+
+        Arguments:
+            df (pl.DataFrame):
+                DataFrame with ``accession``, ``case_status``, and
+                ``morphology`` columns.
+            valid_mondo (set[str]):
+                MONDO system descendants from ``get_system_descendants``.
+
+        Returns:
+            (pl.DataFrame): Disease annotation records.
+        """
+        control_df = df.filter(pl.col("case_status") == "Control").select(
+            pl.col(COL_ACCESSION),
+            pl.lit("disease").alias(COL_ATTRIBUTE),
+            pl.lit(CONTROL_ID).alias(COL_TERM_ID),
+            pl.lit("control").alias(COL_TERM_NAME),
+            pl.lit(ECODE_EXPERT).alias(COL_ECODE),
+        )
+
+        id_map = {k: v[0] for k, v in _GSE20189_MORPHOLOGY.items()}
+        name_map = {k: v[1] for k, v in _GSE20189_MORPHOLOGY.items()}
+        case_df = (
+            df.filter(pl.col("case_status") == "Case")
+            .filter(pl.col("morphology").is_not_null())
+            .filter(pl.col("morphology").is_in(list(_GSE20189_MORPHOLOGY)))
+            .select(
+                pl.col(COL_ACCESSION),
+                pl.lit("disease").alias(COL_ATTRIBUTE),
+                pl.col("morphology").replace(id_map).alias(COL_TERM_ID),
+                pl.col("morphology").replace(name_map).alias(COL_TERM_NAME),
+                pl.lit(ECODE_EXPERT).alias(COL_ECODE),
+            )
+            .filter(
+                pl.col(COL_TERM_ID).is_in(valid_mondo)
+                | (pl.col(COL_TERM_ID) == CONTROL_ID)
+            )
+        )
+
+        return pl.concat([control_df, case_df])
