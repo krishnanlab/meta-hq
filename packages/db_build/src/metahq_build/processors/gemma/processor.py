@@ -349,9 +349,10 @@ class GemmaProcessor(BaseProcessor):
         ).height
 
         self.logger.info(
-            "Found %d studies annotated to tissue with MONDO or DOID terms."
+            "Found %d tissue annotations with MONDO or DOID terms."
             " Converting to disease annotations...",
             mismatched,
+        )
         )
 
         return df.with_columns(

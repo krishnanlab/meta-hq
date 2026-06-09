@@ -162,7 +162,7 @@ class XRefExtractor:
     def _resolve_entry_xrefs(
         self, xrefs: list[XRef], source_keys: set[str]
     ) -> list[str]:
-        """Idnetify acceptable xrefs given a set of acceptable levels."""
+        """Identify acceptable xrefs given a set of acceptable levels."""
         mappings: list[str] = []
         for xref in xrefs:
             if len(set(xref.sources) & source_keys) > 0:
