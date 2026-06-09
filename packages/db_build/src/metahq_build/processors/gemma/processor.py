@@ -167,7 +167,9 @@ class GemmaProcessor(BaseProcessor):
                 Ontology.from_obo(onto_obo), ontos, terms
             )
             if mapping.is_empty():
-                self.logger.info("No cross-ontology mappings found for %s; skipping.", attribute)
+                self.logger.info(
+                    "No cross-ontology mappings found for %s; skipping.", attribute
+                )
                 continue
 
             mapping = mapping.with_columns(pl.lit(attribute).alias(COL_ATTRIBUTE))
@@ -352,7 +354,6 @@ class GemmaProcessor(BaseProcessor):
             "Found %d tissue annotations with MONDO or DOID terms."
             " Converting to disease annotations...",
             mismatched,
-        )
         )
 
         return df.with_columns(
