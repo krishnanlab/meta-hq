@@ -454,7 +454,7 @@ class StudyCombiner(BaseAnnotationCombiner):
 
             if diff > 0:
                 self.logger.warning(
-                    "Removed %d invalid entries from the unprocessed annotations."
+                    "Removed %d invalid entries from the unprocessed annotations.", diff
                 )
 
             for entry, values in sample_anno.items():
