@@ -44,7 +44,7 @@ nasopharyngeal biopsies (with epstein-barr virus (ebv)-positive undifferentiated
 synovial membrane,UBERON:0007616
 lymphoblast cell lines,CL:0017005
 endometrial cells,UBERON:0001295
-adipose stem cells,CL:0000034
+adipose stem cells,CL:0000034|UBERON:0001013
 lymphoblast,CL:0017005
 neurons - male,CL:0000540
 uterine tumors (endometrioid histologic subtype) - stage-grade:ib-g3,UBERON:0000995
@@ -464,8 +464,8 @@ livers (atp7b null - wilson disease model),UBERON:0002107
 sciatic nerve,UBERON:0001322
 sperm cells - from males with consistent and severe teratozoospermia (terastospermia) - (hg-u133 2.0 ),CL:0000019
 urothelium,UBERON:0004645
-induced pluripotent stem cell-derived neurons - male,na
-cd34+ hematopoietic stem and progenitor cells from the bone marrow of untreated patients,CL:0002092
+induced pluripotent stem cell-derived neurons - male,CL:0000034|CL:0000540
+cd34+ hematopoietic stem and progenitor cells from the bone marrow of untreated patients,CL:0002092|UBERON:0002371
 cd33+ myeloid cells,CL:0000763
 leukocyte - lymphocyte - b-lymphocyte - plasma cell (mmhcc),CL:0000786
 biceps biopsies,na
