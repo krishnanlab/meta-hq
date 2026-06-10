@@ -61,7 +61,7 @@ class RelationsLazyFrame:
 
     def get_ancestors(
         self, subset: list[str] | None = None, rm_self: bool = False
-    ) -> dict[str, set[str]]:
+    ) -> dict[str, list[str]]:
         """Extract relationships of terms to their ancestors.
 
         Note that terms queried for their ancestors are included
@@ -85,7 +85,7 @@ class RelationsLazyFrame:
             lf = lf.select(subset + [ROW_ID])
 
         relations = self._collect_relations(lf, group_by=COL_ID, agg=ROW_ID)
-        relations = dict(zip(relations[COL_ID], set(relations[ROW_ID])))
+        relations = dict(zip(relations[COL_ID], relations[ROW_ID]))
 
         if rm_self:
             self.logger.info("Removing self terms from ancestors query...")
@@ -95,7 +95,7 @@ class RelationsLazyFrame:
 
     def get_descendants(
         self, subset: list[str] | None = None, rm_self: bool = True
-    ) -> dict[str, set[str]]:
+    ) -> dict[str, list[str]]:
         """Extract relationships of terms to their descendants.
 
         Note that terms queried for their ancestors are included
@@ -187,7 +187,7 @@ class RelationsLazyFrame:
         )
 
     @staticmethod
-    def _rm_self_relations(relations: dict[str, list[str]]):
+    def _rm_self_relations(relations: dict[str, list[str]]) -> dict[str, list[str]]:
         """Remove the term ID representing a particular key from the
         values of that same key.
         """
@@ -195,6 +195,6 @@ class RelationsLazyFrame:
         for term, ds in relations.items():
             ds = set(ds)
             ds.discard(term)
-            relations_self_rm[term] = ds
+            relations_self_rm[term] = list(ds)
 
         return relations_self_rm

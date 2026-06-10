@@ -29,7 +29,7 @@ from metahq_build.config.config import (
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
-from metahq_build.ontology import get_system_descendants
+from metahq_build.ontology import Ontology, get_system_descendants
 from metahq_build.processors.base import BaseProcessor, ProcessorError
 from metahq_build.processors.registry import ProcessorRegistry
 
@@ -142,6 +142,8 @@ class GemmaProcessor(BaseProcessor):
                 COL_ECODE: pl.Utf8,
             },
         )
+
+        df = self._map_mondo_tissue_to_disease(df)
         df = self._map_age_groups(df)
         df = self._map_sex(df)
 
@@ -149,6 +151,45 @@ class GemmaProcessor(BaseProcessor):
         df = df.remove(
             (pl.col(COL_ATTRIBUTE) == "sex") & (pl.col(COL_TERM_ID) == "UBERON:0007222")
         )
+
+        for attribute, onto_obo in {"tissue": UBERON_OBO, "disease": MONDO_OBO}.items():
+            terms = (
+                df.filter(pl.col(COL_ATTRIBUTE) == attribute)[COL_TERM_ID]
+                .unique()
+                .to_list()
+            )
+
+            ontos = set(sorted({term.split(":")[0] for term in terms}))
+            self.logger.info(
+                "Found %d unique ontologies represented: %s", len(ontos), ontos
+            )
+            mapping = self._collect_ontology_mappings(
+                Ontology.from_obo(onto_obo), ontos, terms
+            )
+            if mapping.is_empty():
+                self.logger.info(
+                    "No cross-ontology mappings found for %s; skipping.", attribute
+                )
+                continue
+
+            mapping = mapping.with_columns(pl.lit(attribute).alias(COL_ATTRIBUTE))
+            counts = mapping.with_columns(
+                pl.col(COL_TERM_ID).str.split(":").list.get(0)
+            )[COL_TERM_ID].value_counts()
+
+            counts = dict(counts.iter_rows())
+            msg = f"Found mappings to ontologies: {counts}"
+            self.logger.info(msg)
+
+            df = (
+                df.join(
+                    mapping,
+                    on=[COL_ATTRIBUTE, COL_TERM_ID],
+                    how="left",
+                )
+                .with_columns(pl.coalesce(["mapped", COL_TERM_ID]).alias(COL_TERM_ID))
+                .drop("mapped")
+            )
 
         self.logger.info("Parsed %d annotations from Gemma", len(df))
 
@@ -241,3 +282,88 @@ class GemmaProcessor(BaseProcessor):
     def _map_sex(self, df: pl.DataFrame) -> pl.DataFrame:
         """Map PATO terms to MetaHQ sex ID constants."""
         return df.with_columns(pl.col(COL_TERM_ID).replace(PATO_SEX_MAP))
+
+    def map_ontology_terms(
+        self,
+        df: pl.DataFrame,
+        attribute: str,
+        ontology: str,
+        obo: Path | str,
+        delimiter: str = ":",
+    ) -> pl.DataFrame:
+        """Identify unique ontologies represented in a set of term IDs."""
+        onto = Ontology.from_obo(obo)
+
+        all_terms = (
+            df.filter(pl.col(COL_ATTRIBUTE) == attribute)[COL_TERM_ID]
+            .unique()
+            .to_list()
+        )
+        unique_ontologies = {term.split(delimiter)[0] for term in all_terms}
+        self.logger.info(
+            "Found %d unique ontologies represented: %s",
+            len(unique_ontologies),
+            unique_ontologies,
+        )
+        mappings = self._collect_ontology_mappings(
+            onto,
+            ontologies=unique_ontologies,
+            query_terms=[
+                term for term in all_terms if not term.startswith(ontology)
+            ],  # exclude self terms
+        )
+
+        return df.join(mappings, on=COL_TERM_ID, how="left").with_columns(
+            pl.coalesce(["mapped", COL_TERM_ID]).alias(COL_TERM_ID)
+        )
+
+    def _collect_ontology_mappings(
+        self, ontology: Ontology, ontologies: set[str], query_terms: list[str]
+    ) -> pl.DataFrame:
+        """Collect all term mappings."""
+        mappings: list[pl.DataFrame] = []
+        for onto in ontologies:
+            terms = [term for term in query_terms if term.startswith(onto)]
+            xref = (
+                ontology.xref(onto).pl(explode=True).filter(pl.col(onto).is_in(terms))
+            ).rename({"anchor": "mapped", onto: COL_TERM_ID})
+            if xref.is_empty():
+                self.logger.info("No mappings to %s", onto)
+                continue
+
+            mappings.append(xref)
+
+        return (
+            pl.concat(mappings, how="vertical") if len(mappings) > 0 else pl.DataFrame()
+        )
+
+    def _map_mondo_tissue_to_disease(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Some tissue annotations are to MONDO terms because they originated
+        from a diseased tissue (e.g., brain neoplasm). We convert these to disease
+        annotations to retain the annotations while respecting the MetaHQ schema and requirements.
+        """
+        mismatched = df.filter(
+            (pl.col(COL_ATTRIBUTE) == "tissue")
+            & (
+                (pl.col(COL_TERM_ID).str.starts_with("MONDO"))
+                | (pl.col(COL_TERM_ID).str.starts_with("DOID"))
+            )
+        ).height
+
+        self.logger.info(
+            "Found %d tissue annotations with MONDO or DOID terms."
+            " Converting to disease annotations...",
+            mismatched,
+        )
+
+        return df.with_columns(
+            pl.when(
+                (pl.col(COL_ATTRIBUTE) == "tissue")
+                & (
+                    (pl.col(COL_TERM_ID).str.starts_with("MONDO"))
+                    | (pl.col(COL_TERM_ID).str.starts_with("DOID"))
+                )
+            )
+            .then(pl.lit("disease").alias(COL_ATTRIBUTE))
+            .otherwise(pl.col(COL_ATTRIBUTE))
+        )

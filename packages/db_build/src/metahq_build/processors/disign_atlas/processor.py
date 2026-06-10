@@ -202,9 +202,11 @@ class DiSignAtlasProcessor(BaseProcessor):
         mondo = Ontology.from_obo(MONDO_OBO)
         umls_ids = all_samples["disease_id"].unique().to_list()
         prefixed = ["UMLS:" + uid for uid in umls_ids]
-        umls_to_mondo = mondo.map_terms(
-            prefixed, ontology="MONDO", _from="UMLS", _to="MONDO"
-        )
+        xref_mappings = mondo.xref("UMLS")
+        # Add custom control mapping
+        xref_mappings.add({"MONDO:0000000": ["UMLS:C0000000"]})
+        reverse_map = xref_mappings.reverse()
+        umls_to_mondo = {term: reverse_map.get(term, "NA") for term in prefixed}
         # Strip prefix from keys to match the bare IDs stored in the DataFrame.
         bare_to_mondo = {
             uid.removeprefix("UMLS:"): mondo_id
