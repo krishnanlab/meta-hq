@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.9"
+__generated_with = "0.23.3"
 app = marimo.App(width="medium", auto_download=["ipynb"])
 
 
@@ -12,7 +12,7 @@ def _(mo):
 
     Author: Parker Hicks <br>
     Date: 2026-01-17 <br>
-    Last updated: 2026-06-08 by Parker Hicks
+    Last updated: 2026-06-10 by Parker Hicks
     """)
     return
 
@@ -52,18 +52,14 @@ def _():
         ceil,
         defaultdict,
         from_contents,
-        leaves_list,
-        linkage,
         mcolors,
         mo,
         mpatches,
         np,
-        pd,
         pl,
         plt,
         re,
         sns,
-        squareform,
         ticker,
         warnings,
     )
@@ -95,14 +91,12 @@ def _(Path):
 
     RESULTS_DIR: Path = Path("results")
     UNIQUE_PROPAGATED_TERMS: Path = RESULTS_DIR / "unique_propagated_tissue_disease_terms.txt"
-    PRE_HARMONIZATION_RESULTS = RESULTS_DIR / "pre_harmonization"
     POST_HARMONIZATION_RESULTS = RESULTS_DIR / "post_harmonization"
-    PRE_OVERLAP_RESULTS = list(PRE_HARMONIZATION_RESULTS.glob("overlap*"))
     POST_OVERLAP_RESULTS = list(POST_HARMONIZATION_RESULTS.glob("overlap*"))
 
     FIGURES_DIR: Path = Path("figures")
 
-    ## Source annotation files
+    ## source annotation files
     PROCESSED_DIR = Path("data/processed")
     SRA_PROCESSED = PROCESSED_DIR / "sra_combined.bson"
     GEO_PROCESSED = PROCESSED_DIR / "geo_combined.bson"
@@ -131,7 +125,6 @@ def _(Path):
         PLATFORMS_FILE,
         PMI_CMAP,
         POST_HARMONIZATION_RESULTS,
-        PRE_HARMONIZATION_RESULTS,
         SEMI_PROCESSED_SERIES,
         SRA_PROCESSED,
         UNIQUE_PROPAGATED_TERMS,
@@ -288,7 +281,7 @@ def _(Literal, PLATFORMS_FILE, pl):
         entries (samples or studies) that have at least 
         one annotation to that attribute.
         """
-            # show number of samples annotated to any attribute
+        # show number of samples annotated to any attribute
         print(title)
         print("================")
         for attribute, entries in records.items():
@@ -487,7 +480,7 @@ def _(Literal, defaultdict, pl):
         platform_mapping_funcs = {"sample": acceptable_platform_sample, "study": acceptable_platform_study}
         is_acceptable_platform = platform_mapping_funcs[level]
 
-        # collect all unique sources across all attributes first
+        # collect all unique sources across all attributes
         all_sources = set()
         for id_, data in database.items():
             for attribute in ["tissue", "disease", "sex", "age"]:
@@ -512,31 +505,26 @@ def _(Literal, defaultdict, pl):
                 if not is_acceptable_platform(data, ok_platforms):
                     continue
 
-                # Count tissue sources
                 if "tissue" in data:
                     for source, source_data in data["tissue"].items():
                         if "id" in source_data:
                             tissue_sources[source] += 1
 
-                # Count disease sources
                 if "disease" in data:
                     for source, source_data in data["disease"].items():
                         if "id" in source_data:
                             disease_sources[source] += 1
 
-                # Count sex sources
                 if "sex" in data:
                     for source, source_data in data["sex"].items():
                         if "id" in source_data:
                             sex_sources[source] += 1
 
-                # Count age sources
                 if "age" in data:
                     for source, source_data in data["age"].items():
                         if "id" in source_data:
                             age_sources[source] += 1
 
-            # Create dataframes for this technology, ensuring all sources appear
             for attribute, source_dict in [
                 ("tissue", tissue_sources),
                 ("disease", disease_sources),
@@ -976,269 +964,7 @@ def _(Path, np, pl, plt, sns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Pre-harmonization
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Sample
-    """)
-    return
-
-
-@app.cell
-def _(PRE_HARMONIZATION_RESULTS, get_overlap_results):
-    # collect results
-    pre_sample_overlap_count = get_overlap_results(
-        PRE_HARMONIZATION_RESULTS,
-        overlap_type="overlap_count",
-        level="sample",
-    )
-
-    pre_sample_overlap_percent = get_overlap_results(
-        PRE_HARMONIZATION_RESULTS,
-        overlap_type="overlap_percent",
-        level="sample",
-    )
-
-    pre_sample_overlap_pmi = get_overlap_results(
-        PRE_HARMONIZATION_RESULTS,
-        overlap_type="overlap_count",
-        level="sample",
-        pmi=True,
-        method="norm",
-    )
-    return (
-        pre_sample_overlap_count,
-        pre_sample_overlap_percent,
-        pre_sample_overlap_pmi,
-    )
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Absolute count overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap,
-    pre_sample_overlap_count,
-):
-    plot_overlap_heatmap(
-        pre_sample_overlap_count,
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax_percentile=95,
-        title="Absolute count overlap (level=sample)",
-        save=True,
-        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-sample__metric-counts.png"
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Percent overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap,
-    pre_sample_overlap_percent,
-):
-    plot_overlap_heatmap(
-        pre_sample_overlap_percent,
-        order=OVERLAP_ORDER,
-        vmax=1.0,
-        vmin=0.0,
-        cmap=OVERLAP_CMAP,
-        title="Percent overlap (level=sample)",
-        save=True,
-        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-sample__metric-percent.png",
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Normalized PMI
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_ORDER,
-    PMI_CMAP,
-    plot_overlap_heatmap,
-    pre_sample_overlap_pmi,
-):
-    plot_overlap_heatmap(
-        pre_sample_overlap_pmi,
-        order=OVERLAP_ORDER,
-        cmap=PMI_CMAP,
-        vmax=1,
-        vmin=-1,
-        title="Normalized pointwise mutual information (level=sample)",
-        save=True,
-        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-sample__metric-pmi.png",
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Series
-    """)
-    return
-
-
-@app.cell
-def _(PRE_HARMONIZATION_RESULTS, get_overlap_results):
-    # collect results
-    pre_series_overlap_count = get_overlap_results(
-        PRE_HARMONIZATION_RESULTS,
-        overlap_type="overlap_count",
-        level="series",
-    )
-
-    pre_series_overlap_percent = get_overlap_results(
-        PRE_HARMONIZATION_RESULTS,
-        overlap_type="overlap_percent",
-        level="series",
-    )
-
-    pre_series_overlap_pmi = get_overlap_results(
-        PRE_HARMONIZATION_RESULTS,
-        overlap_type="overlap_count",
-        level="series",
-        pmi=True,
-        method="norm",
-    )
-    return (
-        pre_series_overlap_count,
-        pre_series_overlap_percent,
-        pre_series_overlap_pmi,
-    )
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Absolute count overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap,
-    pre_series_overlap_count,
-):
-    plot_overlap_heatmap(
-        pre_series_overlap_count,
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax_percentile=95,
-        title="Absolute count overlap (level=series)",
-        save=True,
-        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-series__metric-counts.png"
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Percent overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap,
-    pre_series_overlap_percent,
-):
-    plot_overlap_heatmap(
-        pre_series_overlap_percent,
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax=1.0,
-        vmin=0.0,
-        title="Percent overlap (level=series)",
-        save=True,
-        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-series__metric-percent.png"
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Normalized PMI
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_ORDER,
-    PMI_CMAP,
-    plot_overlap_heatmap,
-    pre_series_overlap_pmi,
-):
-    plot_overlap_heatmap(
-        pre_series_overlap_pmi,
-        order=OVERLAP_ORDER,
-        cmap=PMI_CMAP,
-        vmax=1,
-        vmin=-1,
-        title="Normalized pointwise mutual information (level=series)",
-        save=True,
-        outfile=FIGURES_DIR / "pre_harmonization_overlap__level-series__metric-pmi.png",
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Post-harmonization
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Sample
+    ## Sample
     """)
     return
 
@@ -1274,7 +1000,7 @@ def _(POST_HARMONIZATION_RESULTS, get_overlap_results):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    #### Absolute count overlap
+    ### Absolute count overlap
     """)
     return
 
@@ -1302,7 +1028,7 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    #### Percent overlap
+    ### Percent overlap
     """)
     return
 
@@ -1331,7 +1057,7 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    #### Normalized PMI
+    ### Normalized PMI
     """)
     return
 
@@ -1360,7 +1086,7 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Series
+    ## Series
     """)
     return
 
@@ -1396,7 +1122,7 @@ def _(POST_HARMONIZATION_RESULTS, get_overlap_results):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    #### Absolute count overlap
+    ### Absolute count overlap
     """)
     return
 
@@ -1424,7 +1150,7 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    #### Percent overlap
+    ### Percent overlap
     """)
     return
 
@@ -1452,7 +1178,7 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    #### Normalized PMI
+    ### Normalized PMI
     """)
     return
 
@@ -1474,314 +1200,6 @@ def _(
         title="Normalized pointwise mutual information (level=series)",
         save=True,
         outfile=FIGURES_DIR / "post_harmonization_overlap__level-series__metric-pmi.png",
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Pre- vs post-harmonization
-    """)
-    return
-
-
-@app.cell
-def _(Path, leaves_list, linkage, np, pd, pl, plt, sns, squareform):
-    def plot_overlap_heatmap_comparison(
-        overlap_results_pre: dict[str, pl.DataFrame],
-        overlap_results_post: dict[str, pl.DataFrame],
-        figsize_per_plot: tuple[int, int] = (5, 5),
-        title: str = "",
-        pre_label: str = "Pre",
-        post_label: str = "Post",
-        order: list[str] | None = None,
-        save: bool = False,
-        outfile: Path | str | None = None,
-        vmax_percentile: float | int | None = None,
-        **heatmap_kwargs,
-    ):
-        # Determine row order from union of keys
-        if isinstance(order, list):
-            attributes = order
-        else:
-            attributes = list(overlap_results_pre.keys())
-            post_only = [k for k in overlap_results_post if k not in attributes]
-            attributes += post_only
-
-        nrows = len(attributes)
-        ncols = 2
-
-        fig, axes = plt.subplots(
-            nrows,
-            ncols,
-            figsize=(figsize_per_plot[0] * ncols, figsize_per_plot[1] * nrows),
-        )
-
-        # Normalize to 2D array for consistent indexing
-        if nrows == 1:
-            axes = np.array([axes])
-
-        # Add column headers
-        axes[0, 0].set_title(pre_label, fontsize=13, fontweight="bold", pad=12)
-        axes[0, 1].set_title(post_label, fontsize=13, fontweight="bold", pad=12)
-
-        def _df_to_pandas(df: pl.DataFrame) -> pd.DataFrame:
-            return (
-                df.with_columns(pl.Series("source", df.columns))
-                .to_pandas()
-                .set_index("source", drop=True)
-            )
-
-        def _optimal_leaf_order(df_pd: pd.DataFrame) -> list:
-            # Treat as a distance matrix (assuming similarity, convert accordingly)
-            matrix = df_pd.fillna(0).to_numpy()
-            linkage_matrix = linkage(squareform(matrix), method="average")
-            return list(df_pd.index[leaves_list(linkage_matrix)])
-
-        def _plot_single(ax, df_pd: pd.DataFrame, row_label: str, **kwargs):
-            sns.heatmap(df_pd, ax=ax, **kwargs)
-            ax.set_ylabel(row_label.capitalize(), fontsize=11, fontweight="bold")
-            xticks = ax.get_xticklabels()
-            ax.set_xticklabels(labels=xticks, rotation=45, ha="right", rotation_mode="anchor")
-
-            return xticks
-
-        row_vmax = heatmap_kwargs.pop("vmax", None)
-        for row_idx, attribute in enumerate(attributes):
-            ax_pre = axes[row_idx, 0]
-            ax_post = axes[row_idx, 1]
-
-            # Compute shared vmax from both dataframes if needed
-            if row_vmax and isinstance(vmax_percentile, (int, float)):
-                values = []
-                if attribute in overlap_results_pre:
-                    values.append(overlap_results_pre[attribute].to_numpy())
-                if attribute in overlap_results_post:
-                    values.append(overlap_results_post[attribute].to_numpy())
-                if values:
-                    row_vmax = np.percentile(np.concatenate([v.ravel() for v in values]), vmax_percentile)
-
-            pre_df_pd = _df_to_pandas(overlap_results_pre[attribute]) if attribute in overlap_results_pre else None
-            post_df_pd = _df_to_pandas(overlap_results_post[attribute]) if attribute in overlap_results_post else None
-        
-            # Align post to pre's row/column order
-            if pre_df_pd is not None and post_df_pd is not None:
-                post_df_index = [source for source in pre_df_pd.index if source in post_df_pd.index]
-                post_df_columns = [source for source in pre_df_pd.columns if source in post_df_pd.columns]
-                post_df_pd = post_df_pd.loc[post_df_index, post_df_columns]
-    
-            if pre_df_pd is not None:
-                _plot_single(ax_pre, pre_df_pd, attribute, vmax=row_vmax, **heatmap_kwargs)
-            else:
-                ax_pre.axis("off")
-    
-            if post_df_pd is not None:
-                _plot_single(ax_post, post_df_pd, "", vmax=row_vmax, **heatmap_kwargs)
-            else:
-                ax_post.axis("off")
-
-        plt.suptitle(title, fontsize=14, fontweight="bold", y=1)
-        plt.tight_layout()
-
-        if save and isinstance(outfile, (str, Path)):
-            plt.savefig(outfile, dpi=400)
-
-        plt.show()
-
-    return (plot_overlap_heatmap_comparison,)
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Sample
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Absolute count overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap_comparison,
-    post_sample_overlap_count,
-    pre_sample_overlap_count,
-):
-    plot_overlap_heatmap_comparison(
-        pre_sample_overlap_count,
-        post_sample_overlap_count,
-        figsize_per_plot=(5,5),
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax_percentile=95,
-        title="Absolute count overlap (level=sample)",
-        save=False,
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Percent overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap_comparison,
-    post_sample_overlap_percent,
-    pre_sample_overlap_percent,
-):
-    plot_overlap_heatmap_comparison(
-        pre_sample_overlap_percent,
-        post_sample_overlap_percent,
-        figsize_per_plot=(5,5),
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax=1.0,
-        vmin=0.0,
-        title="Percent overlap (level=sample)",
-        save=False,
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Normalized PMI
-    """)
-    return
-
-
-@app.cell
-def _(
-    OVERLAP_ORDER,
-    PMI_CMAP,
-    plot_overlap_heatmap_comparison,
-    post_sample_overlap_pmi,
-    pre_sample_overlap_pmi,
-):
-    plot_overlap_heatmap_comparison(
-        pre_sample_overlap_pmi,
-        post_sample_overlap_pmi,
-        figsize_per_plot=(5,5),
-        order=OVERLAP_ORDER,
-        cmap=PMI_CMAP,
-        vmax=1,
-        vmin=-1,
-        title="Normalized pointwise mutual information (level=sample)",
-        save=False,
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Series
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Absolute count overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap_comparison,
-    post_series_overlap_count,
-    pre_series_overlap_count,
-):
-    plot_overlap_heatmap_comparison(
-        pre_series_overlap_count,
-        post_series_overlap_count,
-        figsize_per_plot=(5,5),
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax_percentile=95,
-        title="Absolute count overlap (level=series)",
-        save=False,
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Percent overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap_comparison,
-    post_series_overlap_percent,
-    pre_series_overlap_percent,
-):
-    plot_overlap_heatmap_comparison(
-        pre_series_overlap_percent,
-        post_series_overlap_percent,
-        figsize_per_plot=(5,5),
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax=1.0,
-        vmin=0.0,
-        title="Percent overlap (level=series)",
-        save=False,
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Normalized PMI
-    """)
-    return
-
-
-@app.cell
-def _(
-    OVERLAP_ORDER,
-    PMI_CMAP,
-    plot_overlap_heatmap_comparison,
-    post_series_overlap_pmi,
-    pre_series_overlap_pmi,
-):
-    plot_overlap_heatmap_comparison(
-        pre_series_overlap_pmi,
-        post_series_overlap_pmi,
-        figsize_per_plot=(5,5),
-        order=OVERLAP_ORDER,
-        cmap=PMI_CMAP,
-        vmax=1,
-        vmin=-1,
-        title="Normalized pointwise mutual information (level=series)",
-        save=False,
     )
     return
 
@@ -1897,62 +1315,6 @@ def _(extract_source_annotation_count_differences, pl):
         return pl.concat([df, additional_df], how="vertical").sort("attribute")
 
 
-    def _extract_source_annotation_count_differences(
-        raw: pl.DataFrame, new: pl.DataFrame, attributes: list[str], source: str
-    ) -> pl.DataFrame:
-        shared_entries = set(
-            raw.filter(pl.col("source") == source)
-            .join(new, on="accession", how="inner")["accession"]
-            .unique()
-            .to_list()
-        )
-        n_shared_entries = len(shared_entries)
-
-        results = {
-            "attribute": [],
-            "num_old": [],
-            "percent_old": [],
-            "num_new": [],
-            "percent_new": [],
-        }
-        for attribute in attributes:
-            # shared entries that had attribute A annotated from source S (in raw)
-            S_A_shared = set(
-                raw.filter(
-                    (pl.col("source") == source)
-                    & (pl.col("attribute") == attribute)
-                    & (pl.col("accession").is_in(shared_entries))
-                )["accession"]
-                .unique()
-                .to_list()
-            )
-
-            # shared entries that have attribute A annotated from any source in new (O)
-            O_A_shared = set(
-                new.filter(
-                    (pl.col("attribute") == attribute)
-                    & (pl.col("accession").is_in(shared_entries))
-                    & (~pl.col("accession").is_in(S_A_shared))
-                )["accession"]
-                .unique()
-                .to_list()
-            )
-
-            num_old = len(S_A_shared)
-            percent_old = num_old / n_shared_entries
-
-            num_new = len(O_A_shared)
-            percent_new = num_new / n_shared_entries
-
-            results["attribute"].append(attribute)
-            results["num_old"].append(num_old)
-            results["percent_old"].append(percent_old)
-            results["num_new"].append(num_new)
-            results["percent_new"].append(percent_new)
-
-        return pl.DataFrame(results)
-
-
     def extract_annotation_count_differences(
         raw: pl.DataFrame, new: pl.DataFrame, attributes: list[str]
     ) -> pl.DataFrame:
@@ -2048,21 +1410,21 @@ def _(Path, lighten_color, mpatches, pl, plt, sns):
                 same_width = abs(light_width - dark_width) < tol
 
                 if zero_dark:
-                    # only light bar visible: show just num_new to the right
+                    # only light bar visible -> show just num_new to the right
                     ax.text(
                         light_width + 0.01, y_center,
                         f"{int(num_new):,}",
                         va="center", ha="left", fontsize=8, color=dark_color,
                     )
                 elif same_width:
-                    # percent_new ~ 0%: show num_old in the middle of the dark bar only
+                    # percent_new ~ 0% -> show num_old in the middle of the dark bar only
                     ax.text(
                         dark_width / 2, y_center,
                         f"{int(num_old):,}",
                         va="center", ha="center", fontsize=8, color="white",
                     )
                 else:
-                    # normal: num_old in the middle of dark bar, num_new to the right
+                    # normal -> num_old in the middle of dark bar, num_new to the right
                     ax.text(
                         dark_width / 2, y_center,
                         f"{int(num_old):,}",
@@ -2197,6 +1559,14 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Sample
+    """)
+    return
+
+
 @app.cell
 def _(
     ATTRIBUTES,
@@ -2205,7 +1575,6 @@ def _(
     plot_coverage_by_attribute_stacked,
     source_harmonization_improvements_sample,
 ):
-    # plot sample
     plot_coverage_by_attribute_stacked(
         source_harmonization_improvements_sample,
         COLORS,
@@ -2217,6 +1586,14 @@ def _(
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Series
+    """)
+    return
+
+
 @app.cell
 def _(
     ATTRIBUTES,
@@ -2225,7 +1602,6 @@ def _(
     plot_coverage_by_attribute_stacked,
     source_harmonization_improvements_series,
 ):
-    # plot series
     plot_coverage_by_attribute_stacked(
         source_harmonization_improvements_series,
         COLORS,
