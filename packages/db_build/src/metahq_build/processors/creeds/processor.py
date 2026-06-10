@@ -25,6 +25,7 @@ from metahq_build.config.config import (
     MONDO_OBO,
     MONDO_SYSTEMS,
     SEX_FEMALE_ID,
+    SEX_KEY,
     SEX_MALE_ID,
     UBERON_OBO,
     UBERON_SYSTEMS,
@@ -82,9 +83,34 @@ class CREEDSProcessor(BaseProcessor):
         # Combine all records
         all_records = disease_records + tissue_records + sex_records
 
-        result_df = pl.DataFrame(all_records).sort(
-            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        result_df = (
+            pl.DataFrame(all_records)
+            .unique()
+            .sort([COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME])
         )
+
+        inconsistent_sex_samples = (
+            result_df.filter(pl.col(COL_ATTRIBUTE) == SEX_KEY)
+            .select([COL_ACCESSION, COL_TERM_ID])
+            .group_by(COL_ACCESSION)
+            .agg(COL_TERM_ID)
+            .with_columns(pl.col(COL_TERM_ID).list.unique().alias(COL_TERM_ID))
+            .filter(pl.col(COL_TERM_ID).list.len() > 1)[COL_ACCESSION]
+            .to_list()
+        )
+
+        if len(inconsistent_sex_samples) > 0:
+            result_df = result_df.filter(
+                ~(
+                    (pl.col(COL_ATTRIBUTE) == SEX_KEY)
+                    & (pl.col(COL_ACCESSION).is_in(inconsistent_sex_samples))
+                )
+            )
+
+            self.logger.warning(
+                "Removed %d samples with inconsistent sex annotations",
+                len(inconsistent_sex_samples),
+            )
 
         self.logger.info(
             "Produced %s total annotations from CREEDS (%s disease + %s tissue + %s sex)",

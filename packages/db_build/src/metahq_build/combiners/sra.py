@@ -17,7 +17,6 @@ in a study-level combiner that maps xxP → GSE via src_sra_studies.
 
 from pathlib import Path
 
-import duckdb
 import polars as pl
 
 from metahq_build.combiners.base import BaseAnnotationCombiner
@@ -29,6 +28,7 @@ from metahq_build.config.config import (
     JOHNSON_2023_RNASEQ_PROCESSED,
     OMICIDX_DB,
 )
+from metahq_build.metadata.sample import sra2gsm_map
 
 # Maps source name → default processed parquet path.
 SRA_SOURCES: dict[str, Path] = {
@@ -141,7 +141,7 @@ class SraCombiner(BaseAnnotationCombiner):
             len(xxr_ids),
             len(xxx_ids),
         )
-        mapping: pl.DataFrame = self._build_gsm_mapping(xxr_ids, xxx_ids, db_path)
+        mapping: pl.DataFrame = sra2gsm_map(xxr_ids, xxx_ids, db_path)
         self.logger.info("Resolved %d IDs to GSM.", len(mapping))
 
         # join mapping with manually assigned map
@@ -184,79 +184,3 @@ class SraCombiner(BaseAnnotationCombiner):
             self.add_source(source_name, data)
 
         return self
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _build_gsm_mapping(
-        xxr_ids: list[str],
-        xxx_ids: list[str],
-        db_path: Path,
-    ) -> pl.DataFrame:
-        """
-        Query OmicIDX to build a mapping from SRA accession IDs to GSM.
-
-        xxR IDs are first joined to their experiment accession (xxX) via
-        ``src_sra_runs``, then both original xxR and xxX IDs are joined to
-        ``src_geo_samples`` on the ``sra_experiment`` JSON field.
-
-        Arguments:
-            xxr_ids (list[str]):
-                Run-level accession IDs (SRR, DRR, ERR).
-            xxx_ids (list[str]):
-                Experiment-level accession IDs (SRX, DRX, ERX).
-            db_path (Path):
-                Path to the OmicIDX DuckDB file.
-
-        Returns:
-            (dict[str, str]): Mapping of original SRA ID → GSM accession.
-        """
-        if not xxr_ids and not xxx_ids:
-            return pl.DataFrame()
-
-        con = duckdb.connect(str(db_path), read_only=True)
-        try:
-            # Resolve xxR → xxX, then join to GSM.
-            # Resolve xxX → GSM directly.
-            # Union both result sets.
-            query = """
-                WITH
-                -- Resolve xxR to xxX, carry original xxR as the key.
-                run_to_exp AS (
-                    SELECT
-                        r.accession       AS original_id,
-                        r.experiment_accession AS xxx_id
-                    FROM src_sra_runs r
-                    WHERE r.accession = ANY($1)
-                ),
-                -- xxX IDs passed in directly.
-                direct_exp AS (
-                    SELECT unnest($2) AS original_id, unnest($2) AS xxx_id
-                ),
-                -- All IDs at the xxX level with their original key.
-                all_exp AS (
-                    SELECT * FROM run_to_exp
-                    UNION ALL
-                    SELECT * FROM direct_exp
-                )
-                SELECT
-                    a.original_id,
-                    g.accession AS gsm
-                FROM all_exp a
-                JOIN src_geo_samples g
-                    ON a.xxx_id = json_extract_string(g.sra_experiment, '$')
-                WHERE g.accession IS NOT NULL
-            """
-
-            rows = con.execute(query, [xxr_ids, xxx_ids]).fetchall()
-        finally:
-            con.close()
-
-        return pl.DataFrame(
-            {
-                "sra": [row[0] for row in rows],
-                "geo": [row[1] for row in rows],
-            }
-        )
