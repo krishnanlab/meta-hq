@@ -23,11 +23,11 @@ from metahq_build.util.logging import setup_logger
 OntologyName: TypeAlias = Literal["uberon", "mondo"]
 
 
-def merge_set_values(dict_: dict[str, set[str]]):
+def merge_set_values(dict_: dict[str, set[str]] | dict[str, list[str]]):
     """Combine all lists that are values of a dictionary to a single list."""
     merged = set()
     for value in dict_.values():
-        merged.update(value)
+        merged.update(set(value))
     return merged
 
 
@@ -216,7 +216,7 @@ class TermFilterer:
                     self.logger.info("%s is not under system descendants.", term)
                 continue
 
-            if desc & anno:
+            if set(desc) & set(anno):
                 specific.discard(term)
 
         return DELIMITER.join(specific)
