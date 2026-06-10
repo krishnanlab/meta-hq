@@ -161,6 +161,7 @@ DISIGN_ATLAS_TISSUE_MAP: Path = HELPERS_DIR / "disign_atlas_tissue_name_uberon_m
 DISIGN_ATLAS_CORRECTIONS: Path = HELPERS_DIR / "disign_atlas_corrected_annotations.csv"
 CELLO_JSON: Path = UNPROCESSED_DIR / "cello.json"
 CREEDS_JSON: Path = UNPROCESSED_DIR / "creeds.json"
+CREEDS_TISSUE_NAME_TO_UBERON: Path = HELPERS_DIR / "creeds_tissue_name_to_uberon.csv"
 KRISHNANLAB_TSV: Path = UNPROCESSED_DIR / "krishnanlab.tsv"
 SIROTA_2011_CSV: Path = UNPROCESSED_DIR / "sirota_2011.csv"
 SIROTA_UMLS_UBERON: Path = HELPERS_DIR / "sirota_2011_umls_uberon_manual_mappings.csv"

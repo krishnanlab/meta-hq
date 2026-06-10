@@ -20,9 +20,14 @@ from metahq_build.config.config import (
     CONTROL_ID,
     CONTROL_VALUE,
     CREEDS_JSON,
+    CREEDS_TISSUE_NAME_TO_UBERON,
     ECODE_CROWD,
     MONDO_OBO,
     MONDO_SYSTEMS,
+    SEX_FEMALE_ID,
+    SEX_MALE_ID,
+    UBERON_OBO,
+    UBERON_SYSTEMS,
 )
 from metahq_build.ontology import Ontology, get_system_descendants
 from metahq_build.processors.base import BaseProcessor
@@ -65,6 +70,47 @@ class CREEDSProcessor(BaseProcessor):
 
         self.logger.info("Loaded %s CREEDS signature entries", len(creeds_data))
 
+        # Process disease annotations
+        disease_records = self._process_disease_annotations(creeds_data)
+
+        # Process tissue annotations
+        tissue_records = self._process_tissue_annotations(creeds_data)
+
+        # Process sex annotations
+        sex_records = self._process_sex_annotations(creeds_data)
+
+        # Combine all records
+        all_records = disease_records + tissue_records + sex_records
+
+        result_df = pl.DataFrame(all_records).sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
+
+        self.logger.info(
+            "Produced %s total annotations from CREEDS (%s disease + %s tissue + %s sex)",
+            len(result_df),
+            len(disease_records),
+            len(tissue_records),
+            len(sex_records),
+        )
+
+        # Save processed data
+        output_file = output_dir / "creeds_processed.parquet"
+        result_df.write_parquet(output_file)
+        self.logger.info("Wrote processed data to %s", output_file)
+
+        return result_df
+
+    def _process_disease_annotations(self, creeds_data: list[dict]) -> list[dict]:
+        """Process disease annotations from CREEDS data.
+
+        Arguments:
+            creeds_data (list[dict]):
+                List of CREEDS signature entries.
+
+        Returns:
+            (list[dict]): List of disease annotation records.
+        """
         # Load MONDO ontology for DOID mapping
         self.logger.info("Loading MONDO ontology for DOID mapping...")
         mondo = Ontology.from_obo(MONDO_OBO)
@@ -80,9 +126,11 @@ class CREEDSProcessor(BaseProcessor):
         self.logger.info("Found %s unique valid DOIDs to map", len(valid_doids))
 
         # Map DOID to MONDO
-        doid_to_mondo = mondo.map_terms(
-            terms=list(valid_doids), ontology="MONDO", _from="DOID", _to="MONDO"
-        )
+        xref_mappings = mondo.xref("DOID")
+        # Add custom control mapping
+        xref_mappings.add({"MONDO:0000000": ["DOID:0000000"]})
+        reverse_map = xref_mappings.reverse()
+        doid_to_mondo = {term: reverse_map.get(term, "NA") for term in valid_doids}
 
         # Load MONDO system descendants for filtering
         self.logger.info("Loading MONDO system descendants for filtering...")
@@ -144,23 +192,189 @@ class CREEDSProcessor(BaseProcessor):
                 skipped_system_level,
             )
 
-        result_df = pl.DataFrame(records).sort(
-            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
-        )
-
         self.logger.info(
             "Produced %s disease annotations from CREEDS (%s perturbation + %s control)",
-            len(result_df),
+            len(records),
             len([r for r in records if r[COL_TERM_ID] != CONTROL_ID]),
             len([r for r in records if r[COL_TERM_ID] == CONTROL_ID]),
         )
 
-        # Save processed data
-        output_file = output_dir / "creeds_processed.parquet"
-        result_df.write_parquet(output_file)
-        self.logger.info("Wrote processed data to %s", output_file)
+        return records
 
-        return result_df
+    def _process_tissue_annotations(self, creeds_data: list[dict]) -> list[dict]:
+        """Process tissue annotations from CREEDS data.
+
+        Maps free-text tissue names to UBERON/CL ontology terms using the
+        manual CREEDS tissue mapping file.
+
+        Arguments:
+            creeds_data (list[dict]):
+                List of CREEDS signature entries.
+
+        Returns:
+            (list[dict]): List of tissue annotation records.
+        """
+        # Collect unique tissue names from data
+        tissue_names = set()
+        for entry in creeds_data:
+            if self._is_valid_entry(entry):
+                cell_type = entry.get("cell_type", "")
+                if cell_type and isinstance(cell_type, str):
+                    tissue_names.add(cell_type.lower())
+
+        self.logger.info(
+            "Found %s unique tissue names in CREEDS data", len(tissue_names)
+        )
+
+        # Load manual tissue mapping
+        self.logger.info(
+            "Loading manual tissue mappings from %s", CREEDS_TISSUE_NAME_TO_UBERON
+        )
+        manual_mapping_df = pl.read_csv(CREEDS_TISSUE_NAME_TO_UBERON)
+        tissue_name_to_terms = {
+            row["name"].lower(): row["id"]
+            for row in manual_mapping_df.iter_rows(named=True)
+            if row["id"] and row["id"] != "na"
+        }
+
+        exact_matches = 0
+        onto_ids_names = Ontology.from_obo(UBERON_OBO).id_map("polars")
+        for tissue in tissue_names:
+            if tissue.lower() in onto_ids_names["name"]:
+                exact_matches += 1
+
+        # Track mapping statistics
+        mapped_tissues = set(tissue_names) & set(tissue_name_to_terms.keys())
+        unmapped_tissues = set(tissue_names) - set(tissue_name_to_terms.keys())
+
+        self.logger.info(
+            "Mapped %s/%s tissue names using manual CREEDS mappings",
+            len(mapped_tissues),
+            len(tissue_names),
+        )
+
+        self.logger.info("%d tissue names mapped through exact matches", exact_matches)
+
+        if unmapped_tissues:
+            self.logger.info(
+                "Unmapped tissue names (%s): %s",
+                len(unmapped_tissues),
+                sorted(unmapped_tissues)[:10]  # Show first 10
+                + (["..."] if len(unmapped_tissues) > 10 else []),
+            )
+
+        # Load UBERON system descendants for filtering
+        self.logger.info("Loading UBERON system descendants for filtering...")
+        valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
+
+        # Process entries and create annotation records
+        records = []
+        skipped_system_level = 0
+        for entry in creeds_data:
+            if not self._is_valid_entry(entry):
+                continue
+
+            cell_type = entry.get("cell_type", "")
+            if not cell_type or not isinstance(cell_type, str):
+                continue
+
+            cell_type_lower = cell_type.lower()
+            if cell_type_lower not in tissue_name_to_terms:
+                continue
+
+            term_id = tissue_name_to_terms[cell_type_lower]
+
+            # Handle multiple term IDs separated by pipe
+            term_ids = [t.strip() for t in term_id.split("|")]
+
+            for tid in term_ids:
+                # Skip if term is at system level or higher (not in descendants)
+                if tid not in valid_uberon:
+                    skipped_system_level += 1
+                    continue
+
+                # Process both perturbation and control samples for tissue
+                pert_ids = entry.get("pert_ids", [])
+                ctrl_ids = entry.get("ctrl_ids", [])
+
+                for gsm_id in pert_ids + ctrl_ids:
+                    records.append(
+                        {
+                            COL_ACCESSION: gsm_id,
+                            COL_ATTRIBUTE: "tissue",
+                            COL_TERM_ID: tid,
+                            COL_TERM_NAME: cell_type.lower(),
+                            COL_ECODE: ECODE_CROWD,
+                        }
+                    )
+
+        if skipped_system_level > 0:
+            self.logger.info(
+                "Skipped %s tissue annotations with system-level or higher UBERON terms.",
+                skipped_system_level,
+            )
+
+        self.logger.info("Produced %s tissue annotations from CREEDS", len(records))
+
+        return records
+
+    def _process_sex_annotations(self, creeds_data: list[dict]) -> list[dict]:
+        """Process sex annotations from CREEDS data.
+
+        Extracts 'male' and 'female' mentions from the cell_type field
+        and creates harmonized M/F sex annotations.
+
+        Arguments:
+            creeds_data (list[dict]):
+                List of CREEDS signature entries.
+
+        Returns:
+            (list[dict]): List of sex annotation records.
+        """
+        records = []
+
+        for entry in creeds_data:
+            if not self._is_valid_entry(entry):
+                continue
+
+            cell_type = entry.get("cell_type", "")
+            if not cell_type or not isinstance(cell_type, str):
+                continue
+
+            cell_type_lower = cell_type.lower()
+
+            # Check if cell_type contains male or female
+            sex_id = None
+            sex_name = None
+
+            if "female" in cell_type_lower:
+                sex_id = SEX_FEMALE_ID
+                sex_name = "female"
+            elif "male" in cell_type_lower:
+                sex_id = SEX_MALE_ID
+                sex_name = "male"
+
+            if sex_id is None:
+                continue
+
+            # Process both perturbation and control samples for sex
+            pert_ids = entry.get("pert_ids", [])
+            ctrl_ids = entry.get("ctrl_ids", [])
+
+            for gsm_id in pert_ids + ctrl_ids:
+                records.append(
+                    {
+                        COL_ACCESSION: gsm_id,
+                        COL_ATTRIBUTE: "sex",
+                        COL_TERM_ID: sex_id,
+                        COL_TERM_NAME: sex_name,
+                        COL_ECODE: ECODE_CROWD,
+                    }
+                )
+
+        self.logger.info("Produced %s sex annotations from CREEDS", len(records))
+
+        return records
 
     def _is_valid_entry(self, entry: dict) -> bool:
         """Check if CREEDS entry is valid for processing.
@@ -198,10 +412,14 @@ class CREEDSProcessor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        # Check that disease annotations are present
+        # Check that disease, tissue, and sex annotations are present
         annotation_types = data[COL_ATTRIBUTE].unique().to_list()
         if "disease" not in annotation_types:
             self.logger.warning("No disease annotations found in CREEDS output.")
+        if "tissue" not in annotation_types:
+            self.logger.warning("No tissue annotations found in CREEDS output.")
+        if "sex" not in annotation_types:
+            self.logger.warning("No sex annotations found in CREEDS output.")
 
         # Verify all records have ecode='crowd'
         if not all(e == ECODE_CROWD for e in data[COL_ECODE].unique().to_list()):
