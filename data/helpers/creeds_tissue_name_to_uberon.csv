@@ -7,7 +7,7 @@ t lymphocytes - homozygous fh,CL:0000542
 cirrhotic livers and normal kidneys from the same patients,na
 adipose tissue,UBERON:0001013
 brain tumor tissue samples of human gliomas and normal brain - grade:iv - primary tumor,UBERON:0000955
-blood myelomonocytic cells from rcc and healthy blood myelomonocytic cells,na
+blood myelomonocytic cells from rcc and healthy blood myelomonocytic cells,UBERON:0000178
 nose,UBERON:0007827
 hcc tumor and matched non-tumor surrounding tissues,na
 trabecular meshwork,UBERON:0005969
@@ -20,7 +20,7 @@ skeletal muscle biopsies - short duration,UBERON:0001134
 peripheral blood mononuclear cells (non-ischemic cardiomyopathy),CL:2000001
 "sections from sporadic, primary basal like cancer specimens",na
 huh7 hepatoma cells (infected with jfh-1 hcv) - 6 hours post-infection,na
-anaplastic thyroid carcinoma tissue and normal thyroid tissue,na
+anaplastic thyroid carcinoma tissue and normal thyroid tissue,UBERON:0002046
 cumulus cells cultured (lean patients),CL:0000711
 substantia nigra - braak &icirc;&plusmn;-synuclein stage 1-2,UBERON:0002038
 lung - upper lobe - advanced idiopathic pulmonary fibrosis - female,UBERON:0008948
@@ -335,7 +335,7 @@ esophagus epithelium,UBERON:0001976
 monocytes - heterozygous fh,CL:0000576
 bicep,na
 haematopoietic stem cell,CL:0000037
-endothelial cells and neurons from dorsolateral prefrontal cortex,na
+endothelial cells and neurons from dorsolateral prefrontal cortex,UBERON:0000451
 endothelial cells,CL:0000115
 cns - brain - cerebellum (mmhcc),UBERON:0002037
 uterus - myometrium (mmhcc),UBERON:0001296
@@ -403,7 +403,7 @@ uterine tumors (endometrioid histologic subtype) - stage-grade:ib-g1,UBERON:0000
 bronchial epithelial cells - female - mild asthma,CL:0002328|UBERON:0002185
 esophageal tissue,UBERON:0001043
 non-lesional (nl) skin - (uninvolved samples),UBERON:0002097
-cervical cancer cell line and normal cervical epithelium,na
+cervical cancer cell line and normal cervical epithelium,UBERON:0000002
 whole heart,UBERON:0000948
 heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 1 hour,UBERON:0002084
 skin tissue,UBERON:0002097
