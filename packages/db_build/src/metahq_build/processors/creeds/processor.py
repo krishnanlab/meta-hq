@@ -24,6 +24,8 @@ from metahq_build.config.config import (
     ECODE_CROWD,
     MONDO_OBO,
     MONDO_SYSTEMS,
+    SEX_FEMALE_ID,
+    SEX_MALE_ID,
     UBERON_OBO,
     UBERON_SYSTEMS,
 )
@@ -74,18 +76,22 @@ class CREEDSProcessor(BaseProcessor):
         # Process tissue annotations
         tissue_records = self._process_tissue_annotations(creeds_data)
 
+        # Process sex annotations
+        sex_records = self._process_sex_annotations(creeds_data)
+
         # Combine all records
-        all_records = disease_records + tissue_records
+        all_records = disease_records + tissue_records + sex_records
 
         result_df = pl.DataFrame(all_records).sort(
             [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
         )
 
         self.logger.info(
-            "Produced %s total annotations from CREEDS (%s disease + %s tissue)",
+            "Produced %s total annotations from CREEDS (%s disease + %s tissue + %s sex)",
             len(result_df),
             len(disease_records),
             len(tissue_records),
+            len(sex_records),
         )
 
         # Save processed data
@@ -312,6 +318,64 @@ class CREEDSProcessor(BaseProcessor):
 
         return records
 
+    def _process_sex_annotations(self, creeds_data: list[dict]) -> list[dict]:
+        """Process sex annotations from CREEDS data.
+
+        Extracts 'male' and 'female' mentions from the cell_type field
+        and creates harmonized M/F sex annotations.
+
+        Arguments:
+            creeds_data (list[dict]):
+                List of CREEDS signature entries.
+
+        Returns:
+            (list[dict]): List of sex annotation records.
+        """
+        records = []
+
+        for entry in creeds_data:
+            if not self._is_valid_entry(entry):
+                continue
+
+            cell_type = entry.get("cell_type", "")
+            if not cell_type or not isinstance(cell_type, str):
+                continue
+
+            cell_type_lower = cell_type.lower()
+
+            # Check if cell_type contains male or female
+            sex_id = None
+            sex_name = None
+
+            if "female" in cell_type_lower:
+                sex_id = SEX_FEMALE_ID
+                sex_name = "female"
+            elif "male" in cell_type_lower:
+                sex_id = SEX_MALE_ID
+                sex_name = "male"
+
+            if sex_id is None:
+                continue
+
+            # Process both perturbation and control samples for sex
+            pert_ids = entry.get("pert_ids", [])
+            ctrl_ids = entry.get("ctrl_ids", [])
+
+            for gsm_id in pert_ids + ctrl_ids:
+                records.append(
+                    {
+                        COL_ACCESSION: gsm_id,
+                        COL_ATTRIBUTE: "sex",
+                        COL_TERM_ID: sex_id,
+                        COL_TERM_NAME: sex_name,
+                        COL_ECODE: ECODE_CROWD,
+                    }
+                )
+
+        self.logger.info("Produced %s sex annotations from CREEDS", len(records))
+
+        return records
+
     def _is_valid_entry(self, entry: dict) -> bool:
         """Check if CREEDS entry is valid for processing.
 
@@ -348,12 +412,14 @@ class CREEDSProcessor(BaseProcessor):
         """
         self._validate_required_columns(data)
 
-        # Check that disease and tissue annotations are present
+        # Check that disease, tissue, and sex annotations are present
         annotation_types = data[COL_ATTRIBUTE].unique().to_list()
         if "disease" not in annotation_types:
             self.logger.warning("No disease annotations found in CREEDS output.")
         if "tissue" not in annotation_types:
             self.logger.warning("No tissue annotations found in CREEDS output.")
+        if "sex" not in annotation_types:
+            self.logger.warning("No sex annotations found in CREEDS output.")
 
         # Verify all records have ecode='crowd'
         if not all(e == ECODE_CROWD for e in data[COL_ECODE].unique().to_list()):
