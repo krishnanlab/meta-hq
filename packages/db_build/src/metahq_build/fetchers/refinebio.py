@@ -204,6 +204,9 @@ class RefineBioFetcher:
             {"srr": "refinebio_sample", "srp": "refinebio_experiment"}
         ).select(order)
 
+        self.logger.info("Successfully mapped %d refinebio SRA run IDs", sra2geo.height)
+
+        self.logger.info("Combining with existing GEO IDs...")
         geo = (
             df.select(["accession", "samples"])
             .filter(pl.col("accession").str.starts_with("GSE"))
@@ -221,7 +224,16 @@ class RefineBioFetcher:
             .select(order)
         )
 
-        return pl.concat([geo, sra2geo], how="vertical")
+        result = pl.concat([geo, sra2geo], how="vertical")
+
+        self.logger.info(
+            "Successfully expanded %d refine.bio IDs to %d GEO samples from %d GEO series",
+            geo.height,
+            result["gsm"].unique().len(),
+            result["gse"].unique().len(),
+        )
+
+        return result
 
     def save(self, outfile: Path | str):
         """Save fetched IDs to parquet."""
