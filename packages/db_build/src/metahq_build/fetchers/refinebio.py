@@ -16,6 +16,7 @@ import requests
 
 from metahq_build.config import DELIMITER
 from metahq_build.config.config import OMICIDX_DB
+from metahq_build.metadata.sra_runs import srr_to_geo
 from metahq_build.util.logging import setup_logger
 
 
@@ -180,26 +181,47 @@ class RefineBioFetcher:
 
         return self
 
-    def expand_geo(self, db_path: Path = OMICIDX_DB):
-        """Map SRA IDs to GEO"""
+    def expand_geo(self, db_path: Path = OMICIDX_DB) -> pl.DataFrame:
+        """Map SRA IDs in refine.bio to GEO IDs through OmicIDX."""
+        order = ["refinebio_sample", "refinebio_experiment", "gsm", "gse"]
+
         df = self._records.pl()
-        geo = df.filter(pl.col("accession").str.starts_with("GSE"))
 
-        sra_ids = df.filter(~pl.col("accession").str.starts_with("GSE"))[
-            "accession"
-        ].to_list()
+        sra_ids = (
+            df.filter(~pl.col("samples").str.starts_with("GSE"))
+            .with_columns(pl.col("samples").str.split(DELIMITER).alias("samples"))
+            .explode("samples")
+            .filter(~pl.col("samples").str.starts_with("GSM"))["samples"]
+            .to_list()
+        )
 
-        with duckdb.connect(db_path, read_only=True) as conn:
-            result = conn.execute(
-                """
-                SELECT accession, sra_studies AS srp
-                FROM src_geo_series
-                WHERE sra_studies = Any($1)
-                """,
-                sra_ids,
-            ).pl()
+        self.logger.info(
+            "Expanding SRA IDs to GEO IDs. This may take a couple minutes."
+        )
+        sra2geo = srr_to_geo(sra_ids, db_path).drop("srx")
 
-            print(result)
+        sra2geo = sra2geo.rename(
+            {"srr": "refinebio_sample", "srp": "refinebio_experiment"}
+        ).select(order)
+
+        geo = (
+            df.select(["accession", "samples"])
+            .filter(pl.col("accession").str.starts_with("GSE"))
+            .with_columns(pl.col("samples").str.split(DELIMITER).alias("samples"))
+            .explode("samples")
+            .rename(
+                {"accession": "refinebio_experiment", "samples": "refinebio_sample"}
+            )
+            .with_columns(
+                [
+                    pl.col("refinebio_experiment").alias("gse"),
+                    pl.col("refinebio_sample").alias("gsm"),
+                ]
+            )
+            .select(order)
+        )
+
+        return pl.concat([geo, sra2geo], how="vertical")
 
     def save(self, outfile: Path | str):
         """Save fetched IDs to parquet."""
