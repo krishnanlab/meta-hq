@@ -12,7 +12,6 @@ import click
 
 from metahq_build import __version__
 from metahq_build.config import PipelineConfig, load_config, save_config
-from metahq_build.config.config import SERIES_COMBINED_BSON
 from metahq_build.config.schema import DataPackageConfig
 from metahq_build.processors import ProcessorRegistry
 from metahq_build.util.checkpointing import CheckpointManager
@@ -300,6 +299,52 @@ def download_gemma(output, query, max_studies):
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)
         sys.exit(1)
+
+
+@download.command(name="refinebio")
+@click.option(
+    "-o",
+    "--outfile",
+    type=click.Path(),
+    required=True,
+    help="Path to parquet file storing refine.bio IDs",
+)
+@click.option(
+    "--start-from",
+    type=click.Path(exists=True, dir_okay=False),
+    required=False,
+    help="Path to parquet file storing refine.bio IDs to start from.",
+)
+@click.option(
+    "--offset",
+    type=int,
+    required=False,
+    default=0,
+    show_default=True,
+    help="""Number of IDs to skip when fetching from the refinebio paginated results.
+    It is recommended you only use this if you know start-from is ordered as refine.bio's
+    paginated results.""",
+)
+def download_refinebio(outfile, start_from, offset):
+    """Download refine.bio experiment and sample IDs.
+
+    Examples:
+
+        # Download IDs
+        metahq-build download refinebio -o ids.parquet
+
+        # Start from an existing download result with 100 predownloaded IDs
+        metahq-build download refinebio --start-from ids.parquet --offset 100
+
+    """
+    from metahq_build.fetchers.refinebio import RefineBioFetcher
+
+    if isinstance(start_from, Path):
+        fetcher = RefineBioFetcher.from_parquet(start_from)
+    else:
+        fetcher = RefineBioFetcher()
+
+    fetcher.fetch(offset=offset).save(outfile)
 
 
 @main.group()
@@ -885,6 +930,80 @@ def ontology_search_db(mondo, uberon_cl, out_db):
     click.secho(
         f"✓ Ontology search DuckDB database successfully built: {out_db}", fg="green"
     )
+
+
+@main.command(name="refinebio-map")
+@click.option(
+    "-o",
+    "--outfile",
+    type=click.Path(),
+    required=False,
+    help="Path to refine.bio map parquet file.",
+)
+@click.option(
+    "-i",
+    "--ids",
+    type=click.Path(exists=True, dir_okay=False),
+    required=True,
+    help="Path to parquet file storing IDs returned from metahq-build download refinebio",
+)
+@click.option(
+    "--sample-db",
+    type=click.Path(exists=True, dir_okay=False),
+    required=False,
+    help="Path to MetaHQ sample BSON database.",
+)
+@click.option(
+    "--series-db",
+    type=click.Path(exists=True, dir_okay=False),
+    required=False,
+    help="Path to MetaHQ series BSON database.",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(exists=True, dir_okay=False),
+    required=False,
+    help="Path to OmicIDX DuckDB database",
+)
+def refinebio_map(outfile, ids, sample_db, series_db, metadata_db):
+    """Map refine.bio experiments and samples to GEO series and samples in MetaHQ.
+
+    Examples:
+
+        # If you already have IDs
+        metahq-build refinebio-map -o map.parquet -i ids.parquet
+
+    """
+
+    import bson
+    import polars as pl
+
+    from metahq_build.config import (
+        OMICIDX_DB,
+        SAMPLE_COMBINED_BSON,
+        SERIES_COMBINED_BSON,
+    )
+    from metahq_build.fetchers.refinebio import RefineBioFetcher
+
+    outfile = outfile if outfile else Path("refinebio_map.parquet")
+    sample_db_path = sample_db if sample_db else SAMPLE_COMBINED_BSON
+    series_db_path = series_db if series_db else SERIES_COMBINED_BSON
+    db_path = metadata_db if metadata_db else OMICIDX_DB
+
+    fetcher = RefineBioFetcher.from_parquet(ids)
+    mapping = fetcher.expand_geo(db_path=db_path)
+
+    def load_bson(file):
+        with open(file, "rb") as f:
+            return list(bson.decode(f.read()).keys())
+
+    metahq_samples = load_bson(sample_db_path)
+    metahq_series = load_bson(series_db_path)
+
+    mapping = mapping.filter(
+        pl.col("gse").is_in(metahq_series) | pl.col("gsm").is_in(metahq_samples)
+    )
+    mapping.write_parquet(outfile)
 
 
 @main.command()
