@@ -20,23 +20,24 @@ class RefineBioExporter:
 
 
 class DatasetCreater:
-    def __init__(self, loglevel: int = 20, logdir: Path | str = DEFAULT_LOG_DIR):
+    """Tools to create a pre-populated refine.bio dataset.
+
+    Attributes:
+        data (dict[str, list[str]]):
+            Dictionary of experiment -> sample IDs (e.g., {SRPxxx1: [SRRxxx1, SRRxxx2, ...]}).
+    """
+
+    def __init__(self, data, loglevel: int = 20, logdir: Path | str = DEFAULT_LOG_DIR):
+
+        self.data: dict[str, list[str]] = data
         self.logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
 
-    def _post_dataset(self, data):
-        """Initialize a datacart on refine.bio.
-
-        Arguments:
-            data (dict[str, list[str]]):
-                Dictionary of experiment -> sample IDs (e.g., {SRPxxx1: [SRRxxx1, SRRxxx2, ...]}).
-            token (str):
-                refine.bio API token.
-
-        """
+    def post_dataset(self):
+        """Initialize a datacart on refine.bio."""
         response = requests.post(
             API_DATASET_URL,
             json={
-                "data": data,
+                "data": self.data,
                 "email_ccdl_ok": False,
                 "notify_me": False,
             },
@@ -46,7 +47,8 @@ class DatasetCreater:
 
     def create(self):
         """Creates a refine.bio dataset"""
-        result = self._post_dataset(data)
-        print("dataset:", result)
-        print("")
-        print(f"populated data cart available at {DATA_CART_URL}{result['id']}")
+        result = self.post_dataset()
+        self.logger.info("dataset: %s", result)
+        self.logger.info(
+            "populated data cart available at %s", DATA_CART_URL + result["id"]
+        )
