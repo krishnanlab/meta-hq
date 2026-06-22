@@ -206,7 +206,7 @@ class DatasetCreator:
         """Creates a refine.bio dataset."""
         result = self.post_dataset()
         if self.verbose:
-            self.log.info("dataset: %s", result)
+            self.log.debug("dataset: %s", result)
             self.log.info(
                 "populated data cart available at %s", DATA_CART_URL + result["id"]
             )
