@@ -16,6 +16,7 @@ import polars as pl
 
 from metahq_core.config import SOURCES_COL
 from metahq_core.export.base import BaseExporter
+from metahq_core.export.refinebio import RefineBioExporter
 from metahq_core.export.references import CitationConfig, save_citations
 from metahq_core.logger import setup_logger
 from metahq_core.util.io import checkdir, load_bson, save_json
@@ -78,6 +79,7 @@ class AnnotationsExporter(BaseExporter):
             logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
+        self._refinebio = RefineBioExporter(logger=self.log, verbose=self.verbose)
 
     def get_sra(self, anno: Annotations, fields: list[str]) -> Annotations:
         """
@@ -153,6 +155,19 @@ class AnnotationsExporter(BaseExporter):
 
         if self.verbose:
             self.log.info("Saved!")
+
+    def to_refinebio_dataset(self, anno: Annotations) -> dict:
+        """Create a pre-populated refine.bio dataset from this curation's
+        samples and series, and submit it through refine.bio's dataset API.
+
+        Arguments:
+            anno (Annotations):
+                A populated Annotations curation.
+
+        Returns:
+            The JSON response from refine.bio's dataset API.
+        """
+        return self._refinebio.create_dataset(anno)
 
     def to_csv(
         self,
@@ -378,6 +393,12 @@ class AnnotationsExporter(BaseExporter):
                 anno, [field for field in _metadata if field in database_ids("sra")]
             )
 
+        if self._refinebio_in_metadata(_metadata):
+            anno = self._refinebio.get_refinebio(
+                anno,
+                [field for field in _metadata if field in database_ids("refinebio")],
+            )
+
         _metadata.extend([SOURCES_COL])
 
         # save sources to citation file
@@ -396,6 +417,10 @@ class AnnotationsExporter(BaseExporter):
             self._get_save_method(fmt)(
                 anno.ids.select(_metadata).hstack(anno.data), file, **kwargs
             )
+
+    def _refinebio_in_metadata(self, metadata: list[str]) -> bool:
+        """Checks if any refine.bio IDs are in requested metadata."""
+        return len(list(set(metadata) & set(database_ids("refinebio")))) > 0
 
     def _sra_in_metadata(self, metadata: list[str]) -> bool:
         """Checks if any SRA IDs are in requested metadata."""
@@ -450,6 +475,12 @@ class AnnotationsExporter(BaseExporter):
         if self._sra_in_metadata(_metadata):
             anno = self.get_sra(
                 anno, [field for field in _metadata if field in database_ids("sra")]
+            )
+
+        if self._refinebio_in_metadata(_metadata):
+            anno = self._refinebio.get_refinebio(
+                anno,
+                [field for field in _metadata if field in database_ids("refinebio")],
             )
 
         stacked = anno.data.hstack(anno.ids)
