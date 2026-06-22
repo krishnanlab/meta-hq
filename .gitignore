@@ -215,3 +215,10 @@ __marimo__/
 
 # Agents
 .claude/
+CLAUDE.md
+AGENTS.md
+.mcp.json
+.github/code-review-graph.instruction.md
+
+# Added by code-review-graph
+.code-review-graph/
