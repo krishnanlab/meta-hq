@@ -208,6 +208,6 @@ class DatasetCreator:
         if self.verbose:
             self.log.debug("dataset: %s", result)
             self.log.info(
-                "populated data cart available at %s", DATA_CART_URL + result["id"]
+                "Your refine.bio dataset accessible at %s", DATA_CART_URL + result["id"]
             )
         return result
