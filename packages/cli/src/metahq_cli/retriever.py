@@ -15,9 +15,10 @@ from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 from metahq_core.export.references import CitationConfig
+from metahq_core.export.refinebio import DATA_CART_URL, RefineBioExporter
 from metahq_core.query import Query
 from metahq_core.util.exceptions import NoResultsFound
-from metahq_core.util.supported import supported
+from metahq_core.util.supported import database_ids, metadata_fields, supported
 
 from metahq_cli.util.messages import TruncatedList
 
@@ -126,6 +127,10 @@ class Retriever:
 
         citation_config: CitationConfig
             Parameters for saving citations.
+
+        refinebio: bool
+            If True, creates a refine.bio dataset from the retrieved curation and
+            submits it through refine.bio's dataset API.
     """
 
     def __init__(
@@ -136,11 +141,13 @@ class Retriever:
         citation_config,
         logger,
         verbose=True,
+        refinebio=False,
     ):
         self.query_config: QueryConfig = query_config
         self.curation_config: CurationConfig = curation_config
         self.output_config: OutputConfig = output_config
         self.citation_config: CitationConfig = citation_config
+        self.refinebio: bool = refinebio
 
         self.log: logging.Logger = logger
         self.verbose: bool = verbose
@@ -187,7 +194,43 @@ class Retriever:
         """Performs the retrieval pipeline: query -> curate -> save."""
         curation = self.query()
         curation = self.curate(curation)
+
+        if self.refinebio:
+            self.include_refinebio_metadata()
+            self.create_refinebio_dataset(curation)
+
         self.save_curation(curation)
+
+    def include_refinebio_metadata(self):
+        """Ensures refine.bio ID fields supported at the output level are
+        requested in the output metadata, so the save step merges refine.bio
+        sample/experiment IDs into the saved curation.
+        """
+        fields = [
+            field
+            for field in database_ids("refinebio")
+            if field in metadata_fields(self.output_config.level)
+        ]
+        current = [f for f in self.output_config.metadata.split(",") if f]
+        missing = [field for field in fields if field not in current]
+
+        if missing:
+            self.output_config.metadata = ",".join(current + missing)
+
+    def create_refinebio_dataset(self, curation: Annotations | Labels):
+        """Creates a refine.bio dataset from the retrieved curation.
+
+        Arguments:
+            curation (Annotations | Labels):
+                A populated Annotations or Labels object to submit to refine.bio.
+        """
+        if self.verbose:
+            self.log.info("Creating refine.bio dataset...")
+
+        result = RefineBioExporter(
+            logger=self.log, verbose=self.verbose
+        ).create_dataset(curation)
+        self.citation_config.refinebio_dataset_id = DATA_CART_URL + result["id"]
 
     def save_curation(self, curation: Annotations | Labels):
         """Saves the curation.

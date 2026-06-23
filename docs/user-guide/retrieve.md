@@ -39,6 +39,9 @@ All retrieve commands share the following common options:
 - `--metadata TEXT`: Metadata level to include (`sample`, `series`, etc.). Default: `default` (matches `--level`)
     - Run `metahq supported` for all metadata fields.
     - Combine multiple filters like so: `'sample,series,description,srp'`
+- `--refinebio`: Use to easily access gene expression data paired with your retrieved samples and studies. 
+Adds mappings to [refine.bio](https://www.refine.bio/) samples and experiments and pre-populates a
+refine.bio dataset with gene expression data matched with results from your query.
 
 ### Logging Options
 
@@ -245,9 +248,53 @@ They would retrieve the following:
         }, ...
 ```
 
+### Cite the original annotation sources
 The sources of the annotations are also included in their own `sources` column or key. Additionally, we include
 a file called `CITATION.txt` in the output directory of a query. This file stores information about the query
 and the sources included in the dataset. We require users to cite these sources if they use MetaHQ annotations in their research.
 
 See the [About](../about/citation.md) page for a source-to-citation map. See our [Terms and Conditions](../about/terms_conditions.md)
 for more information.
+
+### Create a refine.bio dataset
+[refine.bio](https://www.refine.bio/) is a database containing over 1.4 million harmonized gene expression
+profiles from over 43,000 studies. For easy access to the gene expression data paired with your MetaHQ
+annotations, we provide users with the option to create a refine.bio dataset including samples and
+studies returned from your query. **Note:** not all samples and studies are available in refine.bio.
+
+To create a refine.bio dataset, simply add the `--refinebio` flag to the retrieve command:
+
+```bash
+metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
+    --level sample \
+    --filters "species=human,tech=rnaseq,ecode=expert" \
+    --refinebio
+```
+
+The url that you can use to access and share your refine.bio dataset will be available in the following places
+
+1. Saved in the `Query parameters` section of `CITATION.txt`
+2. Printed to the screen after `metahq retrieve` is run
+
+refine.bio uses SRA accessions for some samples and studies. For this reason, we also append mappings
+to `refinebio_sample` (sample IDs) and `refinebio_experiment` (study IDs) to your export to seamlessly
+port your annotations to the refine.bio identification schema:
+```
+┌────────────┬──────────────────┬──────────────────────┬─────────┬────────────────┬────────────────┐
+│ sample     ┆ refinebio_sample ┆ refinebio_experiment ┆ sources ┆ UBERON:0000948 ┆ UBERON:0000955 │
+│ ---        ┆ ---              ┆ ---                  ┆ ---     ┆ ---            ┆ ---            │
+│ str        ┆ str              ┆ str                  ┆ str     ┆ i64            ┆ i64            │
+╞════════════╪══════════════════╪══════════════════════╪═════════╪════════════════╪════════════════╡
+│ GSM1060654 ┆ SRR646457        ┆ SRP017809            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ GSM1060655 ┆ SRR646458        ┆ SRP017809            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ GSM1060656 ┆ SRR646459        ┆ SRP017809            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ GSM1060657 ┆ SRR646460        ┆ SRP017809            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ GSM1063280 ┆ SRR648404        ┆ SRP017933            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ …          ┆ …                ┆ …                    ┆ …       ┆ …              ┆ …              │
+│ GSM999587  ┆ SRR563553        ┆ SRP015668            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ GSM999588  ┆ SRR563554        ┆ SRP015668            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ GSM999589  ┆ SRR563555        ┆ SRP015668            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ GSM999590  ┆ SRR563556        ┆ SRP015668            ┆ Gu_2023 ┆ 0              ┆ 1              │
+│ GSM999591  ┆ SRR563557        ┆ SRP015668            ┆ Gu_2023 ┆ 0              ┆ 1              │
+└────────────┴──────────────────┴──────────────────────┴─────────┴────────────────┴────────────────┘
+```

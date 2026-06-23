@@ -382,6 +382,11 @@ class TestCitationConfig:
         assert hasattr(sample_citation_config, "mode")
         assert hasattr(sample_citation_config, "date")
         assert hasattr(sample_citation_config, "outfile")
+        assert hasattr(sample_citation_config, "refinebio_dataset_id")
+
+    def test_refinebio_dataset_id_default(self, sample_citation_config):
+        """Test that refinebio_dataset_id defaults to None."""
+        assert sample_citation_config.refinebio_dataset_id is None
 
 
 # ===== Tests for build_citation_file =====
@@ -441,6 +446,22 @@ class TestBuildCitationFile:
         result = build_citation_file(references, sample_citation_config, indent=custom_indent)
 
         assert isinstance(result, str)
+
+    @patch("builtins.open", new_callable=mock_open, read_data="ID: $refinebio_dataset_id")
+    def test_refinebio_dataset_id_defaults_to_na(self, mock_file, sample_citation_config):
+        """Test that refinebio_dataset_id substitutes to 'NA' when unset."""
+        result = build_citation_file("[1] Test", sample_citation_config)
+
+        assert result == "ID: NA"
+
+    @patch("builtins.open", new_callable=mock_open, read_data="ID: $refinebio_dataset_id")
+    def test_refinebio_dataset_id_substituted_when_set(self, mock_file, sample_citation_config):
+        """Test that refinebio_dataset_id is substituted when present."""
+        sample_citation_config.refinebio_dataset_id = "abc123"
+
+        result = build_citation_file("[1] Test", sample_citation_config)
+
+        assert result == "ID: abc123"
 
 
 # ===== Tests for save_citations =====

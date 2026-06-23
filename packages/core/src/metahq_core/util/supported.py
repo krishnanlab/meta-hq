@@ -47,6 +47,7 @@ def _database_ids() -> dict[str, list[str]]:
     return {
         "geo": ["gsm", "gse"],
         "sra": ["srr", "srs", "srx", "srp"],
+        "refinebio": ["refinebio_sample", "refinebio_experiment"],
     }
 
 
@@ -106,6 +107,8 @@ def _sample_metadata() -> list[str]:
         "srx",
         "srs",
         "srp",
+        "refinebio_sample",
+        "refinebio_experiment",
     ]
 
 
@@ -116,6 +119,7 @@ def _series_metadata() -> list[str]:
         "platform",
         "description",
         "srp",
+        "refinebio_experiment",
     ]
 
 
@@ -235,6 +239,11 @@ def geo_metadata(level: Literal["sample", "series"]) -> Path:
 def get_metadata_path() -> Path:
     """Returns the path to MetaHQ metadata."""
     return get_data_dir() / "metadata"
+
+
+def refinebio_metadata() -> Path:
+    """Returns the path to the refine.bio ID mapping file."""
+    return get_metadata_path() / "refinebio_map.parquet"
 
 
 def get_metahq_home() -> Path:
