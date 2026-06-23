@@ -11,8 +11,9 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from metahq_core.util.exceptions import NoResultsFound
 from metahq_core.export.references import CitationConfig
+from metahq_core.export.refinebio import DATA_CART_URL
+from metahq_core.util.exceptions import NoResultsFound
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig, Retriever
 
@@ -288,7 +289,9 @@ class TestRetriever:
         verbose_retriever.log.info.assert_called_with("Querying...")
 
     @patch("metahq_cli.retriever.Query")
-    def test_query_passes_license_to_core(self, mock_query_class, sample_configs, mock_logger):
+    def test_query_passes_license_to_core(
+        self, mock_query_class, sample_configs, mock_logger
+    ):
         """license from QueryConfig is forwarded to the core Query."""
         query_config, curation_config, output_config, citation_config = sample_configs
         query_config.license = "permissive"
@@ -593,9 +596,7 @@ class TestRetriever:
 
         assert retriever.refinebio is False
 
-    def test_retriever_initialization_refinebio_true(
-        self, sample_configs, mock_logger
-    ):
+    def test_retriever_initialization_refinebio_true(self, sample_configs, mock_logger):
         """test refinebio is stored when passed"""
         query_config, curation_config, output_config, citation_config = sample_configs
         retriever = Retriever(
@@ -625,7 +626,9 @@ class TestRetriever:
             logger=retriever.log, verbose=retriever.verbose
         )
         mock_exporter.create_dataset.assert_called_once_with(mock_curation)
-        assert retriever.citation_config.refinebio_dataset_id == "abc123"
+        assert (
+            retriever.citation_config.refinebio_dataset_id == DATA_CART_URL + "abc123"
+        )
 
     @patch("metahq_cli.retriever.RefineBioExporter")
     def test_create_refinebio_dataset_logs_when_verbose(
@@ -704,9 +707,7 @@ class TestRetriever:
         mock_save.assert_called_once_with(mock_curated)
         mock_create_dataset.assert_called_once_with(mock_curated)
 
-    def test_include_refinebio_metadata_appends_missing_fields(
-        self, retriever
-    ):
+    def test_include_refinebio_metadata_appends_missing_fields(self, retriever):
         """test refine.bio fields valid for the output level are appended to metadata"""
         retriever.output_config.level = "sample"
         retriever.output_config.metadata = "sample"
