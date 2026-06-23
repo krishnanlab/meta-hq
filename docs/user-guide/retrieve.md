@@ -132,7 +132,9 @@ Retrieve sex annotations.
 ### Additional Options
 
 - `--terms TEXT`: Comma-separated sex terms.
-    - Available terms: `male`, `female`
+    - Available terms:
+        - Female: `female`, `F`, `PATO:0000383`
+        - Male: `male`, `M`, `PATO:0000384`
 
 ### Examples
 
