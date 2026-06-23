@@ -330,15 +330,17 @@ class Builder:
         return CurationConfig(mode, _terms, ontology="sex")
 
     def _map_sex_to_id(self, terms: list[str]):
-        """Map male to M and female to F if passed."""
-        opt = {"male": "M", "female": "F"}
+        """Map male or PATO:0000384 to M and female or PATO:0000383 to F if passed."""
+        opt = {"male": "M", "female": "F", "PATO:0000384": "M", "PATO:0000383": "F"}
 
         result = []
         for term in terms:
-            if term in ["male", "female"]:
+            if term in opt:
                 result.append(opt[term])
-            else:
+            elif term in opt.values():
                 result.append(term)
+            else:
+                self.log.warning("Invalid input: %s. Skipping...", term)
 
         return result
 
