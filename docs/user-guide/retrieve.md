@@ -271,11 +271,10 @@ metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
     --refinebio
 ```
 
-This command will print a url that you can use to access and share your refine.bio dataset:
+The url that you can use to access and share your refine.bio dataset will be available in the following places
 
-```
-[INFO] Your refine.bio dataset accessible at https://www.refine.bio/dataset/3cdbfe27-a424-41d9-b7e9-7c2febfc7628
-```
+1. Saved in the `Query parameters` section of `CITATION.txt`
+2. Printed to the screen after `metahq retrieve` is run
 
 refine.bio uses SRA accessions for some samples and studies. For this reason, we also append mappings
 to `refinebio_sample` (sample IDs) and `refinebio_experiment` (study IDs) to your export to seamlessly
