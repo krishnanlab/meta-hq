@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 from metahq_core.export.references import CitationConfig
-from metahq_core.export.refinebio import RefineBioExporter
+from metahq_core.export.refinebio import DATA_CART_URL, RefineBioExporter
 from metahq_core.query import Query
 from metahq_core.util.exceptions import NoResultsFound
 from metahq_core.util.supported import database_ids, metadata_fields, supported
@@ -197,11 +197,9 @@ class Retriever:
 
         if self.refinebio:
             self.include_refinebio_metadata()
+            self.create_refinebio_dataset(curation)
 
         self.save_curation(curation)
-
-        if self.refinebio:
-            self.create_refinebio_dataset(curation)
 
     def include_refinebio_metadata(self):
         """Ensures refine.bio ID fields supported at the output level are
@@ -229,9 +227,10 @@ class Retriever:
         if self.verbose:
             self.log.info("Creating refine.bio dataset...")
 
-        RefineBioExporter(logger=self.log, verbose=self.verbose).create_dataset(
-            curation
-        )
+        result = RefineBioExporter(
+            logger=self.log, verbose=self.verbose
+        ).create_dataset(curation)
+        self.citation_config.refinebio_dataset_id = DATA_CART_URL + result["id"]
 
     def save_curation(self, curation: Annotations | Labels):
         """Saves the curation.

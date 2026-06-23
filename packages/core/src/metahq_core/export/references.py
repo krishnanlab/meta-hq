@@ -53,6 +53,8 @@ class CitationConfig:
             Date formatted as 'YYYY-MM-DD HR:MIN:SEC'.
         outfile (str | Path):
             Outfile to save the reference to.
+        refinebio_dataset_id (str | None):
+            ID of the refine.bio dataset created from this export, if any.
 
     """
 
@@ -67,6 +69,7 @@ class CitationConfig:
     license: str
     date: str
     outfile: str | Path = "CITATION.txt"
+    refinebio_dataset_id: str | None = None
 
 
 def build_citation_file(
@@ -109,6 +112,7 @@ def build_citation_file(
         license=config.license,
         date=config.date,
         metahq_reference=metahq_reference,
+        refinebio_dataset_id=config.refinebio_dataset_id or "NA",
     )
 
 

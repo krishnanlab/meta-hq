@@ -615,6 +615,7 @@ class TestRetriever:
     ):
         """test create_refinebio_dataset delegates to RefineBioExporter"""
         mock_exporter = Mock()
+        mock_exporter.create_dataset.return_value = {"id": "abc123"}
         mock_exporter_cls.return_value = mock_exporter
         mock_curation = Mock()
 
@@ -624,13 +625,16 @@ class TestRetriever:
             logger=retriever.log, verbose=retriever.verbose
         )
         mock_exporter.create_dataset.assert_called_once_with(mock_curation)
+        assert retriever.citation_config.refinebio_dataset_id == "abc123"
 
     @patch("metahq_cli.retriever.RefineBioExporter")
     def test_create_refinebio_dataset_logs_when_verbose(
         self, mock_exporter_cls, verbose_retriever
     ):
         """test create_refinebio_dataset logs in verbose mode"""
-        mock_exporter_cls.return_value = Mock()
+        mock_exporter = Mock()
+        mock_exporter.create_dataset.return_value = {"id": "abc123"}
+        mock_exporter_cls.return_value = mock_exporter
         mock_curation = Mock()
 
         verbose_retriever.create_refinebio_dataset(mock_curation)
@@ -642,7 +646,9 @@ class TestRetriever:
         self, mock_exporter_cls, retriever
     ):
         """test create_refinebio_dataset does not log in silent mode"""
-        mock_exporter_cls.return_value = Mock()
+        mock_exporter = Mock()
+        mock_exporter.create_dataset.return_value = {"id": "abc123"}
+        mock_exporter_cls.return_value = mock_exporter
         mock_curation = Mock()
 
         retriever.create_refinebio_dataset(mock_curation)

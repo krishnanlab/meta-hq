@@ -287,8 +287,8 @@ class TestDatasetCreator:
             result = creator.create()
 
         assert result == {"id": "abc123"}
-        assert mock_logger.info.call_count == 2
-        url_call_args = mock_logger.info.call_args_list[1][0]
+        mock_logger.info.assert_called_once()
+        url_call_args = mock_logger.info.call_args[0]
         assert "abc123" in url_call_args[1]
 
     def test_create_silent_mode_does_not_log(self, data, mock_logger):
