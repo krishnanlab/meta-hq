@@ -104,6 +104,10 @@ def _sample_metadata() -> list[str]:
         "series",
         "platform",
         "description",
+        "source_name_ch1",
+        "characteristics_ch1",
+        "source_name_ch2",
+        "characteristics_ch2",
         "srx",
         "srs",
         "srp",
@@ -117,7 +121,11 @@ def _series_metadata() -> list[str]:
     return [
         "series",
         "platform",
+        "title",
+        "summary",
+        "overall_design",
         "description",
+        "sample_id",
         "srp",
         "refinebio_experiment",
     ]
@@ -368,6 +376,23 @@ def metadata_fields(level: str) -> list[str]:
         return _sample_metadata()
     if level == "series":
         return _series_metadata()
+    raise ValueError(f"Expected level in [sample, series], got {level}.")
+
+
+def geo_metadata_fields(level: str) -> list[str]:
+    """Returns metadata fields for a level that are sourced from the GEO
+    metadata parquet (as opposed to SRA or refine.bio ID mappings).
+    """
+    if level == "sample":
+        return [
+            "description",
+            "source_name_ch1",
+            "characteristics_ch1",
+            "source_name_ch2",
+            "characteristics_ch2",
+        ]
+    if level == "series":
+        return ["title", "summary", "overall_design", "description", "sample_id"]
     raise ValueError(f"Expected level in [sample, series], got {level}.")
 
 

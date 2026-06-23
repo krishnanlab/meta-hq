@@ -19,15 +19,8 @@ from metahq_core.export.base import BaseExporter
 from metahq_core.export.refinebio import RefineBioExporter
 from metahq_core.export.references import CitationConfig, save_citations
 from metahq_core.logger import setup_logger
-from metahq_core.util.io import checkdir, load_bson, save_json
-from metahq_core.util.supported import (
-    database_ids,
-    geo_metadata,
-    get_annotations,
-    get_default_log_dir,
-    metadata_fields,
-    supported,
-)
+from metahq_core.util.io import checkdir, save_json
+from metahq_core.util.supported import database_ids, get_default_log_dir
 
 if TYPE_CHECKING:
     import logging
@@ -276,103 +269,6 @@ class AnnotationsExporter(BaseExporter):
         """
         self._save_tabular("tsv", anno, file, citation_config, metadata, **kwargs)
 
-    def _get_descriptions(self, anno: Annotations):
-        """Collect descriptions to add the final output."""
-        representative = anno.ids.row(0, named=True)[anno.index_col]
-        if representative.startswith("GSM"):
-            level = "sample"
-        elif representative.startswith("GSE"):
-            level = "series"
-        else:
-            msg = "Congratulations! You broke the application. Please submit an issue."
-            if self.verbose:
-                self.log.error(msg)
-                self.log.debug(
-                    "%s was used to identify if the passed level is sample or series",
-                    representative,
-                )
-            raise RuntimeError(msg)
-
-        return (
-            pl.scan_parquet(geo_metadata(level))
-            .select([level, "description"])
-            .filter(pl.col(level).is_in(anno.index))
-            .rename({level: anno.index_col})
-            .collect()
-        )
-
-    def _get_save_method(self, fmt: str):
-        """Returns appropriate saving method."""
-        opt = {
-            "parquet": self._save_parquet,
-            "csv": self._save_csv,
-            "tsv": self._save_tsv,
-        }
-        if fmt in opt:
-            return opt[fmt]
-
-        msg = ("Expected fmt in %s, got %s.", list(opt.keys()), fmt)
-        if self.verbose:
-            self.log.error(msg)
-        raise ValueError(msg)
-
-    def _load_annotations(self, level: str) -> dict:
-        """Load the annotations dictionary for a given level."""
-        if level == "sample":
-            return load_bson(get_annotations("sample"))
-
-        if level == "series":
-            return load_bson(get_annotations("series"))
-
-        msg = ("Expected annotations level in %s, got %s.", supported("levels"), level)
-        if self.verbose:
-            self.log.error(msg)
-        raise ValueError(msg)
-
-    def _parse_metafields(self, index_col, fields: str) -> list[str]:
-        """Parse and check user-specified metadata fields."""
-        _metadata = fields.split(",")
-
-        flagged = False
-        for field in _metadata:
-            if field not in metadata_fields(index_col):
-                flagged = True
-                self.log.warning(
-                    "Requested metadata: %s, is not available. Skipping...", field
-                )
-
-        if flagged:
-            self.log.info("Run `metahq supported` to see available metadata fields.")
-
-        if not index_col in _metadata:
-            _metadata.append(index_col)
-        return _metadata
-
-    def _save_table_with_description(
-        self, file: FilePath, anno: Annotations, metadata: list[str], fmt: str, **kwargs
-    ):
-        """Fetches corresponding sample/study descriptions and saves the annotations
-        curation in tabular format (parquet, csv, tsv).
-        """
-
-        desc = self._get_descriptions(anno)
-        ids = [m for m in metadata if m != "description"]
-        reorder = metadata + anno.entities
-
-        df = (
-            anno.ids.select(ids)
-            .hstack(anno.data)  # stack IDs with annotations
-            .join(desc, on=anno.index_col, how="left")  # join with desc
-            .select(reorder)
-        )
-
-        save_method = self._get_save_method(fmt)
-        save_method(
-            df,
-            file,
-            **kwargs,
-        )
-
     def _save_tabular(
         self,
         fmt: str,
@@ -410,35 +306,13 @@ class AnnotationsExporter(BaseExporter):
         )
 
         self.log.info("Saving retrieval result to %s", Path(file).parent)
-        if "description" in _metadata:
-            self._save_table_with_description(file, anno, _metadata, fmt=fmt, **kwargs)
+        if self._geo_fields_in_metadata(_metadata, anno.index_col):
+            self._save_table_with_geo_metadata(file, anno, _metadata, fmt=fmt, **kwargs)
 
         else:
             self._get_save_method(fmt)(
                 anno.ids.select(_metadata).hstack(anno.data), file, **kwargs
             )
-
-    def _refinebio_in_metadata(self, metadata: list[str]) -> bool:
-        """Checks if any refine.bio IDs are in requested metadata."""
-        return len(list(set(metadata) & set(database_ids("refinebio")))) > 0
-
-    def _sra_in_metadata(self, metadata: list[str]) -> bool:
-        """Checks if any SRA IDs are in requested metadata."""
-        return len(list(set(metadata) & set(database_ids("sra")))) > 0
-
-    def _only_index(self, metadata: str | None, index: str):
-        """Check if no metadata passed or if only the index is passed."""
-        return (metadata is None) or (
-            isinstance(metadata, str) & (metadata.strip().replace(",", "") == index)
-        )
-
-    def _save_parquet(self, df: pl.DataFrame, file: FilePath, **kwargs):
-        """Save polars DataFrame to parquet."""
-        df.write_parquet(file, **kwargs)
-
-    def _save_csv(self, df: pl.DataFrame, file: FilePath, **kwargs):
-        """Save polars DataFrame to csv/tsv."""
-        df.write_csv(file, **kwargs, separator=",")
 
     def _save_json_only_index(self, anno: Annotations, file: FilePath):
         """Save annotations as JSON with only the index."""
@@ -485,9 +359,10 @@ class AnnotationsExporter(BaseExporter):
 
         stacked = anno.data.hstack(anno.ids)
 
-        if "description" in _metadata:
-            descs = self._get_descriptions(anno)
-            stacked = stacked.join(descs, on=anno.index_col, how="left").sort(
+        geo_fields = self._geo_fields_in_metadata(_metadata, anno.index_col)
+        if geo_fields:
+            geo = self._get_geo_metadata(anno, geo_fields)
+            stacked = stacked.join(geo, on=anno.index_col, how="left").sort(
                 anno.index_col
             )
 
@@ -501,10 +376,6 @@ class AnnotationsExporter(BaseExporter):
                 )
 
         save_json(_anno, file)
-
-    def _save_tsv(self, df: pl.DataFrame, file: FilePath, **kwargs):
-        """Save polars DataFrame to csv/tsv."""
-        df.write_csv(file, **kwargs, separator="\t")
 
     def _write_row(
         self, row: dict[str, str], anno: dict[str, list[str]], index_col: str
