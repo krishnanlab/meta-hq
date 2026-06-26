@@ -19,16 +19,8 @@ from metahq_core.export.base import BaseExporter
 from metahq_core.export.refinebio import RefineBioExporter
 from metahq_core.export.references import CitationConfig, save_citations
 from metahq_core.logger import setup_logger
-from metahq_core.util.io import checkdir, load_bson, save_json
-from metahq_core.util.supported import (
-    database_ids,
-    disease_ontologies,
-    geo_metadata,
-    get_annotations,
-    get_default_log_dir,
-    metadata_fields,
-    supported,
-)
+from metahq_core.util.io import checkdir, save_json
+from metahq_core.util.supported import database_ids, disease_ontologies, get_default_log_dir
 
 if TYPE_CHECKING:
     import logging
@@ -268,9 +260,10 @@ class LabelsExporter(BaseExporter):
 
             stacked = curation.data.hstack(curation.ids)
 
-            if "description" in _metadata:
-                descs = self._get_descriptions(curation)
-                stacked = stacked.join(descs, on=curation.index_col, how="left").sort(
+            geo_fields = self._geo_fields_in_metadata(_metadata, curation.index_col)
+            if geo_fields:
+                geo = self._get_geo_metadata(curation, geo_fields)
+                stacked = stacked.join(geo, on=curation.index_col, how="left").sort(
                     curation.index_col
                 )
 
@@ -338,103 +331,6 @@ class LabelsExporter(BaseExporter):
         """
         self._save_tabular("tsv", curation, file, citation_config, metadata, **kwargs)
 
-    def _get_descriptions(self, labels: Labels):
-        """Collect descriptions to add the final output."""
-        representative = labels.ids.row(0, named=True)[labels.index_col]
-        if representative.startswith("GSM"):
-            level = "sample"
-        elif representative.startswith("GSE"):
-            level = "series"
-        else:
-            msg = "Congratulations! You broke the application. Please submit an issue."
-            if self.verbose:
-                self.log.error(msg)
-                self.log.debug(
-                    "%s was used to identify if the passed level is sample or series",
-                    representative,
-                )
-            raise RuntimeError(msg)
-
-        return (
-            pl.scan_parquet(geo_metadata(level))
-            .select([level, "description"])
-            .filter(pl.col(level).is_in(labels.index))
-            .rename({level: labels.index_col})
-            .collect()
-        )
-
-    def _get_save_method(self, fmt: str):
-        """Returns appropriate saving method."""
-        opt = {
-            "parquet": self._save_parquet,
-            "csv": self._save_csv,
-            "tsv": self._save_tsv,
-        }
-        if fmt in opt:
-            return opt[fmt]
-
-        msg = ("Expected fmt in %s, got %s.", list(opt.keys()), fmt)
-        if self.verbose:
-            self.log.error(msg)
-        raise ValueError(msg)
-
-    def _load_annotations(self, level: str) -> dict:
-        """Load the annotations dictionary for a given level."""
-        if level == "sample":
-            return load_bson(get_annotations("sample"))
-
-        if level == "series":
-            return load_bson(get_annotations("series"))
-
-        msg = ("Expected annotations level in %s, got %s.", supported("levels"), level)
-        if self.verbose:
-            self.log.error(msg)
-        raise ValueError(msg)
-
-    def _parse_metafields(self, index_col, fields: str) -> list[str]:
-        """Parse and check user-specified metadata fields."""
-        _metadata = fields.split(",")
-
-        flagged = False
-        for field in _metadata:
-            if field not in metadata_fields(index_col):
-                flagged = True
-                self.log.warning(
-                    "Requested metadata: %s, is not available. Skipping...", field
-                )
-
-        if flagged:
-            self.log.info("Run `metahq supported` to see available metadata fields.")
-
-        if not index_col in _metadata:
-            _metadata.append(index_col)
-        return _metadata
-
-    def _save_table_with_description(
-        self, file: FilePath, labels: Labels, metadata: list[str], fmt: str, **kwargs
-    ):
-        """
-        Fetches corresponding sample/study descriptions and saves the labels
-        curation in tabular format (parquet, csv, tsv).
-        """
-
-        desc = self._get_descriptions(labels)
-        ids = [m for m in metadata if m != "description"]
-        reorder = metadata + labels.entities
-
-        save_method = self._get_save_method(fmt)
-        save_method(
-            (
-                labels.ids.select(ids)
-                .hstack(labels.data)  # stack IDs with labels
-                .join(desc, on=labels.index_col, how="left")  # join with desc
-                .select(reorder)
-                .sort(labels.index_col)
-            ),
-            file,
-            **kwargs,
-        )
-
     def _save_tabular(
         self,
         fmt: str,
@@ -472,8 +368,8 @@ class LabelsExporter(BaseExporter):
         )
 
         self.log.info("Saving retrieval result to %s", Path(file).parent)
-        if "description" in _metadata:
-            self._save_table_with_description(
+        if self._geo_fields_in_metadata(_metadata, curation.index_col):
+            self._save_table_with_geo_metadata(
                 file, curation, _metadata, fmt=fmt, **kwargs
             )
 
@@ -485,26 +381,6 @@ class LabelsExporter(BaseExporter):
                 file,
                 **kwargs,
             )
-
-    def _save_parquet(self, df: pl.DataFrame, file: FilePath, **kwargs):
-        """Save polars DataFrame to parquet."""
-        df.write_parquet(file, **kwargs)
-
-    def _save_csv(self, df: pl.DataFrame, file: FilePath, **kwargs):
-        """Save polars DataFrame to csv/tsv."""
-        df.write_csv(file, **kwargs, separator=",")
-
-    def _save_tsv(self, df: pl.DataFrame, file: FilePath, **kwargs):
-        """Save polars DataFrame to csv/tsv."""
-        df.write_csv(file, **kwargs, separator="\t")
-
-    def _refinebio_in_metadata(self, metadata: list[str]) -> bool:
-        """Checks if any refine.bio IDs are in requested metadata."""
-        return len(list(set(metadata) & set(database_ids("refinebio")))) > 0
-
-    def _sra_in_metadata(self, metadata: list[str]) -> bool:
-        """Checks if any SRA IDs are in requested metadata."""
-        return len(list(set(metadata) & set(database_ids("sra")))) > 0
 
     def _write_row(self, row: dict[str, str], labels: dict[str, dict], index_col: str):
         """Write a row of an Annotations curation to a dictionary."""
