@@ -314,15 +314,26 @@ class TestRetriever:
         _, kwargs = mock_query_class.call_args
         assert kwargs["license"] == "permissive"
 
-    def test_curate_raises_error_when_no_annotations(self, retriever):
-        """test curate raises NoResultsFound when there are no annotations"""
+    def test_curate_exits_when_no_results_after_filters(self, retriever):
+        """test curate exits when terms exist in MetaHQ but filters return no results"""
         mock_annotations = Mock()
         mock_annotations.n_indices = 0
+        mock_annotations.entities = ["term1", "term2"]
 
-        with pytest.raises(NoResultsFound) as exc_info:
+        with pytest.raises(SystemExit):
             retriever.curate(mock_annotations)
 
-        assert "No annotations for any terms" in str(exc_info.value)
+        retriever.log.error.assert_called_once()
+
+    def test_curate_exits_when_all_terms_unavailable(self, retriever):
+        """test curate exits when none of the queried terms are in MetaHQ"""
+        mock_annotations = Mock()
+        mock_annotations.n_indices = 0
+        mock_annotations.entities = []
+
+        with pytest.raises(SystemExit):
+            retriever.curate(mock_annotations)
+
         retriever.log.error.assert_called_once()
 
     def test_curate_direct_mode(self, retriever):
@@ -345,6 +356,7 @@ class TestRetriever:
         """test curation with propagate mode"""
         mock_annotations = Mock()
         mock_annotations.n_indices = 10
+        mock_annotations.entities = ["term1", "term2"]
         retriever.curation_config.mode = "annotate"
 
         with patch.object(retriever, "_propagate_annotations") as mock_propagate:
@@ -358,6 +370,7 @@ class TestRetriever:
         """test curation with label mode"""
         mock_annotations = Mock()
         mock_annotations.n_indices = 10
+        mock_annotations.entities = ["term1", "term2"]
         retriever.curation_config.mode = "label"
 
         with patch.object(retriever, "_propagate_annotations") as mock_propagate:
