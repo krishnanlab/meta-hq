@@ -4,7 +4,7 @@ Class to take retrieval arguments, check them, and build the retrieval query.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2026-04-01 by Parker Hicks
+Last updated: 2026-06-29 by Parker Hicks
 """
 
 import sys
