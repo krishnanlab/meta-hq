@@ -9,6 +9,7 @@ Last updated: 2026-04-01 by Parker Hicks
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -160,7 +161,7 @@ class Retriever:
                 self.output_config,
             )
 
-    def curate(self, annotations: Annotations) -> Annotations:
+    def curate(self, annotations: Annotations) -> Annotations | Labels:
         """Mutate curations by specified mode.
 
         Arguments:
@@ -171,12 +172,10 @@ class Retriever:
             A populated Annotations or Labels object given the specified curation mode.
 
         Raises:
-            NoResultsFound: If there are no annotations for a set of query parameters.
+            Error: If there are no annotations for a set of query parameters.
         """
-        if annotations.n_indices == 0:
-            msg = "No annotations for any terms. Try using different conditions."
-            self.log.error(msg)
-            raise NoResultsFound(msg)
+        self._check_terms_available(annotations)
+        self._check_filters_results(annotations)
 
         if self.verbose:
             self.log.info("Curating...")
@@ -346,3 +345,23 @@ class Retriever:
             level=self.output_config.level,
             citation_config=self.citation_config,
         )
+
+    def _check_terms_available(self, annotations: Annotations) -> None:
+        not_available = []
+        for term in self.curation_config.terms:
+            if term not in annotations.entities:
+                not_available.append(term)
+
+        if len(not_available) == len(self.curation_config.terms):
+            self.log.error("No annotations available for your queried terms.")
+            sys.exit(1)
+
+    def _check_filters_results(self, annotations: Annotations) -> None:
+        """If terms are in MetaHQ, but there are no samples returned"""
+        if annotations.n_indices == 0:
+            msg = (
+                "No annotations for any terms given your filter parameters."
+                " Try using different filter values."
+            )
+            self.log.error(msg)
+            sys.exit(1)

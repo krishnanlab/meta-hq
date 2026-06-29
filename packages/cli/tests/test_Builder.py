@@ -270,13 +270,26 @@ class TestBuilder:
         builder.report_bad_filters(filters)
 
     @patch("metahq_cli.retrieval_builder.check_filter_keys")
-    def test_report_bad_filters_raises_on_bad_filters(self, mock_check_keys, builder):
-        """test report_bad_filters raises ValueError for bad filters"""
+    def test_report_bad_filters_exits_on_bad_filters(self, mock_check_keys, builder):
+        """test report_bad_filters calls sys.exit for bad filters"""
         mock_check_keys.return_value = ["bad_filter"]
         filters = {"bad_filter": "value"}
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SystemExit):
             builder.report_bad_filters(filters)
+
+    @patch("metahq_cli.retrieval_builder.check_filter_keys")
+    def test_report_bad_filters_logs_error_always(
+        self, mock_check_keys, builder
+    ):
+        """test report_bad_filters logs error regardless of verbose mode"""
+        mock_check_keys.return_value = ["bad_filter"]
+        filters = {"bad_filter": "value"}
+
+        with pytest.raises(SystemExit):
+            builder.report_bad_filters(filters)
+
+        builder.log.error.assert_called_once()
 
     @patch("metahq_cli.retrieval_builder.check_filter_keys")
     def test_report_bad_filters_logs_error_when_verbose(
@@ -286,7 +299,7 @@ class TestBuilder:
         mock_check_keys.return_value = ["bad_filter"]
         filters = {"bad_filter": "value"}
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SystemExit):
             verbose_builder.report_bad_filters(filters)
 
         verbose_builder.log.error.assert_called_once()
