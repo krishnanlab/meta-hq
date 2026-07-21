@@ -538,6 +538,11 @@ class Query:
             logger=self.log,
             verbose=self.verbose,
         )
+
+        # specify annotations are series-level if applicable
+        if self.level == "series":
+            result.collapsed = True
+
         return result
 
     def compile_annotations(self, id_cols: list[str]) -> pl.DataFrame:
