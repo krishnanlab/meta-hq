@@ -141,10 +141,11 @@ class SraCombiner(BaseAnnotationCombiner):
             len(xxr_ids),
             len(xxx_ids),
         )
-        mapping: pl.DataFrame = sra2gsm_map(xxr_ids, xxx_ids, db_path)
+        mapping: pl.DataFrame = sra2gsm_map(xxr_ids, xxx_ids, db_path).rename(
+            {"original_id": "sra", "gsm": "geo"}
+        )
         self.logger.info("Resolved %d IDs to GSM.", len(mapping))
 
-        # join mapping with manually assigned map
         mapping = pl.concat(
             [
                 mapping,
@@ -156,7 +157,7 @@ class SraCombiner(BaseAnnotationCombiner):
                 ),
             ],
             how="vertical",
-        )
+        ).unique()
 
         # Apply mapping and add each source.
         for source_name, data in source_data.items():

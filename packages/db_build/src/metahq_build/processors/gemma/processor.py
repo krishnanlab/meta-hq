@@ -18,6 +18,7 @@ from metahq_build.config.config import (
     COL_ECODE,
     COL_TERM_ID,
     COL_TERM_NAME,
+    DISEASE_KEY,
     ECODE_EXPERT,
     GEMMA_DEV_STAGE_TO_AGE_GROUP,
     GEMMA_RAW,
@@ -26,8 +27,10 @@ from metahq_build.config.config import (
     PROCESSED_DIR,
     SEX_FEMALE_ID,
     SEX_MALE_ID,
+    TISSUE_KEY,
     UBERON_OBO,
     UBERON_SYSTEMS,
+    VALID_ONTOLOGIES,
 )
 from metahq_build.ontology import Ontology, get_system_descendants
 from metahq_build.processors.base import BaseProcessor, ProcessorError
@@ -189,6 +192,15 @@ class GemmaProcessor(BaseProcessor):
                 )
                 .with_columns(pl.coalesce(["mapped", COL_TERM_ID]).alias(COL_TERM_ID))
                 .drop("mapped")
+                .filter(
+                    ~(
+                        pl.col(COL_ATTRIBUTE).is_in([TISSUE_KEY, DISEASE_KEY])
+                        & ~pl.col(COL_TERM_ID)
+                        .str.split(":")
+                        .list.get(0)
+                        .is_in(list(VALID_ONTOLOGIES))
+                    )
+                )
             )
 
         self.logger.info("Parsed %d annotations from Gemma", len(df))

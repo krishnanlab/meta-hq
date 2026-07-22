@@ -233,5 +233,37 @@ class PipelineOrchestrator:
                 lambda: DataPackageBuilder(self.config).build(),
             )
         )
+        stages.append(
+            (
+                "archive__data_package",
+                lambda: self._archive_data_package(),
+            )
+        )
 
         return stages
+
+    def _archive_data_package(self) -> None:
+        """Create a compressed tar.gz archive of the data package."""
+        from metahq_build.util.archive import (
+            create_database_archive,
+            get_archive_path_from_package,
+        )
+
+        package_dir = self.config.data_package_path
+        archive_path = get_archive_path_from_package(package_dir)
+
+        self.logger.info("Creating archive: %s", archive_path)
+        self.logger.info("Source directory: %s", package_dir)
+
+        result = create_database_archive(
+            package_dir=package_dir,
+            output_path=archive_path,
+            verbose=self.config.verbose,
+            verbose_callback=self.logger.info if self.config.verbose else None,
+        )
+
+        self.logger.info(
+            "Database successfully archived: %s (%.2f MB)",
+            result['path'],
+            result['size_mb'],
+        )

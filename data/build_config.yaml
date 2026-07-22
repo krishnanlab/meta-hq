@@ -72,7 +72,8 @@ processors:
 
 # -----------------------------------------------------------------
 # Per-stage settings
-# Stage names: process__<source>, combine__geo, combine__sra, combine__sample
+# Stage names: process__<source>, combine__geo, combine__sra, combine__sample,
+#              build__data_package, archive__data_package
 # Set skip: true to bypass a stage (useful with --start-from / --end-at too).
 # -----------------------------------------------------------------
 stages:
@@ -89,6 +90,9 @@ stages:
     skip: false
     use_checkpoint: true
   extract__mondo__relations:
+    skip: false
+    use_checkpoint: true
+  archive__data_package:
     skip: false
     use_checkpoint: true
 

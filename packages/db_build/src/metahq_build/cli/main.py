@@ -1006,6 +1006,111 @@ def refinebio_map(outfile, ids, sample_db, series_db, metadata_db):
     mapping.write_parquet(outfile)
 
 
+@main.command(name="zip-database")
+@click.option(
+    "--config",
+    "-c",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to configuration file",
+)
+@click.option(
+    "--package-dir",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to data package directory (overrides config)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    help="Output archive path (default: <package_name>.tar.gz)",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enable verbose output",
+)
+def zip_database(config, package_dir, output, verbose):
+    """
+    Create a tar.gz archive of the MetaHQ database package.
+
+    Archives the complete data package into a compressed tar.gz file,
+    automatically filtering out platform-specific files (e.g., macOS ._ files).
+
+    Examples:
+
+        # Zip using config file
+        metahq-build zip-database --config data/build_config.yaml
+
+        # Zip specific directory
+        metahq-build zip-database --package-dir data/data_packages/metahq_data__v1.2.0
+
+        # Specify custom output path
+        metahq-build zip-database --config data/build_config.yaml -o my_archive.tar.gz
+    """
+    from metahq_build.util.archive import (
+        create_database_archive,
+        get_archive_path_from_package,
+    )
+
+    try:
+        # Determine package directory
+        if package_dir is None:
+            if config is None:
+                click.secho(
+                    "Error: Either --config or --package-dir is required",
+                    fg="red",
+                )
+                sys.exit(1)
+
+            pkg_config = DataPackageConfig.from_yaml(config)
+            package_dir = pkg_config.data_package_path
+
+        package_dir = Path(package_dir).resolve()
+
+        # Determine output path
+        if output is None:
+            output_path = get_archive_path_from_package(package_dir)
+        else:
+            output_path = Path(output).resolve()
+
+        # Check if output exists
+        if output_path.exists():
+            if not click.confirm(f"Output file {output_path} exists. Overwrite?"):
+                click.echo("Aborted.")
+                sys.exit(0)
+
+        click.echo(f"Creating archive: {output_path}")
+        click.echo(f"Source directory: {package_dir}")
+
+        # Create the archive with verbose callback
+        result = create_database_archive(
+            package_dir=package_dir,
+            output_path=output_path,
+            verbose=verbose,
+            verbose_callback=click.echo if verbose else None,
+        )
+
+        click.secho(
+            f"\n✓ Database successfully archived: {result['path']} ({result['size_mb']:.2f} MB)",
+            fg="green",
+        )
+
+    except FileNotFoundError as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+    except NotADirectoryError as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+    except PermissionError as e:
+        click.secho(f"Error: Permission denied - {e}", fg="red", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.secho(f"Error: Failed to create archive", fg="red", err=True)
+        click.echo(f"{e}")
+        sys.exit(1)
+
+
 @main.command()
 @click.option(
     "--config",
