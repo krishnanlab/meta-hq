@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.3"
+__generated_with = "0.23.9"
 app = marimo.App(width="medium", auto_download=["ipynb"])
 
 
@@ -206,11 +206,11 @@ def _(COLORS, Path, pl, plt, sns, ticker):
 
             ax.set_xlabel(ylabel)
             ax.get_xaxis().set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
-            ax.tick_params("x", rotation=30)
+            ax.tick_params("x", rotation=40)
 
             # sample
             if idx == 0:
-                ax.set_xticks([50000, 150000])
+                ax.set_xticks([50000, 100000, 200000])
 
             # study
             if idx == 1:
@@ -413,7 +413,7 @@ def _(
             save=True,
             outfile=f"figures/attribute_upset_plot__level-sample__tech-microarray.{FMT}",
             dpi=500,
-            ylim=60_000,
+            ylim=70_000,
         )
         upset_plot(
             sample_records_rnaseq,
@@ -421,7 +421,7 @@ def _(
             save=True,
             outfile=f"figures/attribute_upset_plot__level-sample__tech-rnaseq.{FMT}",
             dpi=500,
-            ylim=35_000,
+            ylim=70_000,
         )
 
         # ========== Study ============
