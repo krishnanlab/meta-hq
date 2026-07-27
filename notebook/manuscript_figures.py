@@ -911,6 +911,7 @@ def _(Path, np, pl, plt, sns):
         title: str = "",
         order: list[str] | None = None,
         save: bool = False,
+        dpi: int = 400,
         outfile: Path | str | None = None,
         vmax_percentile: float | int | None = None,
         **heatmap_kwargs,
@@ -946,6 +947,7 @@ def _(Path, np, pl, plt, sns):
             ax.set_title(group_name.capitalize())
             xticks = ax.get_xticklabels()
             ax.set_xticklabels(labels=xticks, rotation=45, ha='right', rotation_mode='anchor')
+            ax.set_yticklabels(ax.get_yticklabels(), rotation=0, va="center")
 
         for ax in axes_flat[len(overlap_results):]:
             ax.axis("off")
@@ -954,7 +956,7 @@ def _(Path, np, pl, plt, sns):
         plt.tight_layout()
 
         if save and isinstance(outfile, (str, Path)):
-            plt.savefig(outfile, dpi=400)
+            plt.savefig(outfile, dpi=dpi, bbox_inches="tight")
 
         plt.show()
 
@@ -1140,9 +1142,9 @@ def _(
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP,
         vmax_percentile=95,
-        title="Absolute count overlap (level=series)",
+        title="Absolute count overlap (level=study)",
         save=True,
-        outfile=FIGURES_DIR / "post_harmonization_overlap__level-series__metric-counts.png"
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-study__metric-counts.png"
     )
     return
 
@@ -1168,9 +1170,9 @@ def _(
         order=OVERLAP_ORDER,
         cmap=OVERLAP_CMAP,
         vmax_percentile=95,
-        title="Percent overlap (level=series)",
+        title="Percent overlap (level=study)",
         save=True,
-        outfile=FIGURES_DIR / "post_harmonization_overlap__level-series__metric-percent.png"
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-study__metric-percent.png"
     )
     return
 
@@ -1197,9 +1199,9 @@ def _(
         cmap=PMI_CMAP,
         vmax=1,
         vmin=-1,
-        title="Normalized pointwise mutual information (level=series)",
+        title="Normalized pointwise mutual information (level=study)",
         save=True,
-        outfile=FIGURES_DIR / "post_harmonization_overlap__level-series__metric-pmi.png",
+        outfile=FIGURES_DIR / "post_harmonization_overlap__level-study__metric-pmi.png",
     )
     return
 
@@ -1606,9 +1608,9 @@ def _(
         source_harmonization_improvements_series,
         COLORS,
         ATTRIBUTES,
-        title="Post-harmonzation annotation coverage (level=series)",
+        title="Post-harmonzation annotation coverage (level=study)",
         save=True,
-        outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source__level-series.png",
+        outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source__level-study.png",
     )
     return
 
