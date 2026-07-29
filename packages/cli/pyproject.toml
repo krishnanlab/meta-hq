@@ -25,7 +25,7 @@ dependencies = [
     "click>=8.3.0",
     "metahq-core==1.1.1",
     "rich>=13.0.0",
-    "requests>=2.30.0",
+    "requests>=2.34.2",
 ]
 
 [project.optional-dependencies]
