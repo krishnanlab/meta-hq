@@ -12,7 +12,7 @@ def _(mo):
 
     Author: Parker Hicks <br>
     Date: 2026-01-17 <br>
-    Last updated: 2026-06-10 by Parker Hicks
+    Last updated: 2026-07-28 by Parker Hicks
     """)
     return
 
@@ -37,9 +37,6 @@ def _():
     import seaborn as sns
     from bson import BSON
     from matplotlib import ticker
-    from scipy.cluster.hierarchy import linkage, leaves_list
-    from scipy.spatial.distance import squareform
-    from sklearn.preprocessing import StandardScaler
     from upsetplot import UpSet, from_contents
 
     return (
