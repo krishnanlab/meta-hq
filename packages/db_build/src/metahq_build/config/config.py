@@ -132,6 +132,7 @@ PROCESSED_DIR: Path = DATA_DIR / "processed"
 ONTOLOGY_DIR: Path = DATA_DIR / "ontology"
 HELPERS_DIR: Path = DATA_DIR / "helpers"
 METADATA_DIR: Path = DATA_DIR / "metadata"
+EXTERNAL_LINKS_DIR: Path = DATA_DIR / "external_links"
 
 # Ontology
 ## Ontology OBO files.
@@ -234,6 +235,12 @@ BGEE_FLY: Path = (
     / "Drosophila_melanogaster_Bgee_15_0"
     / "Drosophila_melanogaster_RNA-Seq_libraries.tsv"
 )
+
+# External link files
+BGEE_EXTERNAL_LINKS: Path = EXTERNAL_LINKS_DIR / "bgee.json"
+DISIGN_ATLAS_EXTERNAL_LINKS: Path = EXTERNAL_LINKS_DIR / "disign_atlas.json"
+GEMMA_EXTERNAL_LINKS: Path = EXTERNAL_LINKS_DIR / "gemma.json"
+PROCESSED_EXTERNAL_LINKS: Path = METADATA_DIR / "external_links.parquet"
 
 # Samples deleted from GEO to remove from MetaHQ
 DELTED_SAMPLES: Path = HELPERS_DIR / "deleted_samples.txt"

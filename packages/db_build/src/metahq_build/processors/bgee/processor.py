@@ -7,12 +7,14 @@ for multiple species including mouse, human, rat, worm, and fish.
 Reference: https://bgee.org/
 """
 
+import json
 from pathlib import Path
 from typing import Any
 
 import polars as pl
 
 from metahq_build.config.config import (
+    BGEE_EXTERNAL_LINKS,
     BGEE_FISH,
     BGEE_FLY,
     BGEE_HUMAN,
@@ -33,6 +35,8 @@ from metahq_build.config.config import (
 from metahq_build.ontology import get_system_descendants
 from metahq_build.processors.base import BaseProcessor
 from metahq_build.processors.registry import ProcessorRegistry
+
+BGEE_DATASET_URL = "https://www.bgee.org/experiment/{}"
 
 
 @ProcessorRegistry.register
@@ -89,6 +93,7 @@ class BgeeProcessor(BaseProcessor):
 
         # Process each species
         all_species_data = []
+        all_species_urls = {}
         for species_name, default_path in self.SPECIES_FILES.items():
             # Allow override via kwargs
             file_path = Path(kwargs.get(f"{species_name}_path", default_path))
@@ -104,8 +109,9 @@ class BgeeProcessor(BaseProcessor):
             self.logger.info(
                 "Processing %s data from %s...", species_name, file_path.name
             )
-            species_df = self._process_species(file_path, valid_uberon)
+            species_df, species_urls = self._process_species(file_path, valid_uberon)
             all_species_data.append(species_df)
+            all_species_urls.update(species_urls)
 
             self.logger.info(
                 "Processed %s annotations for %s",
@@ -136,6 +142,16 @@ class BgeeProcessor(BaseProcessor):
             len(all_species_data),
         )
 
+        # save urls
+        with open(BGEE_EXTERNAL_LINKS, "w", encoding="utf-8") as f:
+            json.dump(all_species_urls, f, indent=4, sort_keys=True)
+
+        self.logger.info(
+            "Saved external links for %d studies in Bgee to %s",
+            len(all_species_urls),
+            BGEE_EXTERNAL_LINKS,
+        )
+
         # Save processed data
         output_file = output_dir / "bgee_processed.parquet"
         result_df.write_parquet(output_file)
@@ -145,7 +161,7 @@ class BgeeProcessor(BaseProcessor):
 
     def _process_species(
         self, file_path: Path, valid_uberon: frozenset[str]
-    ) -> pl.DataFrame:
+    ) -> tuple[pl.DataFrame, dict]:
         """Process a single species RNA-Seq library file.
 
         Arguments:
@@ -165,6 +181,14 @@ class BgeeProcessor(BaseProcessor):
             separator="\t",
             null_values=["NA", "na", ""],
         )
+
+        # build urls
+        urls = {}
+        for accession in df["Experiment ID"].unique():
+            urls.setdefault(accession, {"records": []})
+            urls[accession]["records"].append(
+                {"id": accession, "url": BGEE_DATASET_URL.format(accession)}
+            )
 
         # Select and rename columns we need
         df = df.select(
@@ -205,7 +229,7 @@ class BgeeProcessor(BaseProcessor):
             how="vertical",
         )
 
-        return all_records
+        return all_records, urls
 
     def _process_tissue(
         self, df: pl.DataFrame, valid_uberon: frozenset[str]

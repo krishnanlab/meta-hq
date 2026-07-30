@@ -21,6 +21,7 @@ from metahq_build.config.config import (
     DISEASE_KEY,
     ECODE_EXPERT,
     GEMMA_DEV_STAGE_TO_AGE_GROUP,
+    GEMMA_EXTERNAL_LINKS,
     GEMMA_RAW,
     MONDO_OBO,
     MONDO_SYSTEMS,
@@ -48,6 +49,9 @@ CHARACTERISTICS_MAP = {
 
 
 PATO_SEX_MAP = {"PATO:0000384": SEX_MALE_ID, "PATO:0000383": SEX_FEMALE_ID}
+
+GEMMA_BROWSE_URL = "https://gemma.msl.ubc.ca/browse/#/q/{acc}"
+GEMMA_DATASET_URL = "https://gemma.msl.ubc.ca/expressionExperiment/showExpressionExperiment.html?id={acc}"
 
 
 @ProcessorRegistry.register
@@ -98,6 +102,7 @@ class GemmaProcessor(BaseProcessor):
             raw_data = json.load(f)
 
         records = []
+        urls = {}
         for batch_data in raw_data.values():
             if not isinstance(batch_data, list):
                 continue
@@ -109,6 +114,19 @@ class GemmaProcessor(BaseProcessor):
                 gse = study.get("accession", "")
                 if not gse:
                     continue
+
+                gemma_id = study.get("id", "")
+                if not gemma_id:
+                    continue
+
+                # setup urls
+                urls.setdefault(gse, {})
+                urls[gse].setdefault("records", [])
+                if "browse_url" not in urls[gse]:
+                    urls[gse]["browse_url"] = GEMMA_BROWSE_URL.format(acc=gse)
+                urls[gse]["records"].append(
+                    {"id": gemma_id, "url": GEMMA_DATASET_URL.format(acc=gemma_id)}
+                )
 
                 for char in study.get("characteristics", []):
                     if not isinstance(char, dict):
@@ -238,6 +256,25 @@ class GemmaProcessor(BaseProcessor):
             "Filtered %d non-GSE annotations (kept %d)",
             before - len(df),
             len(df),
+        )
+        self.logger.info(
+            "There are %d studies represented in Gemma after processing",
+            df[COL_ACCESSION].unique().len(),
+        )
+
+        # save urls
+        urls = {
+            study: records
+            for study, records in urls.items()
+            if study in df[COL_ACCESSION]
+        }
+        with open(GEMMA_EXTERNAL_LINKS, "w", encoding="utf-8") as f:
+            json.dump(urls, f, indent=4, sort_keys=True)
+
+        self.logger.info(
+            "Saved external links for %d studies in Gemma to %s",
+            len(urls),
+            GEMMA_EXTERNAL_LINKS,
         )
 
         output_file = output_dir / "gemma_processed.parquet"
