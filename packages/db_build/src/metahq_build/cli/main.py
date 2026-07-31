@@ -714,6 +714,64 @@ def retrieve_series_metadata(fields, outfile, series_bson, metadata_db, null_val
     retriever.save(outfile)
 
 
+@metadata.command(name="links")
+@click.option(
+    "-o",
+    "--outfile",
+    type=Path,
+    default=None,
+    help="Path to store parquet file with source external links.",
+)
+@click.option(
+    "--sample-bson",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to sample-level BSON database storing MetaHQ sample anntotations.",
+)
+@click.option(
+    "--series-bson",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to series-level BSON database storing MetaHQ series anntotations.",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
+)
+def build_links(outfile, sample_bson, series_bson, metadata_db):
+    """Builds a file storing external links for sources that distribute annotations
+    through web servers. This file is included in the MetaHQ data package.
+
+    Pulls links from data/external_links. These are automatically generated from processors.
+
+    Examples:
+        metahq-build metadata links
+
+    """
+    from metahq_build.builders import ExternalLinkBuilder
+    from metahq_build.config import (
+        OMICIDX_DB,
+        PROCESSED_EXTERNAL_LINKS,
+        SAMPLE_COMBINED_BSON,
+        SERIES_COMBINED_BSON,
+    )
+
+    outfile = Path(outfile) if outfile else PROCESSED_EXTERNAL_LINKS
+    sample_bson = Path(sample_bson) if sample_bson else SAMPLE_COMBINED_BSON
+    series_bson = Path(series_bson) if series_bson else SERIES_COMBINED_BSON
+    metadata_db = Path(metadata_db) if metadata_db else OMICIDX_DB
+
+    builder = ExternalLinkBuilder()
+    builder.build(
+        sample_db_path=sample_bson,
+        series_db_path=series_bson,
+        omicidx_path=metadata_db,
+    )
+    builder.save_df(outfile)
+
+
 @main.command()
 @click.option(
     "--checkpoint-dir",
