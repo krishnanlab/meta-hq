@@ -16,8 +16,8 @@ import polars as pl
 
 from metahq_core.config import SOURCES_COL
 from metahq_core.export.base import BaseExporter
-from metahq_core.export.refinebio import RefineBioExporter
 from metahq_core.export.references import CitationConfig, save_citations
+from metahq_core.export.refinebio import RefineBioExporter
 from metahq_core.logger import setup_logger
 from metahq_core.util.io import checkdir, save_json
 from metahq_core.util.supported import database_ids, get_default_log_dir
@@ -340,25 +340,29 @@ class AnnotationsExporter(BaseExporter):
         )
 
         self.log.info("Saving retrieval result to %s", Path(file).parent)
+
+        # initialize output dict
         _anno: dict[str, dict[str, dict[str, str]]] = {
             term: {} for term in anno.entities
         }
         _metadata = self._parse_metafields(anno.index_col, metadata)
         _metadata.extend(["sources"])
 
+        # append sra IDs if requested
         if self._sra_in_metadata(_metadata):
             anno = self.get_sra(
                 anno, [field for field in _metadata if field in database_ids("sra")]
             )
 
+        # append refine.bio IDs if requested
         if self._refinebio_in_metadata(_metadata):
             anno = self._refinebio.get_refinebio(
                 anno,
                 [field for field in _metadata if field in database_ids("refinebio")],
             )
 
+        # append requested GEO metadata fields
         stacked = anno.data.hstack(anno.ids)
-
         geo_fields = self._geo_fields_in_metadata(_metadata, anno.index_col)
         if geo_fields:
             geo = self._get_geo_metadata(anno, geo_fields)
