@@ -56,27 +56,56 @@ class ExternalLinkBuilder:
 
         """
 
+        self.logger.info("Building external links...")
+
+        self.logger.info("Loading Bgee external links from %s", BGEE_EXTERNAL_LINKS)
         bgee = self._map_bgee(self._load_json(BGEE_EXTERNAL_LINKS), omicidx_path)
+        self.logger.info("Mapped %d Bgee studies to GEO series", len(bgee))
+
+        self.logger.info(
+            "Loading DiSignAtlas external links from %s", DISIGN_ATLAS_EXTERNAL_LINKS
+        )
         disign_atlas = self._load_json(DISIGN_ATLAS_EXTERNAL_LINKS)
+        self.logger.info("Loaded %d DiSignAtlas studies", len(disign_atlas))
+
+        self.logger.info("Loading Gemma external links from %s", GEMMA_EXTERNAL_LINKS)
         gemma = self._load_json(GEMMA_EXTERNAL_LINKS)
+        self.logger.info("Loaded %d Gemma studies", len(gemma))
 
         # add source links to full collection
         self._add_links(bgee, "BGee")
         self._add_links(disign_atlas, "DiSignAtlas")
         self._add_links(gemma, "Gemma")
+        self.logger.info(
+            "Combined %d studies across %d sources", len(self.all_links), len(self.sources)
+        )
 
         # remove for studies not in MetaHQ
+        self.logger.info(
+            "Collecting MetaHQ series from %s and %s", sample_db_path, series_db_path
+        )
         metahq_series = self._get_all_metahq_series(sample_db_path, series_db_path)
+        self.logger.info("Found %d series in MetaHQ", len(metahq_series))
+
+        before = len(self.all_links)
         self.all_links = {
             series: links
             for series, links in self.all_links.items()
             if series in metahq_series
         }
+        self.logger.info(
+            "Filtered external links to %d studies present in MetaHQ (dropped %d)",
+            len(self.all_links),
+            before - len(self.all_links),
+        )
 
         return self
 
-    def save(self, outfile: Path = PROCESSED_EXTERNAL_LINKS):
-        """Saves the harmonized external IDs to parquet."""
+    def save_dict(self, outfile: Path = PROCESSED_EXTERNAL_LINKS):
+        """
+        Saves the harmonized external IDs to parquet with a single links column
+        containing serialized JSON strings.
+        """
         serialized_links = self.serialize()
         df = pl.LazyFrame(
             {
@@ -85,10 +114,54 @@ class ExternalLinkBuilder:
             }
         )
         df.sink_parquet(outfile, engine="streaming")
+        self.logger.info(
+            "Saved %d serialized external links to %s", len(serialized_links), outfile
+        )
+
+    def save_df(self, outfile: Path = PROCESSED_EXTERNAL_LINKS):
+        """Saves the harmonized external IDs to parquet with one column per source."""
+        self.to_df().lazy().sink_parquet(outfile, engine="streaming")
+        self.logger.info("Saved external links dataframe to %s", outfile)
+
+    def to_df(self) -> pl.DataFrame:
+        """
+        Transform the {series: source_links} dictionary to a polars.DataFrame
+        where each source has it's own column.
+        """
+        # build the transformed dictionary
+        transformed = {}
+        transformed.setdefault(STUDY_ACCESSION_KEY, [])
+
+        _sources = self.sources
+        for source in _sources:
+            transformed.setdefault(source, [])
+
+        for series, content in self.all_links.items():
+            transformed.setdefault(STUDY_ACCESSION_KEY, [])
+            transformed[STUDY_ACCESSION_KEY].append(series)
+
+            for source in _sources:
+                if source not in content:
+                    transformed[source].append(None)
+
+            for source, links in content.items():
+                transformed.setdefault(source, [])
+                transformed[source].append(json.dumps(links))
+
+        return pl.DataFrame(transformed)
 
     def serialize(self) -> dict[str, str]:
         """Serializes links for each series ID."""
         return {study: json.dumps(links) for study, links in self.all_links.items()}
+
+    @property
+    def sources(self) -> set[str]:
+        """Return all unique sources that have external links across series."""
+        unique_sources = set()
+        for source_links in self.all_links.values():
+            unique_sources.update(set(source_links.keys()))
+
+        return unique_sources
 
     def _add_links(self, source_links: dict, source_name: str):
         """Adds links from a particular source to the full collection."""
@@ -129,6 +202,12 @@ class ExternalLinkBuilder:
             mapping = dict(mapping.iter_rows())
 
         # map bgee study IDs to GEO
+        unmapped = data.keys() - mapping.keys()
+        if unmapped:
+            self.logger.warning(
+                "%d Bgee SRA studies could not be mapped to a GEO series", len(unmapped)
+            )
+
         data = {
             mapping[sra_study]: links
             for sra_study, links in data.items()
