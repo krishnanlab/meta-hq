@@ -10,23 +10,18 @@ Last updated: 2026-04-13 by Parker Hicks
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
-
-import polars as pl
+from typing import TYPE_CHECKING
 
 from metahq_core.config import SOURCES_COL
 from metahq_core.export.base import BaseExporter
-from metahq_core.export.refinebio import RefineBioExporter
-from metahq_core.export.references import CitationConfig, save_citations
-from metahq_core.logger import setup_logger
-from metahq_core.util.io import checkdir, save_json
-from metahq_core.util.supported import database_ids, disease_ontologies, get_default_log_dir
+from metahq_core.export.references import save_citations
+from metahq_core.util.io import save_json
+from metahq_core.util.supported import database_ids, disease_ontologies
 
 if TYPE_CHECKING:
-    import logging
-
     from metahq_core.curations.labels import Labels
-    from metahq_core.util.alltypes import FilePath, NpIntMatrix
+    from metahq_core.export.references import CitationConfig
+    from metahq_core.util.alltypes import FilePath
 
 
 LABEL_KEY = {"1": "positive", "-1": "negative", "2": "control"}
@@ -56,136 +51,6 @@ class LabelsExporter(BaseExporter):
 
     """
 
-    def __init__(
-        self,
-        attribute: Literal["tissue", "disease", "sex", "age"],
-        level: Literal["sample", "series"],
-        logger=None,
-        loglevel=20,
-        logdir=get_default_log_dir(),
-        verbose=True,
-    ):
-        self.attribute = attribute
-        self._database = self._load_annotations(level)
-
-        if logger is None:
-            logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
-        self.log: logging.Logger = logger
-        self.verbose: bool = verbose
-        self._refinebio = RefineBioExporter(logger=self.log, verbose=self.verbose)
-
-    def get_sra(self, labels: Labels, fields: list[str]) -> Labels:
-        """Retrieve SRA IDs from the annotations if they exist.
-
-        Arguments:
-            labels (Labels):
-                A Labels curation containing samples and terms matching user-specified
-                filters.
-
-            fields (list[str]):
-                SRA ID levels (i.e., srr, srx, srs, or srp)
-
-        Returns:
-            A new Annotations curation with merged SRA IDs.
-
-        """
-
-        _labels = self._load_annotations(
-            level=labels.index_col
-        )  # all MetaHQ annotations
-
-        new_ids = {field: [] for field in fields}
-        new_ids[labels.index_col] = []
-        for idx in labels.index:
-            new_ids[labels.index_col].append(idx)
-
-            idx_accessions = _labels[idx]["accession_ids"]
-            for field in fields:
-                if field not in idx_accessions:
-                    new_ids[field].append("NA")
-                    continue
-
-                new_ids[field].append(idx_accessions[field])
-
-        return labels.add_ids(pl.DataFrame(new_ids))
-
-    def save(
-        self,
-        labels: Labels,
-        fmt: Literal["json", "parquet", "csv", "tsv"],
-        file: FilePath,
-        citation_config: CitationConfig,
-        metadata: str | None = None,
-        **kwargs,
-    ):
-        """Save labels curation to json. Keys are terms and values are
-        positively, negative, netral, and control labeled entries.
-
-        Arguments:
-            labels (Labels):
-                A populated Labels curation object.
-
-            fmt (Literal["json", "parquet", "csv", "tsv"]):
-                File format to save to.
-
-            file (FilePath):
-                Path to outfile.json.
-
-            citation_config (CitationConfig):
-                Parameters for saving citations.
-
-            metadata (str):
-                Metadata fields to include.
-
-        """
-        _ = checkdir(file, is_file=True)
-        opt = {
-            "json": self.to_json,
-            "parquet": self.to_parquet,
-            "csv": self.to_csv,
-            "tsv": self.to_tsv,
-        }
-        opt[fmt](labels, file, citation_config, metadata, **kwargs)
-
-        if self.verbose:
-            self.log.info("Saved!")
-
-    def to_refinebio_dataset(self, curation: Labels) -> dict:
-        """Create a pre-populated refine.bio dataset from this curation's
-        samples and series, and submit it through refine.bio's dataset API.
-
-        Arguments:
-            curation (Labels):
-                A populated Labels curation.
-
-        Returns:
-            The JSON response from refine.bio's dataset API.
-        """
-        return self._refinebio.create_dataset(curation)
-
-    def to_csv(
-        self,
-        curation: Labels,
-        file: FilePath,
-        citation_config: CitationConfig,
-        metadata: str | None = None,
-        **kwargs,
-    ):
-        """Save labels to csv.
-
-        Arguments:
-            curation (Labels):
-                A populated Labels curation object.
-
-            file (FilePath):
-                Path to outfile.csv.
-
-            metadata (str):
-                Metadata fields to include.
-
-        """
-        self._save_tabular("csv", curation, file, citation_config, metadata, **kwargs)
-
     def to_json(
         self,
         curation: Labels,
@@ -194,7 +59,8 @@ class LabelsExporter(BaseExporter):
         metadata: str | None = None,
     ):
         """Save labels curation to json. Keys are terms and values are
-        positively labelstated indices.
+        positive, negative, and (for disease ontology terms) control labeled
+        entries.
 
         Arguments:
             curation (Labels):
@@ -221,10 +87,7 @@ class LabelsExporter(BaseExporter):
                 term: {"positive": [], "negative": []} for term in curation.entities
             }
 
-        if (metadata is None) or (
-            isinstance(metadata, str)
-            & (metadata.strip().replace(",", "") == curation.index_col)
-        ):
+        if self._only_index(metadata, curation.index_col):
             metadata = curation.index_col
 
         if isinstance(metadata, str):
@@ -279,109 +142,6 @@ class LabelsExporter(BaseExporter):
 
         save_json(_labels, file)
 
-    def to_numpy(self, curation: Labels) -> NpIntMatrix:
-        """Returns the labelstation data as a numpy array."""
-        return curation.data.to_numpy()
-
-    def to_parquet(
-        self,
-        curation: Labels,
-        file: FilePath,
-        citation_config: CitationConfig,
-        metadata: str | None = None,
-        **kwargs,
-    ):
-        """Save labels to parquet.
-
-        Arguments:
-            curation (Labels):
-                Labels curation object to save.
-
-            file (FilePath):
-                Path to outfile.parquet.
-
-            metadata (str | None):
-                Metadata fields to include.
-
-        """
-        self._save_tabular(
-            "parquet", curation, file, citation_config, metadata, **kwargs
-        )
-
-    def to_tsv(
-        self,
-        curation: Labels,
-        file: FilePath,
-        citation_config: CitationConfig,
-        metadata: str | None = None,
-        **kwargs,
-    ):
-        """Save labels to tsv.
-
-        Arguments:
-            curation (Labels):
-                A populated Labels curation object.
-
-            file (FilePath):
-                Path to outfile.tsv.
-
-            metadata (str):
-                Metadata fields to include.
-
-        """
-        self._save_tabular("tsv", curation, file, citation_config, metadata, **kwargs)
-
-    def _save_tabular(
-        self,
-        fmt: str,
-        curation: Labels,
-        file: FilePath,
-        citation_config: CitationConfig,
-        metadata: str | None = None,
-        **kwargs,
-    ):
-        if isinstance(metadata, str):
-            _metadata = self._parse_metafields(curation.index_col, metadata)
-
-        else:
-            _metadata = [curation.index_col]
-
-        if self._sra_in_metadata(_metadata):
-            curation = self.get_sra(
-                curation, [field for field in _metadata if field in database_ids("sra")]
-            )
-
-        if self._refinebio_in_metadata(_metadata):
-            curation = self._refinebio.get_refinebio(
-                curation,
-                [field for field in _metadata if field in database_ids("refinebio")],
-            )
-
-        _metadata = _metadata + [SOURCES_COL]
-
-        # save sources to citation file
-        save_citations(
-            curation.ids[SOURCES_COL].str.split("|").explode().value_counts(sort=True),
-            citation_config,
-            logger=self.log,
-            verbose=self.verbose,
-        )
-
-        self.log.info("Saving retrieval result to %s", Path(file).parent)
-        if self._geo_fields_in_metadata(_metadata, curation.index_col):
-            self._save_table_with_geo_metadata(
-                file, curation, _metadata, fmt=fmt, **kwargs
-            )
-
-        else:
-            self._get_save_method(fmt)(
-                curation.ids.select(_metadata)
-                .hstack(curation.data)
-                .sort(curation.index_col),
-                file,
-                **kwargs,
-            )
-
     def _write_row_with_metadata(
         self,
         row: dict[str, str],
@@ -389,7 +149,7 @@ class LabelsExporter(BaseExporter):
         index_col: str,
         metadata: list[str],
     ):
-        """Write a row of an Annotations curation to a dictionary with metadata."""
+        """Write a row of a Labels curation to a dictionary with metadata."""
         idx = row[index_col]
         for entity in labels:
             label = str(row[entity])
