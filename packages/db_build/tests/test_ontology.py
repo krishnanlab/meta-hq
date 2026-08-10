@@ -47,7 +47,22 @@ synonym: "Cardiomyopathies" EXACT [DOID:0050700, MESH:D009202]
 xref: DOID:0050700 {source="MONDO:equivalentTo", source="EFO:0000318"}
 xref: MESH:D009202 {source="MONDO:equivalentTo"}
 is_a: MONDO:0003939 ! muscle tissue disorder
-relationship: disease_has_location UBERON:0001133 ! cardiac muscle tissue
+relationship: part_of UBERON:0001133 ! cardiac muscle tissue
+relationship: disease_has_location UBERON:8000001 ! some non-hierarchical location
+"""
+
+# Modeled on real CL:0000163 (endocrine cell) / UBERON:0001062 (anatomical entity).
+# Both carry GCI (class-expression) axioms: is_a / relationship lines annotated with
+# gci_relation/gci_filler express a conditional axiom ("X, when part_of Y, is_a Z"),
+# not an unconditional hierarchy edge, and must not be parsed as plain is_a/part_of.
+GCI_ENTRY = """\
+[Term]
+id: CL:0000163
+name: endocrine cell
+is_a: CL:0000151 ! secretory cell
+is_a: CL:0000164 {gci_relation="part_of", gci_filler="UBERON:0000945"} ! enteroendocrine cell
+relationship: part_of UBERON:0000949 ! endocrine system
+relationship: part_of UBERON:0003942 {gci_filler="GO:0050975", gci_relation="capable_of_part_of"} ! somatosensory system
 """
 
 # Relations matrix for the 3-node chain (row = ancestor, col = descendant)
@@ -130,6 +145,31 @@ class TestOboEntry:
     def test_part_of_parsed(self):
         entry = OboEntry.from_text(CARDIOMYOPATHY_ENTRY)
         assert entry.part_of == ["UBERON:0001133"]
+
+    def test_non_part_of_relationship_not_captured(self):
+        """Only `relationship: part_of ...` lines should populate part_of; other
+        relation types (e.g. disease_has_location, mutually_spatially_disjoint_with)
+        are not hierarchical and must be ignored, or Graph.construct() ends up
+        creating cycles from relations that are recorded symmetrically on both terms.
+        """
+        entry = OboEntry.from_text(CARDIOMYOPATHY_ENTRY)
+        assert "UBERON:8000001" not in entry.part_of
+
+    def test_gci_annotated_is_a_not_captured(self):
+        """is_a lines carrying a gci_relation/gci_filler annotation express a
+        conditional class axiom (e.g. "endocrine cell, when part_of UBERON:X,
+        is_a enteroendocrine cell"), not an unconditional is_a edge, and must be
+        excluded or Graph.construct() ends up with a cycle back down the hierarchy.
+        """
+        entry = OboEntry.from_text(GCI_ENTRY)
+        assert entry.is_a == ["CL:0000151"]
+
+    def test_gci_annotated_part_of_not_captured(self):
+        """relationship: part_of lines carrying a gci_relation/gci_filler
+        annotation are likewise conditional, not unconditional part_of edges.
+        """
+        entry = OboEntry.from_text(GCI_ENTRY)
+        assert entry.part_of == ["UBERON:0000949"]
 
     def test_id_prefix(self):
         entry = OboEntry.from_text(CARDIOMYOPATHY_ENTRY)
