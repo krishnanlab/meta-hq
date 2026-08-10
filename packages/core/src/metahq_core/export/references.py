@@ -195,11 +195,10 @@ def format_reference(reference: Reference, index: int, indent: str = "    ") -> 
 
 def format_references(references: list[Reference]) -> str:
     """
-    Format a list of (reference, annotation_count) tuples.
+    Format a list of references.
 
     Arguments:
-        references (list[tuple[Reference, int]]): List of tuples
-            containing (Reference, annotation_count).
+        references (list[Reference]): List of populated Reference objects.
 
     Returns:
         (str): Formatted string with all references numbered sequentially.

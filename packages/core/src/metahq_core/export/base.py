@@ -4,79 +4,255 @@ Abstract base class for Curation export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-06-23 by Parker Hicks
+Last updated: 2026-08-10 by Parker Hicks
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 
-from metahq_core.util.io import load_bson
+from metahq_core.config import SOURCES_COL
+from metahq_core.export.references import save_citations
+from metahq_core.export.refinebio import RefineBioExporter
+from metahq_core.logger import setup_logger
+from metahq_core.util.io import checkdir, load_bson
 from metahq_core.util.supported import (
     database_ids,
     geo_metadata,
     geo_metadata_fields,
     get_annotations,
+    get_default_log_dir,
     metadata_fields,
     supported,
 )
 
 if TYPE_CHECKING:
+    import logging
+
     from metahq_core.curations.base import BaseCuration
+    from metahq_core.export.references import CitationConfig
     from metahq_core.util.alltypes import FilePath, NpIntMatrix
 
 
 class BaseExporter(ABC):
     """Base abstract class for Exporter children.
 
-    Concrete subclasses are expected to set ``self.log`` (a `logging.Logger`)
-    and ``self.verbose`` (bool) before any of the concrete helpers below are
-    used.
+    Attributes:
+        attribute (str):
+            Attribute of the annotations to save.
+
+        level (str):
+            Level of the annotations.
+
+        logger (logging.Logger):
+            Python builtin Logger.
+
+        loglevel (int):
+            Logging level.
+
+        logdir (str | Path):
+            Path to directory storing logs.
+
+        verbose (bool):
+            Controls logging outputs.
     """
+
+    def __init__(
+        self,
+        attribute: str,
+        level: str,
+        logger=None,
+        loglevel=20,
+        logdir=get_default_log_dir(),
+        verbose=True,
+    ):
+        self.attribute = attribute
+        self._database = self._load_annotations(level)
+
+        if logger is None:
+            logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
+        self.log: logging.Logger = logger
+        self.verbose: bool = verbose
+        self._refinebio = RefineBioExporter(logger=self.log, verbose=self.verbose)
 
     @abstractmethod
     def to_json(
         self,
         curation: BaseCuration,
         file: FilePath,
-        metadata: str | None,
-        *args,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
         **kwargs,
     ):
         """Saves curation as json."""
 
-    @abstractmethod
     def to_numpy(self, curation: BaseCuration) -> NpIntMatrix:
-        """Returns curations matrix as numpy array."""
+        """Returns curation's data matrix as a numpy array."""
+        return curation.data.to_numpy()
 
-    @abstractmethod
     def to_parquet(
-        self, curation: BaseCuration, file: FilePath, metadata: str | None, **kwargs
+        self,
+        curation: BaseCuration,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+        **kwargs,
     ):
-        """Saves curation to parquet."""
+        """Save curation to parquet.
 
-    @abstractmethod
+        Arguments:
+            curation (BaseCuration):
+                A populated curation object.
+
+            file (FilePath):
+                Path to outfile.parquet.
+
+            citation_config (CitationConfig):
+                Parameters for saving citations.
+
+            metadata (str | None):
+                Metadata fields to include.
+        """
+        self._save_tabular("parquet", curation, file, citation_config, metadata, **kwargs)
+
     def to_csv(
         self,
         curation: BaseCuration,
         file: FilePath,
-        metadata: str | None,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
         **kwargs,
     ):
-        """Saves curation to csv."""
+        """Save curation to csv.
 
-    @abstractmethod
+        Arguments:
+            curation (BaseCuration):
+                A populated curation object.
+
+            file (FilePath):
+                Path to outfile.csv.
+
+            citation_config (CitationConfig):
+                Parameters for saving citations.
+
+            metadata (str | None):
+                Metadata fields to include.
+        """
+        self._save_tabular("csv", curation, file, citation_config, metadata, **kwargs)
+
     def to_tsv(
         self,
         curation: BaseCuration,
         file: FilePath,
-        metadata: str | None,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
         **kwargs,
     ):
-        """Saves curation to tsv."""
+        """Save curation to tsv.
+
+        Arguments:
+            curation (BaseCuration):
+                A populated curation object.
+
+            file (FilePath):
+                Path to outfile.tsv.
+
+            citation_config (CitationConfig):
+                Parameters for saving citations.
+
+            metadata (str | None):
+                Metadata fields to include.
+        """
+        self._save_tabular("tsv", curation, file, citation_config, metadata, **kwargs)
+
+    def get_sra(self, curation: BaseCuration, fields: list[str]) -> BaseCuration:
+        """Retrieve SRA IDs from the MetaHQ annotations database if they exist.
+
+        Arguments:
+            curation (BaseCuration):
+                A curation containing samples or series matching user-specified
+                filters.
+
+            fields (list[str]):
+                SRA ID levels (i.e., srr, srx, srs, or srp).
+
+        Returns:
+            A new curation with merged SRA IDs.
+        """
+        _database = self._load_annotations(level=curation.index_col)
+
+        new_ids = {field: [] for field in fields}
+        new_ids[curation.index_col] = []
+        for idx in curation.index:
+            new_ids[curation.index_col].append(idx)
+
+            idx_accessions = _database[idx]["accession_ids"]
+            for field in fields:
+                if field not in idx_accessions:
+                    new_ids[field].append("NA")
+                    continue
+
+                new_ids[field].append(idx_accessions[field])
+
+        return curation.add_ids(pl.DataFrame(new_ids))
+
+    def save(
+        self,
+        curation: BaseCuration,
+        fmt: Literal["json", "parquet", "csv", "tsv"],
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+        **kwargs,
+    ):
+        """Save a curation to file.
+
+        Arguments:
+            curation (BaseCuration):
+                A populated curation object.
+
+            fmt (Literal["json", "parquet", "csv", "tsv"]):
+                File format to save to.
+
+            file (FilePath):
+                Path to outfile.
+
+            citation_config (CitationConfig):
+                Parameters for saving citations.
+
+            metadata (str | None):
+                Metadata fields to include.
+        """
+        _ = checkdir(file, is_file=True)
+        opt = {
+            "json": self.to_json,
+            "parquet": self.to_parquet,
+            "csv": self.to_csv,
+            "tsv": self.to_tsv,
+        }
+
+        opt[fmt](curation, file, citation_config, metadata, **kwargs)
+
+        if self.verbose:
+            self.log.info("Saved!")
+
+    def to_refinebio_dataset(self, curation: BaseCuration) -> dict:
+        """Create a pre-populated refine.bio dataset from this curation's
+        samples and series, and submit it through refine.bio's dataset API.
+
+        Arguments:
+            curation (BaseCuration):
+                A populated curation containing samples or series matching
+                user-specified filters.
+
+        Returns:
+            The JSON response from refine.bio's dataset API.
+        """
+        return self._refinebio.create_dataset(curation)
 
     def _load_annotations(self, level: str) -> dict:
         """Load the annotations dictionary for a given level."""
@@ -86,7 +262,7 @@ class BaseExporter(ABC):
         if level == "series":
             return load_bson(get_annotations("series"))
 
-        msg = ("Expected annotations level in %s, got %s.", supported("levels"), level)
+        msg = f"Expected annotations level in {supported('levels')}, got {level}."
         if self.verbose:
             self.log.error(msg)
         raise ValueError(msg)
@@ -127,7 +303,7 @@ class BaseExporter(ABC):
     def _only_index(self, metadata: str | None, index: str) -> bool:
         """Check if no metadata passed or if only the index is passed."""
         return (metadata is None) or (
-            isinstance(metadata, str) & (metadata.strip().replace(",", "") == index)
+            isinstance(metadata, str) and (metadata.strip().replace(",", "") == index)
         )
 
     def _get_geo_metadata(self, curation: BaseCuration, fields: list[str]) -> pl.DataFrame:
@@ -153,10 +329,64 @@ class BaseExporter(ABC):
         if fmt in opt:
             return opt[fmt]
 
-        msg = ("Expected fmt in %s, got %s.", list(opt.keys()), fmt)
+        msg = f"Expected fmt in {list(opt.keys())}, got {fmt}."
         if self.verbose:
             self.log.error(msg)
         raise ValueError(msg)
+
+    def _save_tabular(
+        self,
+        fmt: str,
+        curation: BaseCuration,
+        file: FilePath,
+        citation_config: CitationConfig,
+        metadata: str | None = None,
+        **kwargs,
+    ):
+        """Fetches SRA/refine.bio/GEO fields as requested and saves the
+        curation in tabular format (parquet, csv, tsv), sorted by index.
+        """
+        if isinstance(metadata, str):
+            _metadata = self._parse_metafields(curation.index_col, metadata)
+
+        else:
+            _metadata = [curation.index_col]
+
+        if self._sra_in_metadata(_metadata):
+            curation = self.get_sra(
+                curation, [field for field in _metadata if field in database_ids("sra")]
+            )
+
+        if self._refinebio_in_metadata(_metadata):
+            curation = self._refinebio.get_refinebio(
+                curation,
+                [field for field in _metadata if field in database_ids("refinebio")],
+            )
+
+        _metadata = _metadata + [SOURCES_COL]
+
+        # save sources to citation file
+        save_citations(
+            curation.ids[SOURCES_COL].str.split("|").explode().value_counts(sort=True),
+            citation_config,
+            logger=self.log,
+            verbose=self.verbose,
+        )
+
+        self.log.info("Saving retrieval result to %s", Path(file).parent)
+        if self._geo_fields_in_metadata(_metadata, curation.index_col):
+            self._save_table_with_geo_metadata(
+                file, curation, _metadata, fmt=fmt, **kwargs
+            )
+
+        else:
+            self._get_save_method(fmt)(
+                curation.ids.select(_metadata)
+                .hstack(curation.data)
+                .sort(curation.index_col),
+                file,
+                **kwargs,
+            )
 
     def _save_table_with_geo_metadata(
         self,

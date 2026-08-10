@@ -150,11 +150,7 @@ class RefineBioExporter:
         if index_col in GEO_COL_BY_INDEX:
             return GEO_COL_BY_INDEX[index_col]
 
-        msg = (
-            "Expected curation index_col in %s, got %s.",
-            list(GEO_COL_BY_INDEX),
-            index_col,
-        )
+        msg = f"Expected curation index_col in {list(GEO_COL_BY_INDEX)}, got {index_col}."
         if self.verbose:
             self.log.error(msg)
         raise ValueError(msg)
