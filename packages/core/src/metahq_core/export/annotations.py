@@ -29,9 +29,6 @@ if TYPE_CHECKING:
     from metahq_core.util.alltypes import FilePath, NpIntMatrix
 
 
-ANNOTATION_KEY = {"1": True, "0": False}
-
-
 class AnnotationsExporter(BaseExporter):
     """Exporter for Annotations curations.
 
@@ -314,16 +311,6 @@ class AnnotationsExporter(BaseExporter):
                 anno.ids.select(_metadata).hstack(anno.data), file, **kwargs
             )
 
-    def _save_json_only_index(self, anno: Annotations, file: FilePath):
-        """Save annotations as JSON with only the index."""
-        self.log.info("Saving retrieval result to %s", file)
-        _anno: dict[str, list[str]] = {}
-        stacked = anno.data.hstack(anno.ids)
-        for col in anno.entities:
-            _anno[col] = stacked.filter(pl.col(col) == 1)[anno.index_col].to_list()
-
-        save_json(_anno, file)
-
     def _save_json_with_metadata(
         self,
         anno: Annotations,
@@ -380,16 +367,6 @@ class AnnotationsExporter(BaseExporter):
                 )
 
         save_json(_anno, file)
-
-    def _write_row(
-        self, row: dict[str, str], anno: dict[str, list[str]], index_col: str
-    ):
-        """Write a row of an Annotations curation to a dictionary."""
-        idx = row[index_col]
-        for entity in anno:
-            _anno = str(row[entity])
-            if _anno in ANNOTATION_KEY:
-                anno[entity].append(idx)
 
     def _write_row_with_metadata(
         self,

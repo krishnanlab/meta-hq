@@ -382,14 +382,6 @@ class LabelsExporter(BaseExporter):
                 **kwargs,
             )
 
-    def _write_row(self, row: dict[str, str], labels: dict[str, dict], index_col: str):
-        """Write a row of an Annotations curation to a dictionary."""
-        idx = row[index_col]
-        for entity in labels:
-            label = str(row[entity])
-            if label in LABEL_KEY:
-                labels[entity][LABEL_KEY[label]].append(idx)
-
     def _write_row_with_metadata(
         self,
         row: dict[str, str],
