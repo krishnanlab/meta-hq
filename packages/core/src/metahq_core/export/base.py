@@ -86,7 +86,7 @@ class BaseExporter(ABC):
         if level == "series":
             return load_bson(get_annotations("series"))
 
-        msg = ("Expected annotations level in %s, got %s.", supported("levels"), level)
+        msg = f"Expected annotations level in {supported('levels')}, got {level}."
         if self.verbose:
             self.log.error(msg)
         raise ValueError(msg)
@@ -153,7 +153,7 @@ class BaseExporter(ABC):
         if fmt in opt:
             return opt[fmt]
 
-        msg = ("Expected fmt in %s, got %s.", list(opt.keys()), fmt)
+        msg = f"Expected fmt in {list(opt.keys())}, got {fmt}."
         if self.verbose:
             self.log.error(msg)
         raise ValueError(msg)

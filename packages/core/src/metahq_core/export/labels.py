@@ -272,7 +272,7 @@ class LabelsExporter(BaseExporter):
                     row, _labels, curation.index_col, _metadata
                 )
         else:
-            msg = ("Unexpected metedata arguments %s", metadata)
+            msg = f"Unexpected metadata argument: {metadata!r}"
             self.log.error(msg)
             self.log.debug("metadata dtype: %s", type(metadata))
             raise ValueError(msg)
