@@ -27,6 +27,12 @@ ANNOTATIONS_DB = {
 
 @pytest.fixture(autouse=True)
 def stub_annotations_db(monkeypatch):
+    """get_annotations() is evaluated eagerly as an argument to load_bson(...),
+    so it must be stubbed too - otherwise it resolves the MetaHQ config/data
+    dir (absent on CI) before load_bson ever runs."""
+    monkeypatch.setattr(
+        "metahq_core.export.base.get_annotations", lambda level: level
+    )
     monkeypatch.setattr(
         "metahq_core.export.base.load_bson", lambda *a, **k: ANNOTATIONS_DB
     )

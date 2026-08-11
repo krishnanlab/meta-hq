@@ -30,7 +30,15 @@ ANNOTATIONS_DB = {
 @pytest.fixture(autouse=True)
 def stub_annotations_db(monkeypatch):
     """Stub the bson annotations-database filesystem read used by
-    BaseExporter._load_annotations (called from __init__ and get_sra)."""
+    BaseExporter._load_annotations (called from __init__ and get_sra).
+
+    get_annotations() must be stubbed too: it's evaluated eagerly as an
+    argument to load_bson(...), so mocking load_bson alone doesn't stop it
+    from resolving the MetaHQ config/data dir (which doesn't exist on a
+    fresh CI runner) before load_bson ever runs."""
+    monkeypatch.setattr(
+        "metahq_core.export.base.get_annotations", lambda level: level
+    )
     monkeypatch.setattr(
         "metahq_core.export.base.load_bson", lambda *a, **k: ANNOTATIONS_DB
     )
