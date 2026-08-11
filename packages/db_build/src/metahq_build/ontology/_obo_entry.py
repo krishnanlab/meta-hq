@@ -109,13 +109,19 @@ class OboEntry:
 
             elif key == "is_a":
                 m = re.match(r"(\S+)(?:\s*\{([^}]*)\})?", value)
-                if m:
+                if m and not _is_gci_axiom(m.group(2)):
                     is_a.append(m.group(1))
 
             elif key == "relationship":
-                m = re.match(r".*?([A-Z]+:\d+)", value)
-                if m:
-                    part_of.append(m.group(1))
+                # relationship: part_of ID ! comment  (other relation types, e.g.
+                # develops_from or mutually_spatially_disjoint_with, are not
+                # hierarchical and are recorded on both terms they relate, so
+                # capturing them here would introduce cycles into the graph)
+                reltype, _, target = value.partition(" ")
+                if reltype == "part_of":
+                    m = re.match(r"(\S+)(?:\s*\{([^}]*)\})?", target)
+                    if m and not _is_gci_axiom(m.group(2)):
+                        part_of.append(m.group(1))
 
         if not id_ or not name:
             warnings.warn("Initializing OboEntry without a name or id.", RuntimeWarning)
@@ -147,6 +153,16 @@ class OboEntry:
     def id_prefix(self) -> str:
         """Return the ontology prefix of a full ontology ID."""
         return self.id.split(":")[0]
+
+
+def _is_gci_axiom(annotation: str | None) -> bool:
+    """Check whether an is_a/relationship trailing annotation marks a GCI axiom.
+
+    A `{gci_relation=..., gci_filler=...}` annotation expresses a conditional class
+    axiom (e.g. "X, when part_of Y, is_a Z"), not an unconditional hierarchy edge,
+    so it must be excluded from is_a/part_of or Graph.construct() forms a cycle.
+    """
+    return annotation is not None and "gci_relation" in annotation
 
 
 def _parse_source_list(raw: str) -> list[str]:
