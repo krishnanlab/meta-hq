@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from metahq_core.config import SOURCES_COL
+from metahq_core.config import EXTERNAL_LINKS_COL, SOURCES_COL
 from metahq_core.export.base import BaseExporter
 from metahq_core.export.references import save_citations
 from metahq_core.util.io import save_json
@@ -106,7 +106,10 @@ class AnnotationsExporter(BaseExporter):
             term: {} for term in anno.entities
         }
         _metadata = self._parse_metafields(anno.index_col, metadata)
-        _metadata.extend(["sources"])
+        _metadata.extend([SOURCES_COL, EXTERNAL_LINKS_COL])
+
+        # include external links
+        anno = self.add_external_links(anno)
 
         # append sra IDs if requested
         if self._sra_in_metadata(_metadata):
@@ -130,6 +133,7 @@ class AnnotationsExporter(BaseExporter):
                 anno.index_col
             )
 
+        # convert data frame to dict
         for col in anno.entities:
             _anno.setdefault(col, {})
             subset = stacked.filter(pl.col(col) == 1)[_metadata]
