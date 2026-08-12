@@ -4,21 +4,23 @@ Abstract base class for Curation export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-08-10 by Parker Hicks
+Last updated: 2026-08-12 by Parker Hicks
 """
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+import json
+from abc import ABC
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import polars as pl
 
-from metahq_core.config import SOURCES_COL
+from metahq_core.config import EXTERNAL_LINKS_COL, SOURCES_COL
 from metahq_core.export.references import save_citations
 from metahq_core.export.refinebio import RefineBioExporter
 from metahq_core.logger import setup_logger
+from metahq_core.util.alltypes import Level
 from metahq_core.util.io import checkdir, load_bson
 from metahq_core.util.supported import (
     database_ids,
@@ -26,7 +28,9 @@ from metahq_core.util.supported import (
     geo_metadata_fields,
     get_annotations,
     get_default_log_dir,
+    get_external_links,
     metadata_fields,
+    sources_with_external_links,
     supported,
 )
 
@@ -71,7 +75,8 @@ class BaseExporter(ABC):
         verbose=True,
     ):
         self.attribute = attribute
-        self._database = self._load_annotations(level)
+        self._level = Level(level)
+        self._database = self._load_annotations()
 
         if logger is None:
             logger = setup_logger(__name__, level=loglevel, log_dir=logdir)
@@ -79,16 +84,21 @@ class BaseExporter(ABC):
         self.verbose: bool = verbose
         self._refinebio = RefineBioExporter(logger=self.log, verbose=self.verbose)
 
-    @abstractmethod
-    def to_json(
-        self,
-        curation: BaseCuration,
-        file: FilePath,
-        citation_config: CitationConfig,
-        metadata: str | None = None,
-        **kwargs,
-    ):
-        """Saves curation as json."""
+    def add_exernal_links(self, curation: BaseCuration) -> BaseCuration:
+        """Attaches external links to a curation."""
+        external_links = self._add_external_links(
+            self._extract_sources_for_links(curation)
+        )
+
+        match self._level:
+            case Level.SAMPLE:
+                return curation.add_ids_on_group(external_links, on="series")
+
+            case Level.SERIES:
+                return curation.add_ids_partial(external_links)
+
+            case _:
+                raise ValueError(f"Expected level in [sample, series]. Got {self._level}.")
 
     def to_numpy(self, curation: BaseCuration) -> NpIntMatrix:
         """Returns curation's data matrix as a numpy array."""
@@ -117,7 +127,9 @@ class BaseExporter(ABC):
             metadata (str | None):
                 Metadata fields to include.
         """
-        self._save_tabular("parquet", curation, file, citation_config, metadata, **kwargs)
+        self._save_tabular(
+            "parquet", curation, file, citation_config, metadata, **kwargs
+        )
 
     def to_csv(
         self,
@@ -254,18 +266,106 @@ class BaseExporter(ABC):
         """
         return self._refinebio.create_dataset(curation)
 
-    def _load_annotations(self, level: str) -> dict:
-        """Load the annotations dictionary for a given level."""
-        if level == "sample":
-            return load_bson(get_annotations("sample"))
+    def _add_external_links(self, sources: pl.DataFrame) -> pl.DataFrame:
+        """Adds an external links column to any series IDs.
 
-        if level == "series":
-            return load_bson(get_annotations("series"))
+        Arguments:
+            sources (pl.DataFrame):
+                A long data frame with columns [series, sources] where one row indicates a single series,
+                source pair. A single series IDs can map to multiple sources.
 
-        msg = f"Expected annotations level in {supported('levels')}, got {level}."
-        if self.verbose:
+        Returns:
+            (pl.DataFrame): The sources data frame with an additional external_links column.
+        """
+
+        def to_json(structs: list[dict]) -> str:
+            return json.dumps({s[SOURCES_COL]: s["link"] for s in structs})
+
+        linked_sources = sources_with_external_links()
+        try:
+            links = (
+                pl.scan_parquet(get_external_links())
+                .unpivot(
+                    on=linked_sources,
+                    index="series",
+                    variable_name=SOURCES_COL,
+                    value_name="link",
+                )
+                .collect(engine="streaming")
+            )
+        except FileNotFoundError as e:
+            if self.verbose:
+                self.log.error(e)
+            raise e
+
+        sources = sources.filter(pl.col(SOURCES_COL).is_in(linked_sources)).join(
+            links, on=["series", SOURCES_COL], how="left"
+        )
+        sources = (
+            sources.group_by("series", maintain_order=True)
+            .agg(pl.struct([SOURCES_COL, "link"]).alias("link_with_source"))
+            .with_columns(
+                pl.col("link_with_source")
+                .list.eval(pl.element().struct.field(SOURCES_COL))
+                .list.join("|")
+                .alias(SOURCES_COL)
+            )
+            .drop(SOURCES_COL)
+        )
+
+        sources = sources.with_columns(
+            pl.col("link_with_source")
+            .map_elements(to_json, return_dtype=pl.String)
+            .alias(EXTERNAL_LINKS_COL)
+        ).drop("link_with_source")
+
+        return sources
+
+    def _extract_sources_for_links(self, curation: BaseCuration) -> pl.DataFrame:
+        """Extracts sources and series information from the curation.
+
+        Arguments:
+            curation (BaseCuration):
+                A populated Curation object with id columns [series, sources].
+
+        Returns:
+            (pl.DataFrame): A long data frame with columns [series, sources].
+        """
+        required_cols = ["series", SOURCES_COL]
+        missing = []
+        for col in required_cols:
+            if col not in curation.ids:
+                missing.append(col)
+
+        if len(missing) > 0:
+            msg = f"Missing columns {missing} in the retrieved curation"
             self.log.error(msg)
-        raise ValueError(msg)
+            raise ValueError(msg)
+
+        return (
+            curation.ids.select(required_cols)
+            .with_columns(pl.col(SOURCES_COL).str.split("|"))
+            .explode(SOURCES_COL)
+            .unique()
+            .with_columns(pl.col("series").str.split("|"))
+            .explode("series")
+            .unique()
+        )
+
+    def _load_annotations(self) -> dict:
+        """Load the annotations dictionary for a given level."""
+        match self._level:
+            case Level.SAMPLE:
+                return load_bson(get_annotations("sample"))
+
+            case Level.SERIES:
+                return load_bson(get_annotations("series"))
+
+            case _:
+                msg = f"Expected annotations level in {supported('levels')}, got {self._level}."
+                if self.verbose:
+                    self.log.error(msg)
+                raise ValueError(msg)
 
     def _parse_metafields(self, index_col: str, fields: str) -> list[str]:
         """Parse and check user-specified metadata fields."""
@@ -306,7 +406,9 @@ class BaseExporter(ABC):
             isinstance(metadata, str) and (metadata.strip().replace(",", "") == index)
         )
 
-    def _get_geo_metadata(self, curation: BaseCuration, fields: list[str]) -> pl.DataFrame:
+    def _get_geo_metadata(
+        self, curation: BaseCuration, fields: list[str]
+    ) -> pl.DataFrame:
         """Fetch requested GEO metadata fields (e.g. description, title,
         summary, source_name_ch1, ...) for a curation's index.
         """
@@ -363,7 +465,10 @@ class BaseExporter(ABC):
                 [field for field in _metadata if field in database_ids("refinebio")],
             )
 
-        _metadata = _metadata + [SOURCES_COL]
+        _metadata = _metadata + [SOURCES_COL, EXTERNAL_LINKS_COL]
+
+        # add link to original sources where applicable
+        curation = self.add_exernal_links(curation)
 
         # save sources to citation file
         save_citations(
