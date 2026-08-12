@@ -22,6 +22,16 @@ class BaseCuration(ABC):
     """Base abstract class for Curation children."""
 
     @abstractmethod
+    def add_ids(self, new: pl.DataFrame) -> BaseCuration:
+        """Joins additional ID columns with the curation IDs. Joins on the curation index."""
+
+    @abstractmethod
+    def add_ids_on_group(self, new: pl.DataFrame, on: str | list[str]) -> BaseCuration:
+        """Joins additional ID columns with the curation IDs, but joins on a
+        set of group IDs rather than the index.
+        """
+
+    @abstractmethod
     def filter(self, condition: pl.Expr) -> BaseCuration:
         """Filters the data based on provided conditions."""
 
