@@ -195,7 +195,7 @@ class BaseExporter(ABC):
         Returns:
             A new curation with merged SRA IDs.
         """
-        _database = self._load_annotations(level=curation.index_col)
+        _database = self._load_annotations()
 
         new_ids = {field: [] for field in fields}
         new_ids[curation.index_col] = []
