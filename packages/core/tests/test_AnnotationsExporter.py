@@ -17,27 +17,6 @@ from metahq_core.curations.annotations import Annotations
 from metahq_core.export.annotations import AnnotationsExporter
 from metahq_core.export.references import CitationConfig
 
-ANNOTATIONS_DB = {
-    "GSM1": {"accession_ids": {"srr": "SRR1"}},
-    "GSM2": {"accession_ids": {"srr": "SRR2"}},
-    "GSM3": {"accession_ids": {}},
-    "GSM4": {"accession_ids": {"srr": "SRR4"}},
-}
-
-
-@pytest.fixture(autouse=True)
-def stub_annotations_db(monkeypatch):
-    """get_annotations() is evaluated eagerly as an argument to load_bson(...),
-    so it must be stubbed too - otherwise it resolves the MetaHQ config/data
-    dir (absent on CI) before load_bson ever runs."""
-    monkeypatch.setattr(
-        "metahq_core.export.base.get_annotations", lambda level: level
-    )
-    monkeypatch.setattr(
-        "metahq_core.export.base.load_bson", lambda *a, **k: ANNOTATIONS_DB
-    )
-
-
 @pytest.fixture
 def sample_annotations():
     data = pl.DataFrame({"UBERON:0000948": [1, 0, 1, 0]})
@@ -82,7 +61,9 @@ class TestToJson:
         self, anno_exporter, sample_annotations, citation_config, tmp_path
     ):
         outfile = tmp_path / "out.json"
-        anno_exporter.to_json(sample_annotations, outfile, citation_config, metadata=None)
+        anno_exporter.to_json(
+            sample_annotations, outfile, citation_config, metadata=None
+        )
 
         result = json.loads(outfile.read_text())
         assert set(result["UBERON:0000948"].keys()) == {"GSM1", "GSM3"}
@@ -141,7 +122,11 @@ class TestToJson:
         self, anno_exporter, sample_annotations, citation_config, tmp_path
     ):
         outfile = tmp_path / "out.json"
-        with pytest.raises(ValueError, match=r"Unexpected metadata argument: 123") as exc:
-            anno_exporter.to_json(sample_annotations, outfile, citation_config, metadata=123)
+        with pytest.raises(
+            ValueError, match=r"Unexpected metadata argument: 123"
+        ) as exc:
+            anno_exporter.to_json(
+                sample_annotations, outfile, citation_config, metadata=123
+            )
 
         assert isinstance(exc.value.args[0], str)

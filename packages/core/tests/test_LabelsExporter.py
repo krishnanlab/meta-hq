@@ -17,27 +17,6 @@ from metahq_core.curations.labels import Labels
 from metahq_core.export.labels import LabelsExporter
 from metahq_core.export.references import CitationConfig
 
-ANNOTATIONS_DB = {
-    "GSM1": {"accession_ids": {"srr": "SRR1"}},
-    "GSM2": {"accession_ids": {"srr": "SRR2"}},
-    "GSM3": {"accession_ids": {}},
-    "GSM4": {"accession_ids": {"srr": "SRR4"}},
-}
-
-
-@pytest.fixture(autouse=True)
-def stub_annotations_db(monkeypatch):
-    """get_annotations() is evaluated eagerly as an argument to load_bson(...),
-    so it must be stubbed too - otherwise it resolves the MetaHQ config/data
-    dir (absent on CI) before load_bson ever runs."""
-    monkeypatch.setattr(
-        "metahq_core.export.base.get_annotations", lambda level: level
-    )
-    monkeypatch.setattr(
-        "metahq_core.export.base.load_bson", lambda *a, **k: ANNOTATIONS_DB
-    )
-
-
 @pytest.fixture
 def sample_labels():
     """positive (1), negative (-1), control (2), and unlabeled (0) rows for
@@ -69,7 +48,9 @@ def sample_labels_no_controls():
 
 @pytest.fixture
 def labels_exporter():
-    return LabelsExporter(attribute="disease", level="sample", logger=Mock(), verbose=False)
+    return LabelsExporter(
+        attribute="disease", level="sample", logger=Mock(), verbose=False
+    )
 
 
 @pytest.fixture
@@ -99,7 +80,11 @@ class TestToJson:
         labels_exporter.to_json(sample_labels, outfile, citation_config, metadata=None)
 
         result = json.loads(outfile.read_text())
-        assert set(result["MONDO:0005148"].keys()) == {"positive", "negative", "control"}
+        assert set(result["MONDO:0005148"].keys()) == {
+            "positive",
+            "negative",
+            "control",
+        }
 
     def test_non_disease_entity_has_no_control_bucket(
         self, labels_exporter, sample_labels_no_controls, citation_config, tmp_path
@@ -125,10 +110,7 @@ class TestToJson:
         assert [next(iter(entry)) for entry in entity["control"]] == ["GSM3"]
         # GSM4 (label 0) is unlabeled and must not appear in any bucket
         all_ids = {
-            idx
-            for bucket in entity.values()
-            for entry in bucket
-            for idx in entry
+            idx for bucket in entity.values() for entry in bucket for idx in entry
         }
         assert "GSM4" not in all_ids
 
@@ -148,7 +130,9 @@ class TestToJson:
         self, labels_exporter, sample_labels, citation_config, tmp_path
     ):
         no_metadata = tmp_path / "no_metadata.json"
-        labels_exporter.to_json(sample_labels, no_metadata, citation_config, metadata=None)
+        labels_exporter.to_json(
+            sample_labels, no_metadata, citation_config, metadata=None
+        )
 
         explicit_index = tmp_path / "explicit_index.json"
         labels_exporter.to_json(
@@ -163,7 +147,11 @@ class TestToJson:
         self, labels_exporter, sample_labels, citation_config, tmp_path
     ):
         outfile = tmp_path / "out.json"
-        with pytest.raises(ValueError, match=r"Unexpected metadata argument: 123") as exc:
-            labels_exporter.to_json(sample_labels, outfile, citation_config, metadata=123)
+        with pytest.raises(
+            ValueError, match=r"Unexpected metadata argument: 123"
+        ) as exc:
+            labels_exporter.to_json(
+                sample_labels, outfile, citation_config, metadata=123
+            )
 
         assert isinstance(exc.value.args[0], str)
