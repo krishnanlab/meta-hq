@@ -98,6 +98,49 @@ class Labels(BaseCuration):
             self.data, new_ids, index_col=self.index_col, group_cols=new_groups
         )
 
+    def add_ids_on_group(self, new: pl.DataFrame, on: str | list[str]) -> Labels:
+        """Appends new group ID columns to other group IDs of a Labels object. IDs from the
+        new data frame will be dropped if there is no match in the original IDs data frame.
+
+        Arguments:
+            new (pl.DataFrame):
+                A DataFrame of additional group IDs to join on the selected column.
+            on (str: list[str]):
+                A group column or list of group columns to join on.
+
+        Returns:
+            A new Labels object including the new ID columns.
+        """
+        new_ids = self.ids.join(new, on=on, how="left", maintain_order="left")
+        new_groups = tuple(col for col in new_ids.columns if col != self.index_col)
+
+        return self.__class__(
+            self.data, new_ids, index_col=self.index_col, group_cols=new_groups
+        )
+
+    def add_ids_partial(self, new: pl.DataFrame) -> Labels:
+        """Appends new group ID columns to the IDs of an Labels object. IDs in the new data
+        frame that are not in the original will be dropped.
+
+        Arguments:
+            new (pl.DataFrame):
+                A DataFrame of additional IDs to join with the current index column of `data`.
+
+        Returns:
+            A new Labels object including the new ID columns.
+        """
+        new_ids = self.ids.join(
+            new, on=self.index_col, how="left", maintain_order="left"
+        )
+        new_groups = tuple(col for col in new_ids.columns if col != self.index_col)
+        assert (
+            new_ids[self.index_col].to_list() == self.index
+        ), "Index order does not match."
+
+        return self.__class__(
+            self.data, new_ids, index_col=self.index_col, group_cols=new_groups
+        )
+
     def drop(self, *args, **kwargs):
         """Wrapper for polars drop. Drops any of the term columns.
         ID columns are not dropped through this method.

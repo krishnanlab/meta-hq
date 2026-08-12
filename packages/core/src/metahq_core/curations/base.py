@@ -32,6 +32,19 @@ class BaseCuration(ABC):
         """
 
     @abstractmethod
+    def add_ids_partial(self, new: pl.DataFrame) -> BaseCuration:
+        """Appends new group ID columns to the IDs of an BaseCuration object. IDs in the new data
+        frame that are not in the original will be dropped.
+
+        Arguments:
+            new (pl.DataFrame):
+                A DataFrame of additional IDs to join with the current index column of `data`.
+
+        Returns:
+            A new BaseCuration object including the new ID columns.
+        """
+
+    @abstractmethod
     def filter(self, condition: pl.Expr) -> BaseCuration:
         """Filters the data based on provided conditions."""
 

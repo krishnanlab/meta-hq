@@ -78,7 +78,7 @@ class Annotations(BaseCuration):
         self.verbose: bool = verbose
 
     def add_ids(self, new: pl.DataFrame) -> Annotations:
-        """Append new group ID columns to the IDs of an Annotations object. The new
+        """Appends new group ID columns to the IDs of an Annotations object. The new
         IDs must have a matching index.
 
         Arguments:
@@ -93,7 +93,50 @@ class Annotations(BaseCuration):
             self.ids, on=self.index_col, how="inner", maintain_order="right"
         )
         new_groups = tuple(col for col in new_ids.columns if col != self.index_col)
-        assert new_ids.height == self.ids.height, "SRA IDs height mismatch."
+        assert new_ids.height == self.ids.height, "Height mismatch."
+        assert (
+            new_ids[self.index_col].to_list() == self.index
+        ), "Index order does not match."
+
+        return self.__class__(
+            self.data, new_ids, index_col=self.index_col, group_cols=new_groups
+        )
+
+    def add_ids_on_group(self, new: pl.DataFrame, on: str | list[str]) -> Annotations:
+        """Appends new group ID columns to other group IDs of an Annotations object. IDs from the
+        new data frame will be dropped if there is no match in the original IDs data frame.
+
+        Arguments:
+            new (pl.DataFrame):
+                A DataFrame of additional group IDs to join on the selected column.
+            on (str: list[str]):
+                A group column or list of group columns to join on.
+
+        Returns:
+            A new Annotations object including the new ID columns.
+        """
+        new_ids = self.ids.join(new, on=on, how="left", maintain_order="left")
+        new_groups = tuple(col for col in new_ids.columns if col != self.index_col)
+
+        return self.__class__(
+            self.data, new_ids, index_col=self.index_col, group_cols=new_groups
+        )
+
+    def add_ids_partial(self, new: pl.DataFrame) -> Annotations:
+        """Appends new group ID columns to the IDs of an Annotations object. IDs in the new data
+        frame that are not in the original will be dropped.
+
+        Arguments:
+            new (pl.DataFrame):
+                A DataFrame of additional IDs to join with the current index column of `data`.
+
+        Returns:
+            A new Annotations object including the new ID columns.
+        """
+        new_ids = self.ids.join(
+            new, on=self.index_col, how="left", maintain_order="left"
+        )
+        new_groups = tuple(col for col in new_ids.columns if col != self.index_col)
         assert (
             new_ids[self.index_col].to_list() == self.index
         ), "Index order does not match."
