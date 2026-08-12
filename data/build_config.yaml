@@ -154,6 +154,9 @@ structure:
   - source: data/metadata/refinebio_map.parquet
     destination: "{output_dir}/{package_name}/metadata/refinebio_map.parquet"
 
+  - source: data/metadata/external_links.parquet
+    destination: "{output_dir}/{package_name}/metadata/external_links.parquet"
+
 # -----------------------------------------------------------------
 # General
 # -----------------------------------------------------------------
