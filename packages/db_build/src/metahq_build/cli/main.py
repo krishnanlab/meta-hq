@@ -740,7 +740,13 @@ def retrieve_series_metadata(fields, outfile, series_bson, metadata_db, null_val
     default=None,
     help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
 )
-def build_links(outfile, sample_bson, series_bson, metadata_db):
+@click.option(
+    "--serialize",
+    type=bool,
+    default=False,
+    help="Apply to serialize the JSON external links contents (default: False).",
+)
+def build_links(outfile, sample_bson, series_bson, metadata_db, serialize):
     """Builds a file storing external links for sources that distribute annotations
     through web servers. This file is included in the MetaHQ data package.
 
@@ -769,7 +775,7 @@ def build_links(outfile, sample_bson, series_bson, metadata_db):
         series_db_path=series_bson,
         omicidx_path=metadata_db,
     )
-    builder.save_df(outfile)
+    builder.save_df(outfile, serialize=serialize)
 
 
 @main.command()

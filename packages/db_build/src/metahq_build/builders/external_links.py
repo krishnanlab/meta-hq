@@ -44,7 +44,7 @@ class ExternalLinkBuilder:
 
         Below is an example entry:
 
-        "'GSE99039': {'DiSignAtlas': {'records': [{'id': 'DSA04920',
+        'GSE99039': {'DiSignAtlas': {'records': [{'id': 'DSA04920',
                                            'url': 'http://www.inbirg.com/disignatlas/detail/DSA04920'},
                                           {'id': 'DSA04922',
                                            'url': 'http://www.inbirg.com/disignatlas/detail/DSA04922'}]},
@@ -77,7 +77,9 @@ class ExternalLinkBuilder:
         self._add_links(disign_atlas, "DiSignAtlas")
         self._add_links(gemma, "Gemma")
         self.logger.info(
-            "Combined %d studies across %d sources", len(self.all_links), len(self.sources)
+            "Combined %d studies across %d sources",
+            len(self.all_links),
+            len(self.sources),
         )
 
         # remove for studies not in MetaHQ
@@ -118,12 +120,12 @@ class ExternalLinkBuilder:
             "Saved %d serialized external links to %s", len(serialized_links), outfile
         )
 
-    def save_df(self, outfile: Path = PROCESSED_EXTERNAL_LINKS):
+    def save_df(self, outfile: Path = PROCESSED_EXTERNAL_LINKS, serialize: bool = True):
         """Saves the harmonized external IDs to parquet with one column per source."""
-        self.to_df().lazy().sink_parquet(outfile, engine="streaming")
+        self.to_df(serialize).lazy().sink_parquet(outfile, engine="streaming")
         self.logger.info("Saved external links dataframe to %s", outfile)
 
-    def to_df(self) -> pl.DataFrame:
+    def to_df(self, serialize: bool = True) -> pl.DataFrame:
         """
         Transform the {series: source_links} dictionary to a polars.DataFrame
         where each source has it's own column.
@@ -146,7 +148,9 @@ class ExternalLinkBuilder:
 
             for source, links in content.items():
                 transformed.setdefault(source, [])
-                transformed[source].append(json.dumps(links))
+                if serialize:
+                    links = json.dumps(links)
+                transformed[source].append(links)
 
         return pl.DataFrame(transformed)
 
@@ -181,11 +185,19 @@ class ExternalLinkBuilder:
 
         return sample_db_series | series_db_series
 
-    def _map_bgee(self, data: dict, omicidx_path: Path):
+    def _map_bgee(self, data: dict[str, dict], omicidx_path: Path):
         """
         Map Bgee external links. Since these are SRA-forward, they must be converted to
         GEO series IDs.
         """
+        geo_series = {
+            study: records for study, records in data.items() if study.startswith("GSE")
+        }
+        to_map = {
+            study: records
+            for study, records in data.items()
+            if not study.startswith("GSE")
+        }
         with duckdb.connect(omicidx_path, read_only=True) as conn:
             mapping = (
                 conn.execute(
@@ -194,7 +206,7 @@ class ExternalLinkBuilder:
                     (SELECT accession, trim(unnest(sra_studies), '""') as sra FROM src_geo_series)
                 SELECT * FROM mapping WHERE sra = ANY($1)
                 """,
-                    [list(data.keys())],
+                    [list(to_map.keys())],
                 )
                 .pl()
                 .select(["sra", "accession"])
@@ -202,7 +214,7 @@ class ExternalLinkBuilder:
             mapping = dict(mapping.iter_rows())
 
         # map bgee study IDs to GEO
-        unmapped = data.keys() - mapping.keys()
+        unmapped = to_map.keys() - mapping.keys()
         if unmapped:
             self.logger.warning(
                 "%d Bgee SRA studies could not be mapped to a GEO series", len(unmapped)
@@ -213,6 +225,10 @@ class ExternalLinkBuilder:
             for sra_study, links in data.items()
             if sra_study in mapping
         }
+
+        # include GEO-forward records
+        for study, records in geo_series.items():
+            data[study] = records
 
         return data
 
