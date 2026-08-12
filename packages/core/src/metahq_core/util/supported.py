@@ -7,7 +7,7 @@ Functions beginning with an underscore are intended to be called through the
 Author: Parker Hicks
 Date: 2025-04-15
 
-Last updated: 2026-02-02 by Parker Hicks
+Last updated: 2026-08-11 by Parker Hicks
 """
 
 from pathlib import Path
@@ -49,6 +49,11 @@ def _database_ids() -> dict[str, list[str]]:
         "sra": ["srr", "srs", "srx", "srp"],
         "refinebio": ["refinebio_sample", "refinebio_experiment"],
     }
+
+
+def sources_with_external_links() -> list[str]:
+    """Returns sources with supported external links in the MetaHQ data package."""
+    return ["Gemma", "BGee", "DiSignAtlas"]
 
 
 def _ecodes() -> dict[str, str]:
@@ -221,6 +226,12 @@ def get_default_data_dir() -> Path:
 def get_database_version() -> str:
     """Return the current version of the database."""
     return get_config()["version"]
+
+
+def get_external_links() -> Path:
+    """Return the path to the external links metadata file storing links of GEO studies
+    their web pages in Gemma, Bgee, DiSignAtlas, etc."""
+    return get_metadata_path() / "external_links.parquet"
 
 
 def get_log_dir() -> Path:
