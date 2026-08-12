@@ -84,7 +84,7 @@ class BaseExporter(ABC):
         self.verbose: bool = verbose
         self._refinebio = RefineBioExporter(logger=self.log, verbose=self.verbose)
 
-    def add_exernal_links(self, curation: BaseCuration) -> BaseCuration:
+    def add_external_links(self, curation: BaseCuration) -> BaseCuration:
         """Attaches external links to a curation."""
         external_links = self._add_external_links(
             self._extract_sources_for_links(curation)
@@ -468,7 +468,7 @@ class BaseExporter(ABC):
         _metadata = _metadata + [SOURCES_COL, EXTERNAL_LINKS_COL]
 
         # add link to original sources where applicable
-        curation = self.add_exernal_links(curation)
+        curation = self.add_external_links(curation)
 
         # save sources to citation file
         save_citations(
