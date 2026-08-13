@@ -72,7 +72,7 @@ include = ["src/metahq_core/export/citation_template.txt"]
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py312']
 include = '\.pyi?$'
 
 [tool.isort]
