@@ -4,11 +4,12 @@ Class for Annotations export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-04-13 by Parker Hicks
+Last updated: 2026-08-13 by Parker Hicks
 """
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,6 +18,7 @@ import polars as pl
 from metahq_core.config import EXTERNAL_LINKS_COL, SOURCES_COL
 from metahq_core.export.base import BaseExporter
 from metahq_core.export.references import save_citations
+from metahq_core.util.alltypes import MetadataField
 from metahq_core.util.io import save_json
 from metahq_core.util.supported import database_ids
 
@@ -106,7 +108,7 @@ class AnnotationsExporter(BaseExporter):
             term: {} for term in anno.entities
         }
         _metadata = self._parse_metafields(anno.index_col, metadata)
-        _metadata.extend([SOURCES_COL, EXTERNAL_LINKS_COL])
+        _metadata.extend([MetadataField.SOURCES, MetadataField.EXTERNAL_LINKS])
 
         # include external links
         anno = self.add_external_links(anno)
@@ -114,14 +116,19 @@ class AnnotationsExporter(BaseExporter):
         # append sra IDs if requested
         if self._sra_in_metadata(_metadata):
             anno = self.get_sra(
-                anno, [field for field in _metadata if field in database_ids("sra")]
+                anno,
+                [
+                    field.value
+                    for field in _metadata
+                    if field.value in database_ids("sra")
+                ],
             )
 
         # append refine.bio IDs if requested
         if self._refinebio_in_metadata(_metadata):
             anno = self._refinebio.get_refinebio(
                 anno,
-                [field for field in _metadata if field in database_ids("refinebio")],
+                [field.value for field in _metadata if field.value in database_ids("refinebio")],
             )
 
         # append requested GEO metadata fields
@@ -136,7 +143,7 @@ class AnnotationsExporter(BaseExporter):
         # convert data frame to dict
         for col in anno.entities:
             _anno.setdefault(col, {})
-            subset = stacked.filter(pl.col(col) == 1)[_metadata]
+            subset = stacked.filter(pl.col(col) == 1)[[field.value for field in _metadata]]
 
             for row in subset.iter_rows(named=True):
                 self._write_row_with_metadata(
@@ -151,10 +158,15 @@ class AnnotationsExporter(BaseExporter):
         index: str,
         anno: dict[str, dict],
         entity: str,
-        metadata: list[str],
+        metadata: list[MetadataField],
     ):
         """Write a row of an Annotations curation to a dictionary with metadata."""
         idx = row[index]
         anno[entity].setdefault(idx, {})
-        for additional in [i for i in metadata if i != index]:
-            anno[entity][idx][additional] = row[additional]
+        for additional in [i for i in metadata if i.value != index]:
+            value = row[additional.value]
+            match additional:
+                case MetadataField.EXTERNAL_LINKS:
+                    anno[entity][idx][additional.value] = json.loads(value) if value is not None else None
+                case _:
+                    anno[entity][idx][additional.value] = value

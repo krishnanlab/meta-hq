@@ -20,7 +20,12 @@ from metahq_core.config import EXTERNAL_LINKS_COL, SOURCES_COL
 from metahq_core.export.references import save_citations
 from metahq_core.export.refinebio import RefineBioExporter
 from metahq_core.logger import setup_logger
-from metahq_core.util.alltypes import Level
+from metahq_core.util.alltypes import (
+    LEVEL_TO_FIELDS,
+    LEVEL_TO_INDEX_FIELD,
+    Level,
+    MetadataField,
+)
 from metahq_core.util.io import checkdir, load_bson
 from metahq_core.util.supported import (
     database_ids,
@@ -29,7 +34,6 @@ from metahq_core.util.supported import (
     get_annotations,
     get_default_log_dir,
     get_external_links,
-    metadata_fields,
     sources_with_external_links,
     supported,
 )
@@ -98,7 +102,9 @@ class BaseExporter(ABC):
                 return curation.add_ids_partial(external_links)
 
             case _:
-                raise ValueError(f"Expected level in [sample, series]. Got {self._level}.")
+                raise ValueError(
+                    f"Expected level in [sample, series]. Got {self._level}."
+                )
 
     def to_numpy(self, curation: BaseCuration) -> NpIntMatrix:
         """Returns curation's data matrix as a numpy array."""
@@ -367,38 +373,58 @@ class BaseExporter(ABC):
                     self.log.error(msg)
                 raise ValueError(msg)
 
-    def _parse_metafields(self, index_col: str, fields: str) -> list[str]:
+    def _parse_metafields(self, level: Level | str, fields: str) -> list[MetadataField]:
         """Parse and check user-specified metadata fields."""
-        _metadata = fields.split(",")
+        _level = Level(level) if isinstance(level, str) else level
+        allowed = LEVEL_TO_FIELDS[_level]
+        requested = fields.split(",")
 
+        resolved: list[MetadataField] = []
         flagged = False
-        for field in _metadata:
-            if field not in metadata_fields(index_col):
+
+        for raw in requested:
+            raw = raw.strip()
+            try:
+                field = MetadataField(raw)
+            except ValueError:
+                field = None
+
+            if field is None or field not in allowed:
                 flagged = True
                 self.log.warning(
-                    "Requested metadata: %s, is not available. Skipping...", field
+                    "Requested metadata: %s, is not available. Skipping...", raw
                 )
+                continue
+
+            resolved.append(field)
 
         if flagged:
             self.log.info("Run `metahq supported` to see available metadata fields.")
 
-        if not index_col in _metadata:
-            _metadata.append(index_col)
-        return _metadata
+        index_field = LEVEL_TO_INDEX_FIELD[_level]
+        if index_field not in resolved:
+            resolved.append(index_field)
 
-    def _refinebio_in_metadata(self, metadata: list[str]) -> bool:
+        return resolved
+
+    def _refinebio_in_metadata(self, metadata: list[MetadataField]) -> bool:
         """Checks if any refine.bio IDs are in requested metadata."""
-        return len(list(set(metadata) & set(database_ids("refinebio")))) > 0
+        _fields = [field.value for field in metadata]
+        return len(list(set(_fields) & set(database_ids("refinebio")))) > 0
 
-    def _sra_in_metadata(self, metadata: list[str]) -> bool:
+    def _sra_in_metadata(self, metadata: list[MetadataField]) -> bool:
         """Checks if any SRA IDs are in requested metadata."""
-        return len(list(set(metadata) & set(database_ids("sra")))) > 0
+        _fields = [field.value for field in metadata]
+        return len(list(set(_fields) & set(database_ids("sra")))) > 0
 
-    def _geo_fields_in_metadata(self, metadata: list[str], index_col: str) -> list[str]:
+    def _geo_fields_in_metadata(
+        self, metadata: list[MetadataField], index_col: str
+    ) -> list[str]:
         """Returns the requested metadata fields that are sourced from the
         GEO metadata parquet (e.g. description, title, summary, ...).
         """
-        return [field for field in metadata if field in geo_metadata_fields(index_col)]
+        _fields = [field.value for field in metadata]
+        return [field for field in _fields if field in geo_metadata_fields(index_col)]
 
     def _only_index(self, metadata: str | None, index: str) -> bool:
         """Check if no metadata passed or if only the index is passed."""
@@ -413,10 +439,9 @@ class BaseExporter(ABC):
         summary, source_name_ch1, ...) for a curation's index.
         """
         level = curation.index_col
-        cols = self._geo_fields_in_metadata(fields, level)
         return (
             pl.scan_parquet(geo_metadata(level))
-            .select([level, *cols])
+            .select([level, *fields])
             .filter(pl.col(level).is_in(curation.index))
             .collect()
         )
@@ -452,20 +477,20 @@ class BaseExporter(ABC):
             _metadata = self._parse_metafields(curation.index_col, metadata)
 
         else:
-            _metadata = [curation.index_col]
+            _metadata = [LEVEL_TO_INDEX_FIELD[Level(curation.index_col)]]
 
         if self._sra_in_metadata(_metadata):
             curation = self.get_sra(
-                curation, [field for field in _metadata if field in database_ids("sra")]
+                curation, [field.value for field in _metadata if field.value in database_ids("sra")]
             )
 
         if self._refinebio_in_metadata(_metadata):
             curation = self._refinebio.get_refinebio(
                 curation,
-                [field for field in _metadata if field in database_ids("refinebio")],
+                [field.value for field in _metadata if field.value in database_ids("refinebio")],
             )
 
-        _metadata = _metadata + [SOURCES_COL, EXTERNAL_LINKS_COL]
+        _metadata = _metadata + [MetadataField.SOURCES, MetadataField.EXTERNAL_LINKS]
 
         # add link to original sources where applicable
         curation = self.add_external_links(curation)
@@ -486,7 +511,7 @@ class BaseExporter(ABC):
 
         else:
             self._get_save_method(fmt)(
-                curation.ids.select(_metadata)
+                curation.ids.select([field.value for field in _metadata])
                 .hstack(curation.data)
                 .sort(curation.index_col),
                 file,
@@ -497,7 +522,7 @@ class BaseExporter(ABC):
         self,
         file: FilePath,
         curation: BaseCuration,
-        metadata: list[str],
+        metadata: list[MetadataField],
         fmt: str,
         **kwargs,
     ):
@@ -506,8 +531,9 @@ class BaseExporter(ABC):
         """
         geo_fields = self._geo_fields_in_metadata(metadata, curation.index_col)
         geo = self._get_geo_metadata(curation, geo_fields)
-        ids = [field for field in metadata if field not in geo_fields]
-        reorder = metadata + curation.entities
+        metadata_str = [field.value for field in metadata]
+        ids = [field for field in metadata_str if field not in geo_fields]
+        reorder = metadata_str + curation.entities
 
         df = (
             curation.ids.select(ids)

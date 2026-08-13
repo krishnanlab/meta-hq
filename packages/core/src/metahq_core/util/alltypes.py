@@ -34,45 +34,95 @@ type ParsedGemma = dict[str, dict[str, dict[str, list[str]]]]
 
 class Level(Enum):
     """Supported annotation levels."""
+
     SAMPLE = "sample"
     SERIES = "series"
-    
-class SampleMetadataField(Enum):
-    """Supported sample-level metadata fields."""
+
+
+class MetadataField(Enum):
+    """All supported metadata fields."""
+
+    # levels
+    SAMPLE = "sample"
+    SERIES = "series"
+    # sample-level
     DESCRIPTION = "description"
     SOURCE_NAME_CH1 = "source_name_ch1"
     CHARACTERISTICS_CH1 = "characteristics_ch1"
     SOURCE_NAME_CH2 = "source_name_ch2"
     CHARACTERISTICS_CH2 = "characteristics_ch2"
-
-class SeriesMetadataField(Enum):
-    """Supported series-level metadata fields."""
+    # series-level
     TITLE = "title"
     SUMMARY = "summary"
     OVERALL_DESIGN = "overall_design"
-    DESCRIPTION = "description"
     SAMPLE_ID = "sample_id"
-
-class IDField(Enum):
-    """Supported ID fields."""
+    # id fields
     PLATFORM = "platform"
+    SRA_RUN = "srr"
     SRA_EXPERIMENT = "srx"
     SRA_SAMPLE = "srs"
     SRA_PROJECT = "srp"
     REFINEBIO_SAMPLE = "refinebio_sample"
     REFINEBIO_EXPERIMENT = "refinebio_experiment"
-
-class RequiredField(Enum):
-    """Fields required in queries from MetaHQ."""
+    # required
     SOURCES = SOURCES_COL
     EXTERNAL_LINKS = EXTERNAL_LINKS_COL
 
 
-# Supported metadata fields
-MetadataField = Enum(
-    "MetadataField", {
-        **{e.name: e.value for e in SampleMetadataField},
-        **{e.name: e.value for e in SeriesMetadataField},
-        **{e.name: e.value for e in IDField},
+SAMPLE_METADATA_FIELDS = frozenset(
+    {
+        MetadataField.DESCRIPTION,
+        MetadataField.SOURCE_NAME_CH1,
+        MetadataField.CHARACTERISTICS_CH1,
+        MetadataField.SOURCE_NAME_CH2,
+        MetadataField.CHARACTERISTICS_CH2,
     }
 )
+
+SERIES_METADATA_FIELDS = frozenset(
+    {
+        MetadataField.TITLE,
+        MetadataField.SUMMARY,
+        MetadataField.OVERALL_DESIGN,
+        MetadataField.DESCRIPTION,
+        MetadataField.SAMPLE_ID,
+    }
+)
+
+# ID fields that apply to sample level
+SAMPLE_ID_FIELDS = frozenset(
+    {
+        MetadataField.PLATFORM,
+        MetadataField.SRA_RUN,
+        MetadataField.SRA_EXPERIMENT,
+        MetadataField.SRA_SAMPLE,
+        MetadataField.SRA_PROJECT,
+        MetadataField.REFINEBIO_SAMPLE,
+        MetadataField.REFINEBIO_EXPERIMENT,
+    }
+)
+
+# ID fields that apply to series level
+SERIES_ID_FIELDS = frozenset(
+    {
+        MetadataField.PLATFORM,
+        MetadataField.SRA_PROJECT,
+        MetadataField.REFINEBIO_EXPERIMENT,
+    }
+)
+
+# All ID fields (kept for backward compatibility)
+ID_FIELDS = SAMPLE_ID_FIELDS | SERIES_ID_FIELDS
+
+REQUIRED_FIELDS = frozenset({MetadataField.SOURCES, MetadataField.EXTERNAL_LINKS})
+
+# conversions
+LEVEL_TO_FIELDS: dict[Level, frozenset[MetadataField]] = {
+    Level.SAMPLE: SAMPLE_METADATA_FIELDS | SAMPLE_ID_FIELDS,
+    Level.SERIES: SERIES_METADATA_FIELDS | SERIES_ID_FIELDS,
+}
+
+LEVEL_TO_INDEX_FIELD: dict[Level, MetadataField] = {
+    Level.SAMPLE: MetadataField.SAMPLE,
+    Level.SERIES: MetadataField.SERIES,
+}

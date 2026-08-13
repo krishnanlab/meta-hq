@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from metahq_core.config import SOURCES_COL
 from metahq_core.export.base import BaseExporter
 from metahq_core.export.references import save_citations
+from metahq_core.util.alltypes import MetadataField
 from metahq_core.util.io import save_json
 from metahq_core.util.supported import database_ids, disease_ontologies
 
@@ -103,21 +104,21 @@ class LabelsExporter(BaseExporter):
 
             self.log.info("Saving retrieval result to %s", Path(file).parent)
             _metadata = self._parse_metafields(curation.index_col, metadata)
-            _metadata.extend([SOURCES_COL])
+            _metadata.extend([MetadataField.SOURCES])
 
             if self._sra_in_metadata(_metadata):
                 curation = self.get_sra(
                     curation,
-                    [field for field in _metadata if field in database_ids("sra")],
+                    [field.value for field in _metadata if field.value in database_ids("sra")],
                 )
 
             if self._refinebio_in_metadata(_metadata):
                 curation = self._refinebio.get_refinebio(
                     curation,
                     [
-                        field
+                        field.value
                         for field in _metadata
-                        if field in database_ids("refinebio")
+                        if field.value in database_ids("refinebio")
                     ],
                 )
 
@@ -147,7 +148,7 @@ class LabelsExporter(BaseExporter):
         row: dict[str, str],
         labels: dict[str, dict],
         index_col: str,
-        metadata: list[str],
+        metadata: list[MetadataField],
     ):
         """Write a row of a Labels curation to a dictionary with metadata."""
         idx = row[index_col]
@@ -160,7 +161,7 @@ class LabelsExporter(BaseExporter):
             # add sample with metadata
             cls = LABEL_KEY[label]
             idx_metadata = {idx: {}}
-            for additional in [i for i in metadata if i != index_col]:
-                idx_metadata[idx][additional] = row[additional]
+            for additional in [i for i in metadata if i.value != index_col]:
+                idx_metadata[idx][additional.value] = row[additional.value]
 
             labels[entity][cls].append(idx_metadata)
