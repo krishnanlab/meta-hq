@@ -12,7 +12,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-from metahq_core.config import EXTERNAL_LINKS_COL, SOURCES_COL
+from metahq_core.config import EXTERNAL_LINKS_COL, SAMPLE_KEY, SERIES_KEY, SOURCES_COL
 
 type FilePath = Path | str
 type DictKeys = KeysView
@@ -35,16 +35,16 @@ type ParsedGemma = dict[str, dict[str, dict[str, list[str]]]]
 class Level(Enum):
     """Supported annotation levels."""
 
-    SAMPLE = "sample"
-    SERIES = "series"
+    SAMPLE = SAMPLE_KEY
+    SERIES = SERIES_KEY
 
 
 class MetadataField(Enum):
     """All supported metadata fields."""
 
     # levels
-    SAMPLE = "sample"
-    SERIES = "series"
+    SAMPLE = SAMPLE_KEY
+    SERIES = SERIES_KEY
     # sample-level
     DESCRIPTION = "description"
     SOURCE_NAME_CH1 = "source_name_ch1"
@@ -93,6 +93,8 @@ SERIES_METADATA_FIELDS = frozenset(
 SAMPLE_ID_FIELDS = frozenset(
     {
         MetadataField.PLATFORM,
+        MetadataField.SAMPLE,
+        MetadataField.SERIES,
         MetadataField.SRA_RUN,
         MetadataField.SRA_EXPERIMENT,
         MetadataField.SRA_SAMPLE,
@@ -105,9 +107,11 @@ SAMPLE_ID_FIELDS = frozenset(
 # ID fields that apply to series level
 SERIES_ID_FIELDS = frozenset(
     {
+        MetadataField.SERIES,
         MetadataField.PLATFORM,
         MetadataField.SRA_PROJECT,
         MetadataField.REFINEBIO_EXPERIMENT,
+        MetadataField.SAMPLE_ID,
     }
 )
 
