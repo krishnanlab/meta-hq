@@ -183,7 +183,7 @@ def format_reference(reference: Reference, index: int, indent: str = "    ") -> 
         f"[{index}] {reference.source}\n"
         f"{indent}{textwrap.fill(citation_text, width=80, subsequent_indent=indent)}\n"
         f"{indent}url: {reference.url}\n"
-        f"{indent}Annotations: {reference.n}\n"
+        f"{indent}Number of annotations in this export: {reference.n}\n"
         f"{indent}License: {reference.rights}"
     )
 
