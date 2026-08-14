@@ -47,6 +47,22 @@ def sample_labels_no_controls():
 
 
 @pytest.fixture
+def sample_labels_with_linked_source():
+    """labels curation whose 'sources' column names a real external-link
+    provider (Gemma) for GSE1, so add_external_links has a match to resolve
+    end-to-end."""
+    data = pl.DataFrame({"MONDO:0005148": [1, -1, 2, 0]})
+    ids = pl.DataFrame(
+        {
+            "sample": ["GSM1", "GSM2", "GSM3", "GSM4"],
+            "series": ["GSE1", "GSE1", "GSE2", "GSE1"],
+            "sources": ["Gemma", "Gemma", "KrishnanLab", "Gemma"],
+        }
+    )
+    return Labels(data, ids, index_col="sample", group_cols=("series", "sources"))
+
+
+@pytest.fixture
 def labels_exporter():
     return LabelsExporter(
         attribute="disease", level="sample", logger=Mock(), verbose=False
@@ -142,6 +158,51 @@ class TestToJson:
         assert json.loads(no_metadata.read_text()) == json.loads(
             explicit_index.read_text()
         )
+
+    def test_external_links_attached_when_requested(
+        self,
+        labels_exporter,
+        sample_labels_with_linked_source,
+        citation_config,
+        tmp_path,
+        stub_external_links_with_data,
+    ):
+        outfile = tmp_path / "out.json"
+        labels_exporter.to_json(
+            sample_labels_with_linked_source,
+            outfile,
+            citation_config,
+            metadata="sample,external_links",
+        )
+
+        result = json.loads(outfile.read_text())
+        positive_entry = result["MONDO:0005148"]["positive"][0]
+        links = positive_entry["GSM1"]["external_links"]
+        assert isinstance(links, dict)
+        assert links["Gemma"] == "https://gemma.msl.ubc.ca/GSE1"
+
+    def test_merges_refinebio_fields_when_requested(
+        self, labels_exporter, sample_labels, citation_config, tmp_path
+    ):
+        labels_exporter._refinebio._map = pl.DataFrame(
+            {
+                "gsm": ["GSM1", "GSM2", "GSM3", "GSM4"],
+                "gse": ["GSE1", "GSE1", "GSE2", "GSE1"],
+                "refinebio_sample": ["RB1", "RB2", "RB3", "RB4"],
+                "refinebio_experiment": ["RBE1", "RBE1", "RBE2", "RBE1"],
+            }
+        )
+        outfile = tmp_path / "out.json"
+        labels_exporter.to_json(
+            sample_labels,
+            outfile,
+            citation_config,
+            metadata="sample,refinebio_sample",
+        )
+
+        result = json.loads(outfile.read_text())
+        positive_entry = result["MONDO:0005148"]["positive"][0]
+        assert positive_entry["GSM1"]["refinebio_sample"] == "RB1"
 
     def test_non_str_non_none_metadata_raises_readable_valueerror(
         self, labels_exporter, sample_labels, citation_config, tmp_path

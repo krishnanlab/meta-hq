@@ -31,6 +31,22 @@ def sample_annotations():
 
 
 @pytest.fixture
+def sample_annotations_with_linked_source():
+    """annotations curation whose 'sources' column names a real external-link
+    provider (Gemma) for GSE1, so add_external_links has a match to resolve
+    end-to-end."""
+    data = pl.DataFrame({"UBERON:0000948": [1, 0, 1, 0]})
+    ids = pl.DataFrame(
+        {
+            "sample": ["GSM1", "GSM2", "GSM3", "GSM4"],
+            "series": ["GSE1", "GSE1", "GSE2", "GSE1"],
+            "sources": ["Gemma", "Gemma", "KrishnanLab", "Gemma"],
+        }
+    )
+    return Annotations(data, ids, index_col="sample", group_cols=("series", "sources"))
+
+
+@pytest.fixture
 def anno_exporter():
     return AnnotationsExporter(
         attribute="tissue", level="sample", logger=Mock(), verbose=False
@@ -117,6 +133,44 @@ class TestToJson:
         assert json.loads(no_metadata.read_text()) == json.loads(
             explicit_index.read_text()
         )
+
+    def test_external_links_are_json_objects_not_strings(
+        self,
+        anno_exporter,
+        sample_annotations_with_linked_source,
+        citation_config,
+        tmp_path,
+        stub_external_links_with_data,
+    ):
+        outfile = tmp_path / "out.json"
+        anno_exporter.to_json(
+            sample_annotations_with_linked_source,
+            outfile,
+            citation_config,
+            metadata="sample,external_links",
+        )
+
+        result = json.loads(outfile.read_text())
+        links = result["UBERON:0000948"]["GSM1"]["external_links"]
+        assert isinstance(links, dict)
+        assert links["Gemma"] == "https://gemma.msl.ubc.ca/GSE1"
+
+    def test_respects_verbose_false_for_citations(
+        self, sample_annotations, citation_config, tmp_path
+    ):
+        logger = Mock()
+        exp = AnnotationsExporter(
+            attribute="tissue", level="sample", logger=logger, verbose=False
+        )
+        outfile = tmp_path / "out.json"
+        exp.to_json(sample_annotations, outfile, citation_config, metadata=None)
+
+        citation_messages = [
+            call.args[0]
+            for call in logger.info.call_args_list
+            if call.args and "CITATION" in str(call.args[0])
+        ]
+        assert citation_messages == []
 
     def test_non_str_non_none_metadata_raises_readable_valueerror(
         self, anno_exporter, sample_annotations, citation_config, tmp_path

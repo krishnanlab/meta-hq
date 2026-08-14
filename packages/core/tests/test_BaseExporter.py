@@ -18,6 +18,7 @@ from metahq_core.curations.labels import Labels
 from metahq_core.export.annotations import AnnotationsExporter
 from metahq_core.export.labels import LabelsExporter
 from metahq_core.export.references import CitationConfig
+from metahq_core.util.alltypes import MetadataField
 
 @pytest.fixture
 def mock_logger():
@@ -125,6 +126,47 @@ class TestGetSra:
         merged = labels_exporter.get_sra(sample_labels, ["srr"])
         assert isinstance(merged, Labels)
         assert merged.ids["srr"].to_list() == ["NA", "SRR1", "SRR4", "SRR2"]
+
+
+class TestAddRequiredFieldNames:
+    """test _add_required_field_names, shared identically between both exporters"""
+
+    def test_appends_external_links_and_sources_when_file_exists(self, anno_exporter):
+        resolved = anno_exporter._add_required_field_names([MetadataField.SAMPLE])
+
+        assert MetadataField.EXTERNAL_LINKS in resolved
+        assert MetadataField.SOURCES in resolved
+
+    def test_skips_external_links_and_warns_when_file_missing(
+        self, anno_exporter, mock_logger, tmp_path, monkeypatch
+    ):
+        monkeypatch.setattr(
+            "metahq_core.export.base.get_external_links",
+            lambda: tmp_path / "does_not_exist.parquet",
+        )
+
+        resolved = anno_exporter._add_required_field_names([MetadataField.SAMPLE])
+
+        assert MetadataField.EXTERNAL_LINKS not in resolved
+        assert MetadataField.SOURCES in resolved
+        mock_logger.warning.assert_called_once()
+        assert "old version" in mock_logger.warning.call_args[0][0]
+
+
+class TestParseMetafields:
+    """test _parse_metafields, shared identically between both exporters"""
+
+    def test_index_field_requested_explicitly_does_not_warn(
+        self, anno_exporter, mock_logger
+    ):
+        anno_exporter._parse_metafields("sample", "sample,description")
+        mock_logger.warning.assert_not_called()
+
+    def test_series_allowed_as_sample_level_metadata(self, anno_exporter, mock_logger):
+        resolved = anno_exporter._parse_metafields("sample", "sample,series")
+
+        assert MetadataField.SERIES in resolved
+        mock_logger.warning.assert_not_called()
 
 
 class TestSave:
@@ -254,6 +296,44 @@ class TestSaveTabular:
         written = pl.read_csv(outfile)
         assert written["sample"].to_list() == sorted(written["sample"].to_list())
         assert written.filter(pl.col("sample") == "GSM1")["description"].item() == "d1"
+
+    def test_geo_metadata_branch_places_index_column_first(
+        self, anno_exporter, sample_annotations, citation_config, tmp_path, monkeypatch
+    ):
+        geo_parquet = tmp_path / "geo.parquet"
+        pl.DataFrame(
+            {
+                "sample": ["GSM1", "GSM2", "GSM3", "GSM4"],
+                "description": ["d1", "d2", "d3", "d4"],
+            }
+        ).write_parquet(geo_parquet)
+        monkeypatch.setattr(
+            "metahq_core.export.base.geo_metadata", lambda level: geo_parquet
+        )
+
+        outfile = tmp_path / "out.csv"
+        anno_exporter.to_csv(
+            sample_annotations, outfile, citation_config, metadata="description,sample"
+        )
+
+        written = pl.read_csv(outfile)
+        assert written.columns[0] == "sample"
+
+    def test_skips_external_links_join_when_file_missing(
+        self, anno_exporter, sample_annotations, citation_config, tmp_path, monkeypatch
+    ):
+        monkeypatch.setattr(
+            "metahq_core.export.base.get_external_links",
+            lambda: tmp_path / "does_not_exist.parquet",
+        )
+
+        outfile = tmp_path / "out.csv"
+        anno_exporter.to_csv(
+            sample_annotations, outfile, citation_config, metadata="sample"
+        )
+
+        written = pl.read_csv(outfile)
+        assert "external_links" not in written.columns
 
     def test_invalid_fmt_raises_readable_valueerror(
         self, anno_exporter, sample_annotations, citation_config, tmp_path

@@ -4,7 +4,7 @@ Abstract base class for Curation export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-08-12 by Parker Hicks
+Last updated: 2026-08-13 by Parker Hicks
 """
 
 from __future__ import annotations
@@ -327,6 +327,23 @@ class BaseExporter(ABC):
 
         return sources
 
+    def _add_required_field_names(self, fields: list[MetadataField]):
+        """Adds external links and sources columns to included metadata."""
+        # check if external links exist. These were not included before MetaHQ data package v1.2
+        if get_external_links().exists():
+            fields = fields + [
+                MetadataField.EXTERNAL_LINKS,
+            ]
+        else:
+            self.log.warning(
+                "You are using an old version of the MetaHQ database."
+                " Database versions <v1.2 do not include external links."
+                " Consider updating your database with metahq setup --latest."
+            )
+
+        # save sources to citation file
+        return fields + [MetadataField.SOURCES]
+
     def _extract_sources_for_links(self, curation: BaseCuration) -> pl.DataFrame:
         """Extracts sources and series information from the curation.
 
@@ -357,6 +374,27 @@ class BaseExporter(ABC):
             .explode("series")
             .unique()
         )
+
+    def _join_external_metadata_with_curation(
+        self, curation: BaseCuration, fields: list[MetadataField]
+    ) -> BaseCuration:
+        if self._sra_in_metadata(fields):
+            curation = self.get_sra(
+                curation,
+                [field.value for field in fields if field.value in database_ids("sra")],
+            )
+
+        if self._refinebio_in_metadata(fields):
+            curation = self._refinebio.get_refinebio(
+                curation,
+                [
+                    field.value
+                    for field in fields
+                    if field.value in database_ids("refinebio")
+                ],
+            )
+
+        return curation
 
     def _load_annotations(self) -> dict:
         """Load the annotations dictionary for a given level."""
@@ -404,6 +442,8 @@ class BaseExporter(ABC):
         index_field = LEVEL_TO_INDEX_FIELD[_level]
         if index_field not in resolved:
             resolved.append(index_field)
+
+        resolved = self._add_required_field_names(resolved)
 
         return resolved
 
@@ -478,26 +518,22 @@ class BaseExporter(ABC):
 
         else:
             _metadata = [LEVEL_TO_INDEX_FIELD[Level(curation.index_col)]]
+            _metadata = self._add_required_field_names(_metadata)
 
-        if self._sra_in_metadata(_metadata):
-            curation = self.get_sra(
-                curation, [field.value for field in _metadata if field.value in database_ids("sra")]
-            )
-
-        if self._refinebio_in_metadata(_metadata):
-            curation = self._refinebio.get_refinebio(
-                curation,
-                [field.value for field in _metadata if field.value in database_ids("refinebio")],
-            )
-
-        _metadata = _metadata + [MetadataField.SOURCES, MetadataField.EXTERNAL_LINKS]
+        curation = self._join_external_metadata_with_curation(
+            curation, fields=_metadata
+        )
 
         # add link to original sources where applicable
-        curation = self.add_external_links(curation)
+        if MetadataField.EXTERNAL_LINKS in _metadata:
+            curation = self.add_external_links(curation)
 
         # save sources to citation file
         save_citations(
-            curation.ids[SOURCES_COL].str.split("|").explode().value_counts(sort=True),
+            curation.ids[MetadataField.SOURCES.value]
+            .str.split("|")
+            .explode()
+            .value_counts(sort=True),
             citation_config,
             logger=self.log,
             verbose=self.verbose,
@@ -532,8 +568,13 @@ class BaseExporter(ABC):
         geo_fields = self._geo_fields_in_metadata(metadata, curation.index_col)
         geo = self._get_geo_metadata(curation, geo_fields)
         metadata_str = [field.value for field in metadata]
+
+        # ensure index column is first
+        metadata_str.remove(curation.index_col)
+        metadata_str.insert(0, curation.index_col)
+
         ids = [field for field in metadata_str if field not in geo_fields]
-        reorder = metadata_str + curation.entities
+        reorder = metadata_str + list(curation.entities)
 
         df = (
             curation.ids.select(ids)

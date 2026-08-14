@@ -51,3 +51,24 @@ def stub_external_links(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "metahq_core.export.base.get_external_links", lambda: external_links_file
     )
+
+
+@pytest.fixture
+def stub_external_links_with_data(monkeypatch, tmp_path):
+    """Populated external-links parquet (unlike the empty-schema autouse
+    stub above), so tests can assert real link data flows end-to-end
+    through BaseExporter.add_external_links instead of only exercising the
+    no-match path."""
+    external_links_file = tmp_path / "external_links_with_data.parquet"
+    pl.DataFrame(
+        {
+            "series": pl.Series(["GSE1"], dtype=pl.String),
+            "Gemma": pl.Series(["https://gemma.msl.ubc.ca/GSE1"], dtype=pl.String),
+            "BGee": pl.Series([None], dtype=pl.String),
+            "DiSignAtlas": pl.Series([None], dtype=pl.String),
+        }
+    ).write_parquet(external_links_file)
+    monkeypatch.setattr(
+        "metahq_core.export.base.get_external_links", lambda: external_links_file
+    )
+    return external_links_file

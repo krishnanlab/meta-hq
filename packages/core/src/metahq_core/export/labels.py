@@ -4,11 +4,12 @@ Class for Labels export io classes.
 Author: Parker Hicks
 Date: 2025-09-08
 
-Last updated: 2026-04-13 by Parker Hicks
+Last updated: 2026-08-14 by Parker Hicks
 """
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,7 +18,7 @@ from metahq_core.export.base import BaseExporter
 from metahq_core.export.references import save_citations
 from metahq_core.util.alltypes import MetadataField
 from metahq_core.util.io import save_json
-from metahq_core.util.supported import database_ids, disease_ontologies
+from metahq_core.util.supported import disease_ontologies
 
 if TYPE_CHECKING:
     from metahq_core.curations.labels import Labels
@@ -104,26 +105,16 @@ class LabelsExporter(BaseExporter):
 
             self.log.info("Saving retrieval result to %s", Path(file).parent)
             _metadata = self._parse_metafields(curation.index_col, metadata)
-            _metadata.extend([MetadataField.SOURCES])
 
-            if self._sra_in_metadata(_metadata):
-                curation = self.get_sra(
-                    curation,
-                    [field.value for field in _metadata if field.value in database_ids("sra")],
-                )
+            if MetadataField.EXTERNAL_LINKS in _metadata:
+                curation = self.add_external_links(curation)
 
-            if self._refinebio_in_metadata(_metadata):
-                curation = self._refinebio.get_refinebio(
-                    curation,
-                    [
-                        field.value
-                        for field in _metadata
-                        if field.value in database_ids("refinebio")
-                    ],
-                )
+            curation = self._join_external_metadata_with_curation(
+                curation, fields=_metadata
+            )
 
+            # append requested GEO metadata fields
             stacked = curation.data.hstack(curation.ids)
-
             geo_fields = self._geo_fields_in_metadata(_metadata, curation.index_col)
             if geo_fields:
                 geo = self._get_geo_metadata(curation, geo_fields)
@@ -161,7 +152,18 @@ class LabelsExporter(BaseExporter):
             # add sample with metadata
             cls = LABEL_KEY[label]
             idx_metadata = {idx: {}}
+
             for additional in [i for i in metadata if i.value != index_col]:
-                idx_metadata[idx][additional.value] = row[additional.value]
+                value = row[additional.value]
+
+                # external links need to be loaded from JSON strings before
+                # exporting to JSON.
+                match additional:
+                    case MetadataField.EXTERNAL_LINKS:
+                        idx_metadata[idx][additional.value] = (
+                            json.loads(value) if value is not None else None
+                        )
+                    case _:
+                        idx_metadata[idx][additional.value] = row[additional.value]
 
             labels[entity][cls].append(idx_metadata)

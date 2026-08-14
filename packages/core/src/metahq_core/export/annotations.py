@@ -15,12 +15,10 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from metahq_core.config import EXTERNAL_LINKS_COL, SOURCES_COL
 from metahq_core.export.base import BaseExporter
 from metahq_core.export.references import save_citations
 from metahq_core.util.alltypes import MetadataField
 from metahq_core.util.io import save_json
-from metahq_core.util.supported import database_ids
 
 if TYPE_CHECKING:
     from metahq_core.curations.annotations import Annotations
@@ -96,9 +94,13 @@ class AnnotationsExporter(BaseExporter):
         """Save annotations as JSON with requested metadata."""
 
         save_citations(
-            anno.ids[SOURCES_COL].str.split("|").explode().value_counts(sort=True),
+            anno.ids[MetadataField.SOURCES.value]
+            .str.split("|")
+            .explode()
+            .value_counts(sort=True),
             citation_config,
             logger=self.log,
+            verbose=self.verbose,
         )
 
         self.log.info("Saving retrieval result to %s", Path(file).parent)
@@ -108,28 +110,12 @@ class AnnotationsExporter(BaseExporter):
             term: {} for term in anno.entities
         }
         _metadata = self._parse_metafields(anno.index_col, metadata)
-        _metadata.extend([MetadataField.SOURCES, MetadataField.EXTERNAL_LINKS])
 
         # include external links
-        anno = self.add_external_links(anno)
+        if MetadataField.EXTERNAL_LINKS in _metadata:
+            anno = self.add_external_links(anno)
 
-        # append sra IDs if requested
-        if self._sra_in_metadata(_metadata):
-            anno = self.get_sra(
-                anno,
-                [
-                    field.value
-                    for field in _metadata
-                    if field.value in database_ids("sra")
-                ],
-            )
-
-        # append refine.bio IDs if requested
-        if self._refinebio_in_metadata(_metadata):
-            anno = self._refinebio.get_refinebio(
-                anno,
-                [field.value for field in _metadata if field.value in database_ids("refinebio")],
-            )
+        anno = self._join_external_metadata_with_curation(anno, fields=_metadata)
 
         # append requested GEO metadata fields
         stacked = anno.data.hstack(anno.ids)
@@ -141,13 +127,15 @@ class AnnotationsExporter(BaseExporter):
             )
 
         # convert data frame to dict
-        for col in anno.entities:
-            _anno.setdefault(col, {})
-            subset = stacked.filter(pl.col(col) == 1)[[field.value for field in _metadata]]
+        for entity in anno.entities:
+            _anno.setdefault(entity, {})
+            subset = stacked.filter(pl.col(entity) == 1)[
+                [field.value for field in _metadata]
+            ]
 
             for row in subset.iter_rows(named=True):
                 self._write_row_with_metadata(
-                    row, anno.index_col, _anno, col, _metadata
+                    row, _anno, anno.index_col, _metadata, entity
                 )
 
         save_json(_anno, file)
@@ -155,18 +143,23 @@ class AnnotationsExporter(BaseExporter):
     def _write_row_with_metadata(
         self,
         row: dict[str, str],
-        index: str,
         anno: dict[str, dict],
-        entity: str,
+        index: str,
         metadata: list[MetadataField],
+        entity: str,
     ):
         """Write a row of an Annotations curation to a dictionary with metadata."""
         idx = row[index]
         anno[entity].setdefault(idx, {})
         for additional in [i for i in metadata if i.value != index]:
             value = row[additional.value]
+
+            # external links need to be loaded from JSON strings before
+            # exporting to JSON.
             match additional:
                 case MetadataField.EXTERNAL_LINKS:
-                    anno[entity][idx][additional.value] = json.loads(value) if value is not None else None
+                    anno[entity][idx][additional.value] = (
+                        json.loads(value) if value is not None else None
+                    )
                 case _:
                     anno[entity][idx][additional.value] = value
