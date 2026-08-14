@@ -466,6 +466,12 @@ class BaseExporter(ABC):
         _fields = [field.value for field in metadata]
         return [field for field in _fields if field in geo_metadata_fields(index_col)]
 
+    def _sort_index_first(self, columns: list[str], index_col: str) -> list[str]:
+        """Reorders column names so the index column is first, preserving
+        the relative order of the remaining columns.
+        """
+        return [index_col, *(col for col in columns if col != index_col)]
+
     def _only_index(self, metadata: str | None, index: str) -> bool:
         """Check if no metadata passed or if only the index is passed."""
         return (metadata is None) or (
@@ -546,8 +552,11 @@ class BaseExporter(ABC):
             )
 
         else:
+            columns = self._sort_index_first(
+                [field.value for field in _metadata], curation.index_col
+            )
             self._get_save_method(fmt)(
-                curation.ids.select([field.value for field in _metadata])
+                curation.ids.select(columns)
                 .hstack(curation.data)
                 .sort(curation.index_col),
                 file,
@@ -567,11 +576,9 @@ class BaseExporter(ABC):
         """
         geo_fields = self._geo_fields_in_metadata(metadata, curation.index_col)
         geo = self._get_geo_metadata(curation, geo_fields)
-        metadata_str = [field.value for field in metadata]
-
-        # ensure index column is first
-        metadata_str.remove(curation.index_col)
-        metadata_str.insert(0, curation.index_col)
+        metadata_str = self._sort_index_first(
+            [field.value for field in metadata], curation.index_col
+        )
 
         ids = [field for field in metadata_str if field not in geo_fields]
         reorder = metadata_str + list(curation.entities)

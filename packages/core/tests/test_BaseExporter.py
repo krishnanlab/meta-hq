@@ -20,6 +20,7 @@ from metahq_core.export.labels import LabelsExporter
 from metahq_core.export.references import CitationConfig
 from metahq_core.util.alltypes import MetadataField
 
+
 @pytest.fixture
 def mock_logger():
     return Mock()
@@ -109,13 +110,17 @@ class TestGetSra:
         merged = anno_exporter.get_sra(sample_annotations, ["srr", "srx"])
 
         assert isinstance(merged, Annotations)
-        by_sample = dict(zip(merged.ids["sample"].to_list(), merged.ids["srr"].to_list()))
+        by_sample = dict(
+            zip(merged.ids["sample"].to_list(), merged.ids["srr"].to_list())
+        )
         assert by_sample["GSM1"] == "SRR1"
         assert by_sample["GSM3"] == "NA"
 
     def test_missing_field_filled_with_na(self, anno_exporter, sample_annotations):
         merged = anno_exporter.get_sra(sample_annotations, ["srx"])
-        by_sample = dict(zip(merged.ids["sample"].to_list(), merged.ids["srx"].to_list()))
+        by_sample = dict(
+            zip(merged.ids["sample"].to_list(), merged.ids["srx"].to_list())
+        )
         assert by_sample["GSM2"] == "NA"
 
     def test_preserves_index_order(self, anno_exporter, sample_annotations):
@@ -195,7 +200,9 @@ class TestSave:
             exp.save(sample_annotations, "csv", outfile, Mock())
         assert "Saved!" not in [c.args[0] for c in mock_logger.info.call_args_list]
 
-    def test_creates_parent_directory(self, anno_exporter, sample_annotations, tmp_path):
+    def test_creates_parent_directory(
+        self, anno_exporter, sample_annotations, tmp_path
+    ):
         outfile = tmp_path / "nested" / "dir" / "out.csv"
         with patch.object(anno_exporter, "to_csv"):
             anno_exporter.save(sample_annotations, "csv", outfile, Mock())
@@ -205,7 +212,9 @@ class TestSave:
 class TestToRefinebioDataset:
     """test to_refinebio_dataset, shared identically between both exporters"""
 
-    def test_delegates_to_refinebio_create_dataset(self, anno_exporter, sample_annotations):
+    def test_delegates_to_refinebio_create_dataset(
+        self, anno_exporter, sample_annotations
+    ):
         with patch.object(
             anno_exporter._refinebio, "create_dataset", return_value={"id": "abc"}
         ) as mock_create:
@@ -235,7 +244,9 @@ class TestSaveTabular:
         self, anno_exporter, sample_annotations, citation_config, tmp_path
     ):
         outfile = tmp_path / "out.csv"
-        anno_exporter.to_csv(sample_annotations, outfile, citation_config, metadata="sample")
+        anno_exporter.to_csv(
+            sample_annotations, outfile, citation_config, metadata="sample"
+        )
 
         written = pl.read_csv(outfile)
         assert written["sample"].to_list() == sorted(written["sample"].to_list())
@@ -244,7 +255,9 @@ class TestSaveTabular:
         self, labels_exporter, sample_labels, citation_config, tmp_path
     ):
         outfile = tmp_path / "out.csv"
-        labels_exporter.to_csv(sample_labels, outfile, citation_config, metadata="sample")
+        labels_exporter.to_csv(
+            sample_labels, outfile, citation_config, metadata="sample"
+        )
 
         written = pl.read_csv(outfile)
         assert written["sample"].to_list() == sorted(written["sample"].to_list())
@@ -259,6 +272,18 @@ class TestSaveTabular:
 
         written = pl.read_csv(outfile)
         assert "srr" in written.columns
+
+    def test_base_tabular_save_places_index_column_first(
+        self, anno_exporter, sample_annotations, citation_config, tmp_path
+    ):
+        outfile = tmp_path / "out.csv"
+        anno_exporter.to_csv(
+            sample_annotations, outfile, citation_config, metadata="series,srx"
+        )
+
+        written = pl.read_csv(outfile)
+
+        assert written.columns[0] == "sample"
 
     def test_merges_refinebio_fields_when_requested(
         self, anno_exporter, sample_annotations, citation_config, tmp_path
@@ -280,8 +305,8 @@ class TestSaveTabular:
         geo_parquet = tmp_path / "geo.parquet"
         pl.DataFrame(
             {
-                "sample": ["GSM1", "GSM2", "GSM3", "GSM4"],
                 "description": ["d1", "d2", "d3", "d4"],
+                "sample": ["GSM1", "GSM2", "GSM3", "GSM4"],
             }
         ).write_parquet(geo_parquet)
         monkeypatch.setattr(
