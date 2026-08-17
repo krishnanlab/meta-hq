@@ -185,33 +185,36 @@ metahq retrieve age --terms "infant,adolescent,elderly_adult" \
 
 ## Example Output
 
+### Tabular
+
 If a user queried disease annotations with the following command:
 
 ```bash
 metahq retrieve diseases --terms "MONDO:0002113,MONDO:0004994" \
     --filters="species=human,ecode=expert,tech=rnaseq" \
-    --metadata "platform,srx" --fmt tsv --output disease_annotations
+    --metadata "platform,srx" --fmt parquet --output disease_annotations
 ```
 
-This creates a directory called `disease_annotations` storing a file called `result.tsv` that would look like so:
+This creates a directory called `disease_annotations` storing a file called `result.parquet` contain
+the following table:
 
 ```
-┌──────────┬────────────┬────────────┬─────────────────────────┬───────────────┬───────────────┐
-│ platform ┆ srx        ┆ sample     ┆ sources                 ┆ MONDO:0002113 ┆ MONDO:0004994 │
-│ ---      ┆ ---        ┆ ---        ┆ ---                     ┆ ---           ┆ ---           │
-│ str      ┆ str        ┆ str        ┆ str                     ┆ i64           ┆ i64           │
-╞══════════╪════════════╪════════════╪═════════════════════════╪═══════════════╪═══════════════╡
-│ GPL16791 ┆ SRX2858505 ┆ GSM2641079 ┆ DiSignAtlas             ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858506 ┆ GSM2641080 ┆ KrishnanLab|DiSignAtlas ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858508 ┆ GSM2641082 ┆ KrishnanLab|DiSignAtlas ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858509 ┆ GSM2641083 ┆ KrishnanLab|DiSignAtlas ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858510 ┆ GSM2641084 ┆ DiSignAtlas             ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858511 ┆ GSM2641085 ┆ KrishnanLab|DiSignAtlas ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858512 ┆ GSM2641086 ┆ KrishnanLab|DiSignAtlas ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858513 ┆ GSM2641087 ┆ KrishnanLab|DiSignAtlas ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858514 ┆ GSM2641088 ┆ DiSignAtlas             ┆ 0             ┆ 1             │
-│ GPL16791 ┆ SRX2858515 ┆ GSM2641089 ┆ DiSignAtlas             ┆ 0             ┆ 1             │
-└──────────┴────────────┴────────────┴─────────────────────────┴───────────────┴───────────────┘
+┌────────────┬──────────┬────────────┬─────────────────────────────────┬─────────────────────────┬───────────────┬───────────────┐
+│ sample     ┆ platform ┆ srx        ┆ external_links                  ┆ sources                 ┆ MONDO:0002113 ┆ MONDO:0004994 │
+│ ---        ┆ ---      ┆ ---        ┆ ---                             ┆ ---                     ┆ ---           ┆ ---           │
+│ str        ┆ str      ┆ str        ┆ str                             ┆ str                     ┆ i32           ┆ i32           │
+╞════════════╪══════════╪════════════╪═════════════════════════════════╪═════════════════════════╪═══════════════╪═══════════════╡
+│ GSM1656436 ┆ GPL11154 ┆ SRX993404  ┆ null                            ┆ KrishnanLab|Gu_2023     ┆ 0             ┆ 1             │
+│ GSM1656437 ┆ GPL11154 ┆ SRX993405  ┆ null                            ┆ KrishnanLab|Gu_2023     ┆ 0             ┆ 1             │
+│ GSM1656438 ┆ GPL11154 ┆ SRX993406  ┆ null                            ┆ KrishnanLab|Gu_2023     ┆ 0             ┆ 1             │
+│ GSM1841270 ┆ GPL11154 ┆ SRX1127523 ┆ {"DiSignAtlas": {"browse_url":… ┆ KrishnanLab|DiSignAtlas ┆ 0             ┆ 1             │
+│ GSM1841273 ┆ GPL11154 ┆ SRX1127524 ┆ {"DiSignAtlas": {"browse_url":… ┆ KrishnanLab|DiSignAtlas ┆ 0             ┆ 1             │
+│ GSM2290138 ┆ GPL16791 ┆ SRX2042217 ┆ null                            ┆ KrishnanLab             ┆ 0             ┆ 1             │
+│ GSM2309518 ┆ GPL11154 ┆ SRX2161714 ┆ null                            ┆ KrishnanLab             ┆ 0             ┆ 1             │
+│ GSM2309519 ┆ GPL11154 ┆ SRX2161715 ┆ null                            ┆ KrishnanLab             ┆ 0             ┆ 1             │
+│ GSM2309520 ┆ GPL11154 ┆ SRX2161716 ┆ null                            ┆ KrishnanLab             ┆ 0             ┆ 1             │
+│ GSM2309521 ┆ GPL11154 ┆ SRX2161717 ┆ null                            ┆ KrishnanLab             ┆ 0             ┆ 1             │
+└────────────┴──────────┴────────────┴─────────────────────────────────┴─────────────────────────┴───────────────┴───────────────┘
 ```
 
 A 1 means the entry is annotated to the term, a 0 means it was not annotated to that term. Note that annotations
@@ -219,6 +222,8 @@ of 0 do not mean an entry is definitely not that term. It only means the entry w
 To get declarations of what an entry is, what it definitely is not, and what is unknown, use `--mode=label`.
 
 Metadata associated with each annotation are included as their own column.
+
+### JSON
 
 For JSON formats, metadata will be included as additional keys for the sample/study. For example, if a user
 ran the following:
@@ -234,22 +239,65 @@ They would retrieve the following:
 ```
 {
     "MONDO:0004994": {
-        "GSM2641079": {
-            "platform": "GPL16791",
-            "srx": "SRX2858505",
+        "GSM1423130": {
+            "platform": "GPL10999",
+            "srx": "SRX642727",
+            "external_links": null,
+            "sources": "Gu_2023"
+        },
+        "GSM1542465": {
+            "platform": "GPL11154",
+            "srx": "SRX757100",
+            "external_links": {
+                "DiSignAtlas": {
+                    "browse_url": null,
+                    "records": [
+                        {
+                            "id": "DSA04633",
+                            "url": "http://www.inbirg.com/disignatlas/detail/DSA04633"
+                        }
+                    ]
+                }
+            },
             "sources": "DiSignAtlas"
         },
-        "GSM2641080": {
-            "platform": "GPL16791",
-            "srx": "SRX2858506",
-            "sources": "KrishnanLab|DiSignAtlas"
-        },
-        "GSM2641082": {
-            "platform": "GPL16791",
-            "srx": "SRX2858508",
-            "sources": "KrishnanLab|DiSignAtlas"
-        }, ...
+    }
+}
 ```
+
+### External links
+
+Some annotations in MetaHQ come from databases with web interfaces (e.g., Gemma, DiSignAtlas, Bgee).
+For such annotations, we include an `external_links` column/key containing links to the original
+annotation sources.
+
+Some sources, such as Gemma and DiSignAtlas, computed differential expression signatures using
+subsets of samples within a single series. The Gemma web interface provides a page where users
+can view a list of all analyses performed for a single series - this url is provided under the
+`browse_url` key. The `records` key contains links to the individual analyses themselves where the
+`id` key notes the internal ID for that analysis in Gemma.
+
+```
+{
+    "Gemma": {
+        "browse_url": "https://gemma.msl.ubc.ca/browse/#/q/GSE97806",
+        "records": [
+            {
+                "id": "16162",
+                "url": "https://gemma.msl.ubc.ca/expressionExperiment/showExpressionExperiment.html?id=16162"
+            },
+            {
+                "id": "16161",
+                "url": "https://gemma.msl.ubc.ca/expressionExperiment/showExpressionExperiment.html?id=16161"
+            }
+        ]
+    }
+}
+```
+
+Other resources like DiSignAtlas do not have a "browse" page, but still perform multiple analyses
+per series. These resouces have an empty `browse_url` key, but can still have multiple records.
+
 
 ### Cite the original annotation sources
 The sources of the annotations are also included in their own `sources` column or key. Additionally, we include
