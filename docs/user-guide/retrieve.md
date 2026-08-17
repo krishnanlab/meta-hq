@@ -35,7 +35,8 @@ All retrieve commands share the following common options:
 ### Output Options
 
 - `--output PATH`: Path to the output directory containing the retrieval result and source citation information. Default: `./metahq_result`
-- `--fmt TEXT`: Output format (`parquet`, `tsv`, `csv`, or `json`). Default: `parquet`
+- `--fmt TEXT`: Output format (`parquet`, `tsv`, `csv`, or `json`). Default: `parquet`.
+    - **Note:** MetaHQ is optimized for tabular exports. Wile JSON exports are supported, we recommend using tabular exports for large queries, particularly parquet.
 - `--metadata TEXT`: Metadata level to include (`sample`, `series`, etc.). Default: `default` (matches `--level`)
     - Run `metahq supported` for all metadata fields.
     - Combine multiple filters like so: `'sample,series,description,srp'`
