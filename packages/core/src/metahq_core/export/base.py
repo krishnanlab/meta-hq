@@ -561,7 +561,9 @@ class BaseExporter(ABC):
             columns = self._sort_index_first(
                 [field.value for field in _metadata], curation.index_col
             )
-            columns = self._sort_links_last(columns, EXTERNAL_LINKS_COL)
+
+            if EXTERNAL_LINKS_COL in columns:
+                columns = self._sort_links_last(columns, EXTERNAL_LINKS_COL)
 
             self._get_save_method(fmt)(
                 curation.ids.select(columns)
@@ -587,7 +589,8 @@ class BaseExporter(ABC):
         metadata_str = self._sort_index_first(
             [field.value for field in metadata], curation.index_col
         )
-        metadata_str = self._sort_links_last(metadata_str, EXTERNAL_LINKS_COL)
+        if EXTERNAL_LINKS_COL in metadata_str:
+            metadata_str = self._sort_links_last(metadata_str, EXTERNAL_LINKS_COL)
 
         ids = [field for field in metadata_str if field not in geo_fields]
         reorder = metadata_str + list(curation.entities)
