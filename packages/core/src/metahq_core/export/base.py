@@ -472,6 +472,12 @@ class BaseExporter(ABC):
         """
         return [index_col, *(col for col in columns if col != index_col)]
 
+    def _sort_links_last(self, columns: list[str], links_col: str) -> list[str]:
+        """Reorders column names so the external links column is last, preserving
+        the relative order of the remaining columns.
+        """
+        return [*(col for col in columns if col != links_col), links_col]
+
     def _only_index(self, metadata: str | None, index: str) -> bool:
         """Check if no metadata passed or if only the index is passed."""
         return (metadata is None) or (
@@ -555,6 +561,8 @@ class BaseExporter(ABC):
             columns = self._sort_index_first(
                 [field.value for field in _metadata], curation.index_col
             )
+            columns = self._sort_links_last(columns, EXTERNAL_LINKS_COL)
+
             self._get_save_method(fmt)(
                 curation.ids.select(columns)
                 .hstack(curation.data)
@@ -579,6 +587,7 @@ class BaseExporter(ABC):
         metadata_str = self._sort_index_first(
             [field.value for field in metadata], curation.index_col
         )
+        metadata_str = self._sort_links_last(metadata_str, EXTERNAL_LINKS_COL)
 
         ids = [field for field in metadata_str if field not in geo_fields]
         reorder = metadata_str + list(curation.entities)
