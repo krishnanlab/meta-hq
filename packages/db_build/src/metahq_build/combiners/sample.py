@@ -115,6 +115,7 @@ class SampleCombiner(BaseAnnotationCombiner):
         self.logger.info("Enriching accession IDs from OmicIDX...")
         self.enrich_annotations(all_gsm, db_path)
 
+        self._remove_samples_missing_series()
         self._remove_non_transcriptomics_samples()
         self._remove_invalid_organisms()
         self._resolve_conflicting_disease_annotations()
@@ -298,13 +299,34 @@ class SampleCombiner(BaseAnnotationCombiner):
         )
         return result.lazy()
 
+    def _remove_samples_missing_series(self) -> None:
+        """Remove samples with no series (GSE) mapping from OmicIDX.
+
+        A handful of samples (typically very recent GEO depositions OmicIDX
+        hasn't caught up with yet) enrich successfully otherwise but have no
+        series link, so they can't be traced back to a parent study. The
+        sample schema requires ``accession_ids.series``, so drop them here
+        rather than let them fail validation downstream.
+        """
+        before = len(self.anno)
+        self.anno = {
+            k: v
+            for k, v in self.anno.items()
+            if STUDY_ACCESSION_KEY in v[ACCESSIONS_KEY]
+        }
+
+        after = len(self.anno)
+        diff = before - after
+        if diff > 0:
+            self.logger.info("Removed %d samples with no series mapping.", diff)
+
     def _remove_non_transcriptomics_samples(self):
         before = len(self.anno)
 
         ok_platforms = pl.read_parquet(TECHNOLOGY_MAP)[COL_TECHNOLOGY_MAP_GPL].to_list()
         transcriptomics_samples: dict[str, Any] = {}
         for entry, values in self.anno.items():
-            platform = values[ACCESSIONS_KEY][PLATFORM_ACCESSION_KEY]
+            platform = values[ACCESSIONS_KEY].get(PLATFORM_ACCESSION_KEY)
             if platform in ok_platforms:
                 transcriptomics_samples[entry] = values
 

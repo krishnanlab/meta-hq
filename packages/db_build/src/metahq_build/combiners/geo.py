@@ -15,6 +15,7 @@ from metahq_build.config.config import (
     CREEDS_PROCESSED,
     DISIGN_ATLAS_PROCESSED,
     GEMMA_PROCESSED,
+    GEMMA_SAMPLE_PROCESSED,
     GOLIGHTLY_PROCESSED,
     JOHNSON_2023_MICROARRAY_PROCESSED,
     KRISHNANLAB_PROCESSED,
@@ -23,18 +24,24 @@ from metahq_build.config.config import (
     URSAHD_PROCESSED,
 )
 
-# Maps source name → default processed parquet path.
+# Maps source name → default sample-level (GSM) processed parquet path.
 GEO_SOURCES: dict[str, Path] = {
     "ALE": ALE_PROCESSED,
     "CREEDS": CREEDS_PROCESSED,
     "DiSignAtlas": DISIGN_ATLAS_PROCESSED,
-    "Gemma": GEMMA_PROCESSED,
+    "Gemma": GEMMA_SAMPLE_PROCESSED,
     "Golightly_2018": GOLIGHTLY_PROCESSED,
     "Johnson_2023": JOHNSON_2023_MICROARRAY_PROCESSED,
     "KrishnanLab": KRISHNANLAB_PROCESSED,
     "Sirota_2011": SIROTA_2011_PROCESSED,
     "URSA": URSA_PROCESSED,
     "URSA_HD": URSAHD_PROCESSED,
+}
+
+# Maps source name → default study-level (GSE) processed parquet path, for
+# sources that annotate directly at the study level (currently only Gemma).
+GEO_STUDY_SOURCES: dict[str, Path] = {
+    "Gemma": GEMMA_PROCESSED,
 }
 
 
@@ -53,23 +60,36 @@ class GeoCombiner(BaseAnnotationCombiner):
     def combine(
         self,
         overrides: dict[str, Path] | None = None,
+        study_overrides: dict[str, Path] | None = None,
     ) -> "GeoCombiner":
         """
         Load and combine all GEO source parquets.
 
-        Sources whose parquet file does not exist are skipped with a warning.
+        Loads sample-level (GSM) sources from ``GEO_SOURCES`` and
+        study-level (GSE) sources from ``GEO_STUDY_SOURCES``. Sources whose
+        parquet file does not exist are skipped with a warning.
 
         Arguments:
             overrides (dict[str, Path] | None):
-                Per-source path overrides. Keys are source names from
-                ``GEO_SOURCES``; values replace the default path for that source.
+                Per-source path overrides for ``GEO_SOURCES``. Keys are
+                source names; values replace the default path for that
+                source.
+            study_overrides (dict[str, Path] | None):
+                Per-source path overrides for ``GEO_STUDY_SOURCES``.
 
         Returns:
             (GeoCombiner): self, for chaining.
         """
-        overrides = overrides or {}
+        self._load_sources(GEO_SOURCES, overrides or {})
+        self._load_sources(GEO_STUDY_SOURCES, study_overrides or {})
 
-        for source_name, default_path in GEO_SOURCES.items():
+        return self
+
+    def _load_sources(
+        self, sources: dict[str, Path], overrides: dict[str, Path]
+    ) -> None:
+        """Load and add each source's parquet, skipping missing files with a warning."""
+        for source_name, default_path in sources.items():
             path = overrides.get(source_name, default_path)
 
             if not path.exists():
@@ -81,5 +101,3 @@ class GeoCombiner(BaseAnnotationCombiner):
             self.logger.info("Loading '%s' from %s...", source_name, path)
             data = pl.read_parquet(path)
             self.add_source(source_name, data)
-
-        return self

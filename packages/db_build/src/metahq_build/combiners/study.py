@@ -311,12 +311,23 @@ class StudyCombiner(BaseAnnotationCombiner):
     def _study2sample_map(self, anno) -> dict[str, list[str]]:
         """Retrieve all studies represented in the combined sample annotations."""
         study2sample: dict[str, list[str]] = {}
+        skipped = 0
 
         for sample, values in anno.items():
-            study_ids = values["accession_ids"]["series"].split("|")
+            series = values["accession_ids"].get("series")
+            if series is None:
+                skipped += 1
+                continue
+
+            study_ids = series.split("|")
             for study in study_ids:
                 study2sample.setdefault(study, [])
                 study2sample[study].append(sample)
+
+        if skipped > 0:
+            self.logger.warning(
+                "Skipped %d samples with no series mapping in OmicIDX.", skipped
+            )
 
         return study2sample
 
@@ -338,7 +349,7 @@ class StudyCombiner(BaseAnnotationCombiner):
 
         new_anno = {}
         for series, entry in self.anno.items():
-            organisms = entry[ORGANISM_KEY].split(DELIMITER)
+            organisms = entry.get(ORGANISM_KEY, "").split(DELIMITER)
 
             updated_organisms: set[str] = set()
             for organism in organisms:
