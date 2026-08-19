@@ -23,6 +23,7 @@ from metahq_build.config.config import (
     GEMMA_DEV_STAGE_TO_AGE_GROUP,
     GEMMA_EXTERNAL_LINKS,
     GEMMA_RAW,
+    GEMMA_SAMPLES_RAW,
     MONDO_OBO,
     MONDO_SYSTEMS,
     PROCESSED_DIR,
@@ -32,6 +33,7 @@ from metahq_build.config.config import (
     UBERON_OBO,
     UBERON_SYSTEMS,
     VALID_ONTOLOGIES,
+    VALID_SEXES,
 )
 from metahq_build.ontology import Ontology, get_system_descendants
 from metahq_build.processors.base import BaseProcessor, ProcessorError
@@ -74,21 +76,33 @@ class GemmaProcessor(BaseProcessor):
         (default location: ``data/unprocessed/gemma.json``). Raises
         ``ProcessorError`` if that file does not exist.
 
+        Writes two parquet files to ``output_dir``: ``gemma_processed.parquet``
+        (study-level, accession = GSE) and ``gemma_sample_processed.parquet``
+        (sample-level, accession = GSM), using the same column schema. The
+        sample-level file only contains annotations attached to individual
+        samples or experimental factor values (not present in the
+        dataset-level ``characteristics`` list), and is empty if
+        ``samples_input_path`` has not been downloaded.
+
         Arguments:
             output_dir (Path):
                 Directory for processed output.
             **kwargs:
                 ``input_path`` (Path): override the raw JSON file location.
+                ``samples_input_path`` (Path): override the raw per-sample
+                characteristics JSON file location produced by
+                ``metahq-build download gemma-samples``.
 
         Returns:
-            (pl.DataFrame): Standardized annotations with columns
-                ``sample_id``, ``annotation_type``, ``term_id``,
-                ``term_label``, and ``ecode``.
+            (pl.DataFrame): Standardized study-level annotations with
+                columns ``accession``, ``attribute``, ``term_id``,
+                ``term_name``, and ``ecode``.
 
         Raises:
             (ProcessorError): If the raw Gemma file has not been downloaded.
         """
         input_path = Path(kwargs.get("input_path", GEMMA_RAW))
+        samples_input_path = Path(kwargs.get("samples_input_path", GEMMA_SAMPLES_RAW))
 
         if not input_path.exists():
             raise ProcessorError(
@@ -103,6 +117,7 @@ class GemmaProcessor(BaseProcessor):
 
         records = []
         urls = {}
+        id_to_gse: dict[str, str] = {}
         for batch_data in raw_data.values():
             if not isinstance(batch_data, list):
                 continue
@@ -118,6 +133,8 @@ class GemmaProcessor(BaseProcessor):
                 gemma_id = study.get("id", "")
                 if not gemma_id:
                     continue
+
+                id_to_gse[str(gemma_id)] = gse
 
                 # setup urls
                 urls.setdefault(gse, {})
@@ -153,6 +170,18 @@ class GemmaProcessor(BaseProcessor):
                         }
                     )
 
+        sample_level = self._load_sample_level_records(samples_input_path, id_to_gse)
+        records.extend(
+            {
+                COL_ACCESSION: r["gse"],
+                COL_ATTRIBUTE: r[COL_ATTRIBUTE],
+                COL_TERM_ID: r[COL_TERM_ID],
+                COL_TERM_NAME: r[COL_TERM_NAME],
+                COL_ECODE: r[COL_ECODE],
+            }
+            for r in sample_level
+        )
+
         df = pl.DataFrame(
             records,
             schema={
@@ -163,14 +192,141 @@ class GemmaProcessor(BaseProcessor):
                 COL_ECODE: pl.Utf8,
             },
         )
+        df = self._curate_terms(df)
 
+        before = len(df)
+        df = df.filter(pl.col(COL_ACCESSION).str.starts_with("GSE")).sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
+        self.logger.info(
+            "Filtered %d non-GSE annotations (kept %d)",
+            before - len(df),
+            len(df),
+        )
+        self.logger.info(
+            "There are %d studies represented in Gemma after processing",
+            df[COL_ACCESSION].unique().len(),
+        )
+
+        # save urls
+        urls = {
+            study: records
+            for study, records in urls.items()
+            if study in df[COL_ACCESSION]
+        }
+        with open(GEMMA_EXTERNAL_LINKS, "w", encoding="utf-8") as f:
+            json.dump(urls, f, indent=4, sort_keys=True)
+
+        self.logger.info(
+            "Saved external links for %d studies in Gemma to %s",
+            len(urls),
+            GEMMA_EXTERNAL_LINKS,
+        )
+
+        output_file = output_dir / "gemma_processed.parquet"
+        df.write_parquet(output_file)
+        self.logger.info("Wrote processed data to %s", output_file)
+
+        # Sample-level annotations (accession = GSM), using the same column
+        # schema as the study-level output above. Only annotations attached
+        # to individual samples or experimental factor values end up here;
+        # see `_load_sample_level_records`.
+        sample_df = pl.DataFrame(
+            [
+                {
+                    COL_ACCESSION: r["gsm"],
+                    COL_ATTRIBUTE: r[COL_ATTRIBUTE],
+                    COL_TERM_ID: r[COL_TERM_ID],
+                    COL_TERM_NAME: r[COL_TERM_NAME],
+                    COL_ECODE: r[COL_ECODE],
+                }
+                for r in sample_level
+                if r["gse"].startswith("GSE")
+            ],
+            schema={
+                COL_ACCESSION: pl.Utf8,
+                COL_ATTRIBUTE: pl.Utf8,
+                COL_TERM_ID: pl.Utf8,
+                COL_TERM_NAME: pl.Utf8,
+                COL_ECODE: pl.Utf8,
+            },
+        )
+        sample_df = self._curate_terms(sample_df)
+
+        # A single sample can't have two sexes. Two-channel Gemma arrays
+        # sometimes flatten characteristics from both channels onto one GSM
+        # (e.g. a dye-swap comparing a control and a diseased subject),
+        # producing conflicting sex values for the same sample. Drop sex for
+        # those samples since we can't tell which channel is which.
+        conflicting_sex_samples = (
+            sample_df.filter(pl.col(COL_ATTRIBUTE) == "sex")
+            .group_by(COL_ACCESSION)
+            .agg(pl.col(COL_TERM_ID).n_unique().alias("n"))
+            .filter(pl.col("n") > 1)[COL_ACCESSION]
+        )
+        before = len(sample_df)
+        sample_df = sample_df.filter(
+            ~(
+                (pl.col(COL_ATTRIBUTE) == "sex")
+                & pl.col(COL_ACCESSION).is_in(conflicting_sex_samples)
+            )
+        )
+        self.logger.info(
+            "Dropped sex annotations for %d samples with conflicting sex values (kept %d rows)",
+            len(conflicting_sex_samples),
+            len(sample_df),
+        )
+
+        sample_df = sample_df.sort(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        )
+
+        sample_output_file = output_dir / "gemma_sample_processed.parquet"
+        sample_df.write_parquet(sample_output_file)
+        self.logger.info(
+            "Wrote %d sample-level annotations for %d samples to %s",
+            len(sample_df),
+            sample_df[COL_ACCESSION].n_unique(),
+            sample_output_file,
+        )
+
+        return df
+
+    def _curate_terms(self, df: pl.DataFrame) -> pl.DataFrame:
+        """
+        Apply term-level curation shared by study- and sample-level annotations.
+
+        Reclassifies MONDO/DOID-tagged tissue annotations as disease, maps
+        developmental-stage terms to MetaHQ age groups, maps PATO sex terms
+        to MetaHQ sex IDs, drops a known GSE197511 sex/age term mis-mapping,
+        cross-maps tissue/disease terms to UBERON/MONDO, and filters
+        tissue/disease annotations to descendants of system-level terms.
+        Operates purely on attribute/term_id/term_name and is agnostic to
+        whether ``COL_ACCESSION`` holds a study (GSE) or sample (GSM) ID, so
+        it is reused for both the study-level and sample-level outputs.
+
+        Arguments:
+            df (pl.DataFrame):
+                Raw annotation records to curate.
+
+        Returns:
+            (pl.DataFrame): Curated annotations.
+        """
         df = self._map_mondo_tissue_to_disease(df)
         df = self._map_age_groups(df)
         df = self._map_sex(df)
 
-        # GSE197511 has a sex annotation to UBERON:0007222 (late adult stage). Remove this
-        df = df.remove(
-            (pl.col(COL_ATTRIBUTE) == "sex") & (pl.col(COL_TERM_ID) == "UBERON:0007222")
+        # Some Gemma "biological sex" characteristics are miscategorized, pointing
+        # to a term from another ontology entirely (e.g. GSE197511 has one mapped
+        # to UBERON:0007222 "late adult stage") or to Gemma's own
+        # TGEMO:00122 "unspecified factor value" placeholder. Drop sex
+        # annotations that didn't map to a valid MetaHQ sex ID.
+        before = len(df)
+        df = df.filter(
+            (pl.col(COL_ATTRIBUTE) != "sex") | pl.col(COL_TERM_ID).is_in(VALID_SEXES)
+        )
+        self.logger.info(
+            "Filtered %d invalid sex annotations (kept %d)", before - len(df), len(df)
         )
 
         for attribute, onto_obo in {"tissue": UBERON_OBO, "disease": MONDO_OBO}.items():
@@ -248,40 +404,90 @@ class GemmaProcessor(BaseProcessor):
             len(df),
         )
 
-        before = len(df)
-        df = df.filter(pl.col(COL_ACCESSION).str.starts_with("GSE")).sort(
-            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
-        )
-        self.logger.info(
-            "Filtered %d non-GSE annotations (kept %d)",
-            before - len(df),
-            len(df),
-        )
-        self.logger.info(
-            "There are %d studies represented in Gemma after processing",
-            df[COL_ACCESSION].unique().len(),
-        )
-
-        # save urls
-        urls = {
-            study: records
-            for study, records in urls.items()
-            if study in df[COL_ACCESSION]
-        }
-        with open(GEMMA_EXTERNAL_LINKS, "w", encoding="utf-8") as f:
-            json.dump(urls, f, indent=4, sort_keys=True)
-
-        self.logger.info(
-            "Saved external links for %d studies in Gemma to %s",
-            len(urls),
-            GEMMA_EXTERNAL_LINKS,
-        )
-
-        output_file = output_dir / "gemma_processed.parquet"
-        df.write_parquet(output_file)
-        self.logger.info("Wrote processed data to %s", output_file)
-
         return df
+
+    def _load_sample_level_records(
+        self, samples_input_path: Path, id_to_gse: dict[str, str]
+    ) -> list[dict]:
+        """
+        Load per-sample characteristics and resolve each to its parent study.
+
+        Reads the raw per-sample characteristics produced by
+        ``GemmaFetcher.fetch_samples`` (annotations attached to individual
+        samples/bioAssays or experimental factor values, which are not
+        present in the dataset-level ``characteristics`` handled above) and
+        converts them into the standard annotation columns, keeping both
+        the sample's GSM accession and its parent study's GSE accession
+        (via ``id_to_gse``) on every record. Callers use ``gse`` to roll
+        these up into the study-level output and ``gsm`` to build a
+        sample-level output. Missing or unparseable input is logged and
+        treated as no additional records, since this file is an
+        enhancement on top of the required dataset-level download.
+
+        Arguments:
+            samples_input_path (Path):
+                Path to the raw per-sample characteristics JSON file.
+            id_to_gse (dict[str, str]):
+                Mapping of Gemma dataset ID (as string) to GSE accession,
+                built while parsing the dataset-level raw file.
+
+        Returns:
+            (list[dict]): Records with keys ``gsm``, ``gse``, and the
+                standard ``attribute``/``term_id``/``term_name``/``ecode``
+                columns.
+        """
+        if not samples_input_path.exists():
+            self.logger.warning(
+                "No per-sample Gemma data found at %s; sex/tissue/disease/age "
+                "annotations attached only to individual samples or "
+                "experimental factor values will be missed. Run "
+                "'metahq-build download gemma-samples' to include them.",
+                samples_input_path,
+            )
+            return []
+
+        with open(samples_input_path, "r", encoding="utf-8") as f:
+            samples_data = json.load(f)
+
+        records = []
+        for dataset_id, characteristics in samples_data.items():
+            gse = id_to_gse.get(str(dataset_id))
+            if not gse or not isinstance(characteristics, list):
+                continue
+
+            for char in characteristics:
+                if not isinstance(char, dict):
+                    continue
+
+                gsm = char.get("gsm")
+                category = char.get("category", "")
+                if not gsm or category not in CHARACTERISTICS_MAP:
+                    continue
+
+                uri = char.get("valueUri")
+                value = char.get("value")
+                if not uri or not value:
+                    continue
+
+                term_id = uri.split("/")[-1].replace("_", ":")
+
+                records.append(
+                    {
+                        "gsm": gsm,
+                        "gse": gse,
+                        COL_ATTRIBUTE: CHARACTERISTICS_MAP[category],
+                        COL_TERM_ID: term_id,
+                        COL_TERM_NAME: value.lower(),
+                        COL_ECODE: ECODE_EXPERT,
+                    }
+                )
+
+        self.logger.info(
+            "Parsed %d sample-level annotations from %s",
+            len(records),
+            samples_input_path,
+        )
+        return records
 
     def validate(self, data: pl.DataFrame) -> bool:
         """
@@ -331,60 +537,6 @@ class GemmaProcessor(BaseProcessor):
     def _map_sex(self, df: pl.DataFrame) -> pl.DataFrame:
         """Map PATO terms to MetaHQ sex ID constants."""
         return df.with_columns(pl.col(COL_TERM_ID).replace(PATO_SEX_MAP))
-
-    def map_ontology_terms(
-        self,
-        df: pl.DataFrame,
-        attribute: str,
-        ontology: str,
-        obo: Path | str,
-        delimiter: str = ":",
-    ) -> pl.DataFrame:
-        """Identify unique ontologies represented in a set of term IDs."""
-        onto = Ontology.from_obo(obo)
-
-        all_terms = (
-            df.filter(pl.col(COL_ATTRIBUTE) == attribute)[COL_TERM_ID]
-            .unique()
-            .to_list()
-        )
-        unique_ontologies = {term.split(delimiter)[0] for term in all_terms}
-        self.logger.info(
-            "Found %d unique ontologies represented: %s",
-            len(unique_ontologies),
-            unique_ontologies,
-        )
-        mappings = self._collect_ontology_mappings(
-            onto,
-            ontologies=unique_ontologies,
-            query_terms=[
-                term for term in all_terms if not term.startswith(ontology)
-            ],  # exclude self terms
-        )
-
-        return df.join(mappings, on=COL_TERM_ID, how="left").with_columns(
-            pl.coalesce(["mapped", COL_TERM_ID]).alias(COL_TERM_ID)
-        )
-
-    def _collect_ontology_mappings(
-        self, ontology: Ontology, ontologies: set[str], query_terms: list[str]
-    ) -> pl.DataFrame:
-        """Collect all term mappings."""
-        mappings: list[pl.DataFrame] = []
-        for onto in ontologies:
-            terms = [term for term in query_terms if term.startswith(onto)]
-            xref = (
-                ontology.xref(onto).pl(explode=True).filter(pl.col(onto).is_in(terms))
-            ).rename({"anchor": "mapped", onto: COL_TERM_ID})
-            if xref.is_empty():
-                self.logger.info("No mappings to %s", onto)
-                continue
-
-            mappings.append(xref)
-
-        return (
-            pl.concat(mappings, how="vertical") if len(mappings) > 0 else pl.DataFrame()
-        )
 
     def _map_mondo_tissue_to_disease(self, df: pl.DataFrame) -> pl.DataFrame:
         """Some tissue annotations are to MONDO terms because they originated
