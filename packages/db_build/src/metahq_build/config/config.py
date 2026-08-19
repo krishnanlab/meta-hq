@@ -116,6 +116,9 @@ COL_ECODE: str = "ecode"
 SAMPLE_ID_PREFIX: str = "GSM"
 STUDY_ID_PREFIX: str = "GSE"
 
+SRA_RUN_PREFIXES: list[str] = ["SRR", "ERR", "DRR"]
+SRA_EXPERIMENT_PREFIXES: list[str] = ["SRX", "ERX", "DRX"]
+
 # ===============================================
 # ====== Hard-coded Paths
 # ===============================================
@@ -157,6 +160,9 @@ UBERON_SYSTEMS: Path = ONTOLOGY_DIR / "uberon_ext" / "systems.txt"
 # Known input file paths for static / manually-obtained datasets.
 ALE_TSV: Path = UNPROCESSED_DIR / "ale.tsv"
 ALE_BTO_UBERON: Path = HELPERS_DIR / "ale_bto_to_uberon_map.csv"
+BGEE_HSAPDV_AGE_GROUP_MAP: Path = HELPERS_DIR / "bgee_hsapdv_to_age_groups.csv"
+BGEE_UBERON_AGE_GROUP_MAP: Path = HELPERS_DIR / "bgee_uberon_to_age_groups.csv"
+BGEE_SPECIES_IDS: Path = HELPERS_DIR / "bgee_species_ids.tsv"
 DISIGN_ATLAS_GMT: Path = UNPROCESSED_DIR / "disign_atlas.gmt"
 DISIGN_ATLAS_TISSUE_MAP: Path = HELPERS_DIR / "disign_atlas_tissue_name_uberon_map.csv"
 DISIGN_ATLAS_CORRECTIONS: Path = HELPERS_DIR / "disign_atlas_corrected_annotations.csv"
@@ -194,6 +200,7 @@ CELLO_PROCESSED: Path = PROCESSED_DIR / "cello_processed.parquet"
 CREEDS_PROCESSED: Path = PROCESSED_DIR / "creeds_processed.parquet"
 DISIGN_ATLAS_PROCESSED: Path = PROCESSED_DIR / "disign_atlas_processed.parquet"
 GEMMA_PROCESSED: Path = PROCESSED_DIR / "gemma_processed.parquet"
+GEMMA_SAMPLE_PROCESSED: Path = PROCESSED_DIR / "gemma_sample_processed.parquet"
 GOLIGHTLY_PROCESSED: Path = PROCESSED_DIR / "golightly_processed.parquet"
 GU_PROCESSED: Path = PROCESSED_DIR / "gu_processed.parquet"
 JOHNSON_2023_MICROARRAY_PROCESSED: Path = (
@@ -207,34 +214,13 @@ URSAHD_PROCESSED: Path = PROCESSED_DIR / "ursahd_processed.parquet"
 
 # Gemma raw download output
 GEMMA_RAW: Path = UNPROCESSED_DIR / "gemma.json"
+GEMMA_SAMPLES_RAW: Path = UNPROCESSED_DIR / "gemma_samples.json"
 GEMMA_DEV_STAGE_TO_AGE_GROUP: Path = (
     HELPERS_DIR / "gemma_developmental_stage_id_to_age_group_map.csv"
 )
 
-# Bgee RNA-Seq library files for multiple species
-BGEE_DIR: Path = UNPROCESSED_DIR / "bgee"
-BGEE_MOUSE: Path = (
-    BGEE_DIR / "Mus_musculus_Bgee_15_0" / "Mus_musculus_RNA-Seq_libraries.tsv"
-)
-BGEE_HUMAN: Path = (
-    BGEE_DIR / "Homo_sapiens_Bgee_15_0" / "Homo_sapiens_RNA-Seq_libraries.tsv"
-)
-BGEE_RAT: Path = (
-    BGEE_DIR / "Rattus_norvegicus_Bgee_15_0" / "Rattus_norvegicus_RNA-Seq_libraries.tsv"
-)
-BGEE_WORM: Path = (
-    BGEE_DIR
-    / "Caenorhabditis_elegans_Bgee_15_0"
-    / "Caenorhabditis_elegans_RNA-Seq_libraries.tsv"
-)
-BGEE_FISH: Path = (
-    BGEE_DIR / "Danio_rerio_Bgee_15_0" / "Danio_rerio_RNA-Seq_libraries.tsv"
-)
-BGEE_FLY: Path = (
-    BGEE_DIR
-    / "Drosophila_melanogaster_Bgee_15_0"
-    / "Drosophila_melanogaster_RNA-Seq_libraries.tsv"
-)
+# Bgee RNA-Seq library annotations (all species combined in a single file)
+BGEE_RAW: Path = UNPROCESSED_DIR / "bgee.parquet"
 
 # External link files
 BGEE_EXTERNAL_LINKS: Path = EXTERNAL_LINKS_DIR / "bgee.json"
