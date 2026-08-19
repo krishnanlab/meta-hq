@@ -19,6 +19,7 @@ from metahq_build.config.config import (
     COL_TERM_NAME,
     PROCESSED_DIR,
 )
+from metahq_build.ontology import Ontology
 from metahq_build.util.logging import setup_logger
 
 
@@ -171,6 +172,26 @@ class BaseProcessor(ABC):
             f"Completed {self.source_name} processor. Produced {len(data)} annotations."
         )
         return data
+
+    def _collect_ontology_mappings(
+        self, ontology: Ontology, ontologies: set[str], query_terms: list[str]
+    ) -> pl.DataFrame:
+        """Collect mappings between ontologies."""
+        mappings: list[pl.DataFrame] = []
+        for onto in ontologies:
+            terms = [term for term in query_terms if term.startswith(onto)]
+            xref = (
+                ontology.xref(onto).pl(explode=True).filter(pl.col(onto).is_in(terms))
+            ).rename({"anchor": "mapped", onto: COL_TERM_ID})
+            if xref.is_empty():
+                self.logger.info("No mappings to %s", onto)
+                continue
+
+            mappings.append(xref)
+
+        return (
+            pl.concat(mappings, how="vertical") if len(mappings) > 0 else pl.DataFrame()
+        )
 
     def _validate_required_columns(self, data: pl.DataFrame) -> None:
         """
