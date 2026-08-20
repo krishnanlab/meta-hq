@@ -272,7 +272,10 @@ def download_gemma(output, query, max_studies):
 
     Fetches study annotations from the Gemma REST API in batches and saves
     them to a single JSON file. This file is required before running
-    'metahq-build process gemma'.
+    'metahq-build process gemma'. It only contains annotations attached
+    directly to each experiment; run 'metahq-build download gemma-samples'
+    afterward to also capture annotations attached to individual samples
+    or experimental factor values (e.g. most sex annotations).
 
     Examples:
 
@@ -295,6 +298,61 @@ def download_gemma(output, query, max_studies):
         saved = fetcher.fetch(
             output_path=output_path, query=query, max_studies=max_studies
         )
+        click.secho(f"✓ Saved to {saved}", fg="green")
+    except Exception as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
+@download.command(name="gemma-samples")
+@click.option(
+    "--input",
+    "-i",
+    "input_",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to raw Gemma dataset JSON from 'download gemma' (default: data/unprocessed/gemma.json)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override output file path (default: data/unprocessed/gemma_samples.json)",
+)
+def download_gemma_samples(input_, output):
+    """
+    Download per-sample characteristics for datasets in a raw Gemma file.
+
+    Gemma's dataset-level 'characteristics' (fetched by 'download gemma')
+    only includes annotations curators attached directly to the experiment
+    record. Sex, tissue, disease, and age annotations attached to
+    individual samples or experimental factor values live elsewhere and are
+    fetched here instead, one request per dataset. Requires
+    'metahq-build download gemma' to have been run first, and its output
+    must be re-run before 'metahq-build process gemma' to include the
+    additional annotations.
+
+    Examples:
+
+        # Download using the default gemma.json as input
+        metahq-build download gemma-samples
+
+        # Use a custom input/output path
+        metahq-build download gemma-samples --input /data/gemma.json --output /data/gemma_samples.json
+
+    """
+    from metahq_build.config.config import GEMMA_RAW, GEMMA_SAMPLES_RAW
+    from metahq_build.fetchers.gemma import GemmaFetcher
+
+    try:
+        fetcher = GemmaFetcher()
+        input_path = Path(input_) if input_ else GEMMA_RAW
+        output_path = Path(output) if output else GEMMA_SAMPLES_RAW
+        click.echo(f"Fetching per-sample characteristics from {input_path}...")
+        click.echo(f"Output: {output_path}")
+        click.echo("")
+        saved = fetcher.fetch_samples(input_path=input_path, output_path=output_path)
         click.secho(f"✓ Saved to {saved}", fg="green")
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)
