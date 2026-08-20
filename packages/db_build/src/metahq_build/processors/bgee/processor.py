@@ -418,6 +418,43 @@ class BgeeProcessor(BaseProcessor):
                 unique_ecodes,
             )
 
+        # Verify all tissue records
+        unique_ontologies = (
+            data.filter(pl.col(COL_ATTRIBUTE) == TISSUE_KEY)
+            .with_columns(pl.col(COL_TERM_ID).str.split(":").list.get(0))[COL_TERM_ID]
+            .unique()
+            .to_list()
+        )
+        if not all(onto in VALID_TISSUE_ONTOLOGIES for onto in unique_ontologies):
+            self.logger.warning(
+                "Found unsupported ontologies in tissue annotations: %s",
+                unique_ontologies,
+            )
+
+        # Verify all age records
+        unique_ages = (
+            data.filter(pl.col(COL_ATTRIBUTE) == AGE_KEY)[COL_TERM_ID]
+            .unique()
+            .to_list()
+        )
+        if not all(age_group in VALID_AGE_GROUPS for age_group in unique_ages):
+            self.logger.warning(
+                "Found unsupported age groups in age annotations: %s",
+                unique_ages,
+            )
+
+        # Verify all sex records
+        unique_sexes = (
+            data.filter(pl.col(COL_ATTRIBUTE) == SEX_KEY)[COL_TERM_ID]
+            .unique()
+            .to_list()
+        )
+        if not all(sex in VALID_SEXES for sex in unique_sexes):
+            self.logger.warning(
+                "Found unsupported sex IDs in sex annotations: %s",
+                unique_sexes,
+            )
+
         # Check for sample IDs (library-level SRX/ERX/DRX accessions)
         sample_count = data[COL_ACCESSION].n_unique()
         self.logger.info("Validated %s unique samples", sample_count)
