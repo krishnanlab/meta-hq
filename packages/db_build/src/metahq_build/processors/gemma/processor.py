@@ -14,6 +14,7 @@ from typing import Any
 import polars as pl
 
 from metahq_build.config.config import (
+    AGE_KEY,
     COL_ACCESSION,
     COL_ATTRIBUTE,
     COL_ECODE,
@@ -29,12 +30,16 @@ from metahq_build.config.config import (
     MONDO_SYSTEMS,
     PROCESSED_DIR,
     SEX_FEMALE_ID,
+    SEX_KEY,
     SEX_MALE_ID,
     TISSUE_KEY,
     UBERON_OBO,
     UBERON_SYSTEMS,
+    VALID_AGE_GROUPS,
+    VALID_DISEASE_ONTOLOGIES,
     VALID_ONTOLOGIES,
     VALID_SEXES,
+    VALID_TISSUE_ONTOLOGIES,
 )
 from metahq_build.ontology import Ontology, get_system_descendants
 from metahq_build.processors.base import BaseProcessor, ProcessorError
@@ -260,7 +265,7 @@ class GemmaProcessor(BaseProcessor):
         # producing conflicting sex values for the same sample. Drop sex for
         # those samples since we can't tell which channel is which.
         conflicting_sex_samples = (
-            sample_df.filter(pl.col(COL_ATTRIBUTE) == "sex")
+            sample_df.filter(pl.col(COL_ATTRIBUTE) == SEX_KEY)
             .group_by(COL_ACCESSION)
             .agg(pl.col(COL_TERM_ID).n_unique().alias("n"))
             .filter(pl.col("n") > 1)[COL_ACCESSION]
@@ -268,7 +273,7 @@ class GemmaProcessor(BaseProcessor):
         before = len(sample_df)
         sample_df = sample_df.filter(
             ~(
-                (pl.col(COL_ATTRIBUTE) == "sex")
+                (pl.col(COL_ATTRIBUTE) == SEX_KEY)
                 & pl.col(COL_ACCESSION).is_in(conflicting_sex_samples)
             )
         )
@@ -324,13 +329,16 @@ class GemmaProcessor(BaseProcessor):
         # annotations that didn't map to a valid MetaHQ sex ID.
         before = len(df)
         df = df.filter(
-            (pl.col(COL_ATTRIBUTE) != "sex") | pl.col(COL_TERM_ID).is_in(VALID_SEXES)
+            (pl.col(COL_ATTRIBUTE) != SEX_KEY) | pl.col(COL_TERM_ID).is_in(VALID_SEXES)
         )
         self.logger.info(
             "Filtered %d invalid sex annotations (kept %d)", before - len(df), len(df)
         )
 
-        for attribute, onto_obo in {"tissue": UBERON_OBO, "disease": MONDO_OBO}.items():
+        for attribute, onto_obo in {
+            TISSUE_KEY: UBERON_OBO,
+            DISEASE_KEY: MONDO_OBO,
+        }.items():
             terms = (
                 df.filter(pl.col(COL_ATTRIBUTE) == attribute)[COL_TERM_ID]
                 .unique()
@@ -389,13 +397,13 @@ class GemmaProcessor(BaseProcessor):
 
         before = len(df)
         df = df.filter(
-            ~pl.col(COL_ATTRIBUTE).is_in(["tissue", "disease"])
+            ~pl.col(COL_ATTRIBUTE).is_in([TISSUE_KEY, DISEASE_KEY])
             | (
-                (pl.col(COL_ATTRIBUTE) == "tissue")
+                (pl.col(COL_ATTRIBUTE) == TISSUE_KEY)
                 & pl.col(COL_TERM_ID).is_in(valid_uberon)
             )
             | (
-                (pl.col(COL_ATTRIBUTE) == "disease")
+                (pl.col(COL_ATTRIBUTE) == DISEASE_KEY)
                 & pl.col(COL_TERM_ID).is_in(valid_mondo)
             )
         )
@@ -509,6 +517,24 @@ class GemmaProcessor(BaseProcessor):
         if len(data) == 0:
             self.logger.warning("No annotations processed from Gemma.")
 
+        # validate term ID records
+        self._validate_term_id_column(
+            data,
+            attribute=TISSUE_KEY,
+            valid=VALID_TISSUE_ONTOLOGIES,
+            prefix_only=True,
+            delimiter=":",
+        )
+        self._validate_term_id_column(
+            data,
+            attribute=DISEASE_KEY,
+            valid=VALID_DISEASE_ONTOLOGIES,
+            prefix_only=True,
+            delimiter=":",
+        )
+        self._validate_term_id_column(data, attribute=AGE_KEY, valid=VALID_AGE_GROUPS)
+        self._validate_term_id_column(data, attribute=SEX_KEY, valid=VALID_SEXES)
+
         return True
 
     def _map_age_groups(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -522,10 +548,10 @@ class GemmaProcessor(BaseProcessor):
         return (
             df.join(age_group_map, on=COL_TERM_ID, how="left")
             .filter(
-                (pl.col(COL_ATTRIBUTE) != "age") | pl.col("age_group").is_not_null()
+                (pl.col(COL_ATTRIBUTE) != AGE_KEY) | pl.col("age_group").is_not_null()
             )
             .with_columns(
-                pl.when(pl.col(COL_ATTRIBUTE) == "age")
+                pl.when(pl.col(COL_ATTRIBUTE) == AGE_KEY)
                 .then(pl.col("age_group"))
                 .otherwise(pl.col(COL_TERM_ID))
                 .alias(COL_TERM_ID)
@@ -545,7 +571,7 @@ class GemmaProcessor(BaseProcessor):
         annotations to retain the annotations while respecting the MetaHQ schema and requirements.
         """
         mismatched = df.filter(
-            (pl.col(COL_ATTRIBUTE) == "tissue")
+            (pl.col(COL_ATTRIBUTE) == TISSUE_KEY)
             & (
                 (pl.col(COL_TERM_ID).str.starts_with("MONDO"))
                 | (pl.col(COL_TERM_ID).str.starts_with("DOID"))
@@ -560,12 +586,12 @@ class GemmaProcessor(BaseProcessor):
 
         return df.with_columns(
             pl.when(
-                (pl.col(COL_ATTRIBUTE) == "tissue")
+                (pl.col(COL_ATTRIBUTE) == TISSUE_KEY)
                 & (
                     (pl.col(COL_TERM_ID).str.starts_with("MONDO"))
                     | (pl.col(COL_TERM_ID).str.starts_with("DOID"))
                 )
             )
-            .then(pl.lit("disease").alias(COL_ATTRIBUTE))
+            .then(pl.lit(DISEASE_KEY).alias(COL_ATTRIBUTE))
             .otherwise(pl.col(COL_ATTRIBUTE))
         )

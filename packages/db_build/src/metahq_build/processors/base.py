@@ -220,6 +220,52 @@ class BaseProcessor(ABC):
                 f"DataFrame has: {data.columns}"
             )
 
+    def _validate_term_id_column(
+        self,
+        df: pl.DataFrame,
+        attribute: str,
+        valid: list[str] | set[str] | frozenset[str],
+        prefix_only: bool = False,
+        delimiter: str = ":",
+    ):
+        """Raise warning if unsupported terms are in the annotations.
+
+        Arguments:
+            df (pl.DataFrame):
+                Harmonized data frame with the proper processed annotations structure.
+                    See _validate_required_columns.
+            attribute (str):
+                An attribute to check. Should be an attribute in ATTRIBUTE_KEYS found in
+                the config module.
+            valid (list[str] | set[str] | frozenset[str]):
+                A sequence of valid term ID values or prefixes.
+            prefix_only (bool):
+                If True, will extract and compare term ID prefixes rather than full term IDs.
+                    Set the delimiter argument to specify the prefix delimiter.
+            delimiter (str):
+                If using prefix_only, set the delimiter to extract the prefix.
+
+        """
+
+        df = df.filter(pl.col(COL_ATTRIBUTE) == attribute)
+        if prefix_only:
+            unique = (
+                df.with_columns(pl.col(COL_TERM_ID).str.split(delimiter).list.get(0))[
+                    COL_TERM_ID
+                ]
+                .unique()
+                .to_list()
+            )
+        else:
+            unique = df[COL_TERM_ID].unique().to_list()
+
+        if not all(onto in valid for onto in unique):
+            self.logger.warning(
+                "Found unsupported term IDs in %s annotations: %s",
+                attribute,
+                unique,
+            )
+
     def __repr__(self) -> str:
         """String representation of processor."""
         return f"{self.__class__.__name__}(source={self.source_name}, version={self.version})"
