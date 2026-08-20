@@ -213,8 +213,8 @@ URSA_PROCESSED: Path = PROCESSED_DIR / "ursa_processed.parquet"
 URSAHD_PROCESSED: Path = PROCESSED_DIR / "ursahd_processed.parquet"
 
 # Gemma raw download output
-GEMMA_RAW: Path = UNPROCESSED_DIR / "gemma.json"
-GEMMA_SAMPLES_RAW: Path = UNPROCESSED_DIR / "gemma_samples.json"
+GEMMA_RAW: Path = UNPROCESSED_DIR / "gemma.json.gz"
+GEMMA_SAMPLES_RAW: Path = UNPROCESSED_DIR / "gemma_samples.json.gz"
 GEMMA_DEV_STAGE_TO_AGE_GROUP: Path = (
     HELPERS_DIR / "gemma_developmental_stage_id_to_age_group_map.csv"
 )
