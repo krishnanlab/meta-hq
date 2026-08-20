@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.9"
+__generated_with = "0.24.0"
 app = marimo.App(width="medium", auto_download=["ipynb"])
 
 
@@ -12,7 +12,7 @@ def _(mo):
 
     Author: Parker Hicks <br>
     Date: 2026-01-17 <br>
-    Last updated: 2026-07-28 by Parker Hicks
+    Last updated: 2026-08-18 by Parker Hicks
     """)
     return
 
