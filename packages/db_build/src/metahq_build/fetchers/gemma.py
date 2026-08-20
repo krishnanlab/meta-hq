@@ -5,6 +5,7 @@ Downloads study annotations from the Gemma REST API in batches and saves
 them to a single combined JSON file.
 """
 
+import gzip
 import json
 import shutil
 from pathlib import Path
@@ -70,6 +71,8 @@ class GemmaFetcher:
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        if output_path.suffix != ".gz":
+            output_path = output_path.with_suffix(output_path.suffix + ".gz")
 
         temp_dir = output_path.parent / "_gemma_tmp"
         temp_dir.mkdir(parents=True, exist_ok=True)
@@ -94,7 +97,7 @@ class GemmaFetcher:
                 if data.get("data"):
                     annotations[str(idx)] = data["data"]
 
-            with open(output_path, "w") as f:
+            with gzip.open(output_path, "wt", encoding="utf-8") as f:
                 json.dump(annotations, f, indent=4)
 
             self.logger.info(
@@ -128,7 +131,7 @@ class GemmaFetcher:
         )
         response.raise_for_status()
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(response.json(), f)
 
     def fetch_samples(
@@ -154,13 +157,13 @@ class GemmaFetcher:
 
         Arguments:
             input_path (Path):
-                Path to the raw JSON file produced by ``fetch()``. Used to
+                Path to the raw gzipped JSON file produced by ``fetch()``. Used to
                 determine which dataset IDs to fetch samples for.
             output_path (Path):
-                Destination file path for the combined JSON output.
+                Destination file path for the sample-level gzipped JSON output.
 
         Returns:
-            (Path): Path to the saved JSON file.
+            (Path): Path to the saved gzipped JSON file.
 
         Raises:
             FileNotFoundError: If input_path does not exist.
@@ -168,13 +171,15 @@ class GemmaFetcher:
         input_path = Path(input_path)
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        if output_path.suffix != ".gz":
+            output_path = output_path.with_suffix(output_path.suffix + ".gz")
 
         if not input_path.exists():
             raise FileNotFoundError(
                 f"Raw Gemma data not found at {input_path}. Run fetch() first."
             )
 
-        with open(input_path) as f:
+        with gzip.open(input_path, "rt", encoding="utf-8") as f:
             raw_data = json.load(f)
 
         dataset_ids: list[int] = []
@@ -205,8 +210,8 @@ class GemmaFetcher:
             if characteristics:
                 sample_characteristics[str(dataset_id)] = characteristics
 
-        with open(output_path, "w") as f:
-            json.dump(sample_characteristics, f, indent=4)
+        with gzip.open(output_path, "wt", encoding="utf-8") as f:
+            json.dump(sample_characteristics, f)
 
         self.logger.info(
             "Saved sample-level characteristics for %d datasets to %s (%d failed)",

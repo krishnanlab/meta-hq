@@ -249,7 +249,7 @@ def download():
     "-o",
     type=click.Path(path_type=Path),
     default=None,
-    help="Override output file path (default: data/unprocessed/gemma.json)",
+    help="Override output file path (default: data/unprocessed/gemma.json.gz)",
 )
 @click.option(
     "--query",
@@ -311,14 +311,15 @@ def download_gemma(output, query, max_studies):
     "input_",
     type=click.Path(exists=True, path_type=Path),
     default=None,
-    help="Path to raw Gemma dataset JSON from 'download gemma' (default: data/unprocessed/gemma.json)",
+    help="Path to raw Gemma dataset JSON from 'download gemma'"
+    " (default: data/unprocessed/gemma.json.gz)",
 )
 @click.option(
     "--output",
     "-o",
     type=click.Path(path_type=Path),
     default=None,
-    help="Override output file path (default: data/unprocessed/gemma_samples.json)",
+    help="Override output file path (default: data/unprocessed/gemma_samples.json.gz)",
 )
 def download_gemma_samples(input_, output):
     """
@@ -339,7 +340,9 @@ def download_gemma_samples(input_, output):
         metahq-build download gemma-samples
 
         # Use a custom input/output path
-        metahq-build download gemma-samples --input /data/gemma.json --output /data/gemma_samples.json
+        metahq-build download gemma-samples \
+            --input /data/gemma.json \
+            --output /data/gemma_samples.json
 
     """
     from metahq_build.config.config import GEMMA_RAW, GEMMA_SAMPLES_RAW

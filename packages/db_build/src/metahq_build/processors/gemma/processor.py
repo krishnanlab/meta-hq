@@ -6,6 +6,7 @@ Processes annotations downloaded from the Gemma database
 ``metahq-build download gemma``.
 """
 
+import gzip
 import json
 from pathlib import Path
 from typing import Any
@@ -65,7 +66,7 @@ class GemmaProcessor(BaseProcessor):
     """
 
     source_name = "Gemma"
-    version = "1.32.6"
+    version = "1.32.7"
     description = "Gemma database annotations for gene expression studies"
 
     def process(self, output_dir: Path = PROCESSED_DIR, **kwargs: Any) -> pl.DataFrame:
@@ -112,7 +113,7 @@ class GemmaProcessor(BaseProcessor):
 
         self.logger.info("Processing Gemma annotations from %s...", input_path)
 
-        with open(input_path, "r", encoding="utf-8") as f:
+        with gzip.open(input_path, "rt", encoding="utf-8") as f:
             raw_data = json.load(f)
 
         records = []
@@ -446,7 +447,7 @@ class GemmaProcessor(BaseProcessor):
             )
             return []
 
-        with open(samples_input_path, "r", encoding="utf-8") as f:
+        with gzip.open(samples_input_path, "rt", encoding="utf-8") as f:
             samples_data = json.load(f)
 
         records = []
