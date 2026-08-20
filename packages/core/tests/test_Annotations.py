@@ -265,7 +265,7 @@ class TestAnnotationsFromDf:
         """test creating annotations from combined dataframe"""
         data, ids = sample_data
         ids_with_sources = ids.with_columns(pl.lit("source1").alias("sources"))
-        combined_df = pl.concat([ids_with_sources, data], how="horizontal")
+        combined_df = pl.concat([ids_with_sources, data], how="horizontal_extend")
 
         anno = Annotations.from_df(
             combined_df,
@@ -284,7 +284,7 @@ class TestAnnotationsFromDf:
         """test from_df with default group_cols"""
         data, ids = sample_data
         ids_with_sources = ids.with_columns(pl.lit("source1").alias("sources"))
-        combined_df = pl.concat([ids_with_sources, data], how="horizontal")
+        combined_df = pl.concat([ids_with_sources, data], how="horizontal_extend")
 
         anno = Annotations.from_df(
             combined_df,
@@ -298,7 +298,7 @@ class TestAnnotationsFromDf:
         """test from_df converts list to tuple for group_cols"""
         data, ids = sample_data
         ids_with_sources = ids.with_columns(pl.lit("source1").alias("sources"))
-        combined_df = pl.concat([ids_with_sources, data], how="horizontal")
+        combined_df = pl.concat([ids_with_sources, data], how="horizontal_extend")
 
         anno = Annotations.from_df(
             combined_df,

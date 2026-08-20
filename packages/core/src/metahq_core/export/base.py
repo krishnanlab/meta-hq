@@ -368,10 +368,10 @@ class BaseExporter(ABC):
         return (
             curation.ids.select(required_cols)
             .with_columns(pl.col(SOURCES_COL).str.split("|"))
-            .explode(SOURCES_COL)
+            .explode(SOURCES_COL, empty_as_null=True)
             .unique()
             .with_columns(pl.col("series").str.split("|"))
-            .explode("series")
+            .explode("series", empty_as_null=True)
             .unique()
         )
 
@@ -544,7 +544,7 @@ class BaseExporter(ABC):
         save_citations(
             curation.ids[MetadataField.SOURCES.value]
             .str.split("|")
-            .explode()
+            .explode(empty_as_null=True)
             .value_counts(sort=True),
             citation_config,
             logger=self.log,

@@ -96,7 +96,7 @@ class LabelsExporter(BaseExporter):
             save_citations(
                 curation.ids[SOURCES_COL]
                 .str.split("|")
-                .explode()
+                .explode(empty_as_null=True)
                 .value_counts(sort=True),
                 citation_config,
                 logger=self.log,

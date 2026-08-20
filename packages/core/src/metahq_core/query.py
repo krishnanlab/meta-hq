@@ -215,7 +215,7 @@ class LongAnnotations:
         # pivot to wide format
         exploded = (
             self.annotations.with_columns(pl.col(anchor).str.split("|").alias(anchor))
-            .explode(anchor)
+            .explode(anchor, empty_as_null=True)
             .unique(maintain_order=True)
         )
 

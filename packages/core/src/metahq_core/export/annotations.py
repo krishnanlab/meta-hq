@@ -96,7 +96,7 @@ class AnnotationsExporter(BaseExporter):
         save_citations(
             anno.ids[MetadataField.SOURCES.value]
             .str.split("|")
-            .explode()
+            .explode(empty_as_null=True)
             .value_counts(sort=True),
             citation_config,
             logger=self.log,
