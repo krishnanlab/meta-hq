@@ -207,11 +207,11 @@ def _(COLORS, Path, pl, plt, sns, ticker):
 
             # sample
             if idx == 0:
-                ax.set_xticks([50000, 100000, 200000])
+                ax.set_xticks([100_000, 250_000, 500_000])
 
             # study
             if idx == 1:
-                ax.set_xticks([5000, 15000])
+                ax.set_xticks([5_000, 10_000, 20_000])
 
             ax.set_ylabel("" if idx > 0 else "") 
             if titles and idx < len(titles):
@@ -366,7 +366,7 @@ def _(ATTRIBUTES, record_entries_per_attribute, sample_db, series_db):
     # get attribute sample/study counts
 
     # ========== Sample ============
-    sample_records_microarray = record_entries_per_attribute(
+    sample_records_microarray: dict[str, list[str]] = record_entries_per_attribute(
         sample_db, ATTRIBUTES, verbose=True, title="Sample Records (microarray):", tech="microarray"
     )
     sample_records_rnaseq = record_entries_per_attribute(
@@ -391,7 +391,7 @@ def _(ATTRIBUTES, record_entries_per_attribute, sample_db, series_db):
 @app.cell
 def _(
     FMT,
-    sample_records_microarray,
+    sample_records_microarray: dict[str, list[str]],
     sample_records_rnaseq,
     study_records_microarray,
     study_records_rnaseq,
@@ -1609,6 +1609,396 @@ def _(
         save=True,
         outfile = FIGURES_DIR / "annotation_coverage_improvements_by_source__level-study.png",
     )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Cumulative additions by annotation source
+    """)
+    return
+
+
+@app.cell
+def _(pl):
+    def collect_source_rankings(counts: pl.DataFrame, attribute: str, tech: str) -> list[str]:
+        """
+        Collect a list of sources ranked by the number of sample or series contributions.
+        Removes sources that contribute no annotation entries to a particular 
+        attribute/technology combination.
+
+        Arguments:
+            counts (pl.DataFrame):
+                A counts data frame collected from a previous step. Has columns
+                    [technology, attribute, source, count].
+            attribute (str):
+                A MetaHQ annotated attribute (e.g., tissue, disease, sex, age).
+            tech (str):
+                A supported gene expression technology (e.g., microarray, rnaseq).
+
+        Returns:
+            (list[str]): A list of source names ranked by their number of sample/series
+                contributions in descending order.
+        """
+
+        return (
+            counts
+            .filter(
+                (pl.col("technology") == tech) & (pl.col("attribute") == attribute) & (pl.col("count") > 0)
+            )
+            .sort("count", descending=True)["source"].to_list()
+        )
+
+    return
+
+
+@app.cell
+def _(PLATFORMS_FILE, mo, pl):
+    def quantify_incremental_source_contributions(db: dict, attribute: str, tech: str) -> dict[str, int]:
+        """"""
+        valid_platforms = (
+            pl.scan_parquet(PLATFORMS_FILE)
+                .filter(pl.col("technology") == tech)
+                .select("id")
+                .collect()
+                .to_series()
+        )
+
+        # collect source contributions
+        source_contributions: dict[str, set[str]] = {}
+        for entry, records in mo.status.progress_bar(db.items(), show_eta=True, show_rate=True):
+            if records["accession_ids"]["platform"] not in valid_platforms:
+                continue
+
+            if attribute not in records:
+                continue
+
+            for source in records[attribute]:
+                source_contributions.setdefault(source, set())
+                source_contributions[source].add(entry)
+
+        counts = {source: len(set(entries)) for source, entries in source_contributions.items()}
+        ranked_sources = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
+
+        # identify the number of unique entries cumulatively added by each source
+        # beginning with the largest source and ending with the smallest
+        cumulative_additions: dict[str, set[str]] = {}
+        for rank, source in enumerate(ranked_sources):
+
+            # add largest first
+            if rank == 0:
+                cumulative_additions[source] = source_contributions[source]
+
+            # for each subsequently smaller source, see how many entries it added
+            # to the larger sources that came before
+            else:
+                existing_entries: set[str] = set()
+            
+                descending_rank = rank - 1
+                while descending_rank > -1:
+                    previous_source = list(cumulative_additions.keys())[descending_rank]
+                    existing_entries.update(
+                        cumulative_additions[previous_source]
+                    )
+                    descending_rank -= 1
+
+                cumulative_additions[source] = source_contributions[source].difference(existing_entries)
+
+        cumulative_counts = {source: len(set(entries)) for source, entries in cumulative_additions.items()}
+        cumulative_ranked_sources = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
+        return cumulative_ranked_sources
+            
+        
+
+    return (quantify_incremental_source_contributions,)
+
+
+@app.cell
+def _(pl):
+    def format_cumulative_additions_for_plots(data: dict[str, int], reverse: bool = False) -> pl.DataFrame:
+        """
+        The quantify_incremental_source_contributions function returns a ranked dictionary
+        presenting the number of new entries added by each source from largest to smallest.
+
+        To plot this, we must show how the database grows with each source rather than just
+        the number of unique entries added by each source.
+
+        Arguments:
+            data (dict[str, int]):
+                A ranked dictionary where sources are keys and the number of unique entry
+                    contributions are the values.
+
+        Returns:
+            (dict[str, int]): The same dictionary, but where the number of entries grows in
+                accordance to how many unique entries a source contributes.
+        """
+        if reverse:
+            formatted: dict[str, int] = {}
+    
+            db_size = 0
+            for source, counts in data.items():
+                db_size += counts
+                formatted[source] = db_size
+        else:
+            formatted = data
+
+        return pl.DataFrame(
+            {"source": list(formatted.keys()), "count": list(formatted.values())}
+        )
+
+    return (format_cumulative_additions_for_plots,)
+
+
+@app.cell
+def _(Path, format_cumulative_additions_for_plots, plt, sns):
+    def plot_cumulative_additions(
+        counts: dict[str, int],
+        title: str = "",
+        figsize: tuple[int, int] = (5, 5),
+        savefig: bool = False,
+        outfile: Path | str | None = None,
+        dpi: int = 600,
+    ):
+        """Plot cumulative additions per source."""
+        formatted = format_cumulative_additions_for_plots(counts)
+
+        fig, ax = plt.subplots(figsize=figsize)
+        sns.set_style("whitegrid")
+
+        sns.pointplot(
+            data=formatted.to_pandas(),
+            x="source",
+            y="count",
+            ax=ax,
+        )
+
+        plt.setp(
+            ax.get_xticklabels(),
+            rotation=45,
+            ha="right",
+            rotation_mode="anchor",
+        )
+
+        ax.set_title(title, fontsize=14, fontweight="bold")
+        fig.tight_layout()
+
+        if savefig and outfile is not None:
+            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
+
+        plt.show()
+
+    return (plot_cumulative_additions,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Sample
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### RNA-Seq
+    """)
+    return
+
+
+@app.cell
+def _(sample_db):
+    sample_samples = list(sample_db.keys())[0:50_000]
+    test_sample_db = {sample: sample_db[sample] for sample in sample_samples}
+    return
+
+
+@app.cell
+def _(quantify_incremental_source_contributions, sample_db):
+    sample_tissue_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "tissue", "rnaseq")
+    return (sample_tissue_rnaseq_rankings,)
+
+
+@app.cell
+def _(sample_tissue_rnaseq_rankings):
+    sample_tissue_rnaseq_rankings
+    return
+
+
+@app.cell
+def _(plot_cumulative_additions, sample_tissue_rnaseq_rankings):
+    plot_cumulative_additions(sample_tissue_rnaseq_rankings)
+    return
+
+
+@app.cell
+def _(quantify_incremental_source_contributions, sample_db):
+    sample_disease_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "disease", "rnaseq")
+    return (sample_disease_rnaseq_rankings,)
+
+
+@app.cell
+def _(sample_disease_rnaseq_rankings):
+    sample_disease_rnaseq_rankings
+    return
+
+
+@app.cell
+def _(plot_cumulative_additions, sample_disease_rnaseq_rankings):
+    plot_cumulative_additions(sample_disease_rnaseq_rankings)
+    return
+
+
+@app.cell
+def _(quantify_incremental_source_contributions, sample_db):
+    sample_sex_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "sex", "rnaseq")
+    return (sample_sex_rnaseq_rankings,)
+
+
+@app.cell
+def _(sample_sex_rnaseq_rankings):
+    sample_sex_rnaseq_rankings
+    return
+
+
+@app.cell
+def _(plot_cumulative_additions, sample_sex_rnaseq_rankings):
+    plot_cumulative_additions(sample_sex_rnaseq_rankings)
+    return
+
+
+@app.cell
+def _(quantify_incremental_source_contributions, sample_db):
+    sample_age_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "age", "rnaseq")
+    return (sample_age_rnaseq_rankings,)
+
+
+@app.cell
+def _(sample_age_rnaseq_rankings):
+    sample_age_rnaseq_rankings
+    return
+
+
+@app.cell
+def _(plot_cumulative_additions, sample_age_rnaseq_rankings):
+    plot_cumulative_additions(sample_age_rnaseq_rankings)
+    return
+
+
+@app.cell
+def _(
+    COLORS,
+    Path,
+    format_cumulative_additions_for_plots,
+    pl,
+    plt,
+    sns,
+    ticker,
+):
+    def plot_cumulative_additions_by_attribute(
+        counts: dict[str, dict[str, int]],
+        attributes: list[str] | None = None,
+        reverse: bool = False,
+        ylabel: str = "Cumulative annotations",
+        figsize: tuple[int, int] = (10, 8),
+        title: str = "",
+        sharey: bool = False,
+        savefig: bool = False,
+        outfile: Path | str | None = None,
+        dpi: int = 600,
+    ) -> plt.Figure:
+        """Plot cumulative additions per source, one panel per attribute."""
+        if attributes is None:
+            attributes = list(counts.keys())
+
+        fig, axes = plt.subplots(2, 2, figsize=figsize, sharey=sharey)
+        axes = axes.flatten()
+
+        for idx, attr in enumerate(attributes):
+            ax = axes[idx]
+            color = COLORS.get(attr, "dimgrey")
+
+            # each attribute keeps its own accumulation order
+            sources = list(counts[attr].keys())
+
+            formatted = (
+                format_cumulative_additions_for_plots(counts[attr], reverse=reverse)
+                .with_columns(pl.col("source").cast(pl.Enum(sources)))
+                .sort("source")
+            )
+
+            sns.pointplot(
+                data=formatted.to_pandas(),
+                x="source",
+                y="count",
+                order=sources,
+                color=color,
+                marker="o",
+                markersize=5,
+                linewidth=1.5,
+                ax=ax,
+            )
+
+            plt.setp(
+                ax.get_xticklabels(),
+                rotation=45,
+                ha="right",
+                rotation_mode="anchor",
+            )
+
+            ax.set_title(attr.capitalize(), fontsize=14)
+            ax.set_xlabel("", fontsize=12)
+            ax.set_ylabel(ylabel, fontsize=12)
+            ax.set_ylim(bottom=0)
+            ax.grid(axis="y", alpha=0.3)
+            ax.yaxis.set_major_formatter(
+                ticker.FuncFormatter(lambda x, p: f"{int(x):,}")
+            )
+            sns.despine(ax=ax, top=True, right=True, left=True)
+
+            if ax.get_legend():
+                ax.get_legend().remove()
+
+        for idx in range(len(attributes), len(axes)):
+            axes[idx].set_visible(False)
+
+        plt.suptitle(title, fontsize=14, fontweight="bold")
+        plt.tight_layout()
+
+        if savefig and isinstance(outfile, (str, Path)):
+            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
+
+        plt.show()
+
+    return (plot_cumulative_additions_by_attribute,)
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    plot_cumulative_additions_by_attribute,
+    sample_age_rnaseq_rankings,
+    sample_disease_rnaseq_rankings,
+    sample_sex_rnaseq_rankings,
+    sample_tissue_rnaseq_rankings,
+):
+    # combine and plot
+    sample_rnaseq_rankings = {
+        "tissue": sample_tissue_rnaseq_rankings,
+        "disease": sample_disease_rnaseq_rankings,
+        "sex": sample_sex_rnaseq_rankings,
+        "age": sample_age_rnaseq_rankings,
+    }
+    plot_cumulative_additions_by_attribute(sample_rnaseq_rankings, savefig=True, reverse=True, outfile=FIGURES_DIR / "cumulative_source_contributions__level-sample__tech-rnaseq.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Microarray
+    """)
     return
 
 
