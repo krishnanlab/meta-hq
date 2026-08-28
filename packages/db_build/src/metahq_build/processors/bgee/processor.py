@@ -239,6 +239,7 @@ class BgeeProcessor(BaseProcessor):
 
         hsapdv_map = (
             pl.scan_csv(BGEE_HSAPDV_AGE_GROUP_MAP)
+            .rename({"id": COL_TERM_ID, "age_group": AGE_KEY})
             .select([COL_TERM_ID, AGE_KEY])
             .filter(pl.col(AGE_KEY) != "na")
             .collect(engine="streaming")

@@ -160,7 +160,7 @@ UBERON_SYSTEMS: Path = ONTOLOGY_DIR / "uberon_ext" / "systems.txt"
 # Known input file paths for static / manually-obtained datasets.
 ALE_TSV: Path = UNPROCESSED_DIR / "ale.tsv"
 ALE_BTO_UBERON: Path = HELPERS_DIR / "ale_bto_to_uberon_map.csv"
-BGEE_HSAPDV_AGE_GROUP_MAP: Path = HELPERS_DIR / "bgee_hsapdv_to_age_groups.csv"
+BGEE_HSAPDV_AGE_GROUP_MAP: Path = HELPERS_DIR / "hsapdv_to_age_group.csv"
 BGEE_UBERON_AGE_GROUP_MAP: Path = HELPERS_DIR / "bgee_uberon_to_age_groups.csv"
 BGEE_SPECIES_IDS: Path = HELPERS_DIR / "bgee_species_ids.tsv"
 DISIGN_ATLAS_GMT: Path = UNPROCESSED_DIR / "disign_atlas.gmt"
