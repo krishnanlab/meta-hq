@@ -410,7 +410,7 @@ def _(
             save=True,
             outfile=f"figures/attribute_upset_plot__level-sample__tech-microarray.{FMT}",
             dpi=500,
-            ylim=70_000,
+            ylim=100_000,
         )
         upset_plot(
             sample_records_rnaseq,
@@ -418,7 +418,7 @@ def _(
             save=True,
             outfile=f"figures/attribute_upset_plot__level-sample__tech-rnaseq.{FMT}",
             dpi=500,
-            ylim=70_000,
+            ylim=100_000,
         )
 
         # ========== Study ============
@@ -428,7 +428,7 @@ def _(
             save=True,
             outfile=f"figures/attribute_upset_plot__level-study__tech-microarray.{FMT}",
             dpi=500,
-            ylim=5_000,
+            ylim=5_500,
         )
         # ========== Study ============
         upset_plot(
@@ -437,7 +437,7 @@ def _(
             save=True,
             outfile=f"figures/attribute_upset_plot__level-study__tech-rnaseq.{FMT}",
             dpi=500,
-            ylim=5_000
+            ylim=5_500
         )
     return
 
@@ -787,7 +787,7 @@ def _(UNIQUE_PROPAGATED_TERMS: "Path", load_txt):
                 terms.add(term)
 
         print(f"Number of unique {attribute}s in propagated annotations: {len(terms)}")
-    return
+    return (attribute,)
 
 
 @app.cell(hide_code=True)
@@ -1483,7 +1483,7 @@ def _(mo):
 
     These are annotations that have been formatted into the same schema. Some annotations from the original sources have been removed based on our inclusion criteria:
 
-    * If an annotation can map to UBERON/CL (tissue), MONDO (diseas´), M/F (sex), or an age group (age) either autonomously or manually.
+    * If an annotation can map to UBERON/CL (tissue), MONDO (disease), M/F (sex), or an age group (age) either autonomously or manually.
     * Annotations to very high level tissue or disease terms (e.g., anatomical system) since we posit that these are not informative annotations and are essentially equivalent to not having an annotation.
     * If an entry accession ID cannot be mapped to a GEO accession ID.
     * If annotations are for an entry that is not from microarray or RNA-Seq.
@@ -1616,6 +1616,10 @@ def _(
 def _(mo):
     mo.md(r"""
     # Cumulative additions by annotation source
+
+    The following plots show the number of unique samples added by each annotation source grouped by attribute (i.e., tissue, disease, sex, age), technology (i.e., microarray or rnaseq), and entry level (i.e., sample or series). For each attribute and technology combination, we begin with the source that contributed the most annotated samples/studies overall, then we move to the next largest source for that combination and plot the number of unique samples it contributed compared to the larger sources, and so on and so forth for the remaining sources.
+
+    If a source is not present in a plot, that means it contributed no annotations for that particular attribute, technology, and entry level combination.
     """)
     return
 
@@ -1655,7 +1659,12 @@ def _(pl):
 
 @app.cell
 def _(PLATFORMS_FILE, mo, pl):
-    def quantify_incremental_source_contributions(db: dict, attribute: str, tech: str) -> dict[str, int]:
+    def quantify_incremental_source_contributions(
+        db: dict,
+        attribute: str,
+        tech: str,
+        level: str = "sample",
+    ) -> dict[str, int]:
         """"""
         valid_platforms = (
             pl.scan_parquet(PLATFORMS_FILE)
@@ -1668,8 +1677,13 @@ def _(PLATFORMS_FILE, mo, pl):
         # collect source contributions
         source_contributions: dict[str, set[str]] = {}
         for entry, records in mo.status.progress_bar(db.items(), show_eta=True, show_rate=True):
-            if records["accession_ids"]["platform"] not in valid_platforms:
-                continue
+            if level == "sample":
+                if records["accession_ids"]["platform"] not in valid_platforms:
+                    continue
+            if level == "series":
+                platforms = set(records["accession_ids"]["platform"].split("|"))
+                if len(platforms & set(valid_platforms)) == 0:
+                    continue
 
             if attribute not in records:
                 continue
@@ -1694,7 +1708,7 @@ def _(PLATFORMS_FILE, mo, pl):
             # to the larger sources that came before
             else:
                 existing_entries: set[str] = set()
-            
+        
                 descending_rank = rank - 1
                 while descending_rank > -1:
                     previous_source = list(cumulative_additions.keys())[descending_rank]
@@ -1708,8 +1722,8 @@ def _(PLATFORMS_FILE, mo, pl):
         cumulative_counts = {source: len(set(entries)) for source, entries in cumulative_additions.items()}
         cumulative_ranked_sources = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
         return cumulative_ranked_sources
-            
         
+    
 
     return (quantify_incremental_source_contributions,)
 
@@ -1735,7 +1749,7 @@ def _(pl):
         """
         if reverse:
             formatted: dict[str, int] = {}
-    
+
             db_size = 0
             for source, counts in data.items():
                 db_size += counts
@@ -1748,142 +1762,6 @@ def _(pl):
         )
 
     return (format_cumulative_additions_for_plots,)
-
-
-@app.cell
-def _(Path, format_cumulative_additions_for_plots, plt, sns):
-    def plot_cumulative_additions(
-        counts: dict[str, int],
-        title: str = "",
-        figsize: tuple[int, int] = (5, 5),
-        savefig: bool = False,
-        outfile: Path | str | None = None,
-        dpi: int = 600,
-    ):
-        """Plot cumulative additions per source."""
-        formatted = format_cumulative_additions_for_plots(counts)
-
-        fig, ax = plt.subplots(figsize=figsize)
-        sns.set_style("whitegrid")
-
-        sns.pointplot(
-            data=formatted.to_pandas(),
-            x="source",
-            y="count",
-            ax=ax,
-        )
-
-        plt.setp(
-            ax.get_xticklabels(),
-            rotation=45,
-            ha="right",
-            rotation_mode="anchor",
-        )
-
-        ax.set_title(title, fontsize=14, fontweight="bold")
-        fig.tight_layout()
-
-        if savefig and outfile is not None:
-            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
-
-        plt.show()
-
-    return (plot_cumulative_additions,)
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Sample
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### RNA-Seq
-    """)
-    return
-
-
-@app.cell
-def _(sample_db):
-    sample_samples = list(sample_db.keys())[0:50_000]
-    test_sample_db = {sample: sample_db[sample] for sample in sample_samples}
-    return
-
-
-@app.cell
-def _(quantify_incremental_source_contributions, sample_db):
-    sample_tissue_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "tissue", "rnaseq")
-    return (sample_tissue_rnaseq_rankings,)
-
-
-@app.cell
-def _(sample_tissue_rnaseq_rankings):
-    sample_tissue_rnaseq_rankings
-    return
-
-
-@app.cell
-def _(plot_cumulative_additions, sample_tissue_rnaseq_rankings):
-    plot_cumulative_additions(sample_tissue_rnaseq_rankings)
-    return
-
-
-@app.cell
-def _(quantify_incremental_source_contributions, sample_db):
-    sample_disease_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "disease", "rnaseq")
-    return (sample_disease_rnaseq_rankings,)
-
-
-@app.cell
-def _(sample_disease_rnaseq_rankings):
-    sample_disease_rnaseq_rankings
-    return
-
-
-@app.cell
-def _(plot_cumulative_additions, sample_disease_rnaseq_rankings):
-    plot_cumulative_additions(sample_disease_rnaseq_rankings)
-    return
-
-
-@app.cell
-def _(quantify_incremental_source_contributions, sample_db):
-    sample_sex_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "sex", "rnaseq")
-    return (sample_sex_rnaseq_rankings,)
-
-
-@app.cell
-def _(sample_sex_rnaseq_rankings):
-    sample_sex_rnaseq_rankings
-    return
-
-
-@app.cell
-def _(plot_cumulative_additions, sample_sex_rnaseq_rankings):
-    plot_cumulative_additions(sample_sex_rnaseq_rankings)
-    return
-
-
-@app.cell
-def _(quantify_incremental_source_contributions, sample_db):
-    sample_age_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "age", "rnaseq")
-    return (sample_age_rnaseq_rankings,)
-
-
-@app.cell
-def _(sample_age_rnaseq_rankings):
-    sample_age_rnaseq_rankings
-    return
-
-
-@app.cell
-def _(plot_cumulative_additions, sample_age_rnaseq_rankings):
-    plot_cumulative_additions(sample_age_rnaseq_rankings)
-    return
 
 
 @app.cell
@@ -1974,6 +1852,37 @@ def _(
     return (plot_cumulative_additions_by_attribute,)
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Sample
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### RNA-Seq
+    """)
+    return
+
+
+@app.cell
+def _(quantify_incremental_source_contributions, sample_db):
+    # this takes a couple minutes
+    sample_tissue_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "tissue", "rnaseq")
+    sample_disease_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "disease", "rnaseq")
+    sample_sex_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "sex", "rnaseq")
+    sample_age_rnaseq_rankings = quantify_incremental_source_contributions(sample_db, "age", "rnaseq")
+    return (
+        sample_age_rnaseq_rankings,
+        sample_disease_rnaseq_rankings,
+        sample_sex_rnaseq_rankings,
+        sample_tissue_rnaseq_rankings,
+    )
+
+
 @app.cell
 def _(
     FIGURES_DIR: "Path",
@@ -1999,6 +1908,218 @@ def _(mo):
     mo.md(r"""
     ### Microarray
     """)
+    return
+
+
+@app.cell
+def _(quantify_incremental_source_contributions, sample_db):
+    # this takes a couple minutes
+    sample_tissue_microarray_rankings = quantify_incremental_source_contributions(sample_db, "tissue", "microarray")
+    sample_disease_microarray_rankings = quantify_incremental_source_contributions(sample_db, "disease", "microarray")
+    sample_sex_microarray_rankings = quantify_incremental_source_contributions(sample_db, "sex", "microarray")
+    sample_age_microarray_rankings = quantify_incremental_source_contributions(sample_db, "age", "microarray")
+    return (
+        sample_age_microarray_rankings,
+        sample_disease_microarray_rankings,
+        sample_sex_microarray_rankings,
+        sample_tissue_microarray_rankings,
+    )
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    plot_cumulative_additions_by_attribute,
+    sample_age_microarray_rankings,
+    sample_disease_microarray_rankings,
+    sample_sex_microarray_rankings,
+    sample_tissue_microarray_rankings,
+):
+    # combine and plot
+    sample_microarray_rankings = {
+        "tissue": sample_tissue_microarray_rankings,
+        "disease": sample_disease_microarray_rankings,
+        "sex": sample_sex_microarray_rankings,
+        "age": sample_age_microarray_rankings,
+    }
+    plot_cumulative_additions_by_attribute(sample_microarray_rankings, savefig=True, reverse=True, outfile=FIGURES_DIR / "cumulative_source_contributions__level-sample__tech-microarray.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Series
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### RNA-Seq
+    """)
+    return
+
+
+@app.cell
+def _(quantify_incremental_source_contributions, series_db):
+    series_tissue_rnaseq_rankings = quantify_incremental_source_contributions(series_db, "tissue", "rnaseq", "series")
+    series_disease_rnaseq_rankings = quantify_incremental_source_contributions(series_db, "disease", "rnaseq", "series")
+    series_sex_rnaseq_rankings = quantify_incremental_source_contributions(series_db, "sex", "rnaseq", "series")
+    series_age_rnaseq_rankings = quantify_incremental_source_contributions(series_db, "age", "rnaseq", "series")
+    return (
+        series_age_rnaseq_rankings,
+        series_disease_rnaseq_rankings,
+        series_sex_rnaseq_rankings,
+        series_tissue_rnaseq_rankings,
+    )
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    plot_cumulative_additions_by_attribute,
+    series_age_rnaseq_rankings,
+    series_disease_rnaseq_rankings,
+    series_sex_rnaseq_rankings,
+    series_tissue_rnaseq_rankings,
+):
+    # combine and plot
+    series_rnaseq_rankings = {
+        "tissue": series_tissue_rnaseq_rankings,
+        "disease": series_disease_rnaseq_rankings,
+        "sex": series_sex_rnaseq_rankings,
+        "age": series_age_rnaseq_rankings,
+    }
+    plot_cumulative_additions_by_attribute(series_rnaseq_rankings, savefig=True, reverse=True, outfile=FIGURES_DIR / "cumulative_source_contributions__level-series__tech-rnaseq.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Microarray
+    """)
+    return
+
+
+@app.cell
+def _(quantify_incremental_source_contributions, series_db):
+    series_tissue_microarray_rankings = quantify_incremental_source_contributions(series_db, "tissue", "microarray", "series")
+    series_disease_microarray_rankings = quantify_incremental_source_contributions(series_db, "disease", "microarray", "series")
+    series_sex_microarray_rankings = quantify_incremental_source_contributions(series_db, "sex", "microarray", "series")
+    series_age_microarray_rankings = quantify_incremental_source_contributions(series_db, "age", "microarray", "series")
+    return (
+        series_age_microarray_rankings,
+        series_disease_microarray_rankings,
+        series_sex_microarray_rankings,
+        series_tissue_microarray_rankings,
+    )
+
+
+@app.cell
+def _(
+    FIGURES_DIR: "Path",
+    plot_cumulative_additions_by_attribute,
+    series_age_microarray_rankings,
+    series_disease_microarray_rankings,
+    series_sex_microarray_rankings,
+    series_tissue_microarray_rankings,
+):
+    # combine and plot
+    series_microarray_rankings = {
+        "tissue": series_tissue_microarray_rankings,
+        "disease": series_disease_microarray_rankings,
+        "sex": series_sex_microarray_rankings,
+        "age": series_age_microarray_rankings,
+    }
+    plot_cumulative_additions_by_attribute(
+        series_microarray_rankings,
+        savefig=True,
+        reverse=True,
+        outfile=FIGURES_DIR / "cumulative_source_contributions__level-series__tech-microarray.png",
+    )
+    return
+
+
+@app.cell
+def _(ATTRIBUTES, attribute):
+    def metahq_size_without_gemma(db: dict, attributes: list[str] = ATTRIBUTES):
+        _db = {}
+        for entry, records in db.items():
+            for attribtue in attributes:
+                if attribute not in records:
+                    continue
+
+                # check if Gemma only
+                sources = records[attribute].keys()
+                if (len(sources) == 1) and ("Gemma" in sources):
+                    continue
+
+                _db.setdefault(entry, {})
+                _db[entry].setdefault(attribute, {})
+                for source in sources:
+                    if source != "Gemma":
+                        _db[entry][attribute][source] = records[attribute][source]
+
+        return _db
+
+    return (metahq_size_without_gemma,)
+
+
+@app.cell
+def _(ATTRIBUTES):
+    def metahq_size_without_gemma_test(db: dict, attributes: list[str] = ATTRIBUTES) -> dict:
+        _db = {}
+        for entry, records in db.items():
+            has_other = any(
+                source != "Gemma"
+                for attribute in attributes
+                if attribute in records
+                for source in records[attribute]
+            )
+            if has_other:
+                _db[entry] = records
+        return _db
+
+    return (metahq_size_without_gemma_test,)
+
+
+@app.cell
+def _(GEO_PROCESSED, load_bson, metahq_size_without_gemma_test):
+    geo = load_bson(GEO_PROCESSED)
+    geo = {entry: records for entry, records in geo.items() if entry.startswith("GSM")}
+    sample_db_no_gemma = metahq_size_without_gemma_test(geo)
+    return geo, sample_db_no_gemma
+
+
+@app.cell
+def _(sample_db_no_gemma):
+    print(len(sample_db_no_gemma))
+    return
+
+
+@app.cell
+def _(
+    ATTRIBUTES,
+    geo,
+    metahq_size_without_gemma,
+    metahq_size_without_gemma_test,
+):
+    a = set(metahq_size_without_gemma(geo))
+    b = set(metahq_size_without_gemma_test(geo))
+    print(len(a), len(b))
+    print("only version 1:", list(a - b)[:5])
+    print("only yours:   ", list(b - a)[:5])
+    # then inspect one offender
+    k = next(iter(a ^ b))
+    print(k, {attr: geo[k].get(attr) for attr in ATTRIBUTES})
+    return
+
+
+@app.cell
+def _():
     return
 
 
