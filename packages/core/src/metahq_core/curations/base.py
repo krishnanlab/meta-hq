@@ -60,6 +60,10 @@ class BaseCuration(ABC):
     def slice(self, offset: int, length: int | None = None) -> BaseCuration:
         """Slice both data and ids simultaneously using polars slice."""
 
+    @abstractmethod
+    def pl(self) -> pl.DataFrame:
+        """Return a curation as a polars dataframe."""
+
     @property
     @abstractmethod
     def entities(self) -> IdArray:

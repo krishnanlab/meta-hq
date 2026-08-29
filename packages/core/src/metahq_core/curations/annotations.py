@@ -467,6 +467,10 @@ class Annotations(BaseCuration):
             verbose=self.verbose,
         )
 
+    def pl(self) -> pl.DataFrame:
+        """Return the annotations as a polars DataFrame"""
+        return pl.concat([self.ids, self.data], how="horizontal_extend")
+
     def _collapse(self, on: str):
         """Collapses index-level annotations to group-level. Helper function
         for `collapse`.
