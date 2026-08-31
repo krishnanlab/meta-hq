@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 import polars as pl
 import polars.selectors as cs
+from scipy import sparse
 from metahq_build.config import ID_KEY, MONDO_RELATIONS, UBERON_RELATIONS
 from metahq_build.config.config import DELIMITER
 from metahq_core.curations.annotations import Annotations
@@ -105,17 +106,17 @@ def get_unique_annotation_sources(
 
 def build_source_matrices(
     df: pl.DataFrame, db: dict[str, dict[str, Any]], attribute: Attribute
-) -> tuple[np.ndarray, list[str], np.ndarray, list[str]]:
-    """Build a dense (source x entry x term) array of propagated annotation
+) -> tuple[list[sparse.csr_matrix], list[str], np.ndarray, list[str]]:
+    """Build sparse (entry x term) matrices of propagated annotation
     presence for every source, aligned to a shared entry/term index space.
 
     Returns:
-        source_matrices: Array of shape (n_sources, n_entries, n_terms) where
-            a nonzero value indicates the entry is annotated (directly or via
-            propagation) to that term by that source.
-        sources: Source names, indexing the first axis of `source_matrices`.
-        all_entries: Entry IDs, indexing the second axis.
-        all_terms: Ontology term IDs, indexing the third axis.
+        source_matrices: List of sparse CSR matrices, one per source, each of
+            shape (n_entries, n_terms) where a nonzero value indicates the
+            entry is annotated (directly or via propagation) to that term.
+        sources: Source names, indexing the list of `source_matrices`.
+        all_entries: Entry IDs, indexing the rows of each matrix.
+        all_terms: Ontology term IDs, indexing the columns of each matrix.
     """
     all_terms: list[str] = get_ontology_terms(attribute)
     all_entries = np.array(list(db.keys()))
@@ -123,9 +124,8 @@ def build_source_matrices(
 
     sources = sorted(df[SOURCE_COL].unique())
     ontology_name = get_ontology_name(attribute)
-    source_matrices = np.zeros(
-        (len(sources), len(all_entries), len(all_terms)), dtype=DTYPE_ANNO
-    )
+    source_matrices = []
+
     for i, source in enumerate(sources):
         _df = (
             df.filter(pl.col(SOURCE_COL) == source)
@@ -148,18 +148,24 @@ def build_source_matrices(
         anno = anno.propagate(to_terms=all_terms, ontology=ontology_name, mode=0).pl()
         assert all_terms == anno.select(cs.numeric()).columns, "Mismatched term columns"
 
+        # Build sparse matrix for this source
         source_entries = anno[ENTRY_COL].to_numpy().flatten()
         entry_indices = np.fromiter(
             (entry_to_idx[entry] for entry in source_entries),
             dtype=np.int64,
             count=len(source_entries),
         )
-        source_matrices[i, entry_indices] = anno.select(cs.numeric()).to_numpy()
+
+        # Create a sparse matrix: start with zeros, fill in the annotated entries
+        source_data = anno.select(cs.numeric()).to_numpy()
+        source_matrix = sparse.lil_matrix((len(all_entries), len(all_terms)), dtype=DTYPE_ANNO)
+        source_matrix[entry_indices] = source_data
+        source_matrices.append(source_matrix.tocsr())  # Convert to CSR for efficient operations
 
     return source_matrices, sources, all_entries, all_terms
 
 
-def compute_term_counts(source_matrices: np.ndarray) -> np.ndarray:
+def compute_term_counts(source_matrices: list[sparse.csr_matrix]) -> np.ndarray:
     """Count the number of terms each source annotates each entry to.
 
     Comparing a single entry's counts across sources shows which source
@@ -168,20 +174,41 @@ def compute_term_counts(source_matrices: np.ndarray) -> np.ndarray:
     Returns:
         Array of shape (n_sources, n_entries).
     """
-    return (source_matrices > 0).sum(axis=-1)
+    term_counts = np.zeros((len(source_matrices), source_matrices[0].shape[0]), dtype=np.int32)
+    for i, matrix in enumerate(source_matrices):
+        # For each entry (row), count nonzero terms (columns)
+        term_counts[i] = np.array((matrix > 0).sum(axis=1)).flatten()
+    return term_counts
 
 
-def compute_unique_contribution(source_matrices: np.ndarray) -> np.ndarray:
+def compute_unique_contribution(source_matrices: list[sparse.csr_matrix]) -> np.ndarray:
     """For each source, identify entry-term annotations that no other
     source provides, i.e. information only that source contributes.
 
     Returns:
-        Boolean array of shape (n_sources, n_entries, n_terms) where True
-        marks an entry-term annotation unique to that source.
+        Array of shape (n_sources, n_entries) where each value is the count
+        of unique entry-term annotations for that source.
     """
-    presence = source_matrices > 0
-    n_sources_annotating = presence.sum(axis=0)
-    return presence & (n_sources_annotating == 1)
+    # Stack all sparse matrices to compute total presence across sources
+    n_sources = len(source_matrices)
+    n_entries, n_terms = source_matrices[0].shape
+
+    # Count how many sources annotate each (entry, term) pair
+    # by summing presence across all sources
+    n_sources_annotating = sparse.csr_matrix((n_entries, n_terms), dtype=np.int32)
+    for matrix in source_matrices:
+        n_sources_annotating += (matrix > 0).astype(np.int32)
+
+    # For each source, find annotations where only that source has it
+    unique_counts = np.zeros((n_sources, n_entries), dtype=np.int32)
+    for i, matrix in enumerate(source_matrices):
+        # Find where this source has annotation AND total count is 1
+        presence = matrix > 0
+        unique_to_source = presence.multiply(n_sources_annotating == 1)
+        # Sum across terms (columns) to get count per entry (row)
+        unique_counts[i] = np.array(unique_to_source.sum(axis=1)).flatten()
+
+    return unique_counts
 
 
 def matrix_to_df(
@@ -245,7 +272,7 @@ def main():
     )
 
     # for each entry, how many terms does each source uniquely contribute
-    unique_counts = compute_unique_contribution(source_matrices).sum(axis=-1)
+    unique_counts = compute_unique_contribution(source_matrices)
     matrix_to_df(unique_counts, sources, all_entries).write_csv(
         outdir
         / f"unique_contribution__level-{args.level}__attribute-{attribute.value}.tsv",
