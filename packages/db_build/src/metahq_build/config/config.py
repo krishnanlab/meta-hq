@@ -108,6 +108,7 @@ COL_ATTRIBUTE: str = "attribute"
 COL_TERM_ID: str = "term_id"
 COL_TERM_NAME: str = "term_name"
 COL_ECODE: str = "ecode"
+COL_SOURCE: str = "source"
 
 # ===============================================
 # ====== ACCESSION PROPERTIES
