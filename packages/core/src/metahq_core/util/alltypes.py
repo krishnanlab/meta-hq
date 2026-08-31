@@ -32,6 +32,18 @@ type RawGemma = list[dict[str, Any]]
 type ParsedGemma = dict[str, dict[str, dict[str, list[str]]]]
 
 
+class Attribute(Enum):
+    "An attribute with supported annotations in MetaHQ."
+
+    TISSUE = "tissue"
+    DISEASE = "disease"
+    SEX = "sex"
+    AGE = "age"
+
+
+HIERARCHICAL_ATTRIBUTES = frozenset({Attribute.TISSUE, Attribute.DISEASE})
+
+
 class Level(Enum):
     """Supported annotation levels."""
 
