@@ -194,6 +194,10 @@ class Labels(BaseCuration):
         """Wrapper for polars head function."""
         return repr(self.data.head(*args, **kwargs))
 
+    def pl(self) -> pl.DataFrame:
+        """Return the labels as a polars DataFrame"""
+        return pl.concat([self.ids, self.data], how="horizontal_extend")
+
     def save(
         self,
         outfile: str | Path,
