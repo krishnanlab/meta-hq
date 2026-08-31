@@ -5,6 +5,7 @@ import numpy as np
 from numpy.typing import DTypeLike
 from tqdm import tqdm
 
+from metahq_build.ontology.metrics import ICResult, ICResults, information_content
 from metahq_build.ontology.ontology import Ontology
 from metahq_build.ontology.relations import RelationsMatrix
 from metahq_build.util.logging import setup_logger
@@ -166,6 +167,43 @@ class Graph(Ontology):
                 print(f"{node} not in graph.")
 
         return _map
+
+    def ic(self, node: str) -> ICResult:
+        """Compute the information content for a particular node.
+
+        Arguments:
+            node (str):
+                A particular node in the graph (e.g., MONDO:0004994).
+
+        Returns:
+            (ICResult): The information content of the specified node.
+        """
+        if node in self.nodes:
+            n_descendants = len(self.descendants(node))
+            ic = information_content(n_descendants, len(self.nodes))
+            return ICResult(node, ic)
+
+        raise ValueError(f"Node {node} not in graph.")
+
+    def ic_from(self, nodes: list[str]) -> ICResults:
+        """Compute information content for multiple nodes in the graph.
+
+        Attributes:
+            nodes (list[str]):
+                A list of nodes in the graph.
+
+        Returns:
+            (ICResults): Information content results for all nodes.
+        """
+        results = []
+        for node in nodes:
+            if node not in self.nodes:
+                self.logger.warning("Node not in ontology: %s. Skipping...", node)
+                continue
+
+            results.append(self.ic(node))
+
+        return ICResults.from_list(results)
 
     def relations_matrix(self, dtype: DTypeLike = np.int8) -> "RelationsMatrix":
         """Construct a term x term matrices defining ancestor and descendant relationships.
