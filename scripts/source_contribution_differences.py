@@ -6,19 +6,19 @@ Date: 2026-08-28
 """
 
 from argparse import ArgumentParser
-from enum import Enum
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-from scipy import sparse
-from metahq_build.config import ID_KEY, MONDO_RELATIONS, UBERON_RELATIONS
-from metahq_build.config.config import DELIMITER
+from metahq_build.config import MONDO_RELATIONS, UBERON_RELATIONS
 from metahq_core.curations.annotations import Annotations
+from metahq_core.util.alltypes import Attribute
 from metahq_core.util.io import checkdir, load_bson
 from metahq_core.util.supported import ROOT
+from scipy import sparse
+from util import dict_db_to_df
 
 # annotation dataframe columns
 ENTRY_COL: str = "entry"
@@ -27,38 +27,6 @@ TERM_COL: str = "term"
 DTYPE_ANNO = np.int32
 
 DEFAULT_OUTDIR = ROOT / "results/source_contribution_differences"
-
-
-class Attribute(Enum):
-    "An attribute with supported annotations in MetaHQ."
-
-    TISSUE = "tissue"
-    DISEASE = "disease"
-    SEX = "sex"
-    AGE = "age"
-
-
-def dict_db_to_df(db: dict[str, dict[str, Any]], attribute: Attribute) -> pl.DataFrame:
-    """Transform the database from dictionary to polars.DataFrame
-    where one row represents a single annotation for a particular
-    attribute from a particular source.
-    """
-    _db = {"entry": [], "source": [], "term": []}
-    for entry, records in db.items():
-        if attribute.value not in records:
-            continue
-
-        for source, anno in records[attribute.value].items():
-            _db["entry"].append(entry)
-            _db["source"].append(source)
-            _db["term"].append(anno[ID_KEY])
-
-    return (
-        pl.LazyFrame(_db)
-        .with_columns(pl.col("term").str.split(DELIMITER))
-        .explode("term", empty_as_null=False)
-        .collect(engine="streaming")
-    )
 
 
 def get_ontology_file(attribute: Attribute) -> Path:
@@ -158,9 +126,13 @@ def build_source_matrices(
 
         # Create a sparse matrix: start with zeros, fill in the annotated entries
         source_data = anno.select(cs.numeric()).to_numpy()
-        source_matrix = sparse.lil_matrix((len(all_entries), len(all_terms)), dtype=DTYPE_ANNO)
+        source_matrix = sparse.lil_matrix(
+            (len(all_entries), len(all_terms)), dtype=DTYPE_ANNO
+        )
         source_matrix[entry_indices] = source_data
-        source_matrices.append(source_matrix.tocsr())  # Convert to CSR for efficient operations
+        source_matrices.append(
+            source_matrix.tocsr()
+        )  # Convert to CSR for efficient operations
 
     return source_matrices, sources, all_entries, all_terms
 
@@ -174,7 +146,9 @@ def compute_term_counts(source_matrices: list[sparse.csr_matrix]) -> np.ndarray:
     Returns:
         Array of shape (n_sources, n_entries).
     """
-    term_counts = np.zeros((len(source_matrices), source_matrices[0].shape[0]), dtype=np.int32)
+    term_counts = np.zeros(
+        (len(source_matrices), source_matrices[0].shape[0]), dtype=np.int32
+    )
     for i, matrix in enumerate(source_matrices):
         # For each entry (row), count nonzero terms (columns)
         term_counts[i] = np.array((matrix > 0).sum(axis=1)).flatten()
