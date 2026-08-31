@@ -90,6 +90,8 @@ def _(Path):
     UNIQUE_PROPAGATED_TERMS: Path = RESULTS_DIR / "unique_propagated_tissue_disease_terms.txt"
     POST_HARMONIZATION_RESULTS = RESULTS_DIR / "post_harmonization"
     POST_OVERLAP_RESULTS = list(POST_HARMONIZATION_RESULTS.glob("overlap*"))
+    INFORMATION_CONTENT_SAMPLE_RESULTS = RESULTS_DIR / "ic_original_sources_vs_metahq__level-sample.parquet"
+    INFORMATION_CONTENT_SERIES_RESULTS = RESULTS_DIR / "ic_original_sources_vs_metahq__level-series.parquet"
 
     FIGURES_DIR: Path = Path("figures")
 
@@ -117,6 +119,7 @@ def _(Path):
         FIGURES_DIR,
         FMT,
         GEO_PROCESSED,
+        INFORMATION_CONTENT_SAMPLE_RESULTS,
         OVERLAP_CMAP,
         OVERLAP_ORDER,
         PLATFORMS_FILE,
@@ -1708,7 +1711,7 @@ def _(PLATFORMS_FILE, mo, pl):
             # to the larger sources that came before
             else:
                 existing_entries: set[str] = set()
-        
+    
                 descending_rank = rank - 1
                 while descending_rank > -1:
                     previous_source = list(cumulative_additions.keys())[descending_rank]
@@ -1722,8 +1725,8 @@ def _(PLATFORMS_FILE, mo, pl):
         cumulative_counts = {source: len(set(entries)) for source, entries in cumulative_additions.items()}
         cumulative_ranked_sources = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
         return cumulative_ranked_sources
-        
     
+
 
     return (quantify_incremental_source_contributions,)
 
@@ -2065,7 +2068,7 @@ def _(ATTRIBUTES, attribute):
 
         return _db
 
-    return (metahq_size_without_gemma,)
+    return
 
 
 @app.cell
@@ -2091,35 +2094,253 @@ def _(GEO_PROCESSED, load_bson, metahq_size_without_gemma_test):
     geo = load_bson(GEO_PROCESSED)
     geo = {entry: records for entry, records in geo.items() if entry.startswith("GSM")}
     sample_db_no_gemma = metahq_size_without_gemma_test(geo)
-    return geo, sample_db_no_gemma
+    return
 
 
-@app.cell
-def _(sample_db_no_gemma):
-    print(len(sample_db_no_gemma))
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Information content of original source annotations vs MetaHQ
+    """)
     return
 
 
 @app.cell
-def _(
-    ATTRIBUTES,
-    geo,
-    metahq_size_without_gemma,
-    metahq_size_without_gemma_test,
-):
-    a = set(metahq_size_without_gemma(geo))
-    b = set(metahq_size_without_gemma_test(geo))
-    print(len(a), len(b))
-    print("only version 1:", list(a - b)[:5])
-    print("only yours:   ", list(b - a)[:5])
-    # then inspect one offender
-    k = next(iter(a ^ b))
-    print(k, {attr: geo[k].get(attr) for attr in ATTRIBUTES})
+def _(np, plt, sns):
+    def plot_ic_comparison(
+        df,
+        *,
+        source_col="original_source",
+        attribute_col="attribute",
+        value_cols=("original_ic", "metahq_ic"),
+        pipeline_labels=("original", "metahq"),
+        provenance_col="metahq_source",
+        attributes=("tissue", "disease"),
+        sources=None,
+        levels=8,
+        thresh=0.02,
+        bw_adjust=1.0,
+        cmap="mako_r",
+        min_kde_points=10,
+        show_points=False,
+        jitter=0.03,
+        shared_limits=True,
+        panel_size=4.2,
+        seed=0,
+        outfile=None,
+        dpi=600,
+    ):
+        """Grid of IC comparisons, one row per source and three columns.
+ 
+        Columns are: a 2D KDE of original vs. metahq IC for the first attribute,
+        the same for the second, and a grouped boxplot of both pipelines split by
+        attribute. Panels with too few points, or no spread in either axis, fall
+        back to a scatter because the KDE covariance would be singular.
+ 
+        Parameters
+        ----------
+        df : polars.DataFrame or pandas.DataFrame
+            One row per accession x attribute. Converted to pandas if needed.
+        source_col : str
+            Column that determines the row partitioning.
+        value_cols, pipeline_labels : sequence of str
+            The two IC columns to compare, and the names they get in the boxplot
+            legend. Given in the order (x-axis, y-axis).
+        provenance_col : str or None
+            Compared against `source_col` to flag reassigned annotations, which
+            colors the point overlay. Pass None to skip the flag.
+        attributes : sequence of str
+            Values of `attribute_col` to give a density column each. Determines
+            the number of density panels, so passing three makes a four-column grid.
+        sources : sequence of str or None
+            Restrict and order the rows. Defaults to every source, sorted.
+        levels, thresh, bw_adjust, cmap
+            Passed through to `seaborn.kdeplot`. Lower `bw_adjust` tightens the
+            contours; useful when IC values are tightly clustered.
+        min_kde_points : int
+            Panels with fewer observations get a scatter instead of a density.
+        show_points : bool
+            Overlay the raw observations on top of the density.
+        jitter : float
+            Gaussian jitter applied to the point overlay only, never the density.
+        shared_limits : bool
+            Use one set of axis limits across every panel, so the identity line
+            is comparable between rows. Otherwise limits are per row.
+        panel_size : float
+            Height in inches of a single row.
+        outfile : str or pathlib.Path or None
+            If given, the figure is written here at 200 dpi.
+ 
+        Returns
+        -------
+        (matplotlib.figure.Figure, numpy.ndarray of Axes)
+        """
+        x_col, y_col = value_cols
+        x_label, y_label = pipeline_labels
+ 
+        pdf = df.to_pandas() if hasattr(df, "to_pandas") else df.copy()
+ 
+        if provenance_col is not None:
+            pdf["_reassigned"] = np.where(
+                pdf[provenance_col] == pdf[source_col], "same source", "reassigned"
+            )
+ 
+        if sources is None:
+            sources = sorted(pdf[source_col].unique())
+        attributes = list(attributes)
+ 
+        long = pdf.melt(
+            id_vars=[c for c in pdf.columns if c not in value_cols],
+            value_vars=list(value_cols),
+            var_name="pipeline",
+            value_name="ic",
+        )
+        long["pipeline"] = long["pipeline"].map(dict(zip(value_cols, pipeline_labels)))
+ 
+        rng = np.random.default_rng(seed)
+ 
+        def _jitter(values):
+            if not jitter:
+                return values
+            return values + rng.normal(0, jitter, size=len(values))
+ 
+        def _limits(frame):
+            lo = min(frame[x_col].min(), frame[y_col].min())
+            hi = max(frame[x_col].max(), frame[y_col].max())
+            pad = 0.05 * (hi - lo) or 0.5
+            return (lo - pad, hi + pad)
+ 
+        global_lims = _limits(pdf) if shared_limits else None
+ 
+        n_cols = len(attributes) + 1
+        fig, axes = plt.subplots(
+            nrows=len(sources),
+            ncols=n_cols,
+            figsize=(4.6 * n_cols, panel_size * len(sources)),
+            squeeze=False,
+        )
+ 
+        for i, source in enumerate(sources):
+            sub = pdf[pdf[source_col] == source]
+            lims = global_lims if shared_limits else _limits(sub)
+ 
+            for j, attr in enumerate(attributes):
+                ax = axes[i, j]
+                d = sub[sub[attribute_col] == attr]
+                x = d[x_col].to_numpy()
+                y = d[y_col].to_numpy()
+ 
+                kde_ok = len(d) >= min_kde_points and x.std() > 0 and y.std() > 0
+ 
+                if kde_ok:
+                    shared = dict(
+                        x=x,
+                        y=y,
+                        levels=levels,
+                        thresh=thresh,
+                        bw_adjust=bw_adjust,
+                        clip=(lims, lims),
+                        warn_singular=False,
+                        ax=ax,
+                    )
+                    sns.kdeplot(fill=True, cmap=cmap, zorder=1, **shared)
+                    sns.kdeplot(color="0.3", linewidths=0.6, zorder=2, **shared)
+ 
+                if show_points or not kde_ok:
+                    sns.scatterplot(
+                        x=_jitter(x),
+                        y=_jitter(y),
+                        hue=d["_reassigned"] if provenance_col else None,
+                        hue_order=["same source", "reassigned"] if provenance_col else None,
+                        palette=(
+                            {"same source": "0.55", "reassigned": "#d1495b"}
+                            if provenance_col
+                            else None
+                        ),
+                        color=None if provenance_col else "0.4",
+                        alpha=0.35 if kde_ok else 0.6,
+                        s=18,
+                        edgecolor="none",
+                        zorder=3,
+                        legend=bool(provenance_col) and i == 0 and j == 0,
+                        ax=ax,
+                    )
+ 
+                # Identity line last, so it stays readable over the density.
+                ax.plot(lims, lims, ls="--", lw=1.2, color="0.35", zorder=4)
+ 
+                title = f"{attr} (n = {len(d):,})"
+                if not kde_ok:
+                    title += " - too sparse for KDE"
+                ax.set(
+                    xlim=lims,
+                    ylim=lims,
+                    xlabel=f"{x_label} IC",
+                    ylabel=f"{y_label} IC" if j == 0 else "",
+                    title=title,
+                )
+                ax.set_aspect("equal", adjustable="box")
+ 
+            ax = axes[i, -1]
+            sns.boxplot(
+                data=long[long[source_col] == source],
+                x=attribute_col,
+                y="ic",
+                hue="pipeline",
+                order=attributes,
+                hue_order=list(pipeline_labels),
+                showfliers=False,
+                width=0.6,
+                ax=ax,
+            )
+            ax.set(xlabel="", ylabel="IC", title="IC distribution")
+            ax.legend(title="", loc="lower right", fontsize="small")
+ 
+            axes[i, 0].text(
+                -0.32,
+                0.5,
+                source,
+                transform=axes[i, 0].transAxes,
+                rotation=90,
+                va="center",
+                ha="center",
+                fontsize=12,
+                fontweight="bold",
+            )
+ 
+        fig.tight_layout()
+        if outfile is not None:
+            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
+        return fig, axes
+
+    return (plot_ic_comparison,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Sample
+    """)
     return
 
 
 @app.cell
-def _():
+def _(INFORMATION_CONTENT_SAMPLE_RESULTS, pl):
+    ic_analysis_sample = pl.read_parquet(INFORMATION_CONTENT_SAMPLE_RESULTS)
+    return (ic_analysis_sample,)
+
+
+@app.cell
+def _(FIGURES_DIR: "Path", ic_analysis_sample, plot_ic_comparison):
+    plot_ic_comparison(ic_analysis_sample, outfile=FIGURES_DIR / "ic_original_source_vs_metahq__level-sample.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Series
+    """)
     return
 
 
