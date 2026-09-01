@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.24.0"
+__generated_with = "0.23.9"
 app = marimo.App(width="medium", auto_download=["ipynb"])
 
 
@@ -120,6 +120,7 @@ def _(Path):
         FMT,
         GEO_PROCESSED,
         INFORMATION_CONTENT_SAMPLE_RESULTS,
+        INFORMATION_CONTENT_SERIES_RESULTS,
         OVERLAP_CMAP,
         OVERLAP_ORDER,
         PLATFORMS_FILE,
@@ -1711,7 +1712,7 @@ def _(PLATFORMS_FILE, mo, pl):
             # to the larger sources that came before
             else:
                 existing_entries: set[str] = set()
-    
+
                 descending_rank = rank - 1
                 while descending_rank > -1:
                     previous_source = list(cumulative_additions.keys())[descending_rank]
@@ -1725,7 +1726,7 @@ def _(PLATFORMS_FILE, mo, pl):
         cumulative_counts = {source: len(set(entries)) for source, entries in cumulative_additions.items()}
         cumulative_ranked_sources = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
         return cumulative_ranked_sources
-    
+
 
 
     return (quantify_incremental_source_contributions,)
@@ -2131,12 +2132,12 @@ def _(np, plt, sns):
         dpi=600,
     ):
         """Grid of IC comparisons, one row per source and three columns.
- 
+
         Columns are: a 2D KDE of original vs. metahq IC for the first attribute,
         the same for the second, and a grouped boxplot of both pipelines split by
         attribute. Panels with too few points, or no spread in either axis, fall
         back to a scatter because the KDE covariance would be singular.
- 
+
         Parameters
         ----------
         df : polars.DataFrame or pandas.DataFrame
@@ -2170,25 +2171,25 @@ def _(np, plt, sns):
             Height in inches of a single row.
         outfile : str or pathlib.Path or None
             If given, the figure is written here at 200 dpi.
- 
+
         Returns
         -------
         (matplotlib.figure.Figure, numpy.ndarray of Axes)
         """
         x_col, y_col = value_cols
         x_label, y_label = pipeline_labels
- 
+
         pdf = df.to_pandas() if hasattr(df, "to_pandas") else df.copy()
- 
+
         if provenance_col is not None:
             pdf["_reassigned"] = np.where(
                 pdf[provenance_col] == pdf[source_col], "same source", "reassigned"
             )
- 
+
         if sources is None:
             sources = sorted(pdf[source_col].unique())
         attributes = list(attributes)
- 
+
         long = pdf.melt(
             id_vars=[c for c in pdf.columns if c not in value_cols],
             value_vars=list(value_cols),
@@ -2196,22 +2197,22 @@ def _(np, plt, sns):
             value_name="ic",
         )
         long["pipeline"] = long["pipeline"].map(dict(zip(value_cols, pipeline_labels)))
- 
+
         rng = np.random.default_rng(seed)
- 
+
         def _jitter(values):
             if not jitter:
                 return values
             return values + rng.normal(0, jitter, size=len(values))
- 
+
         def _limits(frame):
             lo = min(frame[x_col].min(), frame[y_col].min())
             hi = max(frame[x_col].max(), frame[y_col].max())
             pad = 0.05 * (hi - lo) or 0.5
             return (lo - pad, hi + pad)
- 
+
         global_lims = _limits(pdf) if shared_limits else None
- 
+
         n_cols = len(attributes) + 1
         fig, axes = plt.subplots(
             nrows=len(sources),
@@ -2219,19 +2220,19 @@ def _(np, plt, sns):
             figsize=(4.6 * n_cols, panel_size * len(sources)),
             squeeze=False,
         )
- 
+
         for i, source in enumerate(sources):
             sub = pdf[pdf[source_col] == source]
             lims = global_lims if shared_limits else _limits(sub)
- 
+
             for j, attr in enumerate(attributes):
                 ax = axes[i, j]
                 d = sub[sub[attribute_col] == attr]
                 x = d[x_col].to_numpy()
                 y = d[y_col].to_numpy()
- 
+
                 kde_ok = len(d) >= min_kde_points and x.std() > 0 and y.std() > 0
- 
+
                 if kde_ok:
                     shared = dict(
                         x=x,
@@ -2245,7 +2246,7 @@ def _(np, plt, sns):
                     )
                     sns.kdeplot(fill=True, cmap=cmap, zorder=1, **shared)
                     sns.kdeplot(color="0.3", linewidths=0.6, zorder=2, **shared)
- 
+
                 if show_points or not kde_ok:
                     sns.scatterplot(
                         x=_jitter(x),
@@ -2265,10 +2266,10 @@ def _(np, plt, sns):
                         legend=bool(provenance_col) and i == 0 and j == 0,
                         ax=ax,
                     )
- 
+
                 # Identity line last, so it stays readable over the density.
                 ax.plot(lims, lims, ls="--", lw=1.2, color="0.35", zorder=4)
- 
+
                 title = f"{attr} (n = {len(d):,})"
                 if not kde_ok:
                     title += " - too sparse for KDE"
@@ -2280,7 +2281,7 @@ def _(np, plt, sns):
                     title=title,
                 )
                 ax.set_aspect("equal", adjustable="box")
- 
+
             ax = axes[i, -1]
             sns.boxplot(
                 data=long[long[source_col] == source],
@@ -2295,7 +2296,7 @@ def _(np, plt, sns):
             )
             ax.set(xlabel="", ylabel="IC", title="IC distribution")
             ax.legend(title="", loc="lower right", fontsize="small")
- 
+
             axes[i, 0].text(
                 -0.32,
                 0.5,
@@ -2307,7 +2308,7 @@ def _(np, plt, sns):
                 fontsize=12,
                 fontweight="bold",
             )
- 
+
         fig.tight_layout()
         if outfile is not None:
             fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
@@ -2325,9 +2326,21 @@ def _(mo):
 
 
 @app.cell
-def _(INFORMATION_CONTENT_SAMPLE_RESULTS, pl):
+def _(
+    INFORMATION_CONTENT_SAMPLE_RESULTS,
+    INFORMATION_CONTENT_SERIES_RESULTS,
+    pl,
+):
     ic_analysis_sample = pl.read_parquet(INFORMATION_CONTENT_SAMPLE_RESULTS)
+
+    ic_analysis_series = pl.read_parquet(INFORMATION_CONTENT_SERIES_RESULTS)
     return (ic_analysis_sample,)
+
+
+@app.cell
+def _(ic_analysis_sample):
+    ic_analysis_sample
+    return
 
 
 @app.cell
@@ -2336,11 +2349,178 @@ def _(FIGURES_DIR: "Path", ic_analysis_sample, plot_ic_comparison):
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Series
-    """)
+@app.cell
+def _(np, plt, sns):
+    def plot_ic_boxplots(
+        df,
+        *,
+        source_col="original_source",
+        attribute_col="attribute",
+        value_cols=("original_ic", "metahq_ic"),
+        pipeline_labels=("original", "metahq"),
+        attributes=("tissue", "disease"),
+        sources=None,
+        palette=None,
+        showfliers=False,
+        box_width=0.7,
+        shared_limits=True,
+        annotate_counts=True,
+        xtick_rotation=0,
+        panel_height=3.6,
+        width_per_source=1.5,
+        min_width=6.5,
+        outfile=None,
+        dpi=600,
+    ):
+        """Stacked IC boxplots, one row per attribute.
+
+        Each row is a single axes holding every source side by side, with the two
+        pipelines as the hue within each source. Rows share the x grouping, so the
+        same source occupies the same horizontal position in every row.
+
+        Parameters
+        ----------
+        df : polars.DataFrame or pandas.DataFrame
+            One row per accession x attribute. Converted to pandas if needed.
+        source_col : str
+            Column giving the outer x grouping.
+        value_cols, pipeline_labels : sequence of str
+            The two IC columns to compare, and the names they get in the legend.
+        attributes : sequence of str
+            Values of `attribute_col` to give a row each, in order.
+        sources : sequence of str or None
+            Restrict and order the x groups. Defaults to every source, sorted.
+        palette : dict or sequence or None
+            Passed to `seaborn.boxplot`; keys are `pipeline_labels` if a dict.
+        showfliers : bool
+            Draw outlier points beyond the whiskers.
+        shared_limits : bool
+            Use one set of y limits across rows, so tissue and disease are directly
+            comparable. Otherwise each row is scaled to its own data.
+        annotate_counts : bool
+            Print the per-source observation count above each group.
+        xtick_rotation : float
+            Rotation for the source labels; raise it when names are long.
+        panel_height : float
+            Height in inches of a single row.
+        width_per_source : float
+            Figure width in inches contributed by each source, floored at
+            `min_width`.
+        outfile : str or pathlib.Path or None
+            If given, the figure is written here at `dpi`.
+
+        Returns
+        -------
+        (matplotlib.figure.Figure, numpy.ndarray of Axes)
+        """
+        pdf = df.to_pandas() if hasattr(df, "to_pandas") else df.copy()
+
+        attributes = list(attributes)
+        if sources is None:
+            sources = sorted(pdf[source_col].unique())
+        else:
+            sources = list(sources)
+
+        pdf = pdf[pdf[source_col].isin(sources) & pdf[attribute_col].isin(attributes)]
+
+        long = pdf.melt(
+            id_vars=[c for c in pdf.columns if c not in value_cols],
+            value_vars=list(value_cols),
+            var_name="pipeline",
+            value_name="ic",
+        )
+        long["pipeline"] = long["pipeline"].map(dict(zip(value_cols, pipeline_labels)))
+
+        def _limits(values):
+            values = np.asarray(values, dtype=float)
+            values = values[np.isfinite(values)]
+            if not values.size:
+                return (0.0, 1.0)
+            lo, hi = float(values.min()), float(values.max())
+            pad = 0.05 * (hi - lo) or 0.5
+            return (lo - pad, hi + pad)
+
+        global_lims = _limits(long["ic"]) if shared_limits else None
+
+        fig_width = max(min_width, width_per_source * max(len(sources), 1) + 2.0)
+        fig, axes = plt.subplots(
+            nrows=len(attributes),
+            ncols=1,
+            figsize=(fig_width, panel_height * len(attributes)),
+            sharex=True,
+            sharey=shared_limits,
+            squeeze=False,
+        )
+        axes = axes[:, 0]
+
+        for i, attr in enumerate(attributes):
+            ax = axes[i]
+            d = long[long[attribute_col] == attr]
+
+            sns.boxplot(
+                data=d,
+                x=source_col,
+                y="ic",
+                hue="pipeline",
+                order=sources,
+                hue_order=list(pipeline_labels),
+                palette=palette,
+                showfliers=showfliers,
+                width=box_width,
+                ax=ax,
+            )
+
+            lims = global_lims if shared_limits else _limits(d["ic"])
+            ax.set(xlabel="", ylabel="information content", ylim=lims, title=attr)
+            ax.grid(axis="y", ls=":", lw=0.6, alpha=0.6)
+            ax.set_axisbelow(True)
+
+            if annotate_counts:
+                # One count per source: rows are accessions, not melted records.
+                counts = (
+                    pdf[pdf[attribute_col] == attr]
+                    .groupby(source_col)
+                    .size()
+                    .reindex(sources, fill_value=0)
+                )
+                top = lims[1] - 0.02 * (lims[1] - lims[0])
+                for k, source in enumerate(sources):
+                    ax.text(
+                        k,
+                        top,
+                        f"n = {counts[source]:,}",
+                        ha="center",
+                        va="top",
+                        fontsize=8,
+                        color="0.35",
+                    )
+
+            legend = ax.get_legend()
+            if i == 0:
+                ax.legend(title="", loc="lower right", fontsize="small", ncol=2)
+            elif legend is not None:
+                legend.remove()
+
+        axes[-1].tick_params(axis="x", labelbottom=True)
+        if xtick_rotation:
+            plt.setp(
+                axes[-1].get_xticklabels(),
+                rotation=xtick_rotation,
+                ha="right",
+                rotation_mode="anchor",
+            )
+
+        fig.tight_layout()
+        if outfile is not None:
+            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
+        return fig, axes
+
+    return (plot_ic_boxplots,)
+
+
+@app.cell
+def _(ic_analysis_sample, plot_ic_boxplots):
+    plot_ic_boxplots(ic_analysis_sample, outfile="test_boxplots.png")
     return
 
 

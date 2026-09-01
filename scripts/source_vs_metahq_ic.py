@@ -37,10 +37,20 @@ def get_ontology_obo(attribute: Attribute) -> Path:
             raise ValueError(f"Unsupported attribute {attribute.value}")
 
 
-def load_dbs(specific: Path, unspecific: Path, attribute: Attribute) -> Databases:
+def load_dbs(
+    specific: Path, unspecific: Path, attribute: Attribute, remove_controls=True
+) -> Databases:
     """Loads databases and identifies all unique terms represented for a particular attribute."""
     _specific = dict_db_to_df(load_bson(specific), attribute)
     _unspecific = dict_db_to_df(load_bson(unspecific), attribute)
+
+    match attribute:
+        case Attribute.DISEASE:
+            if remove_controls:
+                _specific = _specific.filter(pl.col(COL_TERM_ID) != CONTROL_ID)
+                _unspecific = _specific.filter(pl.col(COL_TERM_ID) != CONTROL_ID)
+        case _:
+            pass
 
     specific_terms = set(_specific[COL_TERM_ID].unique().to_list())
     unspecific_terms = set(_unspecific[COL_TERM_ID].unique().to_list())
@@ -91,6 +101,14 @@ def main():
         type=Path,
         required=True,
     )
+    parser.add_argument(
+        "--remove-controls",
+        help="Remove control annotations."
+        " These automatically recieve the highest possible information content value"
+        " as they technically do not have any descendants.",
+        type=bool,
+        default=True,
+    )
     args = parser.parse_args()
     logger = setup_logger(__name__)
 
@@ -102,7 +120,12 @@ def main():
         logger.info("Processing attribute: %s", attribute.value)
 
         logger.info("Loading databases...")
-        db_info = load_dbs(args.db_specific, args.db_unspecific, attribute)
+        db_info = load_dbs(
+            args.db_specific,
+            args.db_unspecific,
+            attribute,
+            remove_controls=args.remove_controls,
+        )
 
         logger.info("Computing information content values...")
         ic = get_information_content(attribute, db_info.all_terms)
@@ -120,36 +143,8 @@ def main():
             .rename({COL_SOURCE: "metahq_source", "ic": "metahq_ic"})
         )
 
-        if attribute.value == "tissue":
-            print(db_info.specific.filter(pl.col(COL_ACCESSION) == "GSM151989"))
-
-            print(
-                ic.filter(pl.col(COL_TERM_ID).is_in(["UBERON:0000178", "CL:0000738"]))
-            )
-            print(
-                ic.filter(pl.col(COL_TERM_ID).is_in(["UBERON:0000178", "CL:0000738"]))
-            )
-
-            test = (
-                db_info.specific.join(ic, on=COL_TERM_ID, how="inner")
-                .filter(pl.col(COL_ACCESSION) == "GSM151989")
-                .filter(pl.col(COL_TERM_ID).is_in(["UBERON:0000178", "CL:0000738"]))
-                .drop(
-                    COL_TERM_ID
-                )  # doesn't matter which term it is as long as the ic is the same.
-                # we care about specificity here not exact terms.
-                .group_by([COL_ACCESSION, "ic"], maintain_order=True)
-                .agg(pl.col(COL_SOURCE).str.join(DELIMITER))
-                .select([COL_ACCESSION, COL_SOURCE, "ic"])
-                .sort("ic", descending=True)
-                .unique(COL_ACCESSION, keep="first")
-                .rename({COL_SOURCE: "metahq_source", "ic": "metahq_ic"})
-            )
-            print(test)
-
-        unique_sources = db_info.unspecific[COL_SOURCE].unique().to_list()
-
         logger.info("Collecting IC for original source annotations...")
+        unique_sources = db_info.unspecific[COL_SOURCE].unique().to_list()
         for source in unique_sources:
 
             # collect IC for the original source annotations
