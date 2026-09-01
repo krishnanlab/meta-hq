@@ -12,7 +12,6 @@ import click
 
 from metahq_build import __version__
 from metahq_build.config import PipelineConfig, load_config, save_config
-from metahq_build.config.config import SERIES_COMBINED_BSON
 from metahq_build.config.schema import DataPackageConfig
 from metahq_build.processors import ProcessorRegistry
 from metahq_build.util.checkpointing import CheckpointManager
@@ -250,7 +249,7 @@ def download():
     "-o",
     type=click.Path(path_type=Path),
     default=None,
-    help="Override output file path (default: data/unprocessed/gemma.json)",
+    help="Override output file path (default: data/unprocessed/gemma.json.gz)",
 )
 @click.option(
     "--query",
@@ -273,7 +272,10 @@ def download_gemma(output, query, max_studies):
 
     Fetches study annotations from the Gemma REST API in batches and saves
     them to a single JSON file. This file is required before running
-    'metahq-build process gemma'.
+    'metahq-build process gemma'. It only contains annotations attached
+    directly to each experiment; run 'metahq-build download gemma-samples'
+    afterward to also capture annotations attached to individual samples
+    or experimental factor values (e.g. most sex annotations).
 
     Examples:
 
@@ -300,6 +302,110 @@ def download_gemma(output, query, max_studies):
     except Exception as e:
         click.secho(f"Error: {e}", fg="red", err=True)
         sys.exit(1)
+
+
+@download.command(name="gemma-samples")
+@click.option(
+    "--input",
+    "-i",
+    "input_",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to raw Gemma dataset JSON from 'download gemma'"
+    " (default: data/unprocessed/gemma.json.gz)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override output file path (default: data/unprocessed/gemma_samples.json.gz)",
+)
+def download_gemma_samples(input_, output):
+    """
+    Download per-sample characteristics for datasets in a raw Gemma file.
+
+    Gemma's dataset-level 'characteristics' (fetched by 'download gemma')
+    only includes annotations curators attached directly to the experiment
+    record. Sex, tissue, disease, and age annotations attached to
+    individual samples or experimental factor values live elsewhere and are
+    fetched here instead, one request per dataset. Requires
+    'metahq-build download gemma' to have been run first, and its output
+    must be re-run before 'metahq-build process gemma' to include the
+    additional annotations.
+
+    Examples:
+
+        # Download using the default gemma.json as input
+        metahq-build download gemma-samples
+
+        # Use a custom input/output path
+        metahq-build download gemma-samples \
+            --input /data/gemma.json \
+            --output /data/gemma_samples.json
+
+    """
+    from metahq_build.config.config import GEMMA_RAW, GEMMA_SAMPLES_RAW
+    from metahq_build.fetchers.gemma import GemmaFetcher
+
+    try:
+        fetcher = GemmaFetcher()
+        input_path = Path(input_) if input_ else GEMMA_RAW
+        output_path = Path(output) if output else GEMMA_SAMPLES_RAW
+        click.echo(f"Fetching per-sample characteristics from {input_path}...")
+        click.echo(f"Output: {output_path}")
+        click.echo("")
+        saved = fetcher.fetch_samples(input_path=input_path, output_path=output_path)
+        click.secho(f"✓ Saved to {saved}", fg="green")
+    except Exception as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
+@download.command(name="refinebio")
+@click.option(
+    "-o",
+    "--outfile",
+    type=click.Path(),
+    required=True,
+    help="Path to parquet file storing refine.bio IDs",
+)
+@click.option(
+    "--start-from",
+    type=click.Path(exists=True, dir_okay=False),
+    required=False,
+    help="Path to parquet file storing refine.bio IDs to start from.",
+)
+@click.option(
+    "--offset",
+    type=int,
+    required=False,
+    default=0,
+    show_default=True,
+    help="""Number of IDs to skip when fetching from the refinebio paginated results.
+    It is recommended you only use this if you know start-from is ordered as refine.bio's
+    paginated results.""",
+)
+def download_refinebio(outfile, start_from, offset):
+    """Download refine.bio experiment and sample IDs.
+
+    Examples:
+
+        # Download IDs
+        metahq-build download refinebio -o ids.parquet
+
+        # Start from an existing download result with 100 predownloaded IDs
+        metahq-build download refinebio --start-from ids.parquet --offset 100
+
+    """
+    from metahq_build.fetchers.refinebio import RefineBioFetcher
+
+    if isinstance(start_from, Path):
+        fetcher = RefineBioFetcher.from_parquet(start_from)
+    else:
+        fetcher = RefineBioFetcher()
+
+    fetcher.fetch(offset=offset).save(outfile)
 
 
 @main.group()
@@ -669,6 +775,70 @@ def retrieve_series_metadata(fields, outfile, series_bson, metadata_db, null_val
     retriever.save(outfile)
 
 
+@metadata.command(name="links")
+@click.option(
+    "-o",
+    "--outfile",
+    type=Path,
+    default=None,
+    help="Path to store parquet file with source external links.",
+)
+@click.option(
+    "--sample-bson",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to sample-level BSON database storing MetaHQ sample anntotations.",
+)
+@click.option(
+    "--series-bson",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to series-level BSON database storing MetaHQ series anntotations.",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to OmicIDX DuckDB file (default: data/omicidx.duckdb)",
+)
+@click.option(
+    "--serialize",
+    type=bool,
+    default=False,
+    help="Apply to serialize the JSON external links contents (default: False).",
+)
+def build_links(outfile, sample_bson, series_bson, metadata_db, serialize):
+    """Builds a file storing external links for sources that distribute annotations
+    through web servers. This file is included in the MetaHQ data package.
+
+    Pulls links from data/external_links. These are automatically generated from processors.
+
+    Examples:
+        metahq-build metadata links
+
+    """
+    from metahq_build.builders import ExternalLinkBuilder
+    from metahq_build.config import (
+        OMICIDX_DB,
+        PROCESSED_EXTERNAL_LINKS,
+        SAMPLE_COMBINED_BSON,
+        SERIES_COMBINED_BSON,
+    )
+
+    outfile = Path(outfile) if outfile else PROCESSED_EXTERNAL_LINKS
+    sample_bson = Path(sample_bson) if sample_bson else SAMPLE_COMBINED_BSON
+    series_bson = Path(series_bson) if series_bson else SERIES_COMBINED_BSON
+    metadata_db = Path(metadata_db) if metadata_db else OMICIDX_DB
+
+    builder = ExternalLinkBuilder()
+    builder.build(
+        sample_db_path=sample_bson,
+        series_db_path=series_bson,
+        omicidx_path=metadata_db,
+    )
+    builder.save_df(outfile, serialize=serialize)
+
+
 @main.command()
 @click.option(
     "--checkpoint-dir",
@@ -789,14 +959,24 @@ def ontology():
     "-i",
     type=click.Path(exists=True, path_type=Path),
     help="Path to ontology .obo or .obo.gz file.",
+    required=True,
+)
+@click.option(
+    "--ontology",
+    "-n",
+    "ontology_",
+    type=click.Choice(["UBERON", "MONDO", "CL"]),
+    help="The ontology of the passes obo file.",
+    required=True,
 )
 @click.option(
     "--outfile",
     "-o",
     type=click.Path(path_type=Path),
     help="Path to .parquet outfile storing ontology relations.",
+    required=True,
 )
-def ontology_relations(obo_file, outfile):
+def ontology_relations(obo_file, ontology_, outfile):
     """Extract a terms x terms ontology relations matrix.
 
     You may interpret the output matrix as the following: For any row, column pair, if the
@@ -812,7 +992,20 @@ def ontology_relations(obo_file, outfile):
         click.echo(f"Out file: {outfile}")
         click.echo("")
 
-        graph = Graph.from_obo(obo_file)
+        match ontology_:
+            case "UBERON":
+                include = ["UBERON", "CL"]
+            case "CL":
+                include = ["CL"]
+            case "MONDO":
+                include = ["MONDO"]
+            case _:
+                click.secho(
+                    "Error: You must provide an ontology name through -n or --ontology."
+                )
+                sys.exit(1)
+
+        graph = Graph.from_obo(obo_file, include=include)
         graph.relations_matrix().save(outfile)
 
         click.secho(f"✓ Relations saved to {outfile}", fg="green")
@@ -862,6 +1055,185 @@ def ontology_search_db(mondo, uberon_cl, out_db):
     click.secho(
         f"✓ Ontology search DuckDB database successfully built: {out_db}", fg="green"
     )
+
+
+@main.command(name="refinebio-map")
+@click.option(
+    "-o",
+    "--outfile",
+    type=click.Path(),
+    required=False,
+    help="Path to refine.bio map parquet file.",
+)
+@click.option(
+    "-i",
+    "--ids",
+    type=click.Path(exists=True, dir_okay=False),
+    required=True,
+    help="Path to parquet file storing IDs returned from metahq-build download refinebio",
+)
+@click.option(
+    "--sample-db",
+    type=click.Path(exists=True, dir_okay=False),
+    required=False,
+    help="Path to MetaHQ sample BSON database.",
+)
+@click.option(
+    "--series-db",
+    type=click.Path(exists=True, dir_okay=False),
+    required=False,
+    help="Path to MetaHQ series BSON database.",
+)
+@click.option(
+    "--metadata-db",
+    type=click.Path(exists=True, dir_okay=False),
+    required=False,
+    help="Path to OmicIDX DuckDB database",
+)
+def refinebio_map(outfile, ids, sample_db, series_db, metadata_db):
+    """Map refine.bio experiments and samples to GEO series and samples in MetaHQ.
+
+    Examples:
+
+        # If you already have IDs
+        metahq-build refinebio-map -o map.parquet -i ids.parquet
+
+    """
+
+    import bson
+    import polars as pl
+
+    from metahq_build.config import (
+        OMICIDX_DB,
+        SAMPLE_COMBINED_BSON,
+        SERIES_COMBINED_BSON,
+    )
+    from metahq_build.fetchers.refinebio import RefineBioFetcher
+
+    outfile = outfile if outfile else Path("refinebio_map.parquet")
+    sample_db_path = sample_db if sample_db else SAMPLE_COMBINED_BSON
+    series_db_path = series_db if series_db else SERIES_COMBINED_BSON
+    db_path = metadata_db if metadata_db else OMICIDX_DB
+
+    fetcher = RefineBioFetcher.from_parquet(ids)
+    mapping = fetcher.expand_geo(db_path=db_path)
+
+    def load_bson(file):
+        with open(file, "rb") as f:
+            return list(bson.decode(f.read()).keys())
+
+    metahq_samples = load_bson(sample_db_path)
+    metahq_series = load_bson(series_db_path)
+
+    mapping = mapping.filter(
+        pl.col("gse").is_in(metahq_series) | pl.col("gsm").is_in(metahq_samples)
+    )
+    mapping.write_parquet(outfile)
+
+
+@main.command(name="zip-database")
+@click.option(
+    "--config",
+    "-c",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to configuration file",
+)
+@click.option(
+    "--package-dir",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to data package directory (overrides config)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    help="Output archive path (default: <package_name>.tar.gz)",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enable verbose output",
+)
+def zip_database(config, package_dir, output, verbose):
+    """
+    Create a tar.gz archive of the MetaHQ database package.
+
+    Archives the complete data package into a compressed tar.gz file,
+    automatically filtering out platform-specific files (e.g., macOS ._ files).
+
+    Examples:
+
+        # Zip using config file
+        metahq-build zip-database --config data/build_config.yaml
+
+        # Zip specific directory
+        metahq-build zip-database --package-dir data/data_packages/metahq_data__v1.2.0
+
+        # Specify custom output path
+        metahq-build zip-database --config data/build_config.yaml -o my_archive.tar.gz
+    """
+    from metahq_build.util.archive import (
+        create_database_archive,
+        get_archive_path_from_package,
+    )
+
+    try:
+        # Determine package directory
+        if package_dir is None:
+            if config is None:
+                click.secho(
+                    "Error: Either --config or --package-dir is required",
+                    fg="red",
+                )
+                sys.exit(1)
+
+            pkg_config = DataPackageConfig.from_yaml(config)
+            package_dir = pkg_config.data_package_path
+
+        package_dir = Path(package_dir).resolve()
+
+        # Determine output path
+        if output is None:
+            output_path = get_archive_path_from_package(package_dir)
+        else:
+            output_path = Path(output).resolve()
+
+        # Check if output exists
+        if output_path.exists():
+            if not click.confirm(f"Output file {output_path} exists. Overwrite?"):
+                click.echo("Aborted.")
+                sys.exit(0)
+
+        click.echo(f"Creating archive: {output_path}")
+        click.echo(f"Source directory: {package_dir}")
+
+        # Create the archive with verbose callback
+        result = create_database_archive(
+            package_dir=package_dir,
+            output_path=output_path,
+            verbose=verbose,
+            verbose_callback=click.echo if verbose else None,
+        )
+
+        click.secho(
+            f"\n✓ Database successfully archived: {result['path']} ({result['size_mb']:.2f} MB)",
+            fg="green",
+        )
+
+    except FileNotFoundError as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+    except NotADirectoryError as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+    except PermissionError as e:
+        click.secho(f"Error: Permission denied - {e}", fg="red", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.secho(f"Error: Failed to create archive", fg="red", err=True)
+        click.echo(f"{e}")
+        sys.exit(1)
 
 
 @main.command()

@@ -58,22 +58,23 @@ class StudyCombiner(BaseAnnotationCombiner):
         self._initialize_study_forward_annotations()
         self._enrich_study_forward_annotations(db_path)
 
+        self.logger.info("Loading annotations from %s", sample_combined_bson)
+        sample_anno = self._load_bson(sample_combined_bson)
+
         # add collapsed to new study-forward annotations
-        self._add_collapsed_sample_annotations(sample_combined_bson)
+        self._add_collapsed_sample_annotations(sample_anno)
 
         self._remove_invalid_organisms()
 
         return self
 
-    def _add_collapsed_sample_annotations(self, sample_combined_bson: Path):
-        sample_anno = self._load_bson(sample_combined_bson)
+    def _add_collapsed_sample_annotations(self, sample_anno: dict):
 
         study2sample = self._study2sample_map(sample_anno)
         self.logger.info(
-            "Found %d samples from %d studies in %s",
+            "Found %d samples from %d studies",
             len(sample_anno),
             len(study2sample),
-            sample_combined_bson,
         )
 
         self.logger.info(
@@ -310,12 +311,23 @@ class StudyCombiner(BaseAnnotationCombiner):
     def _study2sample_map(self, anno) -> dict[str, list[str]]:
         """Retrieve all studies represented in the combined sample annotations."""
         study2sample: dict[str, list[str]] = {}
+        skipped = 0
 
         for sample, values in anno.items():
-            study_ids = values["accession_ids"]["series"].split("|")
+            series = values["accession_ids"].get("series")
+            if series is None:
+                skipped += 1
+                continue
+
+            study_ids = series.split("|")
             for study in study_ids:
                 study2sample.setdefault(study, [])
                 study2sample[study].append(sample)
+
+        if skipped > 0:
+            self.logger.warning(
+                "Skipped %d samples with no series mapping in OmicIDX.", skipped
+            )
 
         return study2sample
 
@@ -337,7 +349,7 @@ class StudyCombiner(BaseAnnotationCombiner):
 
         new_anno = {}
         for series, entry in self.anno.items():
-            organisms = entry[ORGANISM_KEY].split(DELIMITER)
+            organisms = entry.get(ORGANISM_KEY, "").split(DELIMITER)
 
             updated_organisms: set[str] = set()
             for organism in organisms:
@@ -405,3 +417,78 @@ class StudyCombiner(BaseAnnotationCombiner):
             merged_annotations[key] = DELIMITER.join(sorted(set(existing)))
 
         return merged_annotations
+
+    def combine_from_unprocessed(
+        self,
+        unprocessed_combined_geo_bson: Path,
+        unprocessed_combined_sra_bson: Path,
+        processed_combined_bson: Path = SAMPLE_COMBINED_BSON,
+        db_path: Path = OMICIDX_DB,
+    ) -> "StudyCombiner":
+        """
+        Load sample annotations from an unprocessed collection (e.g., GEO_COMBINED_BSON,
+        SRA_COMBINED_BSON), collect sample->series relationships, collapse them, and
+        combine with study-forward annotations.
+
+        This should only be used for anlaysis to generate "unprocessed" study-level annotations.
+
+        Arguments:
+            unprocessed_combined_geo_bson (Path):
+                Path to the combined GEO MetaHQ BSON annotations output from the GeoCombiner
+                    module.
+            unprocessed_combined_sra_bson (Path):
+                Path to the combined GEO MetaHQ BSON annotations output from the SraCombiner
+                    module.
+            processed_combined_bson (Path):
+                Path to the combined sample annotations BSON file generated from the SampleCombiner
+                    or SraCombiner modules.
+            db_path (Path):
+                Path to OmicIDX duckdb.
+
+        Returns:
+            (StudyCombiner): self, for chaining.
+
+        """
+
+        def prepare_unprocessed(unprocessed: Path, processed: dict):
+            """Subset semi-processed annotations for valid samples and copy
+            metadata over from processed annotations for compatability with
+            self._add_collapsed_sample_annotations.
+            """
+
+            self.logger.info("Loading annotations from %s", unprocessed)
+            unprocessed_anno = self._load_bson(unprocessed)
+
+            before = len(unprocessed_anno)
+            sample_anno = {k: v for k, v in unprocessed_anno.items() if k in processed}
+            diff = before - len(sample_anno)
+
+            if diff > 0:
+                self.logger.warning(
+                    "Removed %d invalid entries from the unprocessed annotations.", diff
+                )
+
+            for entry, values in sample_anno.items():
+                values["accession_ids"] = processed_sample_anno[entry]["accession_ids"]
+                values["organism"] = processed_sample_anno[entry]["organism"]
+
+            return sample_anno
+
+        self._initialize_study_forward_annotations()
+        self._enrich_study_forward_annotations(db_path)
+
+        processed_sample_anno = self._load_bson(processed_combined_bson)
+
+        geo_combined_series = prepare_unprocessed(
+            unprocessed_combined_geo_bson, processed_sample_anno
+        )
+        sra_combined_series = prepare_unprocessed(
+            unprocessed_combined_sra_bson, processed_sample_anno
+        )
+
+        self._add_collapsed_sample_annotations(geo_combined_series)
+        self._add_collapsed_sample_annotations(sra_combined_series)
+
+        self._remove_invalid_organisms()
+
+        return self

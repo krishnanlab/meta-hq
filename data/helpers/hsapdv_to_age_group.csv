@@ -1,0 +1,239 @@
+id,name,age_group
+HsapDv:0000273,1-month-old stage,infant
+HsapDv:0000246,1-year-old stage,infant
+HsapDv:0000183,10-month-old stage,infant
+HsapDv:0000104,10-year-old stage,child
+HsapDv:0000228,100-year-old stage,elderly_adult
+HsapDv:0000229,101-year-old stage,elderly_adult
+HsapDv:0000230,102-year-old stage,elderly_adult
+HsapDv:0000231,103-year-old stage,elderly_adult
+HsapDv:0000232,104-year-old stage,elderly_adult
+HsapDv:0000233,105-year-old stage,elderly_adult
+HsapDv:0000234,106-year-old stage,elderly_adult
+HsapDv:0000248,107-year-old stage,elderly_adult
+HsapDv:0000249,108-year-old stage,elderly_adult
+HsapDv:0000250,109-year-old stage,elderly_adult
+HsapDv:0000047,10th week post-fertilization stage,fetus
+HsapDv:0000184,11-month-old stage,infant
+HsapDv:0000105,11-year-old stage,adolescent
+HsapDv:0000251,110-year-old stage,elderly_adult
+HsapDv:0000252,111-year-old stage,elderly_adult
+HsapDv:0000253,112-year-old stage,elderly_adult
+HsapDv:0000254,113-year-old stage,elderly_adult
+HsapDv:0000255,114-year-old stage,elderly_adult
+HsapDv:0000048,11th week post-fertilization stage,fetus
+HsapDv:0000185,12-month-old stage,infant
+HsapDv:0000106,12-year-old stage,adolescent
+HsapDv:0000049,12th week post-fertilization stage,fetus
+HsapDv:0000186,13-month-old stage,infant
+HsapDv:0000107,13-year-old stage,adolescent
+HsapDv:0000050,13th week post-fertilization stage,fetus
+HsapDv:0000187,14-month-old stage,infant
+HsapDv:0000108,14-year-old stage,adolescent
+HsapDv:0000051,14th week post-fertilization stage,fetus
+HsapDv:0000268,15-19 year-old,adolescent
+HsapDv:0000188,15-month-old stage,infant
+HsapDv:0000109,15-year-old stage,adolescent
+HsapDv:0000052,15th week post-fertilization stage,fetus
+HsapDv:0000189,16-month-old stage,infant
+HsapDv:0000110,16-year-old stage,adolescent
+HsapDv:0000053,16th week post-fertilization stage,fetus
+HsapDv:0000190,17-month-old stage,infant
+HsapDv:0000111,17-year-old stage,adolescent
+HsapDv:0000054,17th week post-fertilization stage,fetus
+HsapDv:0000191,18-month-old stage,infant
+HsapDv:0000112,18-year-old stage,adolescent
+HsapDv:0000055,18th week post-fertilization stage,fetus
+HsapDv:0000192,19-month-old stage,infant
+HsapDv:0000113,19-year-old stage,adolescent
+HsapDv:0000056,19th week post-fertilization stage,fetus
+HsapDv:0000270,2-4 year-old child stage,child
+HsapDv:0000175,2-month-old stage,infant
+HsapDv:0000096,2-year-old stage,infant
+HsapDv:0000193,20-month-old stage,infant
+HsapDv:0000114,20-year-old stage,adolescent
+HsapDv:0000057,20th week post-fertilization stage,fetus
+HsapDv:0000194,21-month-old stage,infant
+HsapDv:0000115,21-year-old stage,adult
+HsapDv:0000058,21st week post-fertilization stage,fetus
+HsapDv:0000195,22-month-old stage,infant
+HsapDv:0000116,22-year-old stage,adult
+HsapDv:0000059,22nd week post-fertilization stage,fetus
+HsapDv:0000196,23-month-old stage,infant
+HsapDv:0000117,23-year-old stage,adult
+HsapDv:0000060,23rd week post-fertilization stage,fetus
+HsapDv:0000118,24-year-old stage,adult
+HsapDv:0000061,24th week post-fertilization stage,fetus
+HsapDv:0000119,25-year-old stage,adult
+HsapDv:0000062,25th week post-fertilization stage,fetus
+HsapDv:0000120,26-year-old stage,adult
+HsapDv:0000063,26th week post-fertilization stage,fetus
+HsapDv:0000121,27-year-old stage,adult
+HsapDv:0000064,27th week post-fertilization stage,fetus
+HsapDv:0000122,28-year-old stage,adult
+HsapDv:0000065,28th week post-fertilization stage,fetus
+HsapDv:0000123,29-year-old stage,adult
+HsapDv:0000066,29th week post-fertilization stage,fetus
+HsapDv:0000176,3-month-old stage,infant
+HsapDv:0000097,3-year-old stage,child
+HsapDv:0000124,30-year-old stage,adult
+HsapDv:0000067,30th week post-fertilization stage,fetus
+HsapDv:0000125,31-year-old stage,adult
+HsapDv:0000068,31st week post-fertilization stage,fetus
+HsapDv:0000126,32-year-old stage,adult
+HsapDv:0000069,32nd week post-fertilization stage,fetus
+HsapDv:0000127,33-year-old stage,adult
+HsapDv:0000070,33rd week post-fertilization stage,fetus
+HsapDv:0000128,34-year-old stage,adult
+HsapDv:0000071,34th week post-fertilization stage,fetus
+HsapDv:0000129,35-year-old stage,adult
+HsapDv:0000072,35th week post-fertilization stage,fetus
+HsapDv:0000130,36-year-old stage,adult
+HsapDv:0000073,36th week post-fertilization stage,fetus
+HsapDv:0000131,37-year-old stage,adult
+HsapDv:0000074,37th week post-fertilization stage,fetus
+HsapDv:0000132,38-year-old stage,adult
+HsapDv:0000075,38th week post-fertilization and over stage,fetus
+HsapDv:0000133,39-year-old stage,adult
+HsapDv:0000177,4-month-old stage,infant
+HsapDv:0000098,4-year-old stage,child
+HsapDv:0000134,40-year-old stage,adult
+HsapDv:0000135,41-year-old stage,adult
+HsapDv:0000136,42-year-old stage,adult
+HsapDv:0000137,43-year-old stage,adult
+HsapDv:0000138,44-year-old stage,adult
+HsapDv:0000139,45-year-old stage,adult
+HsapDv:0000140,46-year-old stage,adult
+HsapDv:0000141,47-year-old stage,adult
+HsapDv:0000142,48-year-old stage,adult
+HsapDv:0000143,49-year-old stage,adult
+HsapDv:0000178,5-month-old stage,infant
+HsapDv:0000099,5-year-old stage,child
+HsapDv:0000144,50-year-old stage,adult
+HsapDv:0000145,51-year-old stage,older_adult
+HsapDv:0000146,52-year-old stage,older_adult
+HsapDv:0000147,53-year-old stage,older_adult
+HsapDv:0000148,54-year-old stage,older_adult
+HsapDv:0000149,55-year-old stage,older_adult
+HsapDv:0000150,56-year-old stage,older_adult
+HsapDv:0000151,57-year-old stage,older_adult
+HsapDv:0000152,58-year-old stage,older_adult
+HsapDv:0000153,59-year-old stage,older_adult
+HsapDv:0000179,6-month-old stage,infant
+HsapDv:0000100,6-year-old stage,child
+HsapDv:0000272,60-79 year-old stage,older_adult
+HsapDv:0000154,60-year-old stage,older_adult
+HsapDv:0000155,61-year-old stage,older_adult
+HsapDv:0000156,62-year-old stage,older_adult
+HsapDv:0000157,63-year-old stage,older_adult
+HsapDv:0000158,64-year-old stage,older_adult
+HsapDv:0000159,65-year-old stage,older_adult
+HsapDv:0000160,66-year-old stage,older_adult
+HsapDv:0000161,67-year-old stage,older_adult
+HsapDv:0000162,68-year-old stage,older_adult
+HsapDv:0000163,69-year-old stage,older_adult
+HsapDv:0000180,7-month-old stage,infant
+HsapDv:0000101,7-year-old stage,child
+HsapDv:0000164,70-year-old stage,older_adult
+HsapDv:0000165,71-year-old stage,older_adult
+HsapDv:0000166,72-year-old stage,older_adult
+HsapDv:0000167,73-year-old stage,older_adult
+HsapDv:0000168,74-year-old stage,older_adult
+HsapDv:0000169,75-year-old stage,older_adult
+HsapDv:0000170,76-year-old stage,older_adult
+HsapDv:0000171,77-year-old stage,older_adult
+HsapDv:0000172,78-year-old stage,older_adult
+HsapDv:0000173,79-year-old stage,older_adult
+HsapDv:0000181,8-month-old stage,infant
+HsapDv:0000102,8-year-old stage,child
+HsapDv:0000095,80 year-old and over stage,elderly_adult
+HsapDv:0000206,80-year-old stage,older_adult
+HsapDv:0000207,81-year-old stage,elderly_adult
+HsapDv:0000208,82-year-old stage,elderly_adult
+HsapDv:0000209,83-year-old stage,elderly_adult
+HsapDv:0000210,84-year-old stage,elderly_adult
+HsapDv:0000211,85-year-old stage,elderly_adult
+HsapDv:0000212,86-year-old stage,elderly_adult
+HsapDv:0000213,87-year-old stage,elderly_adult
+HsapDv:0000214,88-year-old stage,elderly_adult
+HsapDv:0000215,89-year-old stage,elderly_adult
+HsapDv:0000182,9-month-old stage,infant
+HsapDv:0000103,9-year-old stage,child
+HsapDv:0000274,90 year-old and over stage,elderly_adult
+HsapDv:0000216,90-year-old stage,elderly_adult
+HsapDv:0000217,91-year-old stage,elderly_adult
+HsapDv:0000218,92-year-old stage,elderly_adult
+HsapDv:0000219,93-year-old stage,elderly_adult
+HsapDv:0000220,94-year-old stage,elderly_adult
+HsapDv:0000221,95-year-old stage,elderly_adult
+HsapDv:0000222,96-year-old stage,elderly_adult
+HsapDv:0000223,97-year-old stage,elderly_adult
+HsapDv:0000224,98-year-old stage,elderly_adult
+HsapDv:0000225,99-year-old stage,elderly_adult
+HsapDv:0000046,9th week post-fertilization stage,fetus
+HsapDv:0000258,adult stage,na
+HsapDv:0000006,blastula stage,fetus
+HsapDv:0000003,carnegie stage 01,fetus
+HsapDv:0000005,carnegie stage 02,fetus
+HsapDv:0000007,carnegie stage 03,fetus
+HsapDv:0000008,carnegie stage 04,fetus
+HsapDv:0000009,carnegie stage 05,fetus
+HsapDv:0000031,carnegie stage 05a,fetus
+HsapDv:0000032,carnegie stage 05b,fetus
+HsapDv:0000033,carnegie stage 05c,fetus
+HsapDv:0000011,carnegie stage 06,fetus
+HsapDv:0000034,carnegie stage 06a,fetus
+HsapDv:0000035,carnegie stage 06b,fetus
+HsapDv:0000013,carnegie stage 07,fetus
+HsapDv:0000014,carnegie stage 08,fetus
+HsapDv:0000016,carnegie stage 09,fetus
+HsapDv:0000017,carnegie stage 10,fetus
+HsapDv:0000018,carnegie stage 11,fetus
+HsapDv:0000019,carnegie stage 12,fetus
+HsapDv:0000020,carnegie stage 13,fetus
+HsapDv:0000021,carnegie stage 14,fetus
+HsapDv:0000022,carnegie stage 15,fetus
+HsapDv:0000024,carnegie stage 17,fetus
+HsapDv:0000025,carnegie stage 18,fetus
+HsapDv:0000026,carnegie stage 19,fetus
+HsapDv:0000027,carnegie stage 20,fetus
+HsapDv:0000028,carnegie stage 21,fetus
+HsapDv:0000029,carnegie stage 22,fetus
+HsapDv:0000030,carnegie stage 23,fetus
+HsapDv:0000247,centenarian stage,elderly_adult
+HsapDv:0000265,child stage (1-4 yo),na
+HsapDv:0000242,eighth decade stage,older_adult
+HsapDv:0000202,eighth lmp month stage,fetus
+HsapDv:0000245,eleventh decade stage,elderly_adult
+HsapDv:0000002,embryonic stage,fetus
+HsapDv:0000037,fetal stage,fetus
+HsapDv:0000239,fifth decade stage,adult
+HsapDv:0000199,fifth lmp month stage,fetus
+HsapDv:0000238,fourth decade stage,adult
+HsapDv:0000198,fourth lmp month stage,fetus
+HsapDv:0000010,gastrula stage,fetus
+HsapDv:0000261,infant stage,infant
+HsapDv:0000271,juvenile stage (5-14 yo),na
+HsapDv:0000227,late adult stage,na
+HsapDv:0000001,life cycle,na
+HsapDv:0000000,life cycle stage,na
+HsapDv:0000267,middle aged stage,na
+HsapDv:0000205,morula stage,na
+HsapDv:0000012,neurula stage,fetus
+HsapDv:0000262,newborn stage (0-28 days),infant
+HsapDv:0000243,ninth decade stage,elderly_adult
+HsapDv:0000203,ninth lmp month stage,fetus
+HsapDv:0000260,nursing stage (0-11 months),infant
+HsapDv:0000015,organogenesis stage,fetus
+HsapDv:0000264,pediatric stage,infant
+HsapDv:0010000,postnatal stage,infant
+HsapDv:0000045,prenatal stage,na
+HsapDv:0000226,prime adult stage,na
+HsapDv:0000241,seventh decade stage,older_adult
+HsapDv:0000201,seventh lmp month stage,fetus
+HsapDv:0000240,sixth decade stage,older_adult
+HsapDv:0000200,sixth lmp month stage,fetus
+HsapDv:0000244,tenth decade stage,elderly_adult
+HsapDv:0000237,third decade stage,adult
+HsapDv:0000197,third lmp month stage,fetus
+HsapDv:0000266,young adult stage,na

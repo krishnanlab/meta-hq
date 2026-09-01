@@ -1,24 +1,26 @@
 """
 Bgee database annotation processor.
 
-Processes RNA-Seq library annotations from the Bgee database (v15.0)
-for multiple species including mouse, human, rat, worm, and fish.
+Processes RNA-Seq library annotations from the Bgee database (v15.0).
+All species are combined in a single annotations file, keyed by
+library-level (SRX/ERX/DRX) accession IDs.
 
 Reference: https://bgee.org/
 """
 
+import json
 from pathlib import Path
 from typing import Any
 
 import polars as pl
 
 from metahq_build.config.config import (
-    BGEE_FISH,
-    BGEE_FLY,
-    BGEE_HUMAN,
-    BGEE_MOUSE,
-    BGEE_RAT,
-    BGEE_WORM,
+    AGE_KEY,
+    BGEE_EXTERNAL_LINKS,
+    BGEE_HSAPDV_AGE_GROUP_MAP,
+    BGEE_RAW,
+    BGEE_SPECIES_IDS,
+    BGEE_UBERON_AGE_GROUP_MAP,
     COL_ACCESSION,
     COL_ATTRIBUTE,
     COL_ECODE,
@@ -26,13 +28,30 @@ from metahq_build.config.config import (
     COL_TERM_NAME,
     ECODE_EXPERT,
     SEX_FEMALE_ID,
+    SEX_KEY,
     SEX_MALE_ID,
+    TISSUE_KEY,
     UBERON_OBO,
     UBERON_SYSTEMS,
+    VALID_AGE_GROUPS,
+    VALID_ORGANISMS,
+    VALID_SEXES,
+    VALID_TISSUE_ONTOLOGIES,
 )
 from metahq_build.ontology import get_system_descendants
 from metahq_build.processors.base import BaseProcessor
 from metahq_build.processors.registry import ProcessorRegistry
+
+BGEE_DATASET_URL = "https://www.bgee.org/experiment/{}"
+
+COL_BGEE_ID = "#libraryId"
+COL_BGEE_EXPERIMENT = "experimentId"
+COL_BGEE_SEX = "sex"
+COL_BGEE_SPECIES_ID = "speciesId"
+COL_BGEE_STAGE_ID = "stageId"
+COL_BGEE_STAGE_NAME = "stageName"
+COL_BGEE_TISSUE = "anatId"
+COL_BGEE_TISSUE_NAME = "anatName"
 
 
 @ProcessorRegistry.register
@@ -42,30 +61,13 @@ class BgeeProcessor(BaseProcessor):
 
     Bgee is a database for gene expression patterns across multiple species,
     providing curated anatomical, developmental stage, and sex annotations
-    for RNA-Seq libraries.
-
-    Processes data for 6 species:
-    - Mus musculus (mouse)
-    - Homo sapiens (human)
-    - Rattus norvegicus (rat)
-    - Caenorhabditis elegans (worm)
-    - Danio rerio (zebrafish)
-    - Drosophila melanogaster (fly)
+    for RNA-Seq libraries. As of the current Bgee release, all species are
+    distributed in a single combined annotations file.
     """
 
     source_name = "BGee"
-    version = "1.0.0"
+    version = "15.2.6"
     description = "Bgee database RNA-Seq library annotations across multiple species"
-
-    # Species configuration
-    SPECIES_FILES = {
-        "mouse": BGEE_MOUSE,
-        "human": BGEE_HUMAN,
-        "rat": BGEE_RAT,
-        "worm": BGEE_WORM,
-        "fish": BGEE_FISH,
-        "fly": BGEE_FLY,
-    }
 
     def process(self, output_dir: Path, **kwargs: Any) -> pl.DataFrame:
         """Process Bgee RNA-Seq library data into standardized annotations.
@@ -74,66 +76,68 @@ class BgeeProcessor(BaseProcessor):
             output_dir (Path):
                 Directory where the processed parquet file will be written.
             **kwargs:
-                Optional species-specific file path overrides.
+                Optional ``bgee_path`` override for the raw annotations file.
 
         Returns:
             (pl.DataFrame): Standardized annotations with columns
-                ``sample_id``, ``annotation_type``, ``term_id``,
-                ``term_label``, and ``ecode``.
+                ``accession``, ``attribute``, ``term_id``,
+                ``term_name``, and ``ecode``.
         """
         self.logger.info("Processing Bgee RNA-Seq library annotations...")
 
-        # Load UBERON system descendants once for all species
-        self.logger.info("Loading UBERON system descendants for tissue filtering...")
+        # Load UBERON/CL system descendants once for tissue filtering
+        self.logger.info("Loading UBERON/CL system descendants for tissue filtering...")
         valid_uberon = get_system_descendants(UBERON_SYSTEMS, UBERON_OBO)
 
-        # Process each species
-        all_species_data = []
-        for species_name, default_path in self.SPECIES_FILES.items():
-            # Allow override via kwargs
-            file_path = Path(kwargs.get(f"{species_name}_path", default_path))
+        file_path = Path(kwargs.get("bgee_path", BGEE_RAW))
+        self.logger.info("Reading Bgee library annotations from %s...", file_path)
+        df = pl.read_parquet(file_path).rename({COL_BGEE_ID: COL_ACCESSION})
 
-            if not file_path.exists():
-                self.logger.warning(
-                    "Skipping %s: file not found at %s",
-                    species_name,
-                    file_path,
-                )
-                continue
-
-            self.logger.info(
-                "Processing %s data from %s...", species_name, file_path.name
-            )
-            species_df = self._process_species(file_path, valid_uberon)
-            all_species_data.append(species_df)
-
-            self.logger.info(
-                "Processed %s annotations for %s",
-                species_df.height,
-                species_name,
-            )
-
-        # Combine all species
-        if not all_species_data:
-            self.logger.error("No species data was successfully processed!")
-            return pl.DataFrame(
-                schema={
-                    COL_ACCESSION: pl.Utf8,
-                    COL_ATTRIBUTE: pl.Utf8,
-                    COL_TERM_ID: pl.Utf8,
-                    COL_TERM_NAME: pl.Utf8,
-                    COL_ECODE: pl.Utf8,
-                }
-            )
-
-        result_df = pl.concat(all_species_data, how="vertical").sort(
-            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME]
+        # IDs prefixed with '#' are deprecated annotations — drop them
+        before = df.height
+        df = df.filter(~pl.col(COL_ACCESSION).str.starts_with("#"))
+        self.logger.info(
+            "Dropped %d deprecated (hash-prefixed) library annotations, kept %d",
+            before - df.height,
+            df.height,
         )
 
+        # Restrict to species MetaHQ currently supports
+        valid_species_ids = self._valid_species_ids()
+        before = df.height
+        df = df.filter(pl.col(COL_BGEE_SPECIES_ID).is_in(valid_species_ids))
         self.logger.info(
-            "Produced %s total annotations across %s species",
-            result_df.height,
-            len(all_species_data),
+            "Filtered to %d supported organisms: dropped %d rows, kept %d",
+            len(valid_species_ids),
+            before - df.height,
+            df.height,
+        )
+
+        urls = self._build_urls(df)
+
+        # Process each annotation type
+        tissue_records = self._process_tissue(df, valid_uberon)
+        sex_records = self._process_sex(df)
+        stage_records = self._process_developmental_stage(df)
+
+        result_df = pl.concat(
+            [tissue_records, sex_records, stage_records],
+            how="vertical",
+        ).sort([COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME])
+
+        self.logger.info("Produced %s total annotations", result_df.height)
+
+        # map ontology terms to uberon
+        result_df = self._curate_terms(result_df)
+
+        # save urls
+        with open(BGEE_EXTERNAL_LINKS, "w", encoding="utf-8") as f:
+            json.dump(urls, f, indent=4, sort_keys=True)
+
+        self.logger.info(
+            "Saved external links for %d studies in Bgee to %s",
+            len(urls),
+            BGEE_EXTERNAL_LINKS,
         )
 
         # Save processed data
@@ -143,69 +147,141 @@ class BgeeProcessor(BaseProcessor):
 
         return result_df
 
-    def _process_species(
-        self, file_path: Path, valid_uberon: frozenset[str]
-    ) -> pl.DataFrame:
-        """Process a single species RNA-Seq library file.
+    def _valid_species_ids(self) -> frozenset[int]:
+        """Return Bgee ``speciesId`` values for organisms in ``VALID_ORGANISMS``.
 
-        Arguments:
-            file_path (Path):
-                Path to the species TSV file.
-            valid_uberon (frozenset[str]):
-                Set of valid UBERON/CL term IDs from system descendants.
-            species_name (str):
-                Name of the species (for metadata/logging).
+        Joins against the Bgee species helper file (shares the ``speciesId``
+        column with the raw annotations file) to resolve each ID to a
+        ``"{genus} {species}"`` organism name.
 
         Returns:
-            (pl.DataFrame): Standardized annotations for this species.
+            (frozenset[int]): Bgee species IDs for supported organisms.
         """
-        # Read TSV file
-        df = pl.read_csv(
-            file_path,
-            separator="\t",
-            null_values=["NA", "na", ""],
+        species_df = pl.read_csv(BGEE_SPECIES_IDS, separator="\t").with_columns(
+            (pl.col("genus") + " " + pl.col("species"))
+            .str.to_lowercase()
+            .alias("organism")
+        )
+        species_df = species_df.filter(pl.col("organism").is_in(VALID_ORGANISMS))
+
+        return frozenset(species_df[COL_BGEE_SPECIES_ID].to_list())
+
+    def _build_urls(self, df: pl.DataFrame) -> dict:
+        """Build per-study external link records from experiment IDs.
+
+        Arguments:
+            df (pl.DataFrame):
+                Library-level Bgee annotations with an ``experimentId`` column.
+
+        Returns:
+            (dict): Mapping of experiment (study) ID to a Bgee dataset URL record.
+        """
+        urls: dict = {}
+        for experiment_id in df[COL_BGEE_EXPERIMENT].drop_nulls().unique():
+            urls.setdefault(experiment_id, {"records": []})
+            urls[experiment_id]["records"].append(
+                {"id": experiment_id, "url": BGEE_DATASET_URL.format(experiment_id)}
+            )
+
+        return urls
+
+    def _curate_terms(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Harmonize annotations to UBERON, CL, and age groups."""
+
+        for attribute in [TISSUE_KEY, SEX_KEY, AGE_KEY]:
+            unique_ontologies = set(
+                df.filter(pl.col(COL_ATTRIBUTE) == attribute)
+                .with_columns(pl.col(COL_TERM_ID).str.split(":").list.get(0))[
+                    COL_TERM_ID
+                ]
+                .unique()
+                .to_list()
+            )
+            self.logger.info(
+                "Found %d unique ontologies for %s: %s",
+                len(unique_ontologies),
+                attribute,
+                unique_ontologies,
+            )
+
+            if attribute == SEX_KEY:
+                if not all(term in VALID_SEXES for term in unique_ontologies):
+                    raise ValueError(
+                        f"Found unexpected sexes in {unique_ontologies}"
+                    )  # will create a sex mapper in the future if needed
+
+            if attribute == TISSUE_KEY:
+                if not all(
+                    term in VALID_TISSUE_ONTOLOGIES for term in unique_ontologies
+                ):
+                    raise ValueError(
+                        f"Found unexpected tissue ontologies in {unique_ontologies}"
+                    )  # will create a tissue mapper in the future if needed
+
+            if attribute == AGE_KEY:
+                if not all(term in VALID_AGE_GROUPS for term in unique_ontologies):
+                    df = self._map_age_terms(df)
+
+        return df
+
+    def _map_age_terms(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Map developmental stage term IDs to MetaHQ age groups.
+
+        Only rows with ``attribute == AGE_KEY`` are remapped; tissue and sex
+        rows are passed through untouched (a right join against the full
+        ``df`` would otherwise drop them, since their term IDs never match
+        an age group).
+        """
+        other_df = df.filter(pl.col(COL_ATTRIBUTE) != AGE_KEY).select(
+            [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME, COL_ECODE]
+        )
+        age_df = df.filter(pl.col(COL_ATTRIBUTE) == AGE_KEY)
+
+        hsapdv_map = (
+            pl.scan_csv(BGEE_HSAPDV_AGE_GROUP_MAP)
+            .rename({"id": COL_TERM_ID, "age_group": AGE_KEY})
+            .select([COL_TERM_ID, AGE_KEY])
+            .filter(pl.col(AGE_KEY) != "na")
+            .collect(engine="streaming")
+        )
+        uberon_map = (
+            pl.scan_csv(BGEE_UBERON_AGE_GROUP_MAP)
+            .select([COL_TERM_ID, AGE_KEY])
+            .filter(pl.col(AGE_KEY) != "na")
+            .collect(engine="streaming")
         )
 
-        # Select and rename columns we need
-        df = df.select(
-            [
-                "Run IDs",
-                "Expression mapped anatomical entity ID",
-                "Expression mapped anatomical entity name",
-                "Expression mapped stage ID",
-                "Expression mapped stage name",
-                "Expression mapped sex",
-            ]
+        mappings = pl.concat([hsapdv_map, uberon_map], how="vertical")
+        age_df = (
+            mappings.join(
+                age_df,
+                on=COL_TERM_ID,
+                how="right",
+            )
+            .with_columns(pl.coalesce(AGE_KEY, COL_TERM_ID))
+            .drop(COL_TERM_ID)
+            .rename({AGE_KEY: COL_TERM_ID})
         )
 
-        # Explode pipe-delimited Run IDs column
-        # First split the Run IDs into a list
-        df = df.with_columns(pl.col("Run IDs").str.split("|").alias("run_id_list"))
+        unmapped = age_df.filter(~pl.col(COL_TERM_ID).is_in(VALID_AGE_GROUPS))[
+            COL_TERM_ID
+        ].to_list()
 
-        # Explode the list to create one row per run ID
-        df_exploded = df.explode("run_id_list")
-
-        # Rename for clarity
-        df_exploded = df_exploded.rename({"run_id_list": COL_ACCESSION})
-
-        # Drop the original "Run IDs" column
-        df_exploded = df_exploded.drop("Run IDs")
-
-        # Filter out any null sample IDs
-        df_exploded = df_exploded.filter(pl.col(COL_ACCESSION).is_not_null())
-
-        # Process each annotation type
-        tissue_records = self._process_tissue(df_exploded, valid_uberon)
-        sex_records = self._process_sex(df_exploded)
-        stage_records = self._process_developmental_stage(df_exploded)
-
-        # Combine all annotation types
-        all_records = pl.concat(
-            [tissue_records, sex_records, stage_records],
-            how="vertical",
+        self.logger.warning(
+            "Unable to map %d age terms to MetaHQ age groups: %s",
+            len(unmapped),
+            set(unmapped),
         )
 
-        return all_records
+        age_df = (
+            age_df.filter(pl.col(COL_TERM_ID).is_in(VALID_AGE_GROUPS))
+            .with_columns(pl.col(COL_TERM_ID).alias(COL_TERM_NAME))
+            .select(
+                [COL_ACCESSION, COL_ATTRIBUTE, COL_TERM_ID, COL_TERM_NAME, COL_ECODE]
+            )
+        )
+
+        return pl.concat([other_df, age_df], how="vertical")
 
     def _process_tissue(
         self, df: pl.DataFrame, valid_uberon: frozenset[str]
@@ -214,7 +290,7 @@ class BgeeProcessor(BaseProcessor):
 
         Arguments:
             df (pl.DataFrame):
-                Exploded data with sample IDs and expression mapped columns.
+                Library-level Bgee annotations.
             valid_uberon (frozenset[str]):
                 Set of valid UBERON/CL term IDs.
 
@@ -223,18 +299,15 @@ class BgeeProcessor(BaseProcessor):
         """
         # Filter to rows with valid anatomical entity IDs
         tissue_df = df.filter(
-            pl.col("Expression mapped anatomical entity ID").is_not_null()
-            & (pl.col("Expression mapped anatomical entity ID") != "")
+            pl.col(COL_BGEE_TISSUE).is_not_null() & (pl.col(COL_BGEE_TISSUE) != "")
         )
 
         # Filter to valid UBERON/CL system descendants
         before = tissue_df.height
-        tissue_df = tissue_df.filter(
-            pl.col("Expression mapped anatomical entity ID").is_in(valid_uberon)
-        )
+        tissue_df = tissue_df.filter(pl.col(COL_BGEE_TISSUE).is_in(valid_uberon))
 
         self.logger.debug(
-            "Filtered tissue from %s to %s rows using UBERON system descendants",
+            "Filtered tissue from %s to %s rows using UBERON/CL system descendants",
             before,
             tissue_df.height,
         )
@@ -242,9 +315,9 @@ class BgeeProcessor(BaseProcessor):
         # Create tissue annotation records
         tissue_records = tissue_df.select(
             pl.col(COL_ACCESSION),
-            pl.lit("tissue").alias(COL_ATTRIBUTE),
-            pl.col("Expression mapped anatomical entity ID").alias(COL_TERM_ID),
-            pl.col("Expression mapped anatomical entity name").alias(COL_TERM_NAME),
+            pl.lit(TISSUE_KEY).alias(COL_ATTRIBUTE),
+            pl.col(COL_BGEE_TISSUE).alias(COL_TERM_ID),
+            pl.col(COL_BGEE_TISSUE_NAME).alias(COL_TERM_NAME),
             pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
@@ -253,38 +326,30 @@ class BgeeProcessor(BaseProcessor):
     def _process_sex(self, df: pl.DataFrame) -> pl.DataFrame:
         """Process sex annotations.
 
-        Maps Bgee sex values (male, female, hermaphrodite, mixed, not annotated)
-        to PATO ontology terms.
+        Maps Bgee sex values (``M``, ``F``, ``mixed``, ``NA``) to PATO-aligned
+        sex IDs, keeping only unambiguous ``M``/``F`` annotations.
 
         Arguments:
             df (pl.DataFrame):
-                Exploded data with sample IDs and expression mapped sex.
+                Library-level Bgee annotations.
 
         Returns:
             (pl.DataFrame): Sex annotation records.
         """
-        # Filter to rows with valid sex annotations
-        # We'll only process 'male' and 'female', skip 'mixed', 'hermaphrodite', 'not annotated'
-        sex_df = df.filter(pl.col("Expression mapped sex").is_in(["male", "female"]))
+        # Filter to rows with unambiguous sex annotations
+        # We'll only process 'M' and 'F', skip 'mixed' and 'NA'
+        sex_df = df.filter(pl.col(COL_BGEE_SEX).is_in([SEX_MALE_ID, SEX_FEMALE_ID]))
 
-        # Map to PATO terms
+        # Map to full-word term names
         sex_records = sex_df.with_columns(
-            pl.when(pl.col("Expression mapped sex") == "male")
-            .then(pl.lit(SEX_MALE_ID))
-            .when(pl.col("Expression mapped sex") == "female")
-            .then(pl.lit(SEX_FEMALE_ID))
-            .otherwise(pl.lit(None))
-            .alias(COL_TERM_ID),
-            pl.when(pl.col("Expression mapped sex") == "male")
+            pl.when(pl.col(COL_BGEE_SEX) == SEX_MALE_ID)
             .then(pl.lit("male"))
-            .when(pl.col("Expression mapped sex") == "female")
-            .then(pl.lit("female"))
-            .otherwise(pl.lit(None))
+            .otherwise(pl.lit("female"))
             .alias(COL_TERM_NAME),
         ).select(
             pl.col(COL_ACCESSION),
-            pl.lit("sex").alias(COL_ATTRIBUTE),
-            pl.col(COL_TERM_ID),
+            pl.lit(SEX_KEY).alias(COL_ATTRIBUTE),
+            pl.col(COL_BGEE_SEX).alias(COL_TERM_ID),
             pl.col(COL_TERM_NAME),
             pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
@@ -296,24 +361,25 @@ class BgeeProcessor(BaseProcessor):
 
         Arguments:
             df (pl.DataFrame):
-                Exploded data with sample IDs and expression mapped stage.
+                Library-level Bgee annotations.
 
         Returns:
             (pl.DataFrame): Developmental stage annotation records.
         """
         # Filter to rows with valid stage annotations
+        # Note: These use various species-specific ontologies (HsapDv for
+        # human, MmusDv for mouse, UBERON, etc.) — mapping them to MetaHQ
+        # age groups is handled downstream in _map_age_terms.
         stage_df = df.filter(
-            pl.col("Expression mapped stage ID").is_not_null()
-            & (pl.col("Expression mapped stage ID") != "")
+            pl.col(COL_BGEE_STAGE_ID).is_not_null() & (pl.col(COL_BGEE_STAGE_ID) != "")
         )
 
         # Create developmental stage annotation records
-        # Note: These use various ontologies (MmusDv for mouse, HsapDv for human, UBERON, etc.)
         stage_records = stage_df.select(
             pl.col(COL_ACCESSION),
-            pl.lit("developmental_stage").alias(COL_ATTRIBUTE),
-            pl.col("Expression mapped stage ID").alias(COL_TERM_ID),
-            pl.col("Expression mapped stage name").alias(COL_TERM_NAME),
+            pl.lit(AGE_KEY).alias(COL_ATTRIBUTE),
+            pl.col(COL_BGEE_STAGE_ID).alias(COL_TERM_ID),
+            pl.col(COL_BGEE_STAGE_NAME).alias(COL_TERM_NAME),
             pl.lit(ECODE_EXPERT).alias(COL_ECODE),
         )
 
@@ -336,7 +402,7 @@ class BgeeProcessor(BaseProcessor):
 
         # Check that expected annotation types are present
         annotation_types = data[COL_ATTRIBUTE].unique().to_list()
-        expected_types = {"tissue", "sex", "developmental_stage"}
+        expected_types = {TISSUE_KEY, SEX_KEY, AGE_KEY}
 
         for expected_type in expected_types:
             if expected_type not in annotation_types:
@@ -353,7 +419,18 @@ class BgeeProcessor(BaseProcessor):
                 unique_ecodes,
             )
 
-        # Check for sample IDs (should all be SRR format)
+        # validate records
+        self._validate_term_id_column(
+            data,
+            attribute=TISSUE_KEY,
+            valid=VALID_TISSUE_ONTOLOGIES,
+            prefix_only=True,
+            delimiter=":",
+        )
+        self._validate_term_id_column(data, attribute=AGE_KEY, valid=VALID_AGE_GROUPS)
+        self._validate_term_id_column(data, attribute=SEX_KEY, valid=VALID_SEXES)
+
+        # Check for sample IDs (library-level SRX/ERX/DRX accessions)
         sample_count = data[COL_ACCESSION].n_unique()
         self.logger.info("Validated %s unique samples", sample_count)
 

@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 import networkx as nx
@@ -6,6 +5,7 @@ import numpy as np
 from numpy.typing import DTypeLike
 from tqdm import tqdm
 
+from metahq_build.ontology.metrics import ICResult, ICResults, information_content
 from metahq_build.ontology.ontology import Ontology
 from metahq_build.ontology.relations import RelationsMatrix
 from metahq_build.util.logging import setup_logger
@@ -34,57 +34,74 @@ class Graph(Ontology):
         bone sarcoma
     """
 
-    def __init__(self):
-        """Initialize Graph object as a child of Ontology"""
+    def __init__(
+        self,
+    ):
+        """Initialize Graph object as a child of Ontology."""
         super().__init__()
         self._graph = nx.DiGraph()
         self._nodes: list[str] = []
 
         self.logger = setup_logger("metahq_build.ontology.graph.Graph")
 
-    def construct_graph(self):
-        """Constructs an ontology graph from entries from an ontology file.
+    def construct(self, include: list[str] | set[str] | None = None):
+        """Constructs an ontology graph from entries from an ontology file. This must be called
+        to utilize any functionalities, otherwise the graph will remain empty.
 
         A simple cycle occurs between 2 nodes UBERON:8000009 and UBERON:0002354
         (cardiac Purkinje fiber network and cardiac Purkinje fiber)
         They are both parents and children of eachother, so to preserve the
         directed acyclic structure of the edgelist, we intentionally keep only one
         edge (fiber network is parent of fiber) on Line 100.
+
+        Arguments:
+            include (list[str] | set[str] | None):
+                Ontology prefixes to include in the graph. Discard all others.
+                    Passing ['UBERON', 'CL'] will dicard other terms that are
+                    not from those ontologies.
+
+        Examples:
+
+            >>> from metahq_build.ontology import Graph
+            >>> graph = Graph.from_obo('/path/to/mondo.obo')
+            >>> graph.construct_graph()
+            >>> graph.graph
+            DiGraph with 42891 nodes and 68389 edges
+
+            Only retain relationships between MONDO ontology terms.
+
+            >>> graph.construct_graph(keep_anchors=['MONDO'])
+            >>> graph.graph
+            DiGraph with 37105 nodes and 58725 edges
+
+            This method is also automatically called by accessing the `graph` property.
+
+            >>> graph = Graph.from_obo('/path/to/mondo.obo')
+            >>> graph.graph
+            DiGraph with 42891 nodes and 68389 edges
         """
         self.logger.info("Constructing the ontology graph...")
-        # ID entries have at least 1 capital letter, a colon, and at least 1 digit
-        id_pattern = re.compile(r"[A-Za-z]+:\S+")
+
+        self._graph = nx.DiGraph()
 
         for entry in self.entries:
-            if "is_obsolete: true" in entry:
-                continue  # skip obsolete entries
+            if isinstance(include, (list, set)):
+                if not any(anchor in entry.id for anchor in include):
+                    continue
 
-            lines = entry.split("\n")
-            for line in lines:
+            # Get is_a connection from the reference term to another
+            for parent in entry.is_a:
+                if ("UBERON" in parent) or ("CL" in parent) or ("MONDO" in entry.id):
+                    self._graph.add_edge(parent, entry.id)
 
-                # Get ID of the term
-                if line.startswith("id:"):
-                    _id = line.split("id: ")[1]
-                    if ("UBERON" in _id) or ("CL" in _id) or ("MONDO" in _id):
-                        pass
-                    else:
-                        break
-
-                # Get is_a connection from the reference term to another
-                elif line.startswith("is_a:"):
-                    parent = id_pattern.search(line).group(0)
-                    if ("UBERON" in parent) or ("CL" in parent) or ("MONDO" in _id):
-                        self._graph.add_edge(parent, _id)
-
-                # Get part_of connections
-                # Ignoring 'develops from' and 'related to'
-                elif line.startswith("relationship: part_of"):
-                    parent = id_pattern.search(line).group(0)
-                    if ("UBERON" in parent) or ("CL" in parent) or ("MONDO" in _id):
-                        # If parent is the fiber and child is the fiber network, then leave that edge out
-                        if _id == "UBERON:8000009" and parent == "UBERON:0002354":
-                            continue
-                        self._graph.add_edge(parent, _id)
+            # Get part_of connections
+            # Ignoring 'develops from' and 'related to'
+            for parent in entry.part_of:
+                if ("UBERON" in parent) or ("CL" in parent) or ("MONDO" in entry.id):
+                    # If parent is the fiber and child is the fiber network, then leave that edge out
+                    if entry.id == "UBERON:8000009" and parent == "UBERON:0002354":
+                        continue
+                    self._graph.add_edge(parent, entry.id)
 
     def descendants_from(
         self, nodes: list[str], verbose: bool = False
@@ -150,6 +167,43 @@ class Graph(Ontology):
                 print(f"{node} not in graph.")
 
         return _map
+
+    def ic(self, node: str) -> ICResult:
+        """Compute the information content for a particular node.
+
+        Arguments:
+            node (str):
+                A particular node in the graph (e.g., MONDO:0004994).
+
+        Returns:
+            (ICResult): The information content of the specified node.
+        """
+        if node in self.nodes:
+            n_descendants = len(self.descendants(node))
+            ic = information_content(n_descendants, len(self.nodes))
+            return ICResult(node, ic)
+
+        raise ValueError(f"Node {node} not in graph.")
+
+    def ic_from(self, nodes: list[str]) -> ICResults:
+        """Compute information content for multiple nodes in the graph.
+
+        Attributes:
+            nodes (list[str]):
+                A list of nodes in the graph.
+
+        Returns:
+            (ICResults): Information content results for all nodes.
+        """
+        results = []
+        for node in nodes:
+            if node not in self.nodes:
+                self.logger.warning("Node not in ontology: %s. Skipping...", node)
+                continue
+
+            results.append(self.ic(node))
+
+        return ICResults.from_list(results)
 
     def relations_matrix(self, dtype: DTypeLike = np.int8) -> "RelationsMatrix":
         """Construct a term x term matrices defining ancestor and descendant relationships.
@@ -255,12 +309,17 @@ class Graph(Ontology):
         """Gets descendants of a single term"""
         return list(nx.descendants(self.graph, term))
 
+    @classmethod
+    def from_obo(cls, obo: Path | str, include: list[str] | set[str] | None = None):
+        """Create Ontology class from an obo file."""
+        parser = cls()
+        parser.read(obo, reader="obo")  # from Ontology parent
+        parser.construct(include)
+        return parser
+
     @property
     def graph(self) -> nx.DiGraph:
         """Return the ontology DiGraph"""
-        if self._graph.number_of_nodes() == 0:
-            self.construct_graph()
-
         return self._graph
 
     @property

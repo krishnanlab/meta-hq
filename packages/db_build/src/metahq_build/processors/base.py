@@ -19,6 +19,7 @@ from metahq_build.config.config import (
     COL_TERM_NAME,
     PROCESSED_DIR,
 )
+from metahq_build.ontology import Ontology
 from metahq_build.util.logging import setup_logger
 
 
@@ -172,6 +173,26 @@ class BaseProcessor(ABC):
         )
         return data
 
+    def _collect_ontology_mappings(
+        self, ontology: Ontology, ontologies: set[str], query_terms: list[str]
+    ) -> pl.DataFrame:
+        """Collect mappings between ontologies."""
+        mappings: list[pl.DataFrame] = []
+        for onto in ontologies:
+            terms = [term for term in query_terms if term.startswith(onto)]
+            xref = (
+                ontology.xref(onto).pl(explode=True).filter(pl.col(onto).is_in(terms))
+            ).rename({"anchor": "mapped", onto: COL_TERM_ID})
+            if xref.is_empty():
+                self.logger.info("No mappings to %s", onto)
+                continue
+
+            mappings.append(xref)
+
+        return (
+            pl.concat(mappings, how="vertical") if len(mappings) > 0 else pl.DataFrame()
+        )
+
     def _validate_required_columns(self, data: pl.DataFrame) -> None:
         """
         Validate that DataFrame has required columns.
@@ -197,6 +218,52 @@ class BaseProcessor(ABC):
             raise ValidationError(
                 f"Missing required columns: {missing_columns}. "
                 f"DataFrame has: {data.columns}"
+            )
+
+    def _validate_term_id_column(
+        self,
+        df: pl.DataFrame,
+        attribute: str,
+        valid: list[str] | set[str] | frozenset[str],
+        prefix_only: bool = False,
+        delimiter: str = ":",
+    ):
+        """Raise warning if unsupported terms are in the annotations.
+
+        Arguments:
+            df (pl.DataFrame):
+                Harmonized data frame with the proper processed annotations structure.
+                    See _validate_required_columns.
+            attribute (str):
+                An attribute to check. Should be an attribute in ATTRIBUTE_KEYS found in
+                the config module.
+            valid (list[str] | set[str] | frozenset[str]):
+                A sequence of valid term ID values or prefixes.
+            prefix_only (bool):
+                If True, will extract and compare term ID prefixes rather than full term IDs.
+                    Set the delimiter argument to specify the prefix delimiter.
+            delimiter (str):
+                If using prefix_only, set the delimiter to extract the prefix.
+
+        """
+
+        df = df.filter(pl.col(COL_ATTRIBUTE) == attribute)
+        if prefix_only:
+            unique = (
+                df.with_columns(pl.col(COL_TERM_ID).str.split(delimiter).list.get(0))[
+                    COL_TERM_ID
+                ]
+                .unique()
+                .to_list()
+            )
+        else:
+            unique = df[COL_TERM_ID].unique().to_list()
+
+        if not all(onto in valid for onto in unique):
+            self.logger.warning(
+                "Found unsupported term IDs in %s annotations: %s",
+                attribute,
+                unique,
             )
 
     def __repr__(self) -> str:

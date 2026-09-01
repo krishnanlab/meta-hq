@@ -11,8 +11,9 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from metahq_core.util.exceptions import NoResultsFound
 from metahq_core.export.references import CitationConfig
+from metahq_core.export.refinebio import DATA_CART_URL
+from metahq_core.util.exceptions import NoResultsFound
 
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig, Retriever
 
@@ -288,7 +289,9 @@ class TestRetriever:
         verbose_retriever.log.info.assert_called_with("Querying...")
 
     @patch("metahq_cli.retriever.Query")
-    def test_query_passes_license_to_core(self, mock_query_class, sample_configs, mock_logger):
+    def test_query_passes_license_to_core(
+        self, mock_query_class, sample_configs, mock_logger
+    ):
         """license from QueryConfig is forwarded to the core Query."""
         query_config, curation_config, output_config, citation_config = sample_configs
         query_config.license = "permissive"
@@ -311,15 +314,26 @@ class TestRetriever:
         _, kwargs = mock_query_class.call_args
         assert kwargs["license"] == "permissive"
 
-    def test_curate_raises_error_when_no_annotations(self, retriever):
-        """test curate raises NoResultsFound when there are no annotations"""
+    def test_curate_exits_when_no_results_after_filters(self, retriever):
+        """test curate exits when terms exist in MetaHQ but filters return no results"""
         mock_annotations = Mock()
         mock_annotations.n_indices = 0
+        mock_annotations.entities = ["term1", "term2"]
 
-        with pytest.raises(NoResultsFound) as exc_info:
+        with pytest.raises(SystemExit):
             retriever.curate(mock_annotations)
 
-        assert "No annotations for any terms" in str(exc_info.value)
+        retriever.log.error.assert_called_once()
+
+    def test_curate_exits_when_all_terms_unavailable(self, retriever):
+        """test curate exits when none of the queried terms are in MetaHQ"""
+        mock_annotations = Mock()
+        mock_annotations.n_indices = 0
+        mock_annotations.entities = []
+
+        with pytest.raises(SystemExit):
+            retriever.curate(mock_annotations)
+
         retriever.log.error.assert_called_once()
 
     def test_curate_direct_mode(self, retriever):
@@ -342,6 +356,7 @@ class TestRetriever:
         """test curation with propagate mode"""
         mock_annotations = Mock()
         mock_annotations.n_indices = 10
+        mock_annotations.entities = ["term1", "term2"]
         retriever.curation_config.mode = "annotate"
 
         with patch.object(retriever, "_propagate_annotations") as mock_propagate:
@@ -355,6 +370,7 @@ class TestRetriever:
         """test curation with label mode"""
         mock_annotations = Mock()
         mock_annotations.n_indices = 10
+        mock_annotations.entities = ["term1", "term2"]
         retriever.curation_config.mode = "label"
 
         with patch.object(retriever, "_propagate_annotations") as mock_propagate:
@@ -577,6 +593,170 @@ class TestRetriever:
                 mock_method.assert_called_once_with(
                     mock_annotations, mode=expected_mode
                 )
+
+    def test_retriever_initialization_refinebio_default(
+        self, sample_configs, mock_logger
+    ):
+        """test refinebio defaults to False when not passed"""
+        query_config, curation_config, output_config, citation_config = sample_configs
+        retriever = Retriever(
+            query_config,
+            curation_config,
+            output_config,
+            citation_config,
+            logger=mock_logger,
+        )
+
+        assert retriever.refinebio is False
+
+    def test_retriever_initialization_refinebio_true(self, sample_configs, mock_logger):
+        """test refinebio is stored when passed"""
+        query_config, curation_config, output_config, citation_config = sample_configs
+        retriever = Retriever(
+            query_config,
+            curation_config,
+            output_config,
+            citation_config,
+            logger=mock_logger,
+            refinebio=True,
+        )
+
+        assert retriever.refinebio is True
+
+    @patch("metahq_cli.retriever.RefineBioExporter")
+    def test_create_refinebio_dataset_calls_exporter(
+        self, mock_exporter_cls, retriever
+    ):
+        """test create_refinebio_dataset delegates to RefineBioExporter"""
+        mock_exporter = Mock()
+        mock_exporter.create_dataset.return_value = {"id": "abc123"}
+        mock_exporter_cls.return_value = mock_exporter
+        mock_curation = Mock()
+
+        retriever.create_refinebio_dataset(mock_curation)
+
+        mock_exporter_cls.assert_called_once_with(
+            logger=retriever.log, verbose=retriever.verbose
+        )
+        mock_exporter.create_dataset.assert_called_once_with(mock_curation)
+        assert (
+            retriever.citation_config.refinebio_dataset_id == DATA_CART_URL + "abc123"
+        )
+
+    @patch("metahq_cli.retriever.RefineBioExporter")
+    def test_create_refinebio_dataset_logs_when_verbose(
+        self, mock_exporter_cls, verbose_retriever
+    ):
+        """test create_refinebio_dataset logs in verbose mode"""
+        mock_exporter = Mock()
+        mock_exporter.create_dataset.return_value = {"id": "abc123"}
+        mock_exporter_cls.return_value = mock_exporter
+        mock_curation = Mock()
+
+        verbose_retriever.create_refinebio_dataset(mock_curation)
+
+        verbose_retriever.log.info.assert_called_with("Creating refine.bio dataset...")
+
+    @patch("metahq_cli.retriever.RefineBioExporter")
+    def test_create_refinebio_dataset_silent_does_not_log(
+        self, mock_exporter_cls, retriever
+    ):
+        """test create_refinebio_dataset does not log in silent mode"""
+        mock_exporter = Mock()
+        mock_exporter.create_dataset.return_value = {"id": "abc123"}
+        mock_exporter_cls.return_value = mock_exporter
+        mock_curation = Mock()
+
+        retriever.create_refinebio_dataset(mock_curation)
+
+        retriever.log.info.assert_not_called()
+
+    @patch.object(Retriever, "query")
+    @patch.object(Retriever, "curate")
+    @patch.object(Retriever, "save_curation")
+    @patch.object(Retriever, "create_refinebio_dataset")
+    @patch.object(Retriever, "include_refinebio_metadata")
+    def test_retrieve_pipeline_skips_refinebio_dataset_by_default(
+        self,
+        mock_include_metadata,
+        mock_create_dataset,
+        mock_save,
+        mock_curate,
+        mock_query,
+        retriever,
+    ):
+        """test retrieve does not adjust metadata or create a refinebio dataset unless requested"""
+        mock_query.return_value = Mock()
+        mock_curate.return_value = Mock()
+
+        retriever.retrieve()
+
+        mock_include_metadata.assert_not_called()
+        mock_create_dataset.assert_not_called()
+
+    @patch.object(Retriever, "query")
+    @patch.object(Retriever, "curate")
+    @patch.object(Retriever, "save_curation")
+    @patch.object(Retriever, "create_refinebio_dataset")
+    @patch.object(Retriever, "include_refinebio_metadata")
+    def test_retrieve_pipeline_creates_refinebio_dataset_when_enabled(
+        self,
+        mock_include_metadata,
+        mock_create_dataset,
+        mock_save,
+        mock_curate,
+        mock_query,
+        retriever,
+    ):
+        """test retrieve includes refinebio metadata and creates a dataset from the curated result"""
+        mock_curated = Mock()
+        mock_query.return_value = Mock()
+        mock_curate.return_value = mock_curated
+        retriever.refinebio = True
+
+        retriever.retrieve()
+
+        mock_include_metadata.assert_called_once()
+        mock_save.assert_called_once_with(mock_curated)
+        mock_create_dataset.assert_called_once_with(mock_curated)
+
+    def test_include_refinebio_metadata_appends_missing_fields(self, retriever):
+        """test refine.bio fields valid for the output level are appended to metadata"""
+        retriever.output_config.level = "sample"
+        retriever.output_config.metadata = "sample"
+
+        retriever.include_refinebio_metadata()
+
+        fields = retriever.output_config.metadata.split(",")
+        assert "sample" in fields
+        assert "refinebio_sample" in fields
+        assert "refinebio_experiment" in fields
+
+    def test_include_refinebio_metadata_series_level_excludes_sample_field(
+        self, retriever
+    ):
+        """test series-level output only gets refinebio_experiment, not refinebio_sample"""
+        retriever.output_config.level = "series"
+        retriever.output_config.metadata = "series"
+
+        retriever.include_refinebio_metadata()
+
+        fields = retriever.output_config.metadata.split(",")
+        assert "refinebio_experiment" in fields
+        assert "refinebio_sample" not in fields
+
+    def test_include_refinebio_metadata_does_not_duplicate_existing_fields(
+        self, retriever
+    ):
+        """test fields already present in metadata are not duplicated"""
+        retriever.output_config.level = "sample"
+        retriever.output_config.metadata = "sample,refinebio_sample"
+
+        retriever.include_refinebio_metadata()
+
+        fields = retriever.output_config.metadata.split(",")
+        assert fields.count("refinebio_sample") == 1
+        assert "refinebio_experiment" in fields
 
     def test_output_config_with_pathlib_path(self):
         """test output config accepts pathlib path objects"""

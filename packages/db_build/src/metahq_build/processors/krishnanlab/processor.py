@@ -127,9 +127,11 @@ class KrishnanLabProcessor(BaseProcessor):
         self.logger.info("Loading MONDO ontology for DOID -> MONDO mapping...")
         mondo = Ontology.from_obo(MONDO_OBO)
         doid_ids = disease_df["ID"].unique().to_list()
-        doid_to_mondo = mondo.map_terms(
-            doid_ids, ontology="MONDO", _from="DOID", _to="MONDO"
-        )
+        xref_mappings = mondo.xref("DOID")
+        # Add custom control mapping
+        xref_mappings.add({"MONDO:0000000": ["DOID:0000000"]})
+        reverse_map = xref_mappings.reverse()
+        doid_to_mondo = {term: reverse_map.get(term, "NA") for term in doid_ids}
 
         unmapped_count = sum(1 for v in doid_to_mondo.values() if v == "NA")
         if unmapped_count:

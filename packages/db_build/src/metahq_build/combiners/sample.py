@@ -30,12 +30,17 @@ from metahq_build.config import (
     ACCESSIONS_KEY,
     ATTRIBUTE_KEYS,
     COL_TECHNOLOGY_MAP_GPL,
+    CONTROL_ID,
+    DELIMITER,
     DELTED_SAMPLES,
+    DISEASE_KEY,
     GEO_COMBINED_BSON,
+    ID_KEY,
     MISC_SAMPLES_TO_REMOVE,
     OMICIDX_DB,
     ORGANISM_KEY,
     PLATFORM_ACCESSION_KEY,
+    SAMPLE_ACCESSION_KEY,
     SRA_COMBINED_BSON,
     SRP_ACCESSION_KEY,
     SRS_ACCESSION_KEY,
@@ -44,7 +49,6 @@ from metahq_build.config import (
     TECHNOLOGY_MAP,
     VALID_ORGANISMS,
 )
-from metahq_build.config.config import SAMPLE_ACCESSION_KEY
 
 
 class SampleCombiner(BaseAnnotationCombiner):
@@ -111,8 +115,10 @@ class SampleCombiner(BaseAnnotationCombiner):
         self.logger.info("Enriching accession IDs from OmicIDX...")
         self.enrich_annotations(all_gsm, db_path)
 
+        self._remove_samples_missing_series()
         self._remove_non_transcriptomics_samples()
         self._remove_invalid_organisms()
+        self._resolve_conflicting_disease_annotations()
         self.logger.debug("Valid organisms are: %s", VALID_ORGANISMS)
 
         return self
@@ -293,13 +299,34 @@ class SampleCombiner(BaseAnnotationCombiner):
         )
         return result.lazy()
 
+    def _remove_samples_missing_series(self) -> None:
+        """Remove samples with no series (GSE) mapping from OmicIDX.
+
+        A handful of samples (typically very recent GEO depositions OmicIDX
+        hasn't caught up with yet) enrich successfully otherwise but have no
+        series link, so they can't be traced back to a parent study. The
+        sample schema requires ``accession_ids.series``, so drop them here
+        rather than let them fail validation downstream.
+        """
+        before = len(self.anno)
+        self.anno = {
+            k: v
+            for k, v in self.anno.items()
+            if STUDY_ACCESSION_KEY in v[ACCESSIONS_KEY]
+        }
+
+        after = len(self.anno)
+        diff = before - after
+        if diff > 0:
+            self.logger.info("Removed %d samples with no series mapping.", diff)
+
     def _remove_non_transcriptomics_samples(self):
         before = len(self.anno)
 
         ok_platforms = pl.read_parquet(TECHNOLOGY_MAP)[COL_TECHNOLOGY_MAP_GPL].to_list()
         transcriptomics_samples: dict[str, Any] = {}
         for entry, values in self.anno.items():
-            platform = values[ACCESSIONS_KEY][PLATFORM_ACCESSION_KEY]
+            platform = values[ACCESSIONS_KEY].get(PLATFORM_ACCESSION_KEY)
             if platform in ok_platforms:
                 transcriptomics_samples[entry] = values
 
@@ -403,6 +430,56 @@ class SampleCombiner(BaseAnnotationCombiner):
                 "Removed %d samples annotated to invalid organisms. Kept %d samples.",
                 diff,
                 after,
+            )
+
+    def _resolve_conflicting_disease_annotations(self) -> None:
+        """Some samples are annotated as both disease and control. This is because controls are not
+        necessarily healthy samples, but can be used as control samples in a comparison within a
+        study. For example for GSM2641087, DiSignAtlas annotated it as a control because the sample
+        was used as a control in the study, however the sample also has cardiomyopathy as annoated
+        by the KrishnanLab source.
+
+        We drop control annotations in these instances. Since the definition of control is nebulous
+        across studies, we feel that explicit disease annotations are more informative of the context
+        of samples
+        """
+
+        removed = 0
+        for entry in self.anno.values():
+            if DISEASE_KEY in entry:
+                unique_ids: dict[str, list[str]] = {}
+                for source, anno in entry[DISEASE_KEY].items():
+                    ids = set(anno[ID_KEY].split(DELIMITER))
+
+                    # first, remove control annotations at the source-level
+                    # MONDO:0000000|MONDO:0004994 --> MONDO:0004994
+                    if (len(ids) > 1) and (CONTROL_ID in ids):
+                        ids.remove(CONTROL_ID)
+
+                    id_ = DELIMITER.join(ids)
+                    anno[ID_KEY] = id_  # update in the database
+                    unique_ids.setdefault(id_, [])
+                    unique_ids[id_].append(source)
+
+                # second, resolve conflicting annotations across sources
+                # {'DiSignAtlas': {'id': MONDO:0000000}, 'KrishnanLab': {'id': MONDO:0004994}}
+                # --> {'KrishnanLab': {'id': MONDO:0004994}}
+                #
+                # here, we can assume that if a sample has a control annotation from a particular
+                # source, then it is the only annotation because this was resolved in step 1
+                # (i.e., {'id': MONDO:0000000|MONDO:0004994} cannot exist). So, if a source has
+                # a control annotation for a particular sample, but another source has a disease
+                # annotation for the same sample, then we drop the source that provides the control
+                # annotation.
+                if (CONTROL_ID in unique_ids) and len(unique_ids) > 1:
+                    for source in unique_ids[CONTROL_ID]:
+                        entry[DISEASE_KEY].pop(source)
+                        removed += 1
+
+        if removed > 0:
+            self.logger.info(
+                "Resolved %d control annotations for samples annotated as both disease and control.",
+                removed,
             )
 
     @staticmethod

@@ -3,7 +3,7 @@ Tools for using ontologies, constructing ontology graphs, and precomputing ontol
 """
 
 from metahq_build.ontology.graph import Graph, get_system_descendants
-from metahq_build.ontology.ontology import Ontology, get_id_map
+from metahq_build.ontology.ontology import Ontology, XRefMappings, get_id_map
 from metahq_build.ontology.relations import RelationsLazyFrame, RelationsMatrix
 
 __all__ = [
@@ -11,6 +11,7 @@ __all__ = [
     "Ontology",
     "RelationsMatrix",
     "RelationsLazyFrame",
+    "XRefMappings",
     "get_id_map",
     "get_system_descendants",
 ]

@@ -75,7 +75,16 @@ def retrieve_commands():
 @retrieval_args
 @logging_args
 def retrieve_age(
-    terms, level, fmt, metadata, filters, license, output, log_level, quiet
+    terms,
+    level,
+    fmt,
+    metadata,
+    filters,
+    license,
+    output,
+    log_level,
+    quiet,
+    refinebio,
 ):
     """Retrieval command for age group annotations."""
     if metadata == "default":
@@ -121,6 +130,7 @@ def retrieve_age(
         citation_config=citation_config,
         logger=log,
         verbose=verbose,
+        refinebio=refinebio,
     )
     retriever.retrieve()
 
@@ -142,6 +152,7 @@ def retrieve_diseases(
     log_level,
     quiet,
     direct,
+    refinebio,
 ):
     """Retrieval command for disease ontology terms."""
     if metadata == "default":
@@ -189,6 +200,7 @@ def retrieve_diseases(
         citation_config=citation_config,
         logger=log,
         verbose=verbose,
+        refinebio=refinebio,
     )
     retriever.retrieve()
 
@@ -198,7 +210,16 @@ def retrieve_diseases(
 @retrieval_args
 @logging_args
 def retrieve_sex(
-    terms, level, fmt, metadata, filters, license, output, log_level, quiet
+    terms,
+    level,
+    fmt,
+    metadata,
+    filters,
+    license,
+    output,
+    log_level,
+    quiet,
+    refinebio,
 ):
     """Retrieval command for sex annotations."""
     if metadata == "default":
@@ -244,6 +265,7 @@ def retrieve_sex(
         citation_config=citation_config,
         logger=log,
         verbose=verbose,
+        refinebio=refinebio,
     )
     retriever.retrieve()
 
@@ -265,6 +287,7 @@ def retrieve_tissues(
     log_level,
     quiet,
     direct,
+    refinebio,
 ):
     """Retrieval command for tissue ontology terms."""
     if metadata == "default":
@@ -312,5 +335,6 @@ def retrieve_tissues(
         citation_config=citation_config,
         logger=log,
         verbose=verbose,
+        refinebio=refinebio,
     )
     retriever.retrieve()
