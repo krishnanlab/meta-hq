@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.9"
+__generated_with = "0.24.0"
 app = marimo.App(width="medium", auto_download=["ipynb"])
 
 
@@ -12,7 +12,7 @@ def _(mo):
 
     Author: Parker Hicks <br>
     Date: 2026-01-17 <br>
-    Last updated: 2026-08-18 by Parker Hicks
+    Last updated: 2026-09-08 by Parker Hicks
     """)
     return
 
@@ -120,7 +120,6 @@ def _(Path):
         FMT,
         GEO_PROCESSED,
         INFORMATION_CONTENT_SAMPLE_RESULTS,
-        INFORMATION_CONTENT_SERIES_RESULTS,
         OVERLAP_CMAP,
         OVERLAP_ORDER,
         PLATFORMS_FILE,
@@ -227,7 +226,7 @@ def _(COLORS, Path, pl, plt, sns, ticker):
 
         if save and isinstance(outfile, (str, Path)):
             plt.savefig(outfile, dpi=dpi)
-
+        
         plt.show()
 
     return (plot_total_anno_sample_and_study,)
@@ -251,7 +250,7 @@ def _(plot_total_anno_sample_and_study, sample_db, series_db):
         figsize=(4, 2),
         titles=["Samples", "Studies"],
         save=True,
-        outfile="figures/attribute_sample_and_study_count.svg",
+        outfile="figures/attribute_sample_and_study_count.png",
         dpi=1000,
         order=["Tissue", "Disease", "Sex", "Age"],
         ylim_scale=1,
@@ -791,7 +790,7 @@ def _(UNIQUE_PROPAGATED_TERMS: "Path", load_txt):
                 terms.add(term)
 
         print(f"Number of unique {attribute}s in propagated annotations: {len(terms)}")
-    return (attribute,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -1778,11 +1777,25 @@ def _(
     sns,
     ticker,
 ):
+    import math
+
+    def _nice_ylim(vmax: float, n_ticks: int = 5) -> tuple[float, float]:
+        """Return (upper_bound, tick_step) where upper_bound >= vmax and lands on a round number."""
+        if vmax <= 0:
+            return 1.0, 1.0
+        raw_step = vmax / n_ticks
+        magnitude = 10 ** math.floor(math.log10(raw_step))
+        for mult in (1, 2, 2.5, 5, 10):
+            step = mult * magnitude
+            if raw_step <= step:
+                break
+        return math.ceil(vmax / step) * step, step
+
     def plot_cumulative_additions_by_attribute(
         counts: dict[str, dict[str, int]],
         attributes: list[str] | None = None,
         reverse: bool = False,
-        ylabel: str = "Cumulative annotations",
+        ylabel: str = "Cumulative additions",
         figsize: tuple[int, int] = (10, 8),
         title: str = "",
         sharey: bool = False,
@@ -1832,7 +1845,10 @@ def _(
             ax.set_title(attr.capitalize(), fontsize=14)
             ax.set_xlabel("", fontsize=12)
             ax.set_ylabel(ylabel, fontsize=12)
-            ax.set_ylim(bottom=0)
+
+            vmax = formatted["count"].max()
+        
+            ax.set_ylim(0, _nice_ylim(vmax)[0])
             ax.grid(axis="y", alpha=0.3)
             ax.yaxis.set_major_formatter(
                 ticker.FuncFormatter(lambda x, p: f"{int(x):,}")
@@ -1903,7 +1919,13 @@ def _(
         "sex": sample_sex_rnaseq_rankings,
         "age": sample_age_rnaseq_rankings,
     }
-    plot_cumulative_additions_by_attribute(sample_rnaseq_rankings, savefig=True, reverse=True, outfile=FIGURES_DIR / "cumulative_source_contributions__level-sample__tech-rnaseq.png")
+    plot_cumulative_additions_by_attribute(
+        sample_rnaseq_rankings,
+        title="Unique samples added per source (RNA-Seq)",
+        savefig=True,
+        reverse=True,
+        outfile=FIGURES_DIR / "cumulative_source_contributions__level-sample__tech-rnaseq.png",
+    )
     return
 
 
@@ -1946,7 +1968,13 @@ def _(
         "sex": sample_sex_microarray_rankings,
         "age": sample_age_microarray_rankings,
     }
-    plot_cumulative_additions_by_attribute(sample_microarray_rankings, savefig=True, reverse=True, outfile=FIGURES_DIR / "cumulative_source_contributions__level-sample__tech-microarray.png")
+    plot_cumulative_additions_by_attribute(
+        sample_microarray_rankings,
+        title="Unique samples added per source (microarray)",
+        savefig=True,
+        reverse=True,
+        outfile=FIGURES_DIR / "cumulative_source_contributions__level-sample__tech-microarray.png",
+    )
     return
 
 
@@ -1996,7 +2024,13 @@ def _(
         "sex": series_sex_rnaseq_rankings,
         "age": series_age_rnaseq_rankings,
     }
-    plot_cumulative_additions_by_attribute(series_rnaseq_rankings, savefig=True, reverse=True, outfile=FIGURES_DIR / "cumulative_source_contributions__level-series__tech-rnaseq.png")
+    plot_cumulative_additions_by_attribute(
+        series_rnaseq_rankings,
+        title="Unique series added per source (RNA-Seq)",
+        savefig=True,
+        reverse=True,
+        outfile=FIGURES_DIR / "cumulative_source_contributions__level-series__tech-rnaseq.png",
+    )
     return
 
 
@@ -2040,61 +2074,11 @@ def _(
     }
     plot_cumulative_additions_by_attribute(
         series_microarray_rankings,
+        title="Unique series added per source (microarray)",
         savefig=True,
         reverse=True,
         outfile=FIGURES_DIR / "cumulative_source_contributions__level-series__tech-microarray.png",
     )
-    return
-
-
-@app.cell
-def _(ATTRIBUTES, attribute):
-    def metahq_size_without_gemma(db: dict, attributes: list[str] = ATTRIBUTES):
-        _db = {}
-        for entry, records in db.items():
-            for attribtue in attributes:
-                if attribute not in records:
-                    continue
-
-                # check if Gemma only
-                sources = records[attribute].keys()
-                if (len(sources) == 1) and ("Gemma" in sources):
-                    continue
-
-                _db.setdefault(entry, {})
-                _db[entry].setdefault(attribute, {})
-                for source in sources:
-                    if source != "Gemma":
-                        _db[entry][attribute][source] = records[attribute][source]
-
-        return _db
-
-    return
-
-
-@app.cell
-def _(ATTRIBUTES):
-    def metahq_size_without_gemma_test(db: dict, attributes: list[str] = ATTRIBUTES) -> dict:
-        _db = {}
-        for entry, records in db.items():
-            has_other = any(
-                source != "Gemma"
-                for attribute in attributes
-                if attribute in records
-                for source in records[attribute]
-            )
-            if has_other:
-                _db[entry] = records
-        return _db
-
-    return (metahq_size_without_gemma_test,)
-
-
-@app.cell
-def _(GEO_PROCESSED, load_bson, metahq_size_without_gemma_test):
-    geo = load_bson(GEO_PROCESSED)
-    geo = {entry: records for entry, records in geo.items() if entry.startswith("GSM")}
-    sample_db_no_gemma = metahq_size_without_gemma_test(geo)
     return
 
 
@@ -2107,7 +2091,7 @@ def _(mo):
 
 
 @app.cell
-def _(np, plt, sns):
+def _(Path, np, plt, sns):
     def plot_ic_comparison(
         df,
         *,
@@ -2127,17 +2111,26 @@ def _(np, plt, sns):
         jitter=0.03,
         shared_limits=True,
         panel_size=4.2,
+        tick_labelsize=13,
+        axis_labelsize=15,
+        title_fontsize=17,
+        legend_fontsize=13,
+        source_labelsize=18,
         seed=0,
+        max_rows=4,
         outfile=None,
         dpi=600,
     ):
         """Grid of IC comparisons, one row per source and three columns.
-
+ 
         Columns are: a 2D KDE of original vs. metahq IC for the first attribute,
         the same for the second, and a grouped boxplot of both pipelines split by
         attribute. Panels with too few points, or no spread in either axis, fall
         back to a scatter because the KDE covariance would be singular.
-
+ 
+        Sources are split across several figures of at most `max_rows` rows each,
+        so a large number of sources does not produce one unreadably tall figure.
+ 
         Parameters
         ----------
         df : polars.DataFrame or pandas.DataFrame
@@ -2166,30 +2159,49 @@ def _(np, plt, sns):
             Gaussian jitter applied to the point overlay only, never the density.
         shared_limits : bool
             Use one set of axis limits across every panel, so the identity line
-            is comparable between rows. Otherwise limits are per row.
+            is comparable between rows and between figures. Otherwise limits are
+            per row.
         panel_size : float
             Height in inches of a single row.
+        tick_labelsize, axis_labelsize, title_fontsize, legend_fontsize : float
+            Point sizes for the tick labels, the x/y axis labels, the panel
+            titles, and the legend entries. Applied through an rc context so
+            seaborn's own artists pick them up too.
+        source_labelsize : float
+            Point size of the rotated source name down the left edge of each row.
+        max_rows : int or None
+            Maximum number of source rows per figure. Sources are taken in order
+            and split into consecutive chunks of this size. Pass None to put every
+            source on one figure, as before.
         outfile : str or pathlib.Path or None
-            If given, the figure is written here at 200 dpi.
-
+            If given, each figure is written next to this path. With more than one
+            chunk the stem gets a `_part01`, `_part02`, ... suffix; with a single
+            chunk the path is used verbatim.
+        dpi : int
+            Resolution for the saved files.
+ 
         Returns
         -------
-        (matplotlib.figure.Figure, numpy.ndarray of Axes)
+        list of (matplotlib.figure.Figure, numpy.ndarray of Axes)
+            One entry per figure, in source order. Note this is a list even when
+            only one figure is produced.
         """
         x_col, y_col = value_cols
         x_label, y_label = pipeline_labels
-
+ 
         pdf = df.to_pandas() if hasattr(df, "to_pandas") else df.copy()
-
+ 
         if provenance_col is not None:
             pdf["_reassigned"] = np.where(
                 pdf[provenance_col] == pdf[source_col], "same source", "reassigned"
             )
-
+ 
         if sources is None:
             sources = sorted(pdf[source_col].unique())
+        else:
+            sources = list(sources)
         attributes = list(attributes)
-
+ 
         long = pdf.melt(
             id_vars=[c for c in pdf.columns if c not in value_cols],
             value_vars=list(value_cols),
@@ -2197,122 +2209,163 @@ def _(np, plt, sns):
             value_name="ic",
         )
         long["pipeline"] = long["pipeline"].map(dict(zip(value_cols, pipeline_labels)))
-
+ 
         rng = np.random.default_rng(seed)
-
+ 
         def _jitter(values):
             if not jitter:
                 return values
             return values + rng.normal(0, jitter, size=len(values))
-
+ 
         def _limits(frame):
             lo = min(frame[x_col].min(), frame[y_col].min())
             hi = max(frame[x_col].max(), frame[y_col].max())
             pad = 0.05 * (hi - lo) or 0.5
             return (lo - pad, hi + pad)
-
+ 
+        # Computed over the whole frame, so limits stay comparable across figures.
         global_lims = _limits(pdf) if shared_limits else None
-
+ 
         n_cols = len(attributes) + 1
-        fig, axes = plt.subplots(
-            nrows=len(sources),
-            ncols=n_cols,
-            figsize=(4.6 * n_cols, panel_size * len(sources)),
-            squeeze=False,
-        )
-
-        for i, source in enumerate(sources):
-            sub = pdf[pdf[source_col] == source]
-            lims = global_lims if shared_limits else _limits(sub)
-
-            for j, attr in enumerate(attributes):
-                ax = axes[i, j]
-                d = sub[sub[attribute_col] == attr]
-                x = d[x_col].to_numpy()
-                y = d[y_col].to_numpy()
-
-                kde_ok = len(d) >= min_kde_points and x.std() > 0 and y.std() > 0
-
-                if kde_ok:
-                    shared = dict(
-                        x=x,
-                        y=y,
-                        levels=levels,
-                        thresh=thresh,
-                        bw_adjust=bw_adjust,
-                        clip=(lims, lims),
-                        warn_singular=False,
-                        ax=ax,
+ 
+        def _render(chunk):
+            """Build one figure holding the rows in `chunk`."""
+            fig, axes = plt.subplots(
+                nrows=len(chunk),
+                ncols=n_cols,
+                figsize=(4.6 * n_cols, panel_size * len(chunk)),
+                squeeze=False,
+            )
+ 
+            for i, source in enumerate(chunk):
+                sub = pdf[pdf[source_col] == source]
+                lims = global_lims if shared_limits else _limits(sub)
+ 
+                for j, attr in enumerate(attributes):
+                    ax = axes[i, j]
+                    d = sub[sub[attribute_col] == attr]
+                    x = d[x_col].to_numpy()
+                    y = d[y_col].to_numpy()
+ 
+                    kde_ok = len(d) >= min_kde_points and x.std() > 0 and y.std() > 0
+ 
+                    if kde_ok:
+                        shared = dict(
+                            x=x,
+                            y=y,
+                            levels=levels,
+                            thresh=thresh,
+                            bw_adjust=bw_adjust,
+                            clip=(lims, lims),
+                            warn_singular=False,
+                            ax=ax,
+                        )
+                        sns.kdeplot(fill=True, cmap=cmap, zorder=1, **shared)
+                        sns.kdeplot(color="0.3", linewidths=0.6, zorder=2, **shared)
+ 
+                    if show_points or not kde_ok:
+                        sns.scatterplot(
+                            x=_jitter(x),
+                            y=_jitter(y),
+                            hue=d["_reassigned"] if provenance_col else None,
+                            hue_order=(
+                                ["same source", "reassigned"] if provenance_col else None
+                            ),
+                            palette=(
+                                {"same source": "0.55", "reassigned": "#d1495b"}
+                                if provenance_col
+                                else None
+                            ),
+                            color=None if provenance_col else "0.4",
+                            alpha=0.35 if kde_ok else 0.6,
+                            s=18,
+                            edgecolor="none",
+                            zorder=3,
+                            # Legend on the first panel of every figure, not just
+                            # the first figure, since each file stands alone.
+                            legend=bool(provenance_col) and i == 0 and j == 0,
+                            ax=ax,
+                        )
+ 
+                    # Identity line last, so it stays readable over the density.
+                    ax.plot(lims, lims, ls="--", lw=1.2, color="0.35", zorder=4)
+ 
+                    title = f"{attr} (n = {len(d):,})"
+                    ax.set(
+                        xlim=lims,
+                        ylim=lims,
+                        xlabel=f"{x_label} IC",
+                        ylabel=f"{y_label} IC" if j == 0 else "",
+                        title=title,
                     )
-                    sns.kdeplot(fill=True, cmap=cmap, zorder=1, **shared)
-                    sns.kdeplot(color="0.3", linewidths=0.6, zorder=2, **shared)
-
-                if show_points or not kde_ok:
-                    sns.scatterplot(
-                        x=_jitter(x),
-                        y=_jitter(y),
-                        hue=d["_reassigned"] if provenance_col else None,
-                        hue_order=["same source", "reassigned"] if provenance_col else None,
-                        palette=(
-                            {"same source": "0.55", "reassigned": "#d1495b"}
-                            if provenance_col
-                            else None
-                        ),
-                        color=None if provenance_col else "0.4",
-                        alpha=0.35 if kde_ok else 0.6,
-                        s=18,
-                        edgecolor="none",
-                        zorder=3,
-                        legend=bool(provenance_col) and i == 0 and j == 0,
-                        ax=ax,
-                    )
-
-                # Identity line last, so it stays readable over the density.
-                ax.plot(lims, lims, ls="--", lw=1.2, color="0.35", zorder=4)
-
-                title = f"{attr} (n = {len(d):,})"
-                if not kde_ok:
-                    title += " - too sparse for KDE"
-                ax.set(
-                    xlim=lims,
-                    ylim=lims,
-                    xlabel=f"{x_label} IC",
-                    ylabel=f"{y_label} IC" if j == 0 else "",
-                    title=title,
+                    ax.set_aspect("equal", adjustable="box")
+ 
+                ax = axes[i, -1]
+                sns.boxplot(
+                    data=long[long[source_col] == source],
+                    x=attribute_col,
+                    y="ic",
+                    hue="pipeline",
+                    order=attributes,
+                    hue_order=list(pipeline_labels),
+                    showfliers=False,
+                    width=0.6,
+                    ax=ax,
                 )
-                ax.set_aspect("equal", adjustable="box")
-
-            ax = axes[i, -1]
-            sns.boxplot(
-                data=long[long[source_col] == source],
-                x=attribute_col,
-                y="ic",
-                hue="pipeline",
-                order=attributes,
-                hue_order=list(pipeline_labels),
-                showfliers=False,
-                width=0.6,
-                ax=ax,
-            )
-            ax.set(xlabel="", ylabel="IC", title="IC distribution")
-            ax.legend(title="", loc="lower right", fontsize="small")
-
-            axes[i, 0].text(
-                -0.32,
-                0.5,
-                source,
-                transform=axes[i, 0].transAxes,
-                rotation=90,
-                va="center",
-                ha="center",
-                fontsize=12,
-                fontweight="bold",
-            )
-
-        fig.tight_layout()
-        if outfile is not None:
-            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
-        return fig, axes
+                ax.set(xlabel="", ylabel="IC", title="IC distribution")
+                ax.legend(title="", loc="lower right", fontsize=legend_fontsize)
+ 
+                axes[i, 0].text(
+                    -0.32,
+                    0.5,
+                    source,
+                    transform=axes[i, 0].transAxes,
+                    rotation=90,
+                    va="center",
+                    ha="center",
+                    fontsize=source_labelsize,
+                    fontweight="bold",
+                )
+ 
+            fig.tight_layout()
+            return fig, axes
+ 
+        if max_rows is None or max_rows < 1:
+            chunks = [sources]
+        else:
+            chunks = [
+                sources[k : k + max_rows] for k in range(0, len(sources), max_rows)
+            ]
+ 
+        def _path_for(index):
+            if outfile is None:
+                return None
+            path = Path(outfile)
+            if len(chunks) == 1:
+                return path
+            width = len(str(len(chunks)))
+            return path.with_name(f"{path.stem}_part{index + 1:0{width}d}{path.suffix}")
+ 
+        rc = {
+            "axes.titlesize": title_fontsize,
+            "axes.labelsize": axis_labelsize,
+            "xtick.labelsize": tick_labelsize,
+            "ytick.labelsize": tick_labelsize,
+            "legend.fontsize": legend_fontsize,
+            "legend.title_fontsize": legend_fontsize,
+        }
+ 
+        results = []
+        for index, chunk in enumerate(chunks):
+            with plt.rc_context(rc):
+                fig, axes = _render(chunk)
+            path = _path_for(index)
+            if path is not None:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                fig.savefig(path, dpi=dpi, bbox_inches="tight")
+            results.append((fig, axes))
+ 
+        return results
 
     return (plot_ic_comparison,)
 
@@ -2326,21 +2379,9 @@ def _(mo):
 
 
 @app.cell
-def _(
-    INFORMATION_CONTENT_SAMPLE_RESULTS,
-    INFORMATION_CONTENT_SERIES_RESULTS,
-    pl,
-):
+def _(INFORMATION_CONTENT_SAMPLE_RESULTS, pl):
     ic_analysis_sample = pl.read_parquet(INFORMATION_CONTENT_SAMPLE_RESULTS)
-
-    ic_analysis_series = pl.read_parquet(INFORMATION_CONTENT_SERIES_RESULTS)
     return (ic_analysis_sample,)
-
-
-@app.cell
-def _(ic_analysis_sample):
-    ic_analysis_sample
-    return
 
 
 @app.cell
@@ -2350,7 +2391,7 @@ def _(FIGURES_DIR: "Path", ic_analysis_sample, plot_ic_comparison):
 
 
 @app.cell
-def _(np, plt, sns):
+def _(Path, np, plt, sns):
     def plot_ic_boxplots(
         df,
         *,
@@ -2362,22 +2403,34 @@ def _(np, plt, sns):
         sources=None,
         palette=None,
         showfliers=False,
-        box_width=0.7,
+        box_width=0.55,
+        box_gap=0.15,
+        box_linewidth=1.0,
         shared_limits=True,
         annotate_counts=True,
-        xtick_rotation=0,
-        panel_height=3.6,
-        width_per_source=1.5,
+        xtick_rotation=35,
+        row_spacing=0.12,
+        panel_height=3.0,
+        width_per_source=1.1,
         min_width=6.5,
+        tick_labelsize=13,
+        axis_labelsize=15,
+        title_fontsize=17,
+        legend_fontsize=13,
+        legend_row=-1,
+        legend_loc="lower left",
+        legend_bbox=None,
+        legend_ncol=2,
+        count_fontsize=10,
         outfile=None,
         dpi=600,
     ):
         """Stacked IC boxplots, one row per attribute.
-
+ 
         Each row is a single axes holding every source side by side, with the two
         pipelines as the hue within each source. Rows share the x grouping, so the
         same source occupies the same horizontal position in every row.
-
+ 
         Parameters
         ----------
         df : polars.DataFrame or pandas.DataFrame
@@ -2394,35 +2447,69 @@ def _(np, plt, sns):
             Passed to `seaborn.boxplot`; keys are `pipeline_labels` if a dict.
         showfliers : bool
             Draw outlier points beyond the whiskers.
+        box_width : float
+            Fraction of the per-source slot taken by the pair of boxes. Lower
+            values make the boxes skinnier and open up white space between
+            sources.
+        box_gap : float
+            Fraction of each box's width shaved off to separate the two pipelines
+            within a source. Requires seaborn >= 0.13; pass 0 on older versions.
+        box_linewidth : float
+            Line width of the box, whisker, and median strokes. Worth dropping
+            toward 0.8 when the boxes are very narrow.
         shared_limits : bool
             Use one set of y limits across rows, so tissue and disease are directly
             comparable. Otherwise each row is scaled to its own data.
         annotate_counts : bool
             Print the per-source observation count above each group.
         xtick_rotation : float
-            Rotation for the source labels; raise it when names are long.
+            Rotation for the source labels; raise it when names are long. Labels
+            are anchored at their right edge so they slant up into the axes.
+        row_spacing : float
+            Vertical gap between rows as a fraction of the mean row height. Applied
+            after `tight_layout`, so it overrides the padding that would otherwise
+            be reserved between panels.
         panel_height : float
             Height in inches of a single row.
         width_per_source : float
             Figure width in inches contributed by each source, floored at
             `min_width`.
+        tick_labelsize, axis_labelsize, title_fontsize, legend_fontsize : float
+            Point sizes for the tick labels, the y axis label, the row titles, and
+            the legend entries. Applied through an rc context so seaborn's own
+            artists pick them up too.
+        count_fontsize : float
+            Point size of the `n = ...` annotations.
+        legend_row : int
+            Index of the row that carries the legend. Defaults to -1, the bottom
+            panel. Every other row's legend is removed.
+        legend_loc : str
+            Corner of that axes the legend anchors to, e.g. "lower left".
+        legend_bbox : tuple or None
+            Passed to `bbox_to_anchor` for manual placement, in axes coordinates
+            where (0, 0) is the bottom left of the panel and (1, 1) the top right.
+            `legend_loc` then names which corner of the legend box sits at that
+            point, so ("lower left", (0.02, 0.02)) insets it slightly. Values
+            outside 0-1 push the legend beyond the axes.
+        legend_ncol : int
+            Columns in the legend; 2 keeps the two pipelines on one line.
         outfile : str or pathlib.Path or None
             If given, the figure is written here at `dpi`.
-
+ 
         Returns
         -------
         (matplotlib.figure.Figure, numpy.ndarray of Axes)
         """
         pdf = df.to_pandas() if hasattr(df, "to_pandas") else df.copy()
-
+ 
         attributes = list(attributes)
         if sources is None:
             sources = sorted(pdf[source_col].unique())
         else:
             sources = list(sources)
-
+ 
         pdf = pdf[pdf[source_col].isin(sources) & pdf[attribute_col].isin(attributes)]
-
+ 
         long = pdf.melt(
             id_vars=[c for c in pdf.columns if c not in value_cols],
             value_vars=list(value_cols),
@@ -2430,97 +2517,140 @@ def _(np, plt, sns):
             value_name="ic",
         )
         long["pipeline"] = long["pipeline"].map(dict(zip(value_cols, pipeline_labels)))
-
+ 
         def _limits(values):
             values = np.asarray(values, dtype=float)
             values = values[np.isfinite(values)]
             if not values.size:
                 return (0.0, 1.0)
             lo, hi = float(values.min()), float(values.max())
-            pad = 0.05 * (hi - lo) or 0.5
+            pad = 0.15 * (hi - lo) or 0.5
             return (lo - pad, hi + pad)
-
+ 
         global_lims = _limits(long["ic"]) if shared_limits else None
-
-        fig_width = max(min_width, width_per_source * max(len(sources), 1) + 2.0)
-        fig, axes = plt.subplots(
-            nrows=len(attributes),
-            ncols=1,
-            figsize=(fig_width, panel_height * len(attributes)),
-            sharex=True,
-            sharey=shared_limits,
-            squeeze=False,
+ 
+        # `gap` landed in seaborn 0.13; only pass it when asked for, so the
+        # function still runs against older versions with box_gap=0.
+        box_kwargs = dict(
+            showfliers=showfliers,
+            width=box_width,
+            linewidth=box_linewidth,
         )
-        axes = axes[:, 0]
-
-        for i, attr in enumerate(attributes):
-            ax = axes[i]
-            d = long[long[attribute_col] == attr]
-
-            sns.boxplot(
-                data=d,
-                x=source_col,
-                y="ic",
-                hue="pipeline",
-                order=sources,
-                hue_order=list(pipeline_labels),
-                palette=palette,
-                showfliers=showfliers,
-                width=box_width,
-                ax=ax,
+        if box_gap:
+            box_kwargs["gap"] = box_gap
+ 
+        rc = {
+            "axes.titlesize": title_fontsize,
+            "axes.labelsize": axis_labelsize,
+            "xtick.labelsize": tick_labelsize,
+            "ytick.labelsize": tick_labelsize,
+            "legend.fontsize": legend_fontsize,
+            "legend.title_fontsize": legend_fontsize,
+        }
+ 
+        fig_width = max(min_width, width_per_source * max(len(sources), 1) + 2.0)
+ 
+        with plt.rc_context(rc):
+            fig, axes = plt.subplots(
+                nrows=len(attributes),
+                ncols=1,
+                figsize=(fig_width, panel_height * len(attributes)),
+                sharex=True,
+                sharey=shared_limits,
+                squeeze=False,
             )
-
-            lims = global_lims if shared_limits else _limits(d["ic"])
-            ax.set(xlabel="", ylabel="information content", ylim=lims, title=attr)
-            ax.grid(axis="y", ls=":", lw=0.6, alpha=0.6)
-            ax.set_axisbelow(True)
-
-            if annotate_counts:
-                # One count per source: rows are accessions, not melted records.
-                counts = (
-                    pdf[pdf[attribute_col] == attr]
-                    .groupby(source_col)
-                    .size()
-                    .reindex(sources, fill_value=0)
+            axes = axes[:, 0]
+ 
+            for i, attr in enumerate(attributes):
+                ax = axes[i]
+                d = long[long[attribute_col] == attr]
+ 
+                sns.boxplot(
+                    data=d,
+                    x=source_col,
+                    y="ic",
+                    hue="pipeline",
+                    order=sources,
+                    hue_order=list(pipeline_labels),
+                    palette=palette,
+                    ax=ax,
+                    **box_kwargs,
                 )
-                top = lims[1] - 0.02 * (lims[1] - lims[0])
-                for k, source in enumerate(sources):
-                    ax.text(
-                        k,
-                        top,
-                        f"n = {counts[source]:,}",
-                        ha="center",
-                        va="top",
-                        fontsize=8,
-                        color="0.35",
+ 
+                lims = global_lims if shared_limits else _limits(d["ic"])
+                ax.set(xlabel="", ylabel="IC", ylim=lims, title=attr)
+                ax.grid(axis="y", ls=":", lw=0.6, alpha=0.6)
+                ax.set_axisbelow(True)
+ 
+                if annotate_counts:
+                    # One count per source: rows are accessions, not melted records.
+                    counts = (
+                        pdf[pdf[attribute_col] == attr]
+                        .groupby(source_col)
+                        .size()
+                        .reindex(sources, fill_value=0)
                     )
-
-            legend = ax.get_legend()
-            if i == 0:
-                ax.legend(title="", loc="lower right", fontsize="small", ncol=2)
-            elif legend is not None:
-                legend.remove()
-
-        axes[-1].tick_params(axis="x", labelbottom=True)
-        if xtick_rotation:
-            plt.setp(
-                axes[-1].get_xticklabels(),
-                rotation=xtick_rotation,
-                ha="right",
-                rotation_mode="anchor",
-            )
-
-        fig.tight_layout()
+                    top = lims[1] - 0.02 * (lims[1] - lims[0])
+                    for k, source in enumerate(sources):
+                        ax.text(
+                            k,
+                            top,
+                            f"n={counts[source]:,}",
+                            ha="center",
+                            va="top",
+                            fontsize=count_fontsize,
+                            color="0.35",
+                        )
+ 
+                # Seaborn adds a legend to every axes; drop them all here and
+                # rebuild a single one after the loop.
+                legend = ax.get_legend()
+                if legend is not None:
+                    legend.remove()
+ 
+            handles, labels = axes[0].get_legend_handles_labels()
+            if handles:
+                axes[legend_row].legend(
+                    handles,
+                    labels,
+                    title="",
+                    loc=legend_loc,
+                    bbox_to_anchor=legend_bbox,
+                    ncol=legend_ncol,
+                    fontsize=legend_fontsize,
+                    framealpha=0.85,
+                )
+ 
+            axes[-1].tick_params(axis="x", labelbottom=True)
+            if xtick_rotation:
+                plt.setp(
+                    axes[-1].get_xticklabels(),
+                    rotation=xtick_rotation,
+                    ha="right",
+                    rotation_mode="anchor",
+                )
+ 
+            fig.tight_layout()
+            # After tight_layout, so this wins over the padding it reserved.
+            fig.subplots_adjust(hspace=row_spacing)
+ 
         if outfile is not None:
-            fig.savefig(outfile, dpi=dpi, bbox_inches="tight")
+            path = Path(outfile)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(path, dpi=dpi, bbox_inches="tight")
         return fig, axes
 
     return (plot_ic_boxplots,)
 
 
 @app.cell
-def _(ic_analysis_sample, plot_ic_boxplots):
-    plot_ic_boxplots(ic_analysis_sample, outfile="test_boxplots.png")
+def _(FIGURES_DIR: "Path", ic_analysis_sample, plot_ic_boxplots):
+    plot_ic_boxplots(
+        ic_analysis_sample,
+        outfile=FIGURES_DIR / "ic_original_source_vs_metahq__boxes__level-sample.png",
+        row_spacing=0.2,
+        width_per_source=0.8,
+    )
     return
 
 
