@@ -7,6 +7,73 @@ from pathlib import Path
 
 
 def get_files_to_check(doi):
+    if doi == "20187710":
+        FILES_TO_CHECK = [
+            [
+                Path("annotations") / "combined__level-sample.bson",
+                "2355bc513e985bc7a45aca6054f19fe2",
+            ],
+            [
+                Path("annotations") / "combined__level-series.bson",
+                "d86fefb17f59cd3b3818799c406221ce",
+            ],
+            [
+                Path("ontology") / "mondo" / "id_map.parquet",
+                "37230bd391ec3af4be4f710ab2d76707",
+            ],
+            [
+                Path("ontology") / "mondo" / "relations.parquet",
+                "c1fb546b0ce69025dfd9d8888b2b5291",
+            ],
+            [
+                Path("ontology") / "mondo" / "systems.txt",
+                "dbf3e5566b4dd80e458b2cd5813ad693",
+            ],
+            [
+                Path("ontology") / "mondo" / "names_synonyms.json",
+                "24318fa528ded695943b53787c0c7b00",
+            ],
+            [
+                Path("ontology") / "uberon_ext" / "relations.parquet",
+                "25c99364d06d10f41461716f0b5812ce",
+            ],
+            [
+                Path("ontology") / "uberon_ext" / "id_map.parquet",
+                "a449bed0812bacfa35d9b83628da594e",
+            ],
+            [
+                Path("ontology") / "uberon_ext" / "systems.txt",
+                "8e2b4b0943ae52720463257d67ec8fbf",
+            ],
+            [
+                Path("ontology") / "uberon_ext" / "names_synonyms.json",
+                "9e9fd448715929351e8c0e4b9561d56c",
+            ],
+            [
+                Path("ontology") / "ontology_search.duckdb",
+                "f14b2e57dd2f5ba8d470b607eaaaf95d",
+            ],
+            [
+                Path("metadata") / "metadata__level-sample.parquet",
+                "3beb1e196c61d604ffc5c5d9e8c13301",
+            ],
+            [
+                Path("metadata") / "metadata__level-series.parquet",
+                "647feb5104584db5f9dbdf4bf0f34a8f",
+            ],
+            [
+                Path("metadata") / "technologies.parquet",
+                "a7cd45dc7db09d30fe35676d8d449b32",
+            ],
+            [
+                Path("metadata") / "refinebio_map.parquet",
+                "55f323e568d202d3c9ed3032318ce237",
+            ],
+            [
+                Path("metadata") / "external_links.parquet",
+                "07da0ceb71d3b1019e8b5cc2aa59e4fd",
+            ],
+        ]
     if doi == "20186688":
         FILES_TO_CHECK = [
             [
