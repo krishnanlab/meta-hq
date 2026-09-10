@@ -7,6 +7,7 @@ Date: 2025-11-21
 Last updated: 2025-11-21 by Parker Hicks
 """
 
+import io
 import tarfile
 from unittest.mock import MagicMock, Mock, patch
 
@@ -682,3 +683,111 @@ class TestDownloader:
             verbose_downloader.extract()
 
             verbose_downloader.logger.info.assert_called()
+
+    def test_extract_handles_top_level_dir_not_matching_filename_stem_issue(
+        self, downloader, tmp_path
+    ):
+        """Test extract() locates the archive's actual top-level directory
+        even when it does not match the filename stem.
+
+        Regression test: Zenodo archives built with metahq_build's
+        zip-database command use the versioned data-package directory name
+        (e.g. "metahq_data__v1.2.0") as the tar's arcname, which does not
+        match `FileConfig.filename_stemmed` (e.g. "metahq_data" derived from
+        "metahq_data.tar.gz"). extract() must not assume the two match.
+        """
+        source_dir = tmp_path / "source" / "metahq__v1.2.0"
+        source_dir.mkdir(parents=True)
+        (source_dir / "data.txt").write_text("payload")
+
+        with tarfile.open(downloader.config.outfile, "w:gz") as tar:
+            tar.add(source_dir, arcname="metahq__v1.2.0")
+
+        downloader.extract()
+
+        assert (tmp_path / "data.txt").read_text() == "payload"
+        assert not (tmp_path / "metahq__v1.2.0").exists()
+        assert not downloader.config.outfile.exists()
+
+    def test_extract_backwards_compatible_when_top_level_dir_matches_filename_stem(
+        self, downloader, tmp_path
+    ):
+        """Test extract() still works for legacy archives whose top-level
+        directory happens to match the filename stem."""
+        source_dir = tmp_path / "source" / "metahq"
+        source_dir.mkdir(parents=True)
+        (source_dir / "data.txt").write_text("payload")
+
+        with tarfile.open(downloader.config.outfile, "w:gz") as tar:
+            tar.add(source_dir, arcname="metahq")
+
+        downloader.extract()
+
+        assert (tmp_path / "data.txt").read_text() == "payload"
+        assert not (tmp_path / "metahq").exists()
+        assert not downloader.config.outfile.exists()
+
+    def test_top_level_dir_returns_single_top_level_entry(self, downloader):
+        """Test _top_level_dir returns the shared top-level directory name."""
+        members = [
+            tarfile.TarInfo(name="metahq_data__v1.2.0/file1.txt"),
+            tarfile.TarInfo(name="metahq_data__v1.2.0/sub/file2.txt"),
+        ]
+
+        assert downloader._top_level_dir(members) == "metahq_data__v1.2.0"
+
+    def test_top_level_dir_raises_on_multiple_top_level_entries(self, downloader):
+        """Test _top_level_dir raises ValueError for an archive with more than
+        one top-level directory."""
+        members = [
+            tarfile.TarInfo(name="dir_a/file1.txt"),
+            tarfile.TarInfo(name="dir_b/file2.txt"),
+        ]
+
+        with pytest.raises(ValueError, match="single top-level directory"):
+            downloader._top_level_dir(members)
+
+    def test_top_level_dir_ignores_macos_resource_fork_entry(self, downloader):
+        """Test _top_level_dir ignores an AppleDouble "._" sibling entry.
+
+        Regression test: older MetaHQ database archives (e.g. v1.1.0, DOI
+        20186688) were built with plain `tar` on macOS and contain a stray
+        "._metahq_data" resource-fork entry alongside the real "metahq_data"
+        directory. This must not be mistaken for a second top-level directory.
+        """
+        members = [
+            tarfile.TarInfo(name="._metahq_data"),
+            tarfile.TarInfo(name="metahq_data/file1.txt"),
+            tarfile.TarInfo(name="metahq_data/sub/file2.txt"),
+        ]
+
+        assert downloader._top_level_dir(members) == "metahq_data"
+
+    def test_top_level_dir_ignores_os_metadata_names(self, downloader):
+        """Test _top_level_dir ignores known OS metadata junk names."""
+        members = [
+            tarfile.TarInfo(name=".DS_Store"),
+            tarfile.TarInfo(name="__MACOSX/._metahq_data"),
+            tarfile.TarInfo(name="metahq_data/file1.txt"),
+        ]
+
+        assert downloader._top_level_dir(members) == "metahq_data"
+
+    def test_extract_backwards_compatible_with_legacy_resource_fork_archive(
+        self, downloader, tmp_path
+    ):
+        """Test extract() handles a real-world legacy archive layout: a top-
+        level AppleDouble "._metahq_data" entry alongside "metahq_data"."""
+        source_dir = tmp_path / "source" / "metahq"
+        source_dir.mkdir(parents=True)
+        (source_dir / "data.txt").write_text("payload")
+
+        with tarfile.open(downloader.config.outfile, "w:gz") as tar:
+            tar.addfile(tarfile.TarInfo(name="._metahq"), io.BytesIO(b""))
+            tar.add(source_dir, arcname="metahq")
+
+        downloader.extract()
+
+        assert (tmp_path / "data.txt").read_text() == "payload"
+        assert not (tmp_path / "metahq").exists()
+        assert not downloader.config.outfile.exists()
