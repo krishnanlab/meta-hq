@@ -973,12 +973,6 @@ def _(mo):
 
 @app.cell
 def _(POST_HARMONIZATION_RESULTS, get_overlap_results):
-    post_sample_overlap_count = get_overlap_results(
-        POST_HARMONIZATION_RESULTS,
-        overlap_type="overlap_count",
-        level="sample",
-    )
-
     post_sample_overlap_percent = get_overlap_results(
         POST_HARMONIZATION_RESULTS,
         overlap_type="overlap_percent",
@@ -992,39 +986,7 @@ def _(POST_HARMONIZATION_RESULTS, get_overlap_results):
         pmi=True,
         method="norm",
     )
-    return (
-        post_sample_overlap_count,
-        post_sample_overlap_percent,
-        post_sample_overlap_pmi,
-    )
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Absolute count overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap,
-    post_sample_overlap_count,
-):
-    plot_overlap_heatmap(
-        post_sample_overlap_count,
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax_percentile=95,
-        title="Absolute count overlap (level=sample)",
-        save=True,
-        outfile=FIGURES_DIR / "post_harmonization_overlap__level-sample__metric-counts.png"
-    )
-    return
+    return post_sample_overlap_percent, post_sample_overlap_pmi
 
 
 @app.cell(hide_code=True)
@@ -1095,12 +1057,6 @@ def _(mo):
 
 @app.cell
 def _(POST_HARMONIZATION_RESULTS, get_overlap_results):
-    post_series_overlap_count = get_overlap_results(
-        POST_HARMONIZATION_RESULTS,
-        overlap_type="overlap_count",
-        level="series",
-    )
-
     post_series_overlap_percent = get_overlap_results(
         POST_HARMONIZATION_RESULTS,
         overlap_type="overlap_percent",
@@ -1114,39 +1070,7 @@ def _(POST_HARMONIZATION_RESULTS, get_overlap_results):
         pmi=True,
         method="norm",
     )
-    return (
-        post_series_overlap_count,
-        post_series_overlap_percent,
-        post_series_overlap_pmi,
-    )
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Absolute count overlap
-    """)
-    return
-
-
-@app.cell
-def _(
-    FIGURES_DIR: "Path",
-    OVERLAP_CMAP,
-    OVERLAP_ORDER,
-    plot_overlap_heatmap,
-    post_series_overlap_count,
-):
-    plot_overlap_heatmap(
-        post_series_overlap_count,
-        order=OVERLAP_ORDER,
-        cmap=OVERLAP_CMAP,
-        vmax_percentile=95,
-        title="Absolute count overlap (level=study)",
-        save=True,
-        outfile=FIGURES_DIR / "post_harmonization_overlap__level-study__metric-counts.png"
-    )
-    return
+    return post_series_overlap_percent, post_series_overlap_pmi
 
 
 @app.cell(hide_code=True)
