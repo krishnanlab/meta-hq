@@ -7,7 +7,7 @@
 params:
   data_dir: ./data # root for all input data (unprocessed/, helpers/, etc.)
   output_dir: ./data/data_packages # location of data packages
-  package_name: metahq_data__v1.1.0 # final package name
+  package_name: metahq_data__v1.2.0 # final package name
   specific: true # filter for most specific annotations
   overwrite: false # overwrite existing data package
   omicidx_path: ./data/omicidx.duckdb # path to OmicIDX DuckDB database
@@ -72,7 +72,8 @@ processors:
 
 # -----------------------------------------------------------------
 # Per-stage settings
-# Stage names: process__<source>, combine__geo, combine__sra, combine__sample
+# Stage names: process__<source>, combine__geo, combine__sra, combine__sample,
+#              build__data_package, archive__data_package
 # Set skip: true to bypass a stage (useful with --start-from / --end-at too).
 # -----------------------------------------------------------------
 stages:
@@ -89,6 +90,9 @@ stages:
     skip: false
     use_checkpoint: true
   extract__mondo__relations:
+    skip: false
+    use_checkpoint: true
+  archive__data_package:
     skip: false
     use_checkpoint: true
 
@@ -146,6 +150,12 @@ structure:
 
   - source: data/metadata/technologies.parquet
     destination: "{output_dir}/{package_name}/metadata/technologies.parquet"
+
+  - source: data/metadata/refinebio_map.parquet
+    destination: "{output_dir}/{package_name}/metadata/refinebio_map.parquet"
+
+  - source: data/metadata/external_links.parquet
+    destination: "{output_dir}/{package_name}/metadata/external_links.parquet"
 
 # -----------------------------------------------------------------
 # General

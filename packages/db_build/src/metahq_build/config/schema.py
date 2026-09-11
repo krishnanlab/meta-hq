@@ -19,6 +19,7 @@ from metahq_build.config import (
     VALID_SEXES,
     VALID_TISSUE_ONTOLOGIES,
 )
+from metahq_build.config.config import CONTROL_ID
 
 # Below are validators for sample- and series-level annotations. There is a unique
 # class per attribute. Sample- and series-level annotation need different validators
@@ -58,6 +59,7 @@ class SampleAnnotationEntry(BaseModel):
             or (any(v.startswith(onto) for onto in VALID_ONTOLOGIES))
         ):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
     @field_validator("ecode", mode="after")
     @classmethod
@@ -65,6 +67,7 @@ class SampleAnnotationEntry(BaseModel):
         """Ensure ecodes were entered correctly."""
         if not v in VALID_ECODES:
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SampleTissueAnnotationEntry(SampleAnnotationEntry):
@@ -91,6 +94,7 @@ class SampleTissueAnnotationEntry(SampleAnnotationEntry):
         for tissue in v.split(DELIMITER):
             if not tissue.startswith(tuple(VALID_TISSUE_ONTOLOGIES)):
                 raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SampleDiseaseAnnotationEntry(SampleAnnotationEntry):
@@ -117,6 +121,7 @@ class SampleDiseaseAnnotationEntry(SampleAnnotationEntry):
         for disease in v.split(DELIMITER):
             if not disease.startswith(tuple(VALID_DISEASE_ONTOLOGIES)):
                 raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SampleSexAnnotationEntry(SampleAnnotationEntry):
@@ -142,6 +147,7 @@ class SampleSexAnnotationEntry(SampleAnnotationEntry):
         """Ensure an entry ID has valid sex ID annotations."""
         if not v in VALID_SEXES:
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SampleAgeAnnotationEntry(SampleAnnotationEntry):
@@ -167,6 +173,7 @@ class SampleAgeAnnotationEntry(SampleAnnotationEntry):
         """Ensure an entry ID has valid age group ID annotations."""
         if not v in VALID_AGE_GROUPS:
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 # ========================================================
@@ -202,6 +209,7 @@ class SeriesAnnotationEntry(BaseModel):
                 or (any(id_.startswith(onto) for onto in VALID_ONTOLOGIES))
             ):
                 raise ValueError(f"Invalid id: {id_!r}")
+        return v
 
     @field_validator("ecode", mode="after")
     @classmethod
@@ -209,6 +217,7 @@ class SeriesAnnotationEntry(BaseModel):
         """Ensure ecodes were entered correctly."""
         if not v in VALID_ECODES:
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SeriesTissueAnnotationEntry(SeriesAnnotationEntry):
@@ -235,6 +244,7 @@ class SeriesTissueAnnotationEntry(SeriesAnnotationEntry):
         for tissue in v.split(DELIMITER):
             if not tissue.startswith(tuple(VALID_TISSUE_ONTOLOGIES)):
                 raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SeriesDiseaseAnnotationEntry(SeriesAnnotationEntry):
@@ -262,6 +272,7 @@ class SeriesDiseaseAnnotationEntry(SeriesAnnotationEntry):
         for disease in v.split(DELIMITER):
             if not disease.startswith(tuple(VALID_DISEASE_ONTOLOGIES)):
                 raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SeriesSexAnnotationEntry(SeriesAnnotationEntry):
@@ -288,6 +299,7 @@ class SeriesSexAnnotationEntry(SeriesAnnotationEntry):
         for sex in v.split(DELIMITER):
             if not sex in VALID_SEXES:
                 raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SeriesAgeAnnotationEntry(SeriesAnnotationEntry):
@@ -314,6 +326,7 @@ class SeriesAgeAnnotationEntry(SeriesAnnotationEntry):
         for age in v.split(DELIMITER):
             if not age in VALID_AGE_GROUPS:
                 raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 # ========================================================
@@ -366,6 +379,7 @@ class SampleAccessionIDs(BaseModel):
         """Ensure all sample IDs start with GSM."""
         if not v.startswith("GSM"):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
     @field_validator("series")
     @classmethod
@@ -373,6 +387,7 @@ class SampleAccessionIDs(BaseModel):
         """Ensure all series IDs start with GSE."""
         if not v.startswith("GSE"):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
     @field_validator("platform")
     @classmethod
@@ -380,6 +395,7 @@ class SampleAccessionIDs(BaseModel):
         """Ensure all platform IDs start with GPL."""
         if not v.startswith("GPL"):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
     @field_validator("srx")
     @classmethod
@@ -388,6 +404,7 @@ class SampleAccessionIDs(BaseModel):
         allowed = {"SRX", "ERX", "DRX"}
         if not any(v.startswith(prefix) for prefix in allowed):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
     @field_validator("srs")
     @classmethod
@@ -396,6 +413,7 @@ class SampleAccessionIDs(BaseModel):
         allowed = {"SRS", "ERS", "DRS"}
         if not any(v.startswith(prefix) for prefix in allowed):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
     @field_validator("srp")
     @classmethod
@@ -404,6 +422,7 @@ class SampleAccessionIDs(BaseModel):
         allowed = {"SRP", "ERP", "DRP"}
         if not any(v.startswith(prefix) for prefix in allowed):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SeriesAccessionIDs(BaseModel):
@@ -428,6 +447,7 @@ class SeriesAccessionIDs(BaseModel):
         """Ensure all series IDs start with GSE."""
         if not v.startswith("GSE"):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
     @field_validator("platform")
     @classmethod
@@ -435,6 +455,7 @@ class SeriesAccessionIDs(BaseModel):
         """Ensure all platform IDs start with GPL."""
         if not v.startswith("GPL"):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
     @field_validator("srp")
     @classmethod
@@ -443,6 +464,7 @@ class SeriesAccessionIDs(BaseModel):
         allowed = {"SRP", "ERP", "DRP"}
         if not any(v.startswith(prefix) for prefix in allowed):
             raise ValueError(f"Invalid id: {v!r}")
+        return v
 
 
 class SampleEntry(BaseModel):
@@ -476,6 +498,23 @@ class SampleEntry(BaseModel):
         """Check that the organism for a particular entry is valid."""
         if v not in VALID_ORGANISMS:
             raise ValueError(f"Unknown organism: {v!r}")
+        return v
+
+    @field_validator("disease")
+    @classmethod
+    def verify_not_annotated_as_disease_and_control(
+        cls, v: SampleDiseaseAnnotations | None
+    ):
+        """Checks that a sample is not annotated to a disease and as a control."""
+        if v is not None:
+            unique_ids = set()
+            for annotation in v.values():
+                unique_ids.update(set(annotation.id.split(DELIMITER)))
+
+            if (CONTROL_ID in unique_ids) and len(unique_ids) > 1:
+                raise ValueError(
+                    f"Sample has both disease and control annotations: {unique_ids}"
+                )
         return v
 
 

@@ -53,6 +53,8 @@ class CitationConfig:
             Date formatted as 'YYYY-MM-DD HR:MIN:SEC'.
         outfile (str | Path):
             Outfile to save the reference to.
+        refinebio_dataset_id (str | None):
+            ID of the refine.bio dataset created from this export, if any.
 
     """
 
@@ -67,6 +69,7 @@ class CitationConfig:
     license: str
     date: str
     outfile: str | Path = "CITATION.txt"
+    refinebio_dataset_id: str | None = None
 
 
 def build_citation_file(
@@ -109,6 +112,7 @@ def build_citation_file(
         license=config.license,
         date=config.date,
         metahq_reference=metahq_reference,
+        refinebio_dataset_id=config.refinebio_dataset_id or "NA",
     )
 
 
@@ -179,7 +183,7 @@ def format_reference(reference: Reference, index: int, indent: str = "    ") -> 
         f"[{index}] {reference.source}\n"
         f"{indent}{textwrap.fill(citation_text, width=80, subsequent_indent=indent)}\n"
         f"{indent}url: {reference.url}\n"
-        f"{indent}Annotations: {reference.n}\n"
+        f"{indent}Number of annotations in this export: {reference.n}\n"
         f"{indent}License: {reference.rights}"
     )
 
@@ -191,11 +195,10 @@ def format_reference(reference: Reference, index: int, indent: str = "    ") -> 
 
 def format_references(references: list[Reference]) -> str:
     """
-    Format a list of (reference, annotation_count) tuples.
+    Format a list of references.
 
     Arguments:
-        references (list[tuple[Reference, int]]): List of tuples
-            containing (Reference, annotation_count).
+        references (list[Reference]): List of populated Reference objects.
 
     Returns:
         (str): Formatted string with all references numbered sequentially.

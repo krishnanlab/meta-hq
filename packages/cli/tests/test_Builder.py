@@ -151,7 +151,9 @@ class TestBuilder:
 
     @patch("metahq_cli.retrieval_builder.check_filter")
     @patch("metahq_cli.retrieval_builder.check_license")
-    def test_query_config_validates_filters(self, mock_check_license, mock_check, builder):
+    def test_query_config_validates_filters(
+        self, mock_check_license, mock_check, builder
+    ):
         """test query_config validates all filter parameters"""
         filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
@@ -164,7 +166,9 @@ class TestBuilder:
 
     @patch("metahq_cli.retrieval_builder.check_filter")
     @patch("metahq_cli.retrieval_builder.check_license")
-    def test_query_config_default_license(self, mock_check_license, mock_check, builder):
+    def test_query_config_default_license(
+        self, mock_check_license, mock_check, builder
+    ):
         """test query_config defaults license to 'any'"""
         filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
@@ -179,14 +183,18 @@ class TestBuilder:
         """test query_config stores the supplied license in QueryConfig"""
         filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
-        result = builder.query_config("geo", "tissue", "sample", filters, license="permissive")
+        result = builder.query_config(
+            "geo", "tissue", "sample", filters, license="permissive"
+        )
 
         assert result.license == "permissive"
         mock_check_license.assert_called_once_with("permissive")
 
     @patch("metahq_cli.retrieval_builder.check_filter")
     @patch("metahq_cli.retrieval_builder.check_license")
-    def test_query_config_calls_check_license(self, mock_check_license, mock_check, builder):
+    def test_query_config_calls_check_license(
+        self, mock_check_license, mock_check, builder
+    ):
         """test query_config calls check_license with the supplied value"""
         filters = {"species": "human", "ecode": "expert", "tech": "rnaseq"}
 
@@ -201,7 +209,9 @@ class TestBuilder:
         from pathlib import Path
 
         outdir = Path("/tmp/my_results")
-        result = builder.output_config(outdir, "parquet", "sample", "sample", "test_attr")
+        result = builder.output_config(
+            outdir, "parquet", "sample", "sample", "test_attr"
+        )
 
         assert isinstance(result, OutputConfig)
         assert result.outfile == outdir / "result.parquet"
@@ -231,6 +241,25 @@ class TestBuilder:
 
         assert result == ["M", "F", "F", "M"]
 
+    def test_map_sex_to_id_maps_pato_ids(self, builder):
+        """test map_sex_to_id converts PATO IDs to M/F"""
+        result = builder._map_sex_to_id(["PATO:0000384", "PATO:0000383"])
+
+        assert result == ["M", "F"]
+
+    def test_map_sex_to_id_mixed_pato_and_string_input(self, builder):
+        """test map_sex_to_id handles a mix of PATO IDs, words, and codes"""
+        result = builder._map_sex_to_id(["PATO:0000384", "female", "M", "PATO:0000383"])
+
+        assert result == ["M", "F", "M", "F"]
+
+    def test_map_sex_to_id_logs_error_on_invalid_term(self, verbose_builder):
+        """test map_sex_to_id logs an error and skips invalid terms"""
+        result = verbose_builder._map_sex_to_id(["male", "invalid_term"])
+
+        assert result == ["M"]
+        verbose_builder.log.warning.assert_called_once()
+
     @patch("metahq_cli.retrieval_builder.check_filter_keys")
     def test_report_bad_filters_no_bad_filters(self, mock_check_keys, builder):
         """test report_bad_filters passes when filters are valid"""
@@ -241,13 +270,26 @@ class TestBuilder:
         builder.report_bad_filters(filters)
 
     @patch("metahq_cli.retrieval_builder.check_filter_keys")
-    def test_report_bad_filters_raises_on_bad_filters(self, mock_check_keys, builder):
-        """test report_bad_filters raises ValueError for bad filters"""
+    def test_report_bad_filters_exits_on_bad_filters(self, mock_check_keys, builder):
+        """test report_bad_filters calls sys.exit for bad filters"""
         mock_check_keys.return_value = ["bad_filter"]
         filters = {"bad_filter": "value"}
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SystemExit):
             builder.report_bad_filters(filters)
+
+    @patch("metahq_cli.retrieval_builder.check_filter_keys")
+    def test_report_bad_filters_logs_error_always(
+        self, mock_check_keys, builder
+    ):
+        """test report_bad_filters logs error regardless of verbose mode"""
+        mock_check_keys.return_value = ["bad_filter"]
+        filters = {"bad_filter": "value"}
+
+        with pytest.raises(SystemExit):
+            builder.report_bad_filters(filters)
+
+        builder.log.error.assert_called_once()
 
     @patch("metahq_cli.retrieval_builder.check_filter_keys")
     def test_report_bad_filters_logs_error_when_verbose(
@@ -257,7 +299,7 @@ class TestBuilder:
         mock_check_keys.return_value = ["bad_filter"]
         filters = {"bad_filter": "value"}
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SystemExit):
             verbose_builder.report_bad_filters(filters)
 
         verbose_builder.log.error.assert_called_once()
@@ -287,6 +329,21 @@ class TestBuilder:
         mock_check_txt.return_value = "male,female"
 
         result = builder.make_sex_curation("male,female", "direct")
+
+        assert isinstance(result, CurationConfig)
+        assert result.mode == "direct"
+        assert result.terms == ["M", "F"]
+        assert result.ontology == "sex"
+
+    @patch("metahq_cli.retrieval_builder.check_if_txt")
+    @patch("metahq_cli.retrieval_builder.check_mode")
+    def test_make_sex_curation_with_pato_ids(
+        self, mock_check_mode, mock_check_txt, builder
+    ):
+        """test make_sex_curation accepts PATO IDs as terms"""
+        mock_check_txt.return_value = "PATO:0000384,PATO:0000383"
+
+        result = builder.make_sex_curation("PATO:0000384,PATO:0000383", "direct")
 
         assert isinstance(result, CurationConfig)
         assert result.mode == "direct"

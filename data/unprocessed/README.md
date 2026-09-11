@@ -7,8 +7,10 @@
 
 - bgee
   - Source: Bgee
-  - Attributes: sex, tissue
-  - Access: [https://www.bgee.org/](https://www.bgee.org/) and follow [https://bioconductor.org/packages/devel/bioc/vignettes/BgeeDB/inst/doc/BgeeDB_Manual.html](https://bioconductor.org/packages/devel/bioc/vignettes/BgeeDB/inst/doc/BgeeDB_Manual.html)
+  - Attributes: age, sex, tissue
+  - Access: [https://github.com/BgeeDB/bgee_pipeline/blob/main/source_files/RNA_Seq/RNASeqLibrary.tsv](https://github.com/BgeeDB/bgee_pipeline/blob/main/source_files/RNA_Seq/RNASeqLibrary.tsv)
+  - Previous access location
+    - Access: [https://www.bgee.org/](https://www.bgee.org/) and follow [https://bioconductor.org/packages/devel/bioc/vignettes/BgeeDB/inst/doc/BgeeDB_Manual.html](https://bioconductor.org/packages/devel/bioc/vignettes/BgeeDB/inst/doc/BgeeDB_Manual.html)
 
 - cello.json
   - Source: Cello
@@ -27,8 +29,8 @@
 
 - gemma.bson
   - Source: Gemma
-  - Attributes: sex, age, disease
-  - Access: Programmatic access to [https://gemma.msl.ubc.ca/home.html](https://gemma.msl.ubc.ca/home.html) with [our Gemma fetcher]("../../packages/db_build/src/metahq_build/fetchers/gemma.py"). Run `metahq-build download gemma` to download.
+  - Attributes: sex, age, disease, tissue
+  - Access: Programmatic access to [https://gemma.msl.ubc.ca/home.html](https://gemma.msl.ubc.ca/home.html) with [our Gemma fetcher]("../../packages/db_build/src/metahq_build/fetchers/gemma.py"). Run `metahq-build download gemma` and `metahq-build download gemma-samples`to download.
 
 - golightly_2018.zip
   - Source: Golightly_2018

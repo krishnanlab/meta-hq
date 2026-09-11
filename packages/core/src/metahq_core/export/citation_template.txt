@@ -17,6 +17,7 @@ Ecode: $ecode
 Technology: $tech
 Mode: $mode
 License: $license
+refine.bio: $refinebio_dataset_id
 
 ====================================
 Data sources included in this export
@@ -25,7 +26,6 @@ Data sources included in this export
 This MetaHQ export contains annotations from the following sources:
 
 $references
-
 
 Please cite these sources along with:
 

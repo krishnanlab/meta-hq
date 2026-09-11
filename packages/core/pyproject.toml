@@ -29,6 +29,7 @@ dependencies = [
     "pyyaml>=5.1",
     "duckdb>=1.4.0",
     "rank-bm25>=0.2.2",
+    "requests>=2.34.2",
     "rich>=13.0.0",
 ]
 
@@ -71,7 +72,7 @@ include = ["src/metahq_core/export/citation_template.txt"]
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py312']
 include = '\.pyi?$'
 
 [tool.isort]

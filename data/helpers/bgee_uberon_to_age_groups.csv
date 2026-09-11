@@ -1,0 +1,23 @@
+term_id,term_name,age
+UBERON:0000066,fully formed stage,na
+UBERON:0007222,late adult stage,na
+UBERON:0034920,infant stage,na
+UBERON:0004707,pharyngula stage,fetus
+UBERON:0000110,neurula stage,fetus
+UBERON:0000108,blastula stage,fetus
+UBERON:0000113,post-juvenile,na
+UBERON:0000106,zygote stage,fetus
+UBERON:0000109,gastrula stage,fetus
+UBERON:0000107,cleavage stage,fetus
+UBERON:0007220,late embryonic stage,fetus
+UBERON:0000112,sexually immature stage,na
+UBERON:0000070,pupal stage,na
+UBERON:0034919,juvenile stage,na
+UBERON:0000068,embryo stage,na
+UBERON:0000069,larval stage,na
+UBERON:0007221,neonate stage,na
+UBERON:0004730,instar larval stage,na
+UBERON:0007232,2 cell stage,fetus
+UBERON:0000111,organogenesis stage,fetus
+UBERON:0018241,prime adult stage,na
+UBERON:0000104,life cycle,na

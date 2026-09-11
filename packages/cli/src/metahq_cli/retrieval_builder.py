@@ -4,9 +4,10 @@ Class to take retrieval arguments, check them, and build the retrieval query.
 Author: Parker Hicks
 Date: 2025-10-16
 
-Last updated: 2026-04-01 by Parker Hicks
+Last updated: 2026-06-29 by Parker Hicks
 """
 
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -330,15 +331,17 @@ class Builder:
         return CurationConfig(mode, _terms, ontology="sex")
 
     def _map_sex_to_id(self, terms: list[str]):
-        """Map male to M and female to F if passed."""
-        opt = {"male": "M", "female": "F"}
+        """Map male or PATO:0000384 to M and female or PATO:0000383 to F if passed."""
+        opt = {"male": "M", "female": "F", "PATO:0000384": "M", "PATO:0000383": "F"}
 
         result = []
         for term in terms:
-            if term in ["male", "female"]:
+            if term in opt:
                 result.append(opt[term])
-            else:
+            elif term in opt.values():
                 result.append(term)
+            else:
+                self.log.warning("Invalid input: %s. Skipping...", term)
 
         return result
 
@@ -365,9 +368,6 @@ class Builder:
         """Check filters and return improper filter parameters."""
         bad_filters = check_filter_keys(filters)
         if len(bad_filters) > 0:
-            msg = ("Expected filters in %s, got %s.", required_filters(), bad_filters)
-
-            if self.verbose:
-                self.log.error(msg)
-
-            raise ValueError(msg)
+            msg = f"Expected filters in {required_filters()}. Got {bad_filters}."
+            self.log.error(msg)
+            sys.exit(1)

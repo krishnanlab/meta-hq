@@ -1,0 +1,1490 @@
+{
+    "DRP003810": {
+        "records": [
+            {
+                "id": "DRP003810",
+                "url": "https://www.bgee.org/experiment/DRP003810"
+            }
+        ]
+    },
+    "DRP005799": {
+        "records": [
+            {
+                "id": "DRP005799",
+                "url": "https://www.bgee.org/experiment/DRP005799"
+            }
+        ]
+    },
+    "E-MTAB-2449": {
+        "records": [
+            {
+                "id": "E-MTAB-2449",
+                "url": "https://www.bgee.org/experiment/E-MTAB-2449"
+            }
+        ]
+    },
+    "ERP000447": {
+        "records": [
+            {
+                "id": "ERP000447",
+                "url": "https://www.bgee.org/experiment/ERP000447"
+            }
+        ]
+    },
+    "ERP000723": {
+        "records": [
+            {
+                "id": "ERP000723",
+                "url": "https://www.bgee.org/experiment/ERP000723"
+            }
+        ]
+    },
+    "ERP000787": {
+        "records": [
+            {
+                "id": "ERP000787",
+                "url": "https://www.bgee.org/experiment/ERP000787"
+            }
+        ]
+    },
+    "ERP001694": {
+        "records": [
+            {
+                "id": "ERP001694",
+                "url": "https://www.bgee.org/experiment/ERP001694"
+            }
+        ]
+    },
+    "ERP002178": {
+        "records": [
+            {
+                "id": "ERP002178",
+                "url": "https://www.bgee.org/experiment/ERP002178"
+            }
+        ]
+    },
+    "ERP002602": {
+        "records": [
+            {
+                "id": "ERP002602",
+                "url": "https://www.bgee.org/experiment/ERP002602"
+            }
+        ]
+    },
+    "ERP003613": {
+        "records": [
+            {
+                "id": "ERP003613",
+                "url": "https://www.bgee.org/experiment/ERP003613"
+            }
+        ]
+    },
+    "ERP006650": {
+        "records": [
+            {
+                "id": "ERP006650",
+                "url": "https://www.bgee.org/experiment/ERP006650"
+            }
+        ]
+    },
+    "ERP006696": {
+        "records": [
+            {
+                "id": "ERP006696",
+                "url": "https://www.bgee.org/experiment/ERP006696"
+            }
+        ]
+    },
+    "ERP012910": {
+        "records": [
+            {
+                "id": "ERP012910",
+                "url": "https://www.bgee.org/experiment/ERP012910"
+            }
+        ]
+    },
+    "ERP014610": {
+        "records": [
+            {
+                "id": "ERP014610",
+                "url": "https://www.bgee.org/experiment/ERP014610"
+            }
+        ]
+    },
+    "ERP024551": {
+        "records": [
+            {
+                "id": "ERP024551",
+                "url": "https://www.bgee.org/experiment/ERP024551"
+            }
+        ]
+    },
+    "ERP104395": {
+        "records": [
+            {
+                "id": "ERP104395",
+                "url": "https://www.bgee.org/experiment/ERP104395"
+            }
+        ]
+    },
+    "ERP108893": {
+        "records": [
+            {
+                "id": "ERP108893",
+                "url": "https://www.bgee.org/experiment/ERP108893"
+            }
+        ]
+    },
+    "ERP108920": {
+        "records": [
+            {
+                "id": "ERP108920",
+                "url": "https://www.bgee.org/experiment/ERP108920"
+            }
+        ]
+    },
+    "ERP109002": {
+        "records": [
+            {
+                "id": "ERP109002",
+                "url": "https://www.bgee.org/experiment/ERP109002"
+            }
+        ]
+    },
+    "ERP111066": {
+        "records": [
+            {
+                "id": "ERP111066",
+                "url": "https://www.bgee.org/experiment/ERP111066"
+            }
+        ]
+    },
+    "ERP116137": {
+        "records": [
+            {
+                "id": "ERP116137",
+                "url": "https://www.bgee.org/experiment/ERP116137"
+            }
+        ]
+    },
+    "ERP116168": {
+        "records": [
+            {
+                "id": "ERP116168",
+                "url": "https://www.bgee.org/experiment/ERP116168"
+            }
+        ]
+    },
+    "ERP116770": {
+        "records": [
+            {
+                "id": "ERP116770",
+                "url": "https://www.bgee.org/experiment/ERP116770"
+            }
+        ]
+    },
+    "ERP116771": {
+        "records": [
+            {
+                "id": "ERP116771",
+                "url": "https://www.bgee.org/experiment/ERP116771"
+            }
+        ]
+    },
+    "ERP120553": {
+        "records": [
+            {
+                "id": "ERP120553",
+                "url": "https://www.bgee.org/experiment/ERP120553"
+            }
+        ]
+    },
+    "ERP121186": {
+        "records": [
+            {
+                "id": "ERP121186",
+                "url": "https://www.bgee.org/experiment/ERP121186"
+            }
+        ]
+    },
+    "GSE30352": {
+        "records": [
+            {
+                "id": "GSE30352",
+                "url": "https://www.bgee.org/experiment/GSE30352"
+            }
+        ]
+    },
+    "GSE30611": {
+        "records": [
+            {
+                "id": "GSE30611",
+                "url": "https://www.bgee.org/experiment/GSE30611"
+            }
+        ]
+    },
+    "GSE30617": {
+        "records": [
+            {
+                "id": "GSE30617",
+                "url": "https://www.bgee.org/experiment/GSE30617"
+            }
+        ]
+    },
+    "GSE36026": {
+        "records": [
+            {
+                "id": "GSE36026",
+                "url": "https://www.bgee.org/experiment/GSE36026"
+            }
+        ]
+    },
+    "GSE38998": {
+        "records": [
+            {
+                "id": "GSE38998",
+                "url": "https://www.bgee.org/experiment/GSE38998"
+            }
+        ]
+    },
+    "GSE39703": {
+        "records": [
+            {
+                "id": "GSE39703",
+                "url": "https://www.bgee.org/experiment/GSE39703"
+            }
+        ]
+    },
+    "GSE41338": {
+        "records": [
+            {
+                "id": "GSE41338",
+                "url": "https://www.bgee.org/experiment/GSE41338"
+            }
+        ]
+    },
+    "GSE41637": {
+        "records": [
+            {
+                "id": "GSE41637",
+                "url": "https://www.bgee.org/experiment/GSE41637"
+            }
+        ]
+    },
+    "GSE42846": {
+        "records": [
+            {
+                "id": "GSE42846",
+                "url": "https://www.bgee.org/experiment/GSE42846"
+            }
+        ]
+    },
+    "GSE43013": {
+        "records": [
+            {
+                "id": "GSE43013",
+                "url": "https://www.bgee.org/experiment/GSE43013"
+            }
+        ]
+    },
+    "GSE43520": {
+        "records": [
+            {
+                "id": "GSE43520",
+                "url": "https://www.bgee.org/experiment/GSE43520"
+            }
+        ]
+    },
+    "GSE43721": {
+        "records": [
+            {
+                "id": "GSE43721",
+                "url": "https://www.bgee.org/experiment/GSE43721"
+            }
+        ]
+    },
+    "GSE44612": {
+        "records": [
+            {
+                "id": "GSE44612",
+                "url": "https://www.bgee.org/experiment/GSE44612"
+            }
+        ]
+    },
+    "GSE49587": {
+        "records": [
+            {
+                "id": "GSE49587",
+                "url": "https://www.bgee.org/experiment/GSE49587"
+            }
+        ]
+    },
+    "GSE57344": {
+        "records": [
+            {
+                "id": "GSE57344",
+                "url": "https://www.bgee.org/experiment/GSE57344"
+            }
+        ]
+    },
+    "GSE58387": {
+        "records": [
+            {
+                "id": "GSE58387",
+                "url": "https://www.bgee.org/experiment/GSE58387"
+            }
+        ]
+    },
+    "GSE58608": {
+        "records": [
+            {
+                "id": "GSE58608",
+                "url": "https://www.bgee.org/experiment/GSE58608"
+            }
+        ]
+    },
+    "GSE62098": {
+        "records": [
+            {
+                "id": "GSE62098",
+                "url": "https://www.bgee.org/experiment/GSE62098"
+            }
+        ]
+    },
+    "GSE63133": {
+        "records": [
+            {
+                "id": "GSE63133",
+                "url": "https://www.bgee.org/experiment/GSE63133"
+            }
+        ]
+    },
+    "GSE63191": {
+        "records": [
+            {
+                "id": "GSE63191",
+                "url": "https://www.bgee.org/experiment/GSE63191"
+            }
+        ]
+    },
+    "GSE63501": {
+        "records": [
+            {
+                "id": "GSE63501",
+                "url": "https://www.bgee.org/experiment/GSE63501"
+            }
+        ]
+    },
+    "GSE64283": {
+        "records": [
+            {
+                "id": "GSE64283",
+                "url": "https://www.bgee.org/experiment/GSE64283"
+            }
+        ]
+    },
+    "GSE68666": {
+        "records": [
+            {
+                "id": "GSE68666",
+                "url": "https://www.bgee.org/experiment/GSE68666"
+            }
+        ]
+    },
+    "GSE71681": {
+        "records": [
+            {
+                "id": "GSE71681",
+                "url": "https://www.bgee.org/experiment/GSE71681"
+            }
+        ]
+    },
+    "GSE71755": {
+        "records": [
+            {
+                "id": "GSE71755",
+                "url": "https://www.bgee.org/experiment/GSE71755"
+            }
+        ]
+    },
+    "SRP000198": {
+        "records": [
+            {
+                "id": "SRP000198",
+                "url": "https://www.bgee.org/experiment/SRP000198"
+            }
+        ]
+    },
+    "SRP001558": {
+        "records": [
+            {
+                "id": "SRP001558",
+                "url": "https://www.bgee.org/experiment/SRP001558"
+            }
+        ]
+    },
+    "SRP001696": {
+        "records": [
+            {
+                "id": "SRP001696",
+                "url": "https://www.bgee.org/experiment/SRP001696"
+            }
+        ]
+    },
+    "SRP002072": {
+        "records": [
+            {
+                "id": "SRP002072",
+                "url": "https://www.bgee.org/experiment/SRP002072"
+            }
+        ]
+    },
+    "SRP003276": {
+        "records": [
+            {
+                "id": "SRP003276",
+                "url": "https://www.bgee.org/experiment/SRP003276"
+            }
+        ]
+    },
+    "SRP003841": {
+        "records": [
+            {
+                "id": "SRP003841",
+                "url": "https://www.bgee.org/experiment/SRP003841"
+            }
+        ]
+    },
+    "SRP003905": {
+        "records": [
+            {
+                "id": "SRP003905",
+                "url": "https://www.bgee.org/experiment/SRP003905"
+            }
+        ]
+    },
+    "SRP006893": {
+        "records": [
+            {
+                "id": "SRP006893",
+                "url": "https://www.bgee.org/experiment/SRP006893"
+            }
+        ]
+    },
+    "SRP007294": {
+        "records": [
+            {
+                "id": "SRP007294",
+                "url": "https://www.bgee.org/experiment/SRP007294"
+            }
+        ]
+    },
+    "SRP007359": {
+        "records": [
+            {
+                "id": "SRP007359",
+                "url": "https://www.bgee.org/experiment/SRP007359"
+            }
+        ]
+    },
+    "SRP007481": {
+        "records": [
+            {
+                "id": "SRP007481",
+                "url": "https://www.bgee.org/experiment/SRP007481"
+            }
+        ]
+    },
+    "SRP007512": {
+        "records": [
+            {
+                "id": "SRP007512",
+                "url": "https://www.bgee.org/experiment/SRP007512"
+            }
+        ]
+    },
+    "SRP007655": {
+        "records": [
+            {
+                "id": "SRP007655",
+                "url": "https://www.bgee.org/experiment/SRP007655"
+            }
+        ]
+    },
+    "SRP008743": {
+        "records": [
+            {
+                "id": "SRP008743",
+                "url": "https://www.bgee.org/experiment/SRP008743"
+            }
+        ]
+    },
+    "SRP009426": {
+        "records": [
+            {
+                "id": "SRP009426",
+                "url": "https://www.bgee.org/experiment/SRP009426"
+            }
+        ]
+    },
+    "SRP009459": {
+        "records": [
+            {
+                "id": "SRP009459",
+                "url": "https://www.bgee.org/experiment/SRP009459"
+            }
+        ]
+    },
+    "SRP010955": {
+        "records": [
+            {
+                "id": "SRP010955",
+                "url": "https://www.bgee.org/experiment/SRP010955"
+            }
+        ]
+    },
+    "SRP011074": {
+        "records": [
+            {
+                "id": "SRP011074",
+                "url": "https://www.bgee.org/experiment/SRP011074"
+            }
+        ]
+    },
+    "SRP012682": {
+        "records": [
+            {
+                "id": "SRP012682",
+                "url": "https://www.bgee.org/experiment/SRP012682"
+            }
+        ]
+    },
+    "SRP013027": {
+        "records": [
+            {
+                "id": "SRP013027",
+                "url": "https://www.bgee.org/experiment/SRP013027"
+            }
+        ]
+    },
+    "SRP013114": {
+        "records": [
+            {
+                "id": "SRP013114",
+                "url": "https://www.bgee.org/experiment/SRP013114"
+            }
+        ]
+    },
+    "SRP013116": {
+        "records": [
+            {
+                "id": "SRP013116",
+                "url": "https://www.bgee.org/experiment/SRP013116"
+            }
+        ]
+    },
+    "SRP013378": {
+        "records": [
+            {
+                "id": "SRP013378",
+                "url": "https://www.bgee.org/experiment/SRP013378"
+            }
+        ]
+    },
+    "SRP013825": {
+        "records": [
+            {
+                "id": "SRP013825",
+                "url": "https://www.bgee.org/experiment/SRP013825"
+            }
+        ]
+    },
+    "SRP015370": {
+        "records": [
+            {
+                "id": "SRP015370",
+                "url": "https://www.bgee.org/experiment/SRP015370"
+            }
+        ]
+    },
+    "SRP019762": {
+        "records": [
+            {
+                "id": "SRP019762",
+                "url": "https://www.bgee.org/experiment/SRP019762"
+            }
+        ]
+    },
+    "SRP020526": {
+        "records": [
+            {
+                "id": "SRP020526",
+                "url": "https://www.bgee.org/experiment/SRP020526"
+            }
+        ]
+    },
+    "SRP021090": {
+        "records": [
+            {
+                "id": "SRP021090",
+                "url": "https://www.bgee.org/experiment/SRP021090"
+            }
+        ]
+    },
+    "SRP021119": {
+        "records": [
+            {
+                "id": "SRP021119",
+                "url": "https://www.bgee.org/experiment/SRP021119"
+            }
+        ]
+    },
+    "SRP022612": {
+        "records": [
+            {
+                "id": "SRP022612",
+                "url": "https://www.bgee.org/experiment/SRP022612"
+            }
+        ]
+    },
+    "SRP028336": {
+        "records": [
+            {
+                "id": "SRP028336",
+                "url": "https://www.bgee.org/experiment/SRP028336"
+            }
+        ]
+    },
+    "SRP029262": {
+        "records": [
+            {
+                "id": "SRP029262",
+                "url": "https://www.bgee.org/experiment/SRP029262"
+            }
+        ]
+    },
+    "SRP029592": {
+        "records": [
+            {
+                "id": "SRP029592",
+                "url": "https://www.bgee.org/experiment/SRP029592"
+            }
+        ]
+    },
+    "SRP029760": {
+        "records": [
+            {
+                "id": "SRP029760",
+                "url": "https://www.bgee.org/experiment/SRP029760"
+            }
+        ]
+    },
+    "SRP030211": {
+        "records": [
+            {
+                "id": "SRP030211",
+                "url": "https://www.bgee.org/experiment/SRP030211"
+            }
+        ]
+    },
+    "SRP033209": {
+        "records": [
+            {
+                "id": "SRP033209",
+                "url": "https://www.bgee.org/experiment/SRP033209"
+            }
+        ]
+    },
+    "SRP034732": {
+        "records": [
+            {
+                "id": "SRP034732",
+                "url": "https://www.bgee.org/experiment/SRP034732"
+            }
+        ]
+    },
+    "SRP034929": {
+        "records": [
+            {
+                "id": "SRP034929",
+                "url": "https://www.bgee.org/experiment/SRP034929"
+            }
+        ]
+    },
+    "SRP037986": {
+        "records": [
+            {
+                "id": "SRP037986",
+                "url": "https://www.bgee.org/experiment/SRP037986"
+            }
+        ]
+    },
+    "SRP039502": {
+        "records": [
+            {
+                "id": "SRP039502",
+                "url": "https://www.bgee.org/experiment/SRP039502"
+            }
+        ]
+    },
+    "SRP043364": {
+        "records": [
+            {
+                "id": "SRP043364",
+                "url": "https://www.bgee.org/experiment/SRP043364"
+            }
+        ]
+    },
+    "SRP044781": {
+        "records": [
+            {
+                "id": "SRP044781",
+                "url": "https://www.bgee.org/experiment/SRP044781"
+            }
+        ]
+    },
+    "SRP045429": {
+        "records": [
+            {
+                "id": "SRP045429",
+                "url": "https://www.bgee.org/experiment/SRP045429"
+            }
+        ]
+    },
+    "SRP045471": {
+        "records": [
+            {
+                "id": "SRP045471",
+                "url": "https://www.bgee.org/experiment/SRP045471"
+            }
+        ]
+    },
+    "SRP045673": {
+        "records": [
+            {
+                "id": "SRP045673",
+                "url": "https://www.bgee.org/experiment/SRP045673"
+            }
+        ]
+    },
+    "SRP048535": {
+        "records": [
+            {
+                "id": "SRP048535",
+                "url": "https://www.bgee.org/experiment/SRP048535"
+            }
+        ]
+    },
+    "SRP049818": {
+        "records": [
+            {
+                "id": "SRP049818",
+                "url": "https://www.bgee.org/experiment/SRP049818"
+            }
+        ]
+    },
+    "SRP051844": {
+        "records": [
+            {
+                "id": "SRP051844",
+                "url": "https://www.bgee.org/experiment/SRP051844"
+            }
+        ]
+    },
+    "SRP053433": {
+        "records": [
+            {
+                "id": "SRP053433",
+                "url": "https://www.bgee.org/experiment/SRP053433"
+            }
+        ]
+    },
+    "SRP055573": {
+        "records": [
+            {
+                "id": "SRP055573",
+                "url": "https://www.bgee.org/experiment/SRP055573"
+            }
+        ]
+    },
+    "SRP056356": {
+        "records": [
+            {
+                "id": "SRP056356",
+                "url": "https://www.bgee.org/experiment/SRP056356"
+            }
+        ]
+    },
+    "SRP057141": {
+        "records": [
+            {
+                "id": "SRP057141",
+                "url": "https://www.bgee.org/experiment/SRP057141"
+            }
+        ]
+    },
+    "SRP058036": {
+        "records": [
+            {
+                "id": "SRP058036",
+                "url": "https://www.bgee.org/experiment/SRP058036"
+            }
+        ]
+    },
+    "SRP058181": {
+        "records": [
+            {
+                "id": "SRP058181",
+                "url": "https://www.bgee.org/experiment/SRP058181"
+            }
+        ]
+    },
+    "SRP058709": {
+        "records": [
+            {
+                "id": "SRP058709",
+                "url": "https://www.bgee.org/experiment/SRP058709"
+            }
+        ]
+    },
+    "SRP058740": {
+        "records": [
+            {
+                "id": "SRP058740",
+                "url": "https://www.bgee.org/experiment/SRP058740"
+            }
+        ]
+    },
+    "SRP061644": {
+        "records": [
+            {
+                "id": "SRP061644",
+                "url": "https://www.bgee.org/experiment/SRP061644"
+            }
+        ]
+    },
+    "SRP061888": {
+        "records": [
+            {
+                "id": "SRP061888",
+                "url": "https://www.bgee.org/experiment/SRP061888"
+            }
+        ]
+    },
+    "SRP063600": {
+        "records": [
+            {
+                "id": "SRP063600",
+                "url": "https://www.bgee.org/experiment/SRP063600"
+            }
+        ]
+    },
+    "SRP065273": {
+        "records": [
+            {
+                "id": "SRP065273",
+                "url": "https://www.bgee.org/experiment/SRP065273"
+            }
+        ]
+    },
+    "SRP066912": {
+        "records": [
+            {
+                "id": "SRP066912",
+                "url": "https://www.bgee.org/experiment/SRP066912"
+            }
+        ]
+    },
+    "SRP070644": {
+        "records": [
+            {
+                "id": "SRP070644",
+                "url": "https://www.bgee.org/experiment/SRP070644"
+            }
+        ]
+    },
+    "SRP070882": {
+        "records": [
+            {
+                "id": "SRP070882",
+                "url": "https://www.bgee.org/experiment/SRP070882"
+            }
+        ]
+    },
+    "SRP073607": {
+        "records": [
+            {
+                "id": "SRP073607",
+                "url": "https://www.bgee.org/experiment/SRP073607"
+            }
+        ]
+    },
+    "SRP073726": {
+        "records": [
+            {
+                "id": "SRP073726",
+                "url": "https://www.bgee.org/experiment/SRP073726"
+            }
+        ]
+    },
+    "SRP073813": {
+        "records": [
+            {
+                "id": "SRP073813",
+                "url": "https://www.bgee.org/experiment/SRP073813"
+            }
+        ]
+    },
+    "SRP074330": {
+        "records": [
+            {
+                "id": "SRP074330",
+                "url": "https://www.bgee.org/experiment/SRP074330"
+            }
+        ]
+    },
+    "SRP074355": {
+        "records": [
+            {
+                "id": "SRP074355",
+                "url": "https://www.bgee.org/experiment/SRP074355"
+            }
+        ]
+    },
+    "SRP081209": {
+        "records": [
+            {
+                "id": "SRP081209",
+                "url": "https://www.bgee.org/experiment/SRP081209"
+            }
+        ]
+    },
+    "SRP086707": {
+        "records": [
+            {
+                "id": "SRP086707",
+                "url": "https://www.bgee.org/experiment/SRP086707"
+            }
+        ]
+    },
+    "SRP091944": {
+        "records": [
+            {
+                "id": "SRP091944",
+                "url": "https://www.bgee.org/experiment/SRP091944"
+            }
+        ]
+    },
+    "SRP092128": {
+        "records": [
+            {
+                "id": "SRP092128",
+                "url": "https://www.bgee.org/experiment/SRP092128"
+            }
+        ]
+    },
+    "SRP092799": {
+        "records": [
+            {
+                "id": "SRP092799",
+                "url": "https://www.bgee.org/experiment/SRP092799"
+            }
+        ]
+    },
+    "SRP098761": {
+        "records": [
+            {
+                "id": "SRP098761",
+                "url": "https://www.bgee.org/experiment/SRP098761"
+            }
+        ]
+    },
+    "SRP099257": {
+        "records": [
+            {
+                "id": "SRP099257",
+                "url": "https://www.bgee.org/experiment/SRP099257"
+            }
+        ]
+    },
+    "SRP100163": {
+        "records": [
+            {
+                "id": "SRP100163",
+                "url": "https://www.bgee.org/experiment/SRP100163"
+            }
+        ]
+    },
+    "SRP100948": {
+        "records": [
+            {
+                "id": "SRP100948",
+                "url": "https://www.bgee.org/experiment/SRP100948"
+            }
+        ]
+    },
+    "SRP101294": {
+        "records": [
+            {
+                "id": "SRP101294",
+                "url": "https://www.bgee.org/experiment/SRP101294"
+            }
+        ]
+    },
+    "SRP101726": {
+        "records": [
+            {
+                "id": "SRP101726",
+                "url": "https://www.bgee.org/experiment/SRP101726"
+            }
+        ]
+    },
+    "SRP101737": {
+        "records": [
+            {
+                "id": "SRP101737",
+                "url": "https://www.bgee.org/experiment/SRP101737"
+            }
+        ]
+    },
+    "SRP102542": {
+        "records": [
+            {
+                "id": "SRP102542",
+                "url": "https://www.bgee.org/experiment/SRP102542"
+            }
+        ]
+    },
+    "SRP102989": {
+        "records": [
+            {
+                "id": "SRP102989",
+                "url": "https://www.bgee.org/experiment/SRP102989"
+            }
+        ]
+    },
+    "SRP103757": {
+        "records": [
+            {
+                "id": "SRP103757",
+                "url": "https://www.bgee.org/experiment/SRP103757"
+            }
+        ]
+    },
+    "SRP104670": {
+        "records": [
+            {
+                "id": "SRP104670",
+                "url": "https://www.bgee.org/experiment/SRP104670"
+            }
+        ]
+    },
+    "SRP105769": {
+        "records": [
+            {
+                "id": "SRP105769",
+                "url": "https://www.bgee.org/experiment/SRP105769"
+            }
+        ]
+    },
+    "SRP106852": {
+        "records": [
+            {
+                "id": "SRP106852",
+                "url": "https://www.bgee.org/experiment/SRP106852"
+            }
+        ]
+    },
+    "SRP107937": {
+        "records": [
+            {
+                "id": "SRP107937",
+                "url": "https://www.bgee.org/experiment/SRP107937"
+            }
+        ]
+    },
+    "SRP110509": {
+        "records": [
+            {
+                "id": "SRP110509",
+                "url": "https://www.bgee.org/experiment/SRP110509"
+            }
+        ]
+    },
+    "SRP111096": {
+        "records": [
+            {
+                "id": "SRP111096",
+                "url": "https://www.bgee.org/experiment/SRP111096"
+            }
+        ]
+    },
+    "SRP112616": {
+        "records": [
+            {
+                "id": "SRP112616",
+                "url": "https://www.bgee.org/experiment/SRP112616"
+            }
+        ]
+    },
+    "SRP114436": {
+        "records": [
+            {
+                "id": "SRP114436",
+                "url": "https://www.bgee.org/experiment/SRP114436"
+            }
+        ]
+    },
+    "SRP116037": {
+        "records": [
+            {
+                "id": "SRP116037",
+                "url": "https://www.bgee.org/experiment/SRP116037"
+            }
+        ]
+    },
+    "SRP119808": {
+        "records": [
+            {
+                "id": "SRP119808",
+                "url": "https://www.bgee.org/experiment/SRP119808"
+            }
+        ]
+    },
+    "SRP123447": {
+        "records": [
+            {
+                "id": "SRP123447",
+                "url": "https://www.bgee.org/experiment/SRP123447"
+            }
+        ]
+    },
+    "SRP125768": {
+        "records": [
+            {
+                "id": "SRP125768",
+                "url": "https://www.bgee.org/experiment/SRP125768"
+            }
+        ]
+    },
+    "SRP125959": {
+        "records": [
+            {
+                "id": "SRP125959",
+                "url": "https://www.bgee.org/experiment/SRP125959"
+            }
+        ]
+    },
+    "SRP127250": {
+        "records": [
+            {
+                "id": "SRP127250",
+                "url": "https://www.bgee.org/experiment/SRP127250"
+            }
+        ]
+    },
+    "SRP127360": {
+        "records": [
+            {
+                "id": "SRP127360",
+                "url": "https://www.bgee.org/experiment/SRP127360"
+            }
+        ]
+    },
+    "SRP127986": {
+        "records": [
+            {
+                "id": "SRP127986",
+                "url": "https://www.bgee.org/experiment/SRP127986"
+            }
+        ]
+    },
+    "SRP131761": {
+        "records": [
+            {
+                "id": "SRP131761",
+                "url": "https://www.bgee.org/experiment/SRP131761"
+            }
+        ]
+    },
+    "SRP135698": {
+        "records": [
+            {
+                "id": "SRP135698",
+                "url": "https://www.bgee.org/experiment/SRP135698"
+            }
+        ]
+    },
+    "SRP136499": {
+        "records": [
+            {
+                "id": "SRP136499",
+                "url": "https://www.bgee.org/experiment/SRP136499"
+            }
+        ]
+    },
+    "SRP142618": {
+        "records": [
+            {
+                "id": "SRP142618",
+                "url": "https://www.bgee.org/experiment/SRP142618"
+            }
+        ]
+    },
+    "SRP144491": {
+        "records": [
+            {
+                "id": "SRP144491",
+                "url": "https://www.bgee.org/experiment/SRP144491"
+            }
+        ]
+    },
+    "SRP145002": {
+        "records": [
+            {
+                "id": "SRP145002",
+                "url": "https://www.bgee.org/experiment/SRP145002"
+            }
+        ]
+    },
+    "SRP149347": {
+        "records": [
+            {
+                "id": "SRP149347",
+                "url": "https://www.bgee.org/experiment/SRP149347"
+            }
+        ]
+    },
+    "SRP151309": {
+        "records": [
+            {
+                "id": "SRP151309",
+                "url": "https://www.bgee.org/experiment/SRP151309"
+            }
+        ]
+    },
+    "SRP162729": {
+        "records": [
+            {
+                "id": "SRP162729",
+                "url": "https://www.bgee.org/experiment/SRP162729"
+            }
+        ]
+    },
+    "SRP163252": {
+        "records": [
+            {
+                "id": "SRP163252",
+                "url": "https://www.bgee.org/experiment/SRP163252"
+            }
+        ]
+    },
+    "SRP174614": {
+        "records": [
+            {
+                "id": "SRP174614",
+                "url": "https://www.bgee.org/experiment/SRP174614"
+            }
+        ]
+    },
+    "SRP181218": {
+        "records": [
+            {
+                "id": "SRP181218",
+                "url": "https://www.bgee.org/experiment/SRP181218"
+            }
+        ]
+    },
+    "SRP199494": {
+        "records": [
+            {
+                "id": "SRP199494",
+                "url": "https://www.bgee.org/experiment/SRP199494"
+            }
+        ]
+    },
+    "SRP201320": {
+        "records": [
+            {
+                "id": "SRP201320",
+                "url": "https://www.bgee.org/experiment/SRP201320"
+            }
+        ]
+    },
+    "SRP216705": {
+        "records": [
+            {
+                "id": "SRP216705",
+                "url": "https://www.bgee.org/experiment/SRP216705"
+            }
+        ]
+    },
+    "SRP226514": {
+        "records": [
+            {
+                "id": "SRP226514",
+                "url": "https://www.bgee.org/experiment/SRP226514"
+            }
+        ]
+    },
+    "SRP226516": {
+        "records": [
+            {
+                "id": "SRP226516",
+                "url": "https://www.bgee.org/experiment/SRP226516"
+            }
+        ]
+    },
+    "SRP227066": {
+        "records": [
+            {
+                "id": "SRP227066",
+                "url": "https://www.bgee.org/experiment/SRP227066"
+            }
+        ]
+    },
+    "SRP237944": {
+        "records": [
+            {
+                "id": "SRP237944",
+                "url": "https://www.bgee.org/experiment/SRP237944"
+            }
+        ]
+    },
+    "SRP249850": {
+        "records": [
+            {
+                "id": "SRP249850",
+                "url": "https://www.bgee.org/experiment/SRP249850"
+            }
+        ]
+    },
+    "SRP250814": {
+        "records": [
+            {
+                "id": "SRP250814",
+                "url": "https://www.bgee.org/experiment/SRP250814"
+            }
+        ]
+    },
+    "SRP252769": {
+        "records": [
+            {
+                "id": "SRP252769",
+                "url": "https://www.bgee.org/experiment/SRP252769"
+            }
+        ]
+    },
+    "SRP262331": {
+        "records": [
+            {
+                "id": "SRP262331",
+                "url": "https://www.bgee.org/experiment/SRP262331"
+            }
+        ]
+    },
+    "SRP262332": {
+        "records": [
+            {
+                "id": "SRP262332",
+                "url": "https://www.bgee.org/experiment/SRP262332"
+            }
+        ]
+    },
+    "SRP266187": {
+        "records": [
+            {
+                "id": "SRP266187",
+                "url": "https://www.bgee.org/experiment/SRP266187"
+            }
+        ]
+    },
+    "SRP266207": {
+        "records": [
+            {
+                "id": "SRP266207",
+                "url": "https://www.bgee.org/experiment/SRP266207"
+            }
+        ]
+    },
+    "SRP273786": {
+        "records": [
+            {
+                "id": "SRP273786",
+                "url": "https://www.bgee.org/experiment/SRP273786"
+            }
+        ]
+    },
+    "SRP287843": {
+        "records": [
+            {
+                "id": "SRP287843",
+                "url": "https://www.bgee.org/experiment/SRP287843"
+            }
+        ]
+    },
+    "SRP292518": {
+        "records": [
+            {
+                "id": "SRP292518",
+                "url": "https://www.bgee.org/experiment/SRP292518"
+            }
+        ]
+    },
+    "SRP293352": {
+        "records": [
+            {
+                "id": "SRP293352",
+                "url": "https://www.bgee.org/experiment/SRP293352"
+            }
+        ]
+    },
+    "SRP308378": {
+        "records": [
+            {
+                "id": "SRP308378",
+                "url": "https://www.bgee.org/experiment/SRP308378"
+            }
+        ]
+    },
+    "SRP314149": {
+        "records": [
+            {
+                "id": "SRP314149",
+                "url": "https://www.bgee.org/experiment/SRP314149"
+            }
+        ]
+    },
+    "SRP410543": {
+        "records": [
+            {
+                "id": "SRP410543",
+                "url": "https://www.bgee.org/experiment/SRP410543"
+            }
+        ]
+    },
+    "SRP445933": {
+        "records": [
+            {
+                "id": "SRP445933",
+                "url": "https://www.bgee.org/experiment/SRP445933"
+            }
+        ]
+    },
+    "SRP446003": {
+        "records": [
+            {
+                "id": "SRP446003",
+                "url": "https://www.bgee.org/experiment/SRP446003"
+            }
+        ]
+    },
+    "SRP470937": {
+        "records": [
+            {
+                "id": "SRP470937",
+                "url": "https://www.bgee.org/experiment/SRP470937"
+            }
+        ]
+    }
+}

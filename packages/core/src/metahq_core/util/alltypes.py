@@ -1,15 +1,18 @@
 """
 Custom types for the metahq package
 
-Last updated: 2025-09-05 by Parker Hicks
+Last updated: 2026-08-12 by Parker Hicks
 """
 
 from collections.abc import KeysView
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+
+from metahq_core.config import EXTERNAL_LINKS_COL, SAMPLE_KEY, SERIES_KEY, SOURCES_COL
 
 type FilePath = Path | str
 type DictKeys = KeysView
@@ -27,3 +30,115 @@ type NpIdArray = NpStringArray | NpIntArray
 # Gemma annotations
 type RawGemma = list[dict[str, Any]]
 type ParsedGemma = dict[str, dict[str, dict[str, list[str]]]]
+
+
+class Attribute(Enum):
+    "An attribute with supported annotations in MetaHQ."
+
+    TISSUE = "tissue"
+    DISEASE = "disease"
+    SEX = "sex"
+    AGE = "age"
+
+
+HIERARCHICAL_ATTRIBUTES = frozenset({Attribute.TISSUE, Attribute.DISEASE})
+
+
+class Level(Enum):
+    """Supported annotation levels."""
+
+    SAMPLE = SAMPLE_KEY
+    SERIES = SERIES_KEY
+
+
+class MetadataField(Enum):
+    """All supported metadata fields."""
+
+    # levels
+    SAMPLE = SAMPLE_KEY
+    SERIES = SERIES_KEY
+    # sample-level
+    DESCRIPTION = "description"
+    SOURCE_NAME_CH1 = "source_name_ch1"
+    CHARACTERISTICS_CH1 = "characteristics_ch1"
+    SOURCE_NAME_CH2 = "source_name_ch2"
+    CHARACTERISTICS_CH2 = "characteristics_ch2"
+    # series-level
+    TITLE = "title"
+    SUMMARY = "summary"
+    OVERALL_DESIGN = "overall_design"
+    SAMPLE_ID = "sample_id"
+    # id fields
+    PLATFORM = "platform"
+    SRA_RUN = "srr"
+    SRA_EXPERIMENT = "srx"
+    SRA_SAMPLE = "srs"
+    SRA_PROJECT = "srp"
+    REFINEBIO_SAMPLE = "refinebio_sample"
+    REFINEBIO_EXPERIMENT = "refinebio_experiment"
+    # required
+    SOURCES = SOURCES_COL
+    EXTERNAL_LINKS = EXTERNAL_LINKS_COL
+
+
+SAMPLE_METADATA_FIELDS = frozenset(
+    {
+        MetadataField.DESCRIPTION,
+        MetadataField.SOURCE_NAME_CH1,
+        MetadataField.CHARACTERISTICS_CH1,
+        MetadataField.SOURCE_NAME_CH2,
+        MetadataField.CHARACTERISTICS_CH2,
+    }
+)
+
+SERIES_METADATA_FIELDS = frozenset(
+    {
+        MetadataField.TITLE,
+        MetadataField.SUMMARY,
+        MetadataField.OVERALL_DESIGN,
+        MetadataField.DESCRIPTION,
+        MetadataField.SAMPLE_ID,
+    }
+)
+
+# ID fields that apply to sample level
+SAMPLE_ID_FIELDS = frozenset(
+    {
+        MetadataField.PLATFORM,
+        MetadataField.SAMPLE,
+        MetadataField.SERIES,
+        MetadataField.SRA_RUN,
+        MetadataField.SRA_EXPERIMENT,
+        MetadataField.SRA_SAMPLE,
+        MetadataField.SRA_PROJECT,
+        MetadataField.REFINEBIO_SAMPLE,
+        MetadataField.REFINEBIO_EXPERIMENT,
+    }
+)
+
+# ID fields that apply to series level
+SERIES_ID_FIELDS = frozenset(
+    {
+        MetadataField.SERIES,
+        MetadataField.PLATFORM,
+        MetadataField.SRA_PROJECT,
+        MetadataField.REFINEBIO_EXPERIMENT,
+        MetadataField.SAMPLE_ID,
+    }
+)
+
+# All ID fields (kept for backward compatibility)
+ID_FIELDS = SAMPLE_ID_FIELDS | SERIES_ID_FIELDS
+
+REQUIRED_FIELDS = frozenset({MetadataField.SOURCES, MetadataField.EXTERNAL_LINKS})
+
+# conversions
+LEVEL_TO_FIELDS: dict[Level, frozenset[MetadataField]] = {
+    Level.SAMPLE: SAMPLE_METADATA_FIELDS | SAMPLE_ID_FIELDS,
+    Level.SERIES: SERIES_METADATA_FIELDS | SERIES_ID_FIELDS,
+}
+
+LEVEL_TO_INDEX_FIELD: dict[Level, MetadataField] = {
+    Level.SAMPLE: MetadataField.SAMPLE,
+    Level.SERIES: MetadataField.SERIES,
+}

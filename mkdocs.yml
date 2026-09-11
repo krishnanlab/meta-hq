@@ -123,6 +123,7 @@ nav:
                 - Annotations: packages/core/api/export/annotations.md
                 - Labels: packages/core/api/export/labels.md
                 - References: packages/core/api/export/references.md
+                - RefineBio: packages/core/api/export/refinebio.md
               - Search: packages/core/api/search.md
               - Sources: packages/core/api/sources.md
               - Utilities:
@@ -203,6 +204,7 @@ nav:
               - Series: packages/db_build/api/metadata/series.md
             - Fetchers:
               - Gemma: packages/db_build/api/fetchers/gemma.md
+              - RefineBio: packages/db_build/api/fetchers/refinebio.md
             - Utilities:
               - Age Groups: packages/db_build/api/util/age_groups.md
               - Checkpointing: packages/db_build/api/util/checkpointing.md

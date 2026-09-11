@@ -61,7 +61,7 @@ class RelationsLazyFrame:
 
     def get_ancestors(
         self, subset: list[str] | None = None, rm_self: bool = False
-    ) -> dict[str, set[str]]:
+    ) -> dict[str, list[str]]:
         """Extract relationships of terms to their ancestors.
 
         Note that terms queried for their ancestors are included
@@ -85,7 +85,7 @@ class RelationsLazyFrame:
             lf = lf.select(subset + [ROW_ID])
 
         relations = self._collect_relations(lf, group_by=COL_ID, agg=ROW_ID)
-        relations = dict(zip(relations[COL_ID], set(relations[ROW_ID])))
+        relations = dict(zip(relations[COL_ID], relations[ROW_ID]))
 
         if rm_self:
             self.logger.info("Removing self terms from ancestors query...")
@@ -95,7 +95,7 @@ class RelationsLazyFrame:
 
     def get_descendants(
         self, subset: list[str] | None = None, rm_self: bool = True
-    ) -> dict[str, set[str]]:
+    ) -> dict[str, list[str]]:
         """Extract relationships of terms to their descendants.
 
         Note that terms queried for their ancestors are included
@@ -177,17 +177,56 @@ class RelationsLazyFrame:
             (dict): A dictionary of the following structure:
                 {<group_by>: 'Term_x', <agg>: ['Term_a', 'Term_b', 'Term_c']}
         """
-        return (
-            lf.unpivot(index=ROW_ID, variable_name=COL_ID, value_name="value")
-            .filter(pl.col("value") != 0)
-            .group_by(group_by)
-            .agg(pl.col(agg))
-            .collect(engine=engine)
-            .to_dict(as_series=False)
-        )
+        # For very large matrices (>30k columns), unpivot can create billions of rows
+        # and hang even with streaming. Process in chunks to avoid memory issues.
+        schema = lf.collect_schema()
+        num_cols = len(schema) - 1  # subtract row_id column
+
+        if num_cols > 30000:
+            self.logger.info(
+                f"Large matrix detected ({num_cols} columns). Processing in chunks to avoid memory issues..."
+            )
+            chunk_size = 5000
+            all_results = []
+            col_names = [c for c in schema.names() if c != ROW_ID]
+
+            for i in range(0, len(col_names), chunk_size):
+                chunk_cols = col_names[i:i + chunk_size]
+                self.logger.debug(f"Processing chunk {i//chunk_size + 1}/{(len(col_names) + chunk_size - 1)//chunk_size}")
+
+                chunk_result = (
+                    lf.select([ROW_ID] + chunk_cols)
+                    .unpivot(index=ROW_ID, variable_name=COL_ID, value_name="value")
+                    .filter(pl.col("value") != 0)
+                    .group_by(group_by)
+                    .agg(pl.col(agg))
+                    .collect(engine="streaming")
+                )
+                all_results.append(chunk_result)
+
+            # Merge all chunks
+            combined = pl.concat(all_results)
+            # Re-group to merge lists from different chunks
+            final = (
+                combined
+                .explode(agg)
+                .group_by(group_by)
+                .agg(pl.col(agg))
+                .to_dict(as_series=False)
+            )
+            return final
+        else:
+            return (
+                lf.unpivot(index=ROW_ID, variable_name=COL_ID, value_name="value")
+                .filter(pl.col("value") != 0)
+                .group_by(group_by)
+                .agg(pl.col(agg))
+                .collect(engine=engine)
+                .to_dict(as_series=False)
+            )
 
     @staticmethod
-    def _rm_self_relations(relations: dict[str, list[str]]):
+    def _rm_self_relations(relations: dict[str, list[str]]) -> dict[str, list[str]]:
         """Remove the term ID representing a particular key from the
         values of that same key.
         """
@@ -195,6 +234,6 @@ class RelationsLazyFrame:
         for term, ds in relations.items():
             ds = set(ds)
             ds.discard(term)
-            relations_self_rm[term] = ds
+            relations_self_rm[term] = list(ds)
 
         return relations_self_rm

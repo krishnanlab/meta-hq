@@ -1,0 +1,487 @@
+name,id
+intestinal mucosa,UBERON:0001242
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t1n1,na
+white blood cells - female severe asthma,CL:0000738
+endometrial tissue,UBERON:0001295
+t lymphocytes - homozygous fh,CL:0000542
+cirrhotic livers and normal kidneys from the same patients,na
+adipose tissue,UBERON:0001013
+brain tumor tissue samples of human gliomas and normal brain - grade:iv - primary tumor,UBERON:0000955
+blood myelomonocytic cells from rcc and healthy blood myelomonocytic cells,UBERON:0000178
+nose,UBERON:0007827
+hcc tumor and matched non-tumor surrounding tissues,na
+trabecular meshwork,UBERON:0005969
+testis,UBERON:0000473
+dental pulp,UBERON:0001754
+blood monocyte,CL:0000576|UBERON:0000178
+extraocular muscle,UBERON:0001601
+back skin (k5-tie2 psoriasis model),UBERON:0001068
+skeletal muscle biopsies - short duration,UBERON:0001134
+peripheral blood mononuclear cells (non-ischemic cardiomyopathy),CL:2000001
+"sections from sporadic, primary basal like cancer specimens",na
+huh7 hepatoma cells (infected with jfh-1 hcv) - 6 hours post-infection,na
+anaplastic thyroid carcinoma tissue and normal thyroid tissue,UBERON:0002046
+cumulus cells cultured (lean patients),CL:0000711
+substantia nigra - braak &icirc;&plusmn;-synuclein stage 1-2,UBERON:0002038
+lung - upper lobe - advanced idiopathic pulmonary fibrosis - female,UBERON:0008948
+ganglioneuroblastoma,UBERON:0000045
+temporal lobes,UBERON:0001871
+intestine - large intestine - colon (mmhcc),UBERON:0001155
+muscle - striated (skeletal) (mmhcc),UBERON:0002036
+hyaff-11 scaffold culture,na
+intestine - small intestine - duodenum (mmhcc),UBERON:0002114
+bronchial epithelial cells - male - mild asthma,CL:0002328|UBERON:0002185
+thymocytes (ikaros mutant thymic tumors),CL:0000233
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 24 hours,UBERON:0002084
+bronchial epithelial cells - female - severe asthma,CL:0002328|UBERON:0002185
+pancreatic tumor cells (bitransgenic pdx1-cre/kras*a mice) and pancreatic cells (wt mice),UBERON:0001264
+peripheral blood leukocytes,UBERON:0000178|CL:0000738
+mesodermal precursor cells,CL:0000134
+retina,UBERON:0000966
+whole lung - early idiopathic pulmonary fibrosis - male,UBERON:0002048
+papillary thyroid carcinoma tumors (without a braf mutation) and normal thyroid specimens,UBERON:0002046
+nasopharyngeal biopsies (with epstein-barr virus (ebv)-positive undifferentiated npc),UBERON:0001728
+synovial membrane,UBERON:0007616
+lymphoblast cell lines,CL:0017005
+endometrial cells,UBERON:0001295
+adipose stem cells,CL:0000034|UBERON:0001013
+lymphoblast,CL:0017005
+neurons - male,CL:0000540
+uterine tumors (endometrioid histologic subtype) - stage-grade:ib-g3,UBERON:0000995
+epithelial cells (pancreatic duct),CL:0000083
+peripheral blood expression profile - symptomatic patients (hg-u133a),UBERON:0000178
+peripheral blood,UBERON:0000178
+female bronchial epithelial cell,CL:0002328
+sections from non-basal like cancer specimens,na
+tracheal epithelium,UBERON:0001901
+nickel-allergic patients whose skins were exposed to nickel - 48 hours,na
+mammary tumors,UBERON:0001911
+"ventral spinal cord, motor neurons",UBERON:0002240|CL:0000100
+nickel-allergic patients whose skins were exposed to nickel - 96 hours,na
+back skin (k5-tgfbeta1 psoriasis model),UBERON:0001068
+bone marrow mesenchymal stromal cells,CL:0010001
+normal urothelium cells and cis cells,na
+striatal cells,na
+endometrial specimens from women with endometriosis - early secretory,UBERON:0001295
+cd4+ t cells - european-american sle patients,CL:0000624
+huh7 hepatoma cells (infected with jfh-1 hcv) - 12 hours post-infection,na
+huh7 hepatoma cells (infected with jfh-1 hcv) - 48 hours post-infection,na
+quadriceps,UBERON:0001377
+connective tissue in joints,UBERON:0002384
+human prolactinomas,na
+esophageal squamous epithelium,UBERON:0006920
+dorsal motor nucleus of vagus nerve,UBERON:0002870
+leukocyte,CL:0000738
+fetus,UBERON:0007220
+bone marrow mesenchymal stromal cells,CL:0000134|UBERON:0002371
+chondrocyte,CL:0000138
+gastrocnemius muscle,UBERON:0001388
+prostate tissue (metastatic prostate tumor),UBERON:0002367
+brain tissue (dorsolateral prefrontal cortex and orbitofrontal cortex),UBERON:0000955
+cns - brain - hippocampus (mmhcc),UBERON:0002421
+bronchial epithelial cells - male - severe asthma,CL:0002328|UBERON:0002185
+male temporal cortex,UBERON:0016538
+skeletal muscle (whole gastrocnemius muscle) from colon cancer bearing mice and non-tumor bearing mice,UBERON:0001134
+skeletal muscle,UBERON:0014895
+"cerebellum, hdhq111 knock-in model of huntington's disease",UBERON:0002037
+white blood cells - female mild asthma,CL:0000738
+uterine tumors (endometrioid histologic subtype) - stage-grade:ic-g2,UBERON:0000995
+mammary gland,UBERON:0001911
+ove26 type 1,na
+skeletal muscle - tibialis anterior - 10 months,UBERON:0001385
+epithelial cells,CL:0000066
+temporal cortex,UBERON:0016538
+derma (skin),UBERON:0000014
+appendix,UBERON:0001154
+panc-1 pancreatic adenocarcinoma cell line,na
+at2 e/r positive bcp all cell line (following e/r -etv6/runx1- knockdown),na
+fibroblast,CL:0000057
+uterus - cervix (mmhcc),UBERON:0000002
+lung fibroblasts (rapid progressing fibrosis),CL:0002553
+extensor digitorum longus muscle,UBERON:0001386
+lymphoblastoid cells,na
+anterior prefrontal cortex - postmortem - male,UBERON:0000451
+colonic mucosa - inflamed,UBERON:0000317
+endometrium,UBERON:0002450
+adrenal gland,UBERON:0002369
+testicular seminoma tumors (at pt3) and normal testicular tissue,UBERON:0000473
+colon (dss - induced colitis),UBERON:0001155
+epidermal punch biopsies,UBERON:0000014
+male hippocampus,UBERON:0002421
+mda-mb231 cells,na
+skeletal muscle (from obese women with polycystic ovary syndrome),UBERON:0001134
+chondrocytes monolayer culture,CL:0000138
+primary lung tumor and normal lung,UBERON:0002048
+"postnatal day 30 cerebellum, cystatin b knockout model of progressive myoclonus epilepsy",UBERON:0002037
+connective tissue,UBERON:0002384
+"ocular motor neurons, 10 weeks old",CL:0008010
+amygdala,UBERON:0001876
+colon,UBERON:0001155
+uterine tumors (endometrioid histologic subtype) - stage-grade:ic-g1,UBERON:0000995
+tonsillar lymphoid tissue,UBERON:0010423
+substantia nigra - female,UBERON:0002038
+pbmc (peripheral blood mononuclear cells),CL:2000001
+papillary thyroid carcinoma tumors (with a braf mutation) and normal thyroid specimens,UBERON:0002046
+colon mucosa - colorectal adenocarcinomas with microsatellite instability (msi crcs),UBERON:0000317
+blood,UBERON:0000178
+pituitary gland,UBERON:0000007
+"postnatal day 7 cerebellum, cystatin b knockout model of progressive myoclonus epilepsy",UBERON:0002037
+skeletal myocyte,CL:0000187
+lymphocytes from patients with moderate stage huntington's disease - male,CL:0000542
+tendons,UBERON:0000043
+uterine tumors (papillary serous histologic subtype) - stage-grade:ia-g3,UBERON:0000995
+skin from sccs and normal human epidermis,UBERON:0002097
+radical prostatectomy tissue samples (tmprss2:erg gene fusion negative) and benign prostate tissue,UBERON:0002367
+normal prostate epithelial cells and primary epithelial cell culture (gleason 6 score tumor),na
+spleen (mmhcc),UBERON:0002106
+blood neutrophil,CL:0000775|UBERON:0000178
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 1 week,UBERON:0002084
+epithelial cell,CL:0000066
+lung,UBERON:0002048
+hematopoietic cd34+ stem cells,CL:0001024
+embryonic stem,CL:0002322
+pd medullas,na
+aorta smooth muscle tissue,UBERON:0004178
+testicular tissue,UBERON:0000473
+skin (lesional atopic dermatitis (al) skin lesions),UBERON:0002097
+"cultured cerebellar granule cells, cystatin b knockout model of progressive myoclonus epilepsy",CL:0001031
+skeletal muscle - semitendinosus muscle biopsies,UBERON:0001375
+cd34+ cells (refractory anemia with ringed sideroblasts),na
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 8 weeks,UBERON:0002084
+intestinal polyps model (generated by the deletion of the phosphatase pten gene from the intestine),UBERON:0000160
+huh7 hepatoma cells (infected with jfh-1 hcv) - 24 hours post-infection,na
+prostate tissue (primary prostate tumor),UBERON:0002367
+synovial biopsies from affected knees,UBERON:0001465
+liver tissue,UBERON:0002107
+non-lesional skin,UBERON:0002097
+uterine tumors (endometrioid histologic subtype) - stage-grade:ia-g1,UBERON:0000995
+ascending colon,UBERON:0001156
+uterine tumors (papillary serous histologic subtype) - stage-grade:ia-g2,UBERON:0000995
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 4 hours,UBERON:0002084
+pancreas (advanced stage of murine pdac and control pancreas),UBERON:0001264
+skeletal muscle - extensor digitorum longus - 7 months,UBERON:0001386
+blood lymphocytes,CL:4030029
+spinal cord grey matter - sporadic als,UBERON:0002020|UBERON:0002240
+muscle tissue,UBERON:0002385
+esophageal normal adjacent tissue,UBERON:0001043
+cns - brain (mmhcc),UBERON:0000955
+peripheral blood lymphocytes,UBERON:0000178|CL:0000542
+vulvar intraepithelial neoplasia (vin) lesions,UBERON:0000997
+lymphocyte,CL:0000542
+peripheral blood monocytes,UBERON:0000178|CL:0000576
+"motor neurons, 120 days old",CL:0000100
+normal skin and squamous cell carcinoma (scc) tumor biopsies,na
+peripheral blood b cells (inactive lupus),CL:0000236|UBERON:0000178
+premature newborn umbilical cords - lower gestational age newborns,UBERON:0002331
+oropharynx epithelium,UBERON:0001952
+breast epithelium,UBERON:0008367
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t2n2,na
+mammary gland tissue,UBERON:0001911
+thymic epithelial cell,CL:0002293
+t lymphocyte,CL:0000542
+blood myelomonocytic cells from rcc and healthy blood myelomonocytic cells,UBERON:0000178
+renal tissue,UBERON:0001008
+stomach,UBERON:0000945
+substantia nigra - braak &icirc;&plusmn;-synuclein stage 3-4,UBERON:0002038
+superior temporal cortex - postmortem - male,UBERON:0016538
+airway epithelial cells,CL:0002368  
+synovial fluid macrophages,UBERON:0001090|CL:0000235
+minor salivary glands - moderate sjogren's syndrome,UBERON:0001830
+intestinal biopsies,UBERON:0000160
+cardiomyocyte,CL:0000746
+cd34+ hematopoietic stem cells (refractory anemia),CL:0001024
+whole heart (myocardium) from colon cancer bearing mice and non-tumor bearing mice,UBERON:0002349
+induced pluripotent stem cells -ipsc- (derived from childhood cerebral adrenoleukodystrophy patient dermal fibroblasts) and healthy fibroblasts,CL:0000034
+dental pulp stem cell culture,CL:4030035
+lung - lower lobe - advanced idiopathic pulmonary fibrosis - female,UBERON:0008949
+nickel-allergic patients whose skins were exposed to nickel - 7 hours,na
+esophagus,UBERON:0015232
+descending colon,UBERON:0001158
+skeletal muscle (biceps &amp; deltoid),UBERON:0001134
+skeletal muscle - gracilis muscle biopsies,UBERON:0000950
+endothelial cells - male,CL:0000115
+cd8+ t cells - african-american sle patients,CL:0000625
+nasal olfactory stem cells,CL:0000034
+bronchial biopsies,UBERON:0002185
+uterine tumors (endometrioid histologic subtype) - stage-grade:ia-g2,UBERON:0000995
+endometrial tissue  (endometrioma tissue and eutopic endometrium controls),UBERON:0001295
+lymphocytes from patients with moderate stage huntington's disease - female,CL:0000542
+thyroid gland (mmhcc),UBERON:0002046
+cd3+ t cells,CL:0000084
+tail skin ( k14-areg psoriasis model),UBERON:0003534
+splenocyte,CL:2000074
+back skin ( imiquimod -imq- psoriasis model),UBERON:0001068
+endometrial specimens from women with endometriosis - proliferative,UBERON:0001295
+neurons - female,CL:0000540
+brain tissue (frontal cortex),UBERON:0000955
+articular condrocytes from osteoarthritic knees of sprague-dawley males and normal contralateral control,CL:1001607|UBERON:0001465
+circulating cd8+ t-cells (non-severe asthma),CL:0000625
+bone marrow stem cell,UBERON:0002371|CL:0000034
+pancreatic islet,UBERON:0000006
+induced pluripotent stem cells,CL:0000034
+primary retinal pigment epithelial (rpe) cells,CL:0002586
+plasma cells,CL:0000786
+heart (from cvb3-infected females - day 10 postinfection),UBERON:0000948
+leukemic cell,na
+pathological skeletal muscle fibers,UBERON:0001134
+glomeruli,UBERON:0000074
+cumulus cells cultured (obese patients),CL:0000711
+mononuclear leukocyte,CL:0000842
+fra-1 null mice,na
+granulosa cells,CL:0000501
+peripheral blood mononuclear cells (collected from is patients at least 6 months after the first and only stroke event),CL:2000001
+astrocyte,CL:0000127
+"aggressive lymphoma, brd2 trangenic",na
+epidermis,UBERON:0007376
+mesenchymal cells,CL:0008019
+peripheral white blood cells,UBERON:0000178|CL:0000738
+bone marrow,UBERON:0002371
+normal resting b cell,CL:0000236
+"striatum, hdhq111 knock-in model of huntington's disease",na
+aorta,UBERON:0000947
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t2n1,na
+whole blood (cutaneous psoriasis),CL:0000738
+skeletal muscle - diaphragm - 10 months,UBERON:0001103
+substantia nigra - male,UBERON:0002038
+superior temporal cortex - postmortem - female,UBERON:0016538
+embryonic stem cells,CL:0002322
+gracilis and semitendinosus muscle,UBERON:0004252
+pancreatic tissue,UBERON:0001264
+biceps biopsies,UBERON:0001507
+umbilical vein,UBERON:0002066
+cd8+ t cells - european-american sle patients,CL:0000625
+uterine tumors (endometrioid histologic subtype) - stage-grade:ic-g3,UBERON:0000995
+thymus,UBERON:0002370
+soleus muscle,UBERON:0001389
+testicular seminoma tumors (at pt2) and normal testicular tissue,UBERON:0000473
+white blood cells - male mild asthma,CL:0000738
+brain tumor tissue samples of human gliomas and normal brain - grade:ogiii - primary tumor,UBERON:0000955
+cd19+ b cells,CL:0001201
+lung tumor cells,UBERON:0002048
+"invasive ductal carcinoma (idc) cells,  and their normal counterpart",na
+kidney,UBERON:0002113
+back skin (k5-stat3c psoriasis model),UBERON:0001068
+intestinal epithelium,UBERON:0001277
+b cells - derived from the spleen (mm model xbp-1s overexpression),CL:0000236|UBERON:0002106
+nonlesional epithelium,UBERON:0000483
+primary dermal fibroblasts (childhood cerebral adrenoleukodystrophy),CL:0020013
+splenic tissue,UBERON:0002106
+cd34+ hematopoietic stem cells (refractory anemia with excess blasts 2),CL:0001024
+cd8t cells (sorted peripheral blood lymphocytes),CL:0000625
+hepatic tissue,UBERON:0002107
+fibroblasts,CL:0000057
+fibroblast cell lines - 3 years,CL:0000057
+premature newborn umbilical cords - higher gestational age newborns,UBERON:0002331
+prostate,UBERON:0002367
+liver,UBERON:0002107
+epithelial cells (pancreatic duct)),CL:0000083
+circulating cd4+ t-cells (non-severe asthma),CL:0000624
+brain lesion (ms after demyelination - active inflammation),UBERON:0000955
+thrombocyte,CL:0000233
+testicular seminoma tumors (at pt1) and normal testicular tissue,UBERON:0000473
+"""penis, nos""",UBERON:0000989
+sigmoid colon,UBERON:0001159
+b cell lymphocyte,CL:0000236
+neuron,CL:0000540
+mast cells,CL:0000097
+eye - lacrimal gland (mmhcc),UBERON:0001817
+kyse human esophageal squamous cell carcinoma cell line and normal esophageal tissue,UBERON:0001043
+normal prostate epithelial cells and primary epithelial cell culture (gleason 7 score tumor),na
+percutaneous needle liver biopsies - (hepatokines) - male,UBERON:0002107
+peripheral blood expression profile - presymptomatic patients (hg-u133a),UBERON:0000178
+stromal cells,CL:0000499
+pbmc,CL:2000001
+colonic mucosa - non-inflamed,UBERON:0000317
+lung (from b6d2f1 females) - 63 days post infection,UBERON:0002048
+brain,UBERON:6110636
+induced pluripotent stem cell-derived neurons - female,na
+mammary epithelium,UBERON:0003244
+esopahgus endoscopic biopsies,UBERON:0001043
+brain tumor tissue samples of human gliomas and normal brain - grade:iv - secundary tumor,UBERON:0000955
+peripheral blood mononuclear cells,CL:2000001
+sigmoid colons (mucosal biopsy),UBERON:0001155
+endothelial cell,CL:0000115
+monocytes - homozygous fh,CL:0000576
+whole blood cells,CL:0000738
+head and neck squamous cell (normal vs. tumor),CL:0000076
+dermal fibroblast (from childhood cerebral adrenoleukodystrophy (ccald) patient) and healthy fibroblasts,CL:0020013
+embryonic fibroblasts - mbt/pas animals,CL:2000042
+gingiva,UBERON:0001828
+white blood cells - male severe asthma,CL:0000738
+uterus,UBERON:0000995
+b cells (sorted peripheral blood lymphocytes),CL:0000236|CL:4030030
+dorsal root ganglia,UBERON:0000044
+female temporal cortex,UBERON:0016538
+hepatocellular carcinoma and adjacent non-tumorous liver tissues,UBERON:0002107
+ht29 colo205,na
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t1n0,na
+"soleus muscle, in the basal state, from five-month-old ts65dn down syndrome (ds) males",UBERON:0001389
+adrenal gland tissue,UBERON:0018303
+deltoid,UBERON:0001476
+brain tumor tissue samples of human gliomas and normal brain - grade:aii - primary tumor,UBERON:0000955
+radical prostatectomy tissue samples (tmprss2:erg gene fusion positive) and benign prostate tissue,UBERON:0002367
+colon biopsy,UBERON:0001155
+skeletal muscle - gastrocnemius - 7 months,UBERON:0001388
+skeletal muscle - tibialis anterior - 7 months,UBERON:0001385
+"transitional lymphoma, brd2 transgenic",na
+nickel-allergic patients whose skins were not exposed to nickel,na
+brain tissue,UBERON:0000955
+female hippocampus,UBERON:0002421
+hepatocyte,CL:0000182
+megakaryocyte,CL:0000556
+"spinal cord, 10 weeks old",UBERON:0002240
+cd4+ t cells,CL:0000624
+esophagus epithelium,UBERON:0001976
+monocytes - heterozygous fh,CL:0000576
+bicep,na
+haematopoietic stem cell,CL:0000037
+endothelial cells and neurons from dorsolateral prefrontal cortex,UBERON:0000451
+endothelial cells,CL:0000115
+cns - brain - cerebellum (mmhcc),UBERON:0002037
+uterus - myometrium (mmhcc),UBERON:0001296
+skin fibroblast,CL:0002620
+neuroretina,UBERON:0003902
+"motor neurons, 60 days old",CL:0000100
+left ventricle apex tissue,UBERON:0002084
+lung - lower lobe - advanced idiopathic pulmonary fibrosis - male,UBERON:0008949
+trachea,UBERON:0003126
+wrist muscles - extensor,UBERON:0000311|UBERON:0001491
+striatum,UBERON:0005383
+lung - upper lobe - advanced idiopathic pulmonary fibrosis - male,UBERON:0008948
+cd34+ hematopoietic stem cells (refractory anemia with excess blasts 1),CL:0001024
+substantia nigra - braak &icirc;&plusmn;-synuclein stage 5-6,UBERON:0002038
+cd34+ hematopoietic stem cells (refractory anemia with ringed sideroblasts),CL:0001024
+uterine tumors (endometrioid histologic subtype) - stage-grade:ia-g3,UBERON:0000995
+brain lesion (ms after inflammation - late stage),UBERON:0000955
+salivary tissue,UBERON:0001044
+hypothalamus,UBERON:0001898
+bronchial epithelial cells,CL:0002328|UBERON:0002185
+retina (adult cd-1 animals) - 5 weeks,UBERON:0000966
+terminal ileum,UBERON:0002116
+skeletal muscle biopsies - long duration,UBERON:0001134
+pleura,UBERON:0003390
+percutaneous needle liver biopsies - (hepatokines) - female,UBERON:0002107
+nucleus accumbens,UBERON:0001882
+alveolar macrophage,CL:1001603
+platelets,CL:0000233
+blood monocyte,CL:0000576
+cerebellum,UBERON:0002037
+"whole blood, female",UBERON:0000178
+leukocyte - monocyte - macrophage (mmhcc),CL:0000235
+cervical cancer primary tumors and normal cervical epithelium,na
+gastric tissue,UBERON:0001007
+whole blood,UBERON:0000178
+"heart, left ventricle apex",UBERON:0002084
+beta cells of pancreas,CL:0000169
+optic nerve head,UBERON:0001783
+cd34+ cells (refractory anemia with excess blasts),na
+minor salivary glands - early sjogren's syndrome,UBERON:0001830
+rectal mucosal epithelia (cftr d508 mutation),UBERON:0013067
+cd20+ b cells - european-american sle patients,CL:0000236
+female frontal cortex,UBERON:0001870
+ear skin ( k14-areg psoriasis model),UBERON:0001459
+spleen,UBERON:0002106
+prefrontal cortex,UBERON:0000451
+male bronchial epithelial cell,CL:0002328
+embryonic fibroblasts - balb/cbyj animals,CL:2000042
+wrist muscles - flexor,UBERON:0001491|UBERON:0000366
+macrophage,CL:0000235
+hsc cells,na
+nasopharynx,UBERON:0001728
+circulating cd4+ t-cells (severe asthma),CL:0000624
+fallopian tube,UBERON:0003889
+sebocyte,CL:0000317
+lung (from b6d2f1 females) - 42 days post infection,UBERON:0002048
+lung fibroblasts (slow progressing fibrosis),CL:0002553
+bladder tissue,UBERON:0001255
+osteoblastic lineage cells,na
+mesangial cell,CL:0000777
+cns - brain - olfactory bulb (mmhcc),UBERON:0002264
+peripheral blood mononuclear cell,CL:2000001
+dental pulp cells,CL:0002148
+uterine tumors (endometrioid histologic subtype) - stage-grade:ib-g1,UBERON:0000995
+bronchial epithelial cells - female - mild asthma,CL:0002328|UBERON:0002185
+esophageal tissue,UBERON:0001043
+non-lesional (nl) skin - (uninvolved samples),UBERON:0002097
+cervical cancer cell line and normal cervical epithelium,UBERON:0000002
+whole heart,UBERON:0000948
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 1 hour,UBERON:0002084
+skin tissue,UBERON:0002097
+endometrial specimens from women with endometriosis - mid secretory,UBERON:0001295
+ovarian epithelial cells,CL:2000064
+amniotic fluid,UBERON:0000173
+femur,UBERON:0003826
+anterior prefrontal cortex - postmortem - female,UBERON:0000451
+normal skin and actinic keratotic (ak) lesion,na
+brain from adult (postnatal day 70) male offspring prenatally exposed to alcohol via voluntary maternal consumption from gestational day 0 to pup postnatal day 10,UBERON:0000955
+tumor tissues and adjacent non-tumorous tissues of hepatocellular carcinoma,na
+beta cells of pancreas,CL:0000168|UBERON:0001264
+bone marrow stem cell,UBERON:0002371|CL:0000723
+colon mucosa,UBERON:0000317
+lungs,UBERON:0000170
+circulating cd8+ t-cells (severe asthma),CL:0000625
+dendritic cell,CL:0000451
+carotid artery,UBERON:0005396
+lung tissue,UBERON:0002048
+heart,UBERON:0015228
+heart left ventricles above lad artery (ami -induced by left coronary artery ligation) - 48 hours,UBERON:0002084
+t lymphocytes - heterozygous fh,CL:0000542
+cerebral artery,UBERON:0004449
+low-grade serous ovarian carcinomas (tumors from patients with matched border control),UBERON:0000992
+bone marrow plasma cells,CL:0000786|UBERON:0002371
+frontal cortex,UBERON:0016525
+cd34+ cells (refractory anemia),na
+blood neutrophil,CL:0000775
+hypothalmus,UBERON:0001898
+mda-mb-231 breast cancer cells,na
+embryonic tissue,UBERON:0005291
+bicep,UBERON:0001507
+lung - lower lobe - early idiopathic pulmonary fibrosis - male,UBERON:0008949
+entorhinal cortex neurons,UBERON:0002728|CL:0000540
+neural precursor cells,na
+pancreas,UBERON:3011040
+biopsy,na
+skin,UBERON:0002199
+male frontal cortex,UBERON:0001870
+tibialis muscle,UBERON:0008230
+optic disk,UBERON:0001783
+articular condrocytes from osteoarthritic knees of sprague-dawley males and sham control,CL:1001607|UBERON:0001465
+cns - brain - hypothalamus (mmhcc),UBERON:0001898
+cd4+ t cells lymphocytes (sorted from pbmcs from monozygotic twin pairs discordant for rrms),CL:0000624
+natural killer (nk) cells (sorted peripheral blood lymphocytes),CL:0000623
+bronchial epithelium,UBERON:0002031
+hippocampus,UBERON:0002961
+skeletal muscle - plantaris - 7 months,UBERON:0011905
+endocrine pancreas - islet cell of langerhans - beta cell (mmhcc),CL:0000169
+integument,UBERON:0002199
+brain tumor tissue samples of human gliomas and normal brain - grade:aiii - primary tumor,UBERON:0000955
+mammary arterial tissue,UBERON:0001637
+primary lung bronchial epithelial cells,CL:0002328
+cd4t cells (sorted peripheral blood lymphocytes),CL:0000624
+myocardial tissue,UBERON:0002349
+microdissected nasopharyngeal carcinoma (npc) tissues samples - stage t3n2,na
+livers (atp7b null - wilson disease model),UBERON:0002107
+sciatic nerve,UBERON:0001322
+sperm cells - from males with consistent and severe teratozoospermia (terastospermia) - (hg-u133 2.0 ),CL:0000019
+urothelium,UBERON:0004645
+induced pluripotent stem cell-derived neurons - male,CL:0000034|CL:0000540
+cd34+ hematopoietic stem and progenitor cells from the bone marrow of untreated patients,CL:0002092|UBERON:0002371
+cd33+ myeloid cells,CL:0000763
+leukocyte - lymphocyte - b-lymphocyte - plasma cell (mmhcc),CL:0000786
+biceps biopsies,na
+lncap,na
+uterine tumors (papillary serous histologic subtype) - stage-grade:ib-g3,UBERON:0000995
+huh-7,na
+ion (inferior olivary nucleus),UBERON:0007244
+non-lesional (nl) skin,UBERON:0002097
+skeletal muscle (triceps),UBERON:0001134
+cerebral cortex,UBERON:0000956
+placenta,UBERON:0001987
+b lymphocytes,CL:0000236
+peripheral blood mononuclear cells (ischemic cardiomyopathy),CL:2000001
+"marginal lymphoma, brd2 transgenic",na
+huh7 hepatoma cells (infected with jfh-1 hcv) - 18 hours post-infection,na
+uterine tumors (endometrioid histologic subtype) - stage-grade:ib-g2,UBERON:0000995
+hek293e,na
+muscle - striated (skeletal) - diaphragm (mmhcc),UBERON:0002036
+cns - spinal cord (mmhcc),UBERON:0002240

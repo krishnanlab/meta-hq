@@ -31,7 +31,6 @@ from metahq_core.export.references import (
 )
 from metahq_core.sources import REFERENCE_MAP, Ale, Gemma, KrishnanLab
 
-
 # ===== Fixtures =====
 
 
@@ -136,7 +135,7 @@ class TestFormatReference:
         # Should contain the URL
         assert sample_reference.url in formatted
         # Should contain annotation count
-        assert "Annotations: 5" in formatted
+        assert "Number of annotations in this export: 5" in formatted
         # Should contain license information
         assert sample_reference.rights in formatted
 
@@ -382,6 +381,11 @@ class TestCitationConfig:
         assert hasattr(sample_citation_config, "mode")
         assert hasattr(sample_citation_config, "date")
         assert hasattr(sample_citation_config, "outfile")
+        assert hasattr(sample_citation_config, "refinebio_dataset_id")
+
+    def test_refinebio_dataset_id_default(self, sample_citation_config):
+        """Test that refinebio_dataset_id defaults to None."""
+        assert sample_citation_config.refinebio_dataset_id is None
 
 
 # ===== Tests for build_citation_file =====
@@ -390,7 +394,11 @@ class TestCitationConfig:
 class TestBuildCitationFile:
     """Test class for build_citation_file function."""
 
-    @patch("builtins.open", new_callable=mock_open, read_data="Test template\nReferences: $references\nVersion: $version")
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data="Test template\nReferences: $references\nVersion: $version",
+    )
     def test_basic_substitution(self, mock_file, sample_citation_config):
         """Test basic template substitution."""
         references = "[1] Test Reference"
@@ -402,7 +410,11 @@ class TestBuildCitationFile:
         # Should contain substituted values
         assert sample_citation_config.version in result or "$version" not in result
 
-    @patch("builtins.open", new_callable=mock_open, read_data="Version: $version\nAttribute: $attribute")
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data="Version: $version\nAttribute: $attribute",
+    )
     def test_config_substitution(self, mock_file, sample_citation_config):
         """Test that all config fields are substituted."""
         references = "[1] Test"
@@ -430,17 +442,47 @@ class TestBuildCitationFile:
         result = build_citation_file(references, sample_citation_config)
 
         # MetaHQ reference should be formatted and included
-        assert "$metahq_reference" not in result or "MetaHQ" in result or "Hicks" in result
+        assert (
+            "$metahq_reference" not in result or "MetaHQ" in result or "Hicks" in result
+        )
 
-    @patch("builtins.open", new_callable=mock_open, read_data="Template: $date $mode $tech")
+    @patch(
+        "builtins.open", new_callable=mock_open, read_data="Template: $date $mode $tech"
+    )
     def test_custom_indent(self, mock_file, sample_citation_config):
         """Test build_citation_file with custom indent."""
         references = "[1] Test"
         custom_indent = "    "
 
-        result = build_citation_file(references, sample_citation_config, indent=custom_indent)
+        result = build_citation_file(
+            references, sample_citation_config, indent=custom_indent
+        )
 
         assert isinstance(result, str)
+
+    @patch(
+        "builtins.open", new_callable=mock_open, read_data="ID: $refinebio_dataset_id"
+    )
+    def test_refinebio_dataset_id_defaults_to_na(
+        self, mock_file, sample_citation_config
+    ):
+        """Test that refinebio_dataset_id substitutes to 'NA' when unset."""
+        result = build_citation_file("[1] Test", sample_citation_config)
+
+        assert result == "ID: NA"
+
+    @patch(
+        "builtins.open", new_callable=mock_open, read_data="ID: $refinebio_dataset_id"
+    )
+    def test_refinebio_dataset_id_substituted_when_set(
+        self, mock_file, sample_citation_config
+    ):
+        """Test that refinebio_dataset_id is substituted when present."""
+        sample_citation_config.refinebio_dataset_id = "abc123"
+
+        result = build_citation_file("[1] Test", sample_citation_config)
+
+        assert result == "ID: abc123"
 
 
 # ===== Tests for save_citations =====
@@ -466,7 +508,9 @@ class TestSaveCitations:
 
     @patch("metahq_core.export.references.save_plain_text")
     @patch("metahq_core.export.references.build_citation_file")
-    def test_integration_flow(self, mock_build, mock_save, source_counts_df, sample_citation_config):
+    def test_integration_flow(
+        self, mock_build, mock_save, source_counts_df, sample_citation_config
+    ):
         """Test the integration flow of save_citations."""
         mock_logger = MagicMock()
         mock_build.return_value = "Mock citation content"
@@ -476,7 +520,9 @@ class TestSaveCitations:
         # build_citation_file should be called
         mock_build.assert_called_once()
         # save_plain_text should be called with the result
-        mock_save.assert_called_once_with("Mock citation content", sample_citation_config.outfile)
+        mock_save.assert_called_once_with(
+            "Mock citation content", sample_citation_config.outfile
+        )
 
     @patch("metahq_core.export.references.save_plain_text")
     def test_single_source(self, mock_save, sample_citation_config):

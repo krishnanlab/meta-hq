@@ -4,10 +4,10 @@ Unit tests for Query class and related helper classes.
 Author: Parker Hicks
 Date: 2025-10-24
 
-Last updated: 2025-10-24 by Parker Hicks
+Last updated: 2026-07-09 by Parker Hicks
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import polars as pl
 import pytest
@@ -82,6 +82,34 @@ def sample_annotation_entry():
             "sample": "GSM123456",
             "series": "GSE12345",
             "platform": "GPL570",
+        },
+    }
+
+
+@pytest.fixture
+def series_annotation_entry():
+    """
+    Series annotation entry from the annotations dictionary with multiple
+    species and platforms
+    """
+    return {
+        "organism": "homo sapiens|mus musculus",
+        "tissue": {
+            "source1": {
+                "id": "UBERON:0001",
+                "value": "brain",
+                "ecode": "expert-curated",
+            },
+            "source2": {
+                "id": "UBERON:0002",
+                "value": "cerebral cortex",
+                "ecode": "expert-curated",
+            },
+        },
+        "accession_ids": {
+            "series": "GSE12345",
+            "platform": "GPL570",
+            "srp": "SRP1234",
         },
     }
 
@@ -464,6 +492,22 @@ class TestUnParsedEntry:
         assert "|" in ids
         assert "brain" in values
         assert "cerebral cortex" in values
+        assert "source1" in sources
+        assert "source2" in sources
+
+    def test_get_annotations_multiple_organisms(self, series_annotation_entry):
+        """Test getting annotations from series annotation with multiple organisms."""
+        entry = UnParsedEntry(
+            series_annotation_entry, "tissue", ["expert-curated"], "homo sapiens"
+        )
+        ids, values, sources = entry.get_annotations()
+
+        print(ids)
+        print(values)
+        print(sources)
+
+        assert "UBERON:0001" in ids
+        assert "brain" in values
         assert "source1" in sources
         assert "source2" in sources
 

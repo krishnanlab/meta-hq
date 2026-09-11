@@ -9,7 +9,7 @@ on:
   pull_request:
     branches: [dev]
     paths:
-      - "packages/db-build/**"
+      - "packages/db_build/**"
       - ".github/workflows/db-build-tests-dev.yml"
 
 jobs:

@@ -12,7 +12,7 @@ import shutil
 import sys
 import tarfile
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
 import click
@@ -114,6 +114,10 @@ class Downloader:
         >>> downloader.extract()
     """
 
+    _JUNK_TOP_LEVEL_NAMES = frozenset(
+        {".DS_Store", "__MACOSX", "Thumbs.db", "desktop.ini"}
+    )
+
     def __init__(
         self,
         doi,
@@ -155,9 +159,7 @@ class Downloader:
         if self.verbose:
             self.logger.info("Decompressing...")
 
-        self._extract()
-
-        tar_dir = self.config.outdir / self.config.filename_stemmed
+        tar_dir = self._extract()
         self._move_tar_contents(base_dir=self.config.outdir, tar_dir=tar_dir)
 
         if self.verbose:
@@ -287,11 +289,53 @@ class Downloader:
     # ======  tar extractors
     # ========================================
 
-    def _extract(self):
+    def _extract(self) -> Path:
+        """Extract the tar archive and return its top-level directory.
+
+        The archive's internal directory name is not assumed to match the
+        downloaded filename (e.g. a versioned data-package directory like
+        "metahq_data__v1.2.0" packed under a differently versioned
+        "metahq_data.tar.gz"); it is read from the archive's own members.
+        """
         with tarfile.open(self.config.outfile, mode="r:gz") as tar:
-            tar.extractall(
-                path=self.config.outdir, members=tar.getmembers(), filter="data"
+            members = tar.getmembers()
+            tar.extractall(path=self.config.outdir, members=members, filter="data")
+
+        return self.config.outdir / self._top_level_dir(members)
+
+    @classmethod
+    def _is_junk_top_level_name(cls, name: str) -> bool:
+        """Return True for macOS/Windows metadata entries (e.g. AppleDouble
+        "._foo" resource forks) that some tar tools include alongside the
+        real archive contents."""
+        return name.startswith("._") or name in cls._JUNK_TOP_LEVEL_NAMES
+
+    @classmethod
+    def _top_level_dir(cls, members: list[tarfile.TarInfo]) -> str:
+        """Return the name of the archive's single top-level directory.
+
+        Ignores known OS metadata junk entries (e.g. AppleDouble "._" files)
+        that older archives built with plain `tar` can contain alongside the
+        real contents.
+
+        Raises:
+            ValueError: If the archive does not contain exactly one shared
+                top-level entry once junk entries are ignored.
+        """
+        top_level_names = {
+            PurePosixPath(m.name).parts[0]
+            for m in members
+            if m.name
+            and not cls._is_junk_top_level_name(PurePosixPath(m.name).parts[0])
+        }
+
+        if len(top_level_names) != 1:
+            raise ValueError(
+                "Expected the archive to contain a single top-level directory, "
+                f"found: {sorted(top_level_names)}"
             )
+
+        return top_level_names.pop()
 
     def _move_tar_contents(self, base_dir: Path, tar_dir: Path):
         target_dir = base_dir

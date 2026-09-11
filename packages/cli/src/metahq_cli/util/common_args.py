@@ -71,6 +71,15 @@ def retrieval_args(command):
     )
     @click.option("--fmt", type=FMT_OPT, default="parquet")
     @click.option("--metadata", type=str, default="default")
+    @click.option(
+        "--refinebio",
+        is_flag=True,
+        default=False,
+        help=(
+            "Create a pre-populated refine.bio dataset from the retrieved "
+            "samples/series and submit it through refine.bio's dataset API."
+        ),
+    )
     @wraps(command)
     def wrapper(*args, **kwargs):
         return command(*args, **kwargs)

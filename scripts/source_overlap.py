@@ -7,7 +7,7 @@ from metahq_core.util.io import checkdir, load_bson
 from metahq_core.util.supported import ROOT
 from numpy.typing import NDArray
 
-DEFAULT_OUTDIR = ROOT / "results"
+DEFAULT_OUTDIR = ROOT / "results/post_harmonization"
 
 ATTRIBUTES = ["tissue", "disease", "sex", "age"]
 
@@ -39,7 +39,7 @@ def gather_source_contributions(
 
 
 def get_source_contribution_overlap(
-    contributions: dict[str, set[str]]
+    contributions: dict[str, set[str]],
 ) -> dict[str, NDArray]:
     """Given a map of sources to sample or study IDs, compute the absolute
     and percent overlap between them.

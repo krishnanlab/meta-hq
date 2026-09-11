@@ -7,6 +7,7 @@ GMT file where each row encodes a dataset with pipe-delimited metadata in
 the second column.
 """
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ from metahq_build.config.config import (
     COL_TERM_NAME,
     CONTROL_ID,
     DISIGN_ATLAS_CORRECTIONS,
+    DISIGN_ATLAS_EXTERNAL_LINKS,
     DISIGN_ATLAS_GMT,
     DISIGN_ATLAS_TISSUE_MAP,
     ECODE_EXPERT,
@@ -46,6 +48,8 @@ _EXPECTED_PARTS = 11
 
 _CONTROL_DISEASE_NAME = "Control"
 _CONTROL_DISEASE_ID = "C0000000"
+
+DISIGN_ATLAS_DATASET_URL = "http://www.inbirg.com/disignatlas/detail/{acc}"
 
 
 def _read_gmt(file_path: Path) -> pl.DataFrame:
@@ -158,6 +162,19 @@ class DiSignAtlasProcessor(BaseProcessor):
             pl.col("parts").list.get(_IDX_ORGANISM).alias("organism"),
         ).drop("description", "parts", "parts_len")
 
+        extracted = extracted.filter(pl.col("datasource") == "GEO")
+
+        # build urls
+        urls = {}
+        for row in extracted.iter_rows(named=True):
+            urls.setdefault(row["gse"], {"records": []})
+            urls[row["gse"]]["records"].append(
+                {
+                    "id": row["dataset_id"],
+                    "url": DISIGN_ATLAS_DATASET_URL.format(acc=row["dataset_id"]),
+                }
+            )
+
         # Log datasets that carry the literal string "None" in key fields.
         none_count = extracted.filter(
             (pl.col("tissue") == "None")
@@ -202,9 +219,11 @@ class DiSignAtlasProcessor(BaseProcessor):
         mondo = Ontology.from_obo(MONDO_OBO)
         umls_ids = all_samples["disease_id"].unique().to_list()
         prefixed = ["UMLS:" + uid for uid in umls_ids]
-        umls_to_mondo = mondo.map_terms(
-            prefixed, ontology="MONDO", _from="UMLS", _to="MONDO"
-        )
+        xref_mappings = mondo.xref("UMLS")
+        # Add custom control mapping
+        xref_mappings.add({"MONDO:0000000": ["UMLS:C0000000"]})
+        reverse_map = xref_mappings.reverse()
+        umls_to_mondo = {term: reverse_map.get(term, "NA") for term in prefixed}
         # Strip prefix from keys to match the bare IDs stored in the DataFrame.
         bare_to_mondo = {
             uid.removeprefix("UMLS:"): mondo_id
@@ -308,6 +327,21 @@ class DiSignAtlasProcessor(BaseProcessor):
             result_df.height,
             disease_records.height,
             tissue_records.filter(pl.col(COL_TERM_ID) != "na").height,
+        )
+
+        self.logger.info(
+            "There are %d samples represented in DiSignAtlas after processing",
+            result_df[COL_ACCESSION].unique().len(),
+        )
+
+        # save urls
+        with open(DISIGN_ATLAS_EXTERNAL_LINKS, "w", encoding="utf-8") as f:
+            json.dump(urls, f, indent=4, sort_keys=True)
+
+        self.logger.info(
+            "Saved external links for %d studies in DiSignAtlas to %s",
+            len(urls),
+            DISIGN_ATLAS_EXTERNAL_LINKS,
         )
 
         output_file = output_dir / "disign_atlas_processed.parquet"

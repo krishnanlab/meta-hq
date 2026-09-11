@@ -215,7 +215,7 @@ class LongAnnotations:
         # pivot to wide format
         exploded = (
             self.annotations.with_columns(pl.col(anchor).str.split("|").alias(anchor))
-            .explode(anchor)
+            .explode(anchor, empty_as_null=True)
             .unique(maintain_order=True)
         )
 
@@ -390,10 +390,11 @@ class UnParsedEntry:
         attr_exists = self.attribute in self.entry
         is_populated = len(self.entry) > 0
 
+        is_correct_species = False
         if "organism" in self.entry:
-            is_correct_species = self.entry["organism"] == self.species
-        else:
-            is_correct_species = False
+            if isinstance(self.entry["organism"], str):
+                if self.species in self.entry["organism"].split("|"):
+                    is_correct_species = True
 
         return attr_exists and is_populated and is_correct_species
 
@@ -537,6 +538,11 @@ class Query:
             logger=self.log,
             verbose=self.verbose,
         )
+
+        # specify annotations are series-level if applicable
+        if self.level == "series":
+            result.collapsed = True
+
         return result
 
     def compile_annotations(self, id_cols: list[str]) -> pl.DataFrame:
@@ -562,7 +568,10 @@ class Query:
 
         parsed = parsed.to_polars()
         parsed = parsed.filter(
-            pl.col("platform").is_in(self._load_platforms())
+            pl.col("platform")
+            .str.split("|")
+            .list.eval(pl.element().is_in(self._load_platforms()))
+            .list.any()
         )  # filter platforms just once for speed
 
         if parsed.height == 0:
