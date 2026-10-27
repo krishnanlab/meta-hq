@@ -258,7 +258,7 @@ class StudyCombiner(BaseAnnotationCombiner):
         """Retrieve SRP/project IDs and organism information from OmicIDX."""
         with duckdb.connect(db_path, read_only=True) as conn:
             accession_map = (
-                conn.execute(
+                conn.sql(
                     f"""
                     SELECT
                         accession AS {ACCESSIONS_KEY},
@@ -269,7 +269,7 @@ class StudyCombiner(BaseAnnotationCombiner):
                     WHERE accession = ANY($1)
                     ORDER BY accession
                 """,
-                    [gse_ids],
+                    params=[gse_ids],
                 )
                 .pl()
                 .lazy()

@@ -24,7 +24,7 @@ def srr_to_geo(sra_ids: list[str], db_path: Path | str = OMICIDX_DB) -> pl.DataF
             GEO samples, and GEO series.
     """
     with duckdb.connect(db_path, read_only=True) as conn:
-        srr_gsm_map = conn.execute(
+        srr_gsm_map = conn.sql(
             """
                 WITH 
                     srr_srx_map AS (
@@ -47,14 +47,14 @@ def srr_to_geo(sra_ids: list[str], db_path: Path | str = OMICIDX_DB) -> pl.DataF
                 JOIN gsm_srx_map ON srr_srx_map.srx::VARCHAR = trim(gsm_srx_map.srx::VARCHAR, '"')
                 JOIN srx_srp_map ON srr_srx_map.srx = srx_srp_map.srx
                 """,
-            [sra_ids],
+            params=[sra_ids],
         ).pl()
 
         gsm_ids = srr_gsm_map["gsm"].to_list()
         srr_gsm_map = srr_gsm_map.lazy()
 
         gsm_gse_map = (
-            conn.execute(
+            conn.sql(
                 """
                 WITH gse_gsm_map AS (
                     SELECT accession as gse, unnest(sample_id) as gsm
@@ -64,7 +64,7 @@ def srr_to_geo(sra_ids: list[str], db_path: Path | str = OMICIDX_DB) -> pl.DataF
                 FROM gse_gsm_map
                 WHERE gsm = Any($1)
                 """,
-                [gsm_ids],
+                params=[gsm_ids],
             )
             .pl()
             .lazy()

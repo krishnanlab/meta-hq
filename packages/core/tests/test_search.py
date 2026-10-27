@@ -103,9 +103,9 @@ class MockDuckDBConnection:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def execute(self, sql):
+    def sql(self, sql):
         """
-        Mock execute that returns appropriate data based on query.
+        Mock sql that returns appropriate data based on query.
 
         Detects whether this is a synonym query or main search query
         and returns the appropriate mock data with filters applied.

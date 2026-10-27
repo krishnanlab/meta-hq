@@ -249,7 +249,7 @@ class SampleCombiner(BaseAnnotationCombiner):
             return pl.LazyFrame()
 
         with duckdb.connect(str(db_path), read_only=True) as conn:
-            result = conn.execute(
+            result = conn.sql(
                 f"""
                     WITH
                     -- platform and SRX come directly from src_geo_samples
@@ -257,7 +257,7 @@ class SampleCombiner(BaseAnnotationCombiner):
                         SELECT
                             accession                                    AS gsm,
                             platform_id                                  AS platform,
-                            json_extract_string(sra_experiment, '$')     AS srx
+                            trim(sra_experiment, '"')                    AS srx
                         FROM src_geo_samples
                         WHERE accession = ANY($1)
                     ),
@@ -289,7 +289,7 @@ class SampleCombiner(BaseAnnotationCombiner):
                     LEFT JOIN series_agg se  ON s.gsm = se.gsm
                     LEFT JOIN sra_map    sra ON s.srx  = sra.srx
                     """,
-                [gsm_ids],
+                params=[gsm_ids],
             ).pl()
 
         self.logger.info(
@@ -353,7 +353,7 @@ class SampleCombiner(BaseAnnotationCombiner):
 
         with duckdb.connect(db_path, read_only=True) as conn:
             result = (
-                conn.execute(
+                conn.sql(
                     f"""
                     WITH samples AS (
                         SELECT s.accession, s.channels
@@ -365,7 +365,7 @@ class SampleCombiner(BaseAnnotationCombiner):
                         TRIM(LOWER(unnest(channels).organism)) AS {ORGANISM_KEY}
                     FROM samples;
                     """,
-                    [gsm_ids],
+                    params=[gsm_ids],
                 )
                 .pl()
                 .lazy()

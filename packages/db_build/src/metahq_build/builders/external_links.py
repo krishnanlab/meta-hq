@@ -200,13 +200,13 @@ class ExternalLinkBuilder:
         }
         with duckdb.connect(omicidx_path, read_only=True) as conn:
             mapping = (
-                conn.execute(
+                conn.sql(
                     """
                 WITH mapping AS
                     (SELECT accession, trim(unnest(sra_studies), '""') as sra FROM src_geo_series)
                 SELECT * FROM mapping WHERE sra = ANY($1)
                 """,
-                    [list(to_map.keys())],
+                    params=[list(to_map.keys())],
                 )
                 .pl()
                 .select(["sra", "accession"])
