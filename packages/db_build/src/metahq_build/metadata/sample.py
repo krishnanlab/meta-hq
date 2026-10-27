@@ -198,4 +198,4 @@ def sra2gsm_map(
                     WHERE g.accession IS NOT NULL
                 """
 
-        return conn.execute(query, [xxr_ids, xxx_ids]).pl()
+        return conn.sql(query, params=[xxr_ids, xxx_ids]).pl()

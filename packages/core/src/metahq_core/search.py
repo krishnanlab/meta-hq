@@ -208,7 +208,7 @@ def search(
             logger.debug("SQL:\n%s\n", sql)
 
         # execute the query and get the results as a polars DataFrame
-        df = con.execute(sql).pl()
+        df = con.sql(sql).pl()
 
         # check that the df is not empty; if it is, raise an error
         if df.is_empty():
@@ -259,7 +259,7 @@ def search(
             """
 
             try:
-                syn_df = con.execute(syn_sql).pl()
+                syn_df = con.sql(syn_sql).pl()
                 result_synonyms[term_id] = [
                     (r["synonym"], r["scope"])
                     for r in syn_df.select(["synonym", "scope"]).rows(named=True)
