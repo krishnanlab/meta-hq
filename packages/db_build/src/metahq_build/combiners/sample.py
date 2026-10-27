@@ -257,7 +257,7 @@ class SampleCombiner(BaseAnnotationCombiner):
                         SELECT
                             accession                                    AS gsm,
                             platform_id                                  AS platform,
-                            json_extract_string(sra_experiment, '$')     AS srx
+                            trim(sra_experiment, '"')                    AS srx
                         FROM src_geo_samples
                         WHERE accession = ANY($1)
                     ),

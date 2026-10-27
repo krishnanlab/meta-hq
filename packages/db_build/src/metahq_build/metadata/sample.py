@@ -194,7 +194,7 @@ def sra2gsm_map(
                         g.accession AS gsm
                     FROM all_exp a
                     JOIN src_geo_samples g
-                        ON a.xxx_id = json_extract_string(g.sra_experiment, '$')
+                        ON a.xxx_id = trim(g.sra_experiment, '"')
                     WHERE g.accession IS NOT NULL
                 """
 
