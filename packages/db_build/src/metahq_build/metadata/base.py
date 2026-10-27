@@ -120,7 +120,7 @@ class BaseMetadataRetriever:
         self.logger.info("Querying OmicIDX...")
         with duckdb.connect(self.db_path, read_only=True) as conn:
             self.logger.debug("Query: %s", query)
-            self.metadata = conn.execute(query, [entries]).pl()
+            self.metadata = conn.sql(query, params=[entries]).pl()
 
     def _validate_columns(self):
         """Ensure all columns are of type str."""
