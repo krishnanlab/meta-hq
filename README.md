@@ -8,7 +8,7 @@
 [![Latest database: 17663086](https://zenodo.org/badge/DOI/10.5281/zenodo.17663086.svg)](https://doi.org/10.5281/zenodo.17663086)
 
 A platform for harmonizing and distributing community-curated high-quality metadata of public omics samples and datasets.
-See our preprint at [https://arxiv.org/abs/2602.07805](https://arxiv.org/abs/2602.07805).
+See our publication at [https://doi.org/10.1093/bioinformatics/btag814](https://doi.org/10.1093/bioinformatics/btag814).
 
 ## License and Attribution
 
