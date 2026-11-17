@@ -20,6 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "certifi>=2026.10.19",
     "dnspython>=2.9.2",
     "networkx>=3.0", 
     "numpy>=2.3.0",
