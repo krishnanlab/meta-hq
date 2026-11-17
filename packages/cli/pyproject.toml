@@ -26,6 +26,7 @@ dependencies = [
     "metahq-core==1.2.2",
     "rich>=13.0.0",
     "requests>=2.34.2",
+    "urllib3>=2.8.0",
 ]
 
 [project.optional-dependencies]
