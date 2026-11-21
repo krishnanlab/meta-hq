@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 import pytest
 from metahq_core.util.exceptions import NoResultsFound
 
-from metahq_cli.retrieval_builder import Builder
+from metahq_cli.retrieval_builder import DEFAULT_FILTERS, Builder
 from metahq_cli.retriever import CurationConfig, OutputConfig, QueryConfig
 
 
@@ -79,43 +79,45 @@ class TestBuilder:
             "tech": "rnaseq",
         }
 
-    @patch("metahq_cli.retrieval_builder.required_filters")
-    def test_parse_filters_missing_required_filters(self, mock_required, builder):
-        """test _parse_filters raises RuntimeError when required filters are missing"""
-        mock_required.return_value = ["species", "ecode", "tech"]
+    def test_parse_filters_defaults_ecode(self, builder):
+        """test _parse_filters fills in ecode=any when ecode is omitted"""
+        result = builder._parse_filters("species=human,tech=rnaseq")
 
-        with pytest.raises(RuntimeError) as exc_info:
-            builder._parse_filters("species=human,ecode=expert")
+        assert result == {"species": "human", "tech": "rnaseq", "ecode": "any"}
 
-        assert "Missing required filters" in str(exc_info.value)
-        assert "tech" in str(exc_info.value)
+    def test_parse_filters_defaults_multiple(self, builder):
+        """test _parse_filters fills in all missing filters with defaults"""
+        result = builder._parse_filters("species=mouse")
 
-    @patch("metahq_cli.retrieval_builder.required_filters")
-    def test_parse_filters_logs_error_on_missing_filters(
-        self, mock_required, verbose_builder
-    ):
-        """test _parse_filters logs error when required filters are missing"""
-        mock_required.return_value = ["species", "ecode", "tech"]
+        assert result == {"species": "mouse", "tech": "rnaseq", "ecode": "any"}
 
-        with pytest.raises(RuntimeError):
-            verbose_builder._parse_filters("species=human,ecode=expert")
+    def test_parse_filters_empty_uses_defaults(self, builder):
+        """test _parse_filters returns all defaults for an empty string"""
+        result = builder._parse_filters("")
 
-        verbose_builder.log.error.assert_called_once()
-        call_args = verbose_builder.log.error.call_args[0][0]
-        assert "Missing required filters" in call_args
+        assert result == DEFAULT_FILTERS
 
-    @patch("metahq_cli.retrieval_builder.required_filters")
-    def test_parse_filters_multiple_missing_filters(self, mock_required, builder):
-        """test _parse_filters reports all missing required filters"""
-        mock_required.return_value = ["species", "ecode", "tech"]
+    def test_parse_filters_user_values_override_defaults(self, builder):
+        """test _parse_filters keeps user-provided values over defaults"""
+        result = builder._parse_filters("ecode=expert,tech=microarray")
 
-        with pytest.raises(RuntimeError) as exc_info:
-            builder._parse_filters("species=human")
+        assert result["species"] == "human"
+        assert result["ecode"] == "expert"
+        assert result["tech"] == "microarray"
 
-        error_msg = str(exc_info.value)
-        assert "Missing required filters" in error_msg
-        assert "ecode" in error_msg
-        assert "tech" in error_msg
+    def test_parse_filters_logs_defaults(self, verbose_builder):
+        """test _parse_filters logs info for each default applied"""
+        verbose_builder._parse_filters("species=human")
+
+        assert verbose_builder.log.info.call_count == 2
+        logged_keys = {c.args[1] for c in verbose_builder.log.info.call_args_list}
+        assert logged_keys == {"tech", "ecode"}
+
+    def test_parse_filters_no_logs_when_quiet(self, builder):
+        """test _parse_filters does not log defaults when not verbose"""
+        builder._parse_filters("species=human")
+
+        builder.log.info.assert_not_called()
 
     @patch("metahq_cli.retrieval_builder.required_filters")
     def test_parse_filters_parses_correctly(self, mock_required, builder):

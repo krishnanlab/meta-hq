@@ -24,7 +24,7 @@ classifiers = [
 dependencies = [
     "certifi>=2026.10.19",
     "click>=8.3.0",
-    "metahq-core==1.2.4",
+    "metahq-core==1.3.0",
     "rich>=13.0.0",
     "requests>=2.34.2",
     "urllib3>=2.8.0",
