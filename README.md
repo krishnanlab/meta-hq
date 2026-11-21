@@ -30,6 +30,8 @@ See [Terms and Conditions](docs/about/terms_conditions.md).
 | cli     | ![metahq-cli pypi](https://img.shields.io/pypi/v/metahq-cli.svg)                                                                                                         | ![Core Tests](https://github.com/krishnanlab/meta-hq/workflows/CLI%20Tests/badge.svg)            |
 | build   | ![metahq-build local](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/krishnanlab/meta-hq/refs/heads/main/data/shields/metahq_build__version.json) | ![DB-Build Tests](https://github.com/krishnanlab/meta-hq/workflows/DB%20Build%20Tests/badge.svg) |
 
+Our codebase is permanently archived on SoftwareHeritage at [https://archive.softwareheritage.org/browse/origin/directory/?origin_url=https://github.com/krishnanlab/meta-hq&visit_type=git](https://archive.softwareheritage.org/browse/origin/directory/?origin_url=https://github.com/krishnanlab/meta-hq&visit_type=git).
+
 ## Setup
 
 ### 1. Install metahq-cli
