@@ -33,6 +33,9 @@ if TYPE_CHECKING:
     import logging
 
 
+DEFAULT_FILTERS: dict[str, str] = {"species": "human", "tech": "rnaseq", "ecode": "any"}
+
+
 class Builder:
     """Class to build query, curation, and output configurations for `metahq retrieve`.
     Exists to support modularity and reduce redundnacy in the retrieval commands.
@@ -45,6 +48,9 @@ class Builder:
     def get_filters(self, filters: str) -> dict[str, str]:
         """Parses and checks requested filters.
 
+        Missing filters are filled in from `DEFAULT_FILTERS`
+        (`species=human`, `tech=rnaseq`, `ecode=any`).
+
         Arguments:
             filters (str):
                 A comma-delimited string of supported MetaHQ filters.
@@ -54,10 +60,11 @@ class Builder:
 
         Examples:
             >>> from metahq_cli.retrieval_builder import Builder
-            >>> builder = Builder()
-            >>> filters = 'species=human,ecode=expert,tech=rnaseq'
-            >>> builder.get_filters()
-            {'species': 'human', 'ecode': 'expert', 'tech': 'rnaseq'}
+            >>> builder = Builder(logger)
+            >>> builder.get_filters('species=human,ecode=expert,tech=rnaseq')
+            {'species': 'human', 'tech': 'rnaseq', 'ecode': 'expert'}
+            >>> builder.get_filters('species=mouse')
+            {'species': 'mouse', 'tech': 'rnaseq', 'ecode': 'any'}
         """
         _filters = self._parse_filters(filters)
         self.report_bad_filters(_filters)
@@ -349,20 +356,22 @@ class Builder:
         return [term for term in terms if term in available]
 
     def _parse_filters(self, filters: str) -> dict[str, str]:
-        as_list: list[list[str]] = [f.split("=") for f in filters.split(",")]
-        as_dict: dict[str, str] = {f[0]: f[1] for f in as_list}
+        as_list: list[list[str]] = [
+            f.split("=", 1) for f in filters.split(",") if f.strip()
+        ]
+        as_dict: dict[str, str] = {f[0].strip(): f[1].strip() for f in as_list}
 
-        not_in_filters: list[str] = []
+        # fill in defaults for any missing filters
         for key in required_filters():
-            if key not in as_dict:
-                not_in_filters.append(key)
+            if key not in as_dict and self.verbose:
+                self.log.info(
+                    "No '%s' filter given. Using default: %s=%s",
+                    key,
+                    key,
+                    DEFAULT_FILTERS[key],
+                )
 
-        if len(not_in_filters) > 0:
-            msg: str = f"Missing required filters {not_in_filters}."
-            self.log.error(msg)
-            raise RuntimeError(msg)
-
-        return as_dict
+        return {**DEFAULT_FILTERS, **as_dict}
 
     def report_bad_filters(self, filters: dict[str, str]):
         """Check filters and return improper filter parameters."""
