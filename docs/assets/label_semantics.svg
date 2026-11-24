@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" role="img" aria-label="How annotate and label modes use the ontology">
+<title>How annotate and label modes use the ontology</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9aa5b1"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="30" y="40" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="bold" fill="#1f2933" text-anchor="start" xml:space="preserve">Query: heart (UBERON:0000948)</text>
+<text x="30" y="64" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">Each sample&#x27;s most specific annotation is compared with the query term through the ontology.</text>
+<path d="M 330 142 L 110 208" fill="none" stroke="#9aa5b1" stroke-width="1.5"/>
+<path d="M 330 142 L 260 208" fill="none" stroke="#9aa5b1" stroke-width="1.5"/>
+<path d="M 330 142 L 400 208" fill="none" stroke="#9aa5b1" stroke-width="1.5"/>
+<path d="M 330 142 L 550 208" fill="none" stroke="#9aa5b1" stroke-width="1.5"/>
+<path d="M 110 252 L 110 318" fill="none" stroke="#9aa5b1" stroke-width="1.5"/>
+<path d="M 400 252 L 400 318" fill="none" stroke="#9aa5b1" stroke-width="1.5"/>
+<rect x="285.0" y="100" width="90" height="40" rx="20" fill="#ffffff" stroke="#b7791f" stroke-width="1.5"/>
+<text x="330" y="125" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f2933" text-anchor="middle" xml:space="preserve">organ</text>
+<circle cx="373.0" cy="102" r="13" fill="#b7791f" stroke="#b7791f" stroke-width="1.5"/>
+<text x="373.0" y="106" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle" xml:space="preserve">0</text>
+<rect x="65.0" y="210" width="90" height="40" rx="20" fill="#ffffff" stroke="#2f855a" stroke-width="3"/>
+<text x="110" y="235" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#1f2933" text-anchor="middle" xml:space="preserve">heart</text>
+<circle cx="153.0" cy="212" r="13" fill="#2f855a" stroke="#2f855a" stroke-width="1.5"/>
+<text x="153.0" y="216" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle" xml:space="preserve">+1</text>
+<rect x="215.0" y="210" width="90" height="40" rx="20" fill="#ffffff" stroke="#c53030" stroke-width="1.5"/>
+<text x="260" y="235" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f2933" text-anchor="middle" xml:space="preserve">liver</text>
+<circle cx="303.0" cy="212" r="13" fill="#c53030" stroke="#c53030" stroke-width="1.5"/>
+<text x="303.0" y="216" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle" xml:space="preserve">-1</text>
+<rect x="355.0" y="210" width="90" height="40" rx="20" fill="#ffffff" stroke="#c53030" stroke-width="1.5"/>
+<text x="400" y="235" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f2933" text-anchor="middle" xml:space="preserve">brain</text>
+<circle cx="443.0" cy="212" r="13" fill="#c53030" stroke="#c53030" stroke-width="1.5"/>
+<text x="443.0" y="216" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle" xml:space="preserve">-1</text>
+<rect x="505.0" y="210" width="90" height="40" rx="20" fill="#ffffff" stroke="#c53030" stroke-width="1.5"/>
+<text x="550" y="235" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f2933" text-anchor="middle" xml:space="preserve">kidney</text>
+<circle cx="593.0" cy="212" r="13" fill="#c53030" stroke="#c53030" stroke-width="1.5"/>
+<text x="593.0" y="216" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle" xml:space="preserve">-1</text>
+<rect x="58.0" y="320" width="104" height="40" rx="20" fill="#ffffff" stroke="#2f855a" stroke-width="1.5"/>
+<text x="110" y="345" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f2933" text-anchor="middle" xml:space="preserve">myocardium</text>
+<circle cx="160.0" cy="322" r="13" fill="#2f855a" stroke="#2f855a" stroke-width="1.5"/>
+<text x="160.0" y="326" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle" xml:space="preserve">+1</text>
+<rect x="328.0" y="320" width="144" height="40" rx="20" fill="#ffffff" stroke="#c53030" stroke-width="1.5"/>
+<text x="400" y="345" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f2933" text-anchor="middle" xml:space="preserve">cerebral cortex</text>
+<circle cx="470.0" cy="322" r="13" fill="#c53030" stroke="#c53030" stroke-width="1.5"/>
+<text x="470.0" y="326" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle" xml:space="preserve">-1</text>
+<text x="30" y="410" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">Lines join a parent term (above) to its child (below).</text>
+<text x="30" y="427" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">Badges: label of a sample annotated to that term.</text>
+<rect x="640" y="100" width="390" height="250" rx="6" fill="#ffffff" stroke="#9aa5b1" stroke-width="1"/>
+<text x="654" y="124" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#1f2933" text-anchor="start" xml:space="preserve">A sample annotated to ...</text>
+<text x="876" y="124" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#1f2933" text-anchor="middle" xml:space="preserve">annotate</text>
+<text x="970" y="124" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#1f2933" text-anchor="middle" xml:space="preserve">label</text>
+<text x="654" y="316" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">* MONDO:0000000, in a study where other samples</text>
+<text x="654" y="332" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">  are +1 for the term; otherwise 0. Diseases only.</text>
+<text x="654" y="156" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">heart itself</text>
+<text x="876" y="156" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#52606d" text-anchor="middle" xml:space="preserve">1</text>
+<text x="970" y="156" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" fill="#2f855a" text-anchor="middle" xml:space="preserve">+1</text>
+<text x="654" y="186" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">a descendant (myocardium)</text>
+<text x="876" y="186" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#52606d" text-anchor="middle" xml:space="preserve">1</text>
+<text x="970" y="186" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" fill="#2f855a" text-anchor="middle" xml:space="preserve">+1</text>
+<text x="654" y="216" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">an ancestor (organ)</text>
+<text x="876" y="216" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#52606d" text-anchor="middle" xml:space="preserve">dropped</text>
+<text x="970" y="216" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" fill="#b7791f" text-anchor="middle" xml:space="preserve">0</text>
+<text x="654" y="246" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">anything else (liver)</text>
+<text x="876" y="246" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#52606d" text-anchor="middle" xml:space="preserve">dropped</text>
+<text x="970" y="246" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" fill="#c53030" text-anchor="middle" xml:space="preserve">-1</text>
+<text x="654" y="276" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">a disease control*</text>
+<text x="876" y="276" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#52606d" text-anchor="middle" xml:space="preserve">-</text>
+<text x="970" y="276" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" fill="#6b46c1" text-anchor="middle" xml:space="preserve">2</text>
+<rect x="640" y="370" width="295.2" height="122" rx="6" fill="#ffffff" stroke="#9aa5b1" stroke-width="1"/>
+<text x="652" y="390" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2933" text-anchor="start" xml:space="preserve">Labels (label mode)</text>
+<rect x="652" y="395" width="22" height="14" rx="3" fill="#ffffff" stroke="#2f855a" stroke-width="1.5"/>
+<text x="682" y="406" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">+1  is the term</text>
+<rect x="652" y="417" width="22" height="14" rx="3" fill="#ffffff" stroke="#b7791f" stroke-width="1.5"/>
+<text x="682" y="428" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve"> 0  unknown (too general)</text>
+<rect x="652" y="439" width="22" height="14" rx="3" fill="#ffffff" stroke="#c53030" stroke-width="1.5"/>
+<text x="682" y="450" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">-1  is not the term</text>
+<rect x="652" y="461" width="22" height="14" rx="3" fill="#ffffff" stroke="#6b46c1" stroke-width="1.5"/>
+<text x="682" y="472" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve"> 2  control in a study of the term</text>
+</svg>

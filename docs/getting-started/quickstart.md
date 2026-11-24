@@ -19,11 +19,12 @@ tissue annotations from human RNA-Seq samples:
 ```bash
 metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
     --level sample --filters "species=human,tech=rnaseq,ecode=expert" \
-    --metadata "sample,series,description" --fmt tsv --output annotations.tsv
+    --metadata "sample,series,description" --fmt tsv --output annotations
 ```
 
-This command outputs a tabular dataset with columns `[sample, series, description, sources, UBERON:0000948, UBERON:0000955]`.
-An additional file is also created called `CITATION__<date>.txt` providing citation information for the original sources of annotations returned in your query.
+This command creates a directory called `annotations` containing `result.tsv`, a table with columns
+`[sample, series, description, sources, external_links, UBERON:0000948, UBERON:0000955]`, and `CITATION.txt`, which
+lists the original sources of the annotations returned by your query.
 Please cite the original sources of any annotations that you use along with MetaHQ.
 
 Some annotations in MetaHQ come from sources with non-commercial licenses (e.g., CC BY-NC). You can filter for annotations
@@ -35,7 +36,8 @@ metahq retrieve tissues --terms "UBERON:0000948,UBERON:0000955" \
     --license permissive
 ```
 
-See the [retrieve documentation](../packages/cli/commands/retrieve.md) for more details.
+See the [retrieve documentation](../user-guide/retrieve.md) for more details, and [use cases](../user-guide/use-cases.md)
+for worked examples such as building classifier labels or finding case/control studies.
 
 ## Ontology term ID search
 

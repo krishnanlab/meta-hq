@@ -93,7 +93,11 @@ nav:
   - Getting Started:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
+  - Concepts:
+      - How MetaHQ works: concepts/overview.md
+      - Data model: concepts/data-model.md
   - User Guide:
+      - Use cases: user-guide/use-cases.md
       - Setup: user-guide/setup.md
       - Search: user-guide/search.md
       - Retrieve: user-guide/retrieve.md
