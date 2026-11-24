@@ -292,7 +292,9 @@ def _write_ontology(onto_dir: Path, parents, names, sort_terms=True) -> None:
     )
     roots = [t for t, p in parents.items() if p is None]
     (onto_dir / "systems.txt").write_text("\n".join(roots) + "\n")
-    (onto_dir / "names_synonyms.json").write_text(json.dumps(names))
+    (onto_dir / "names_synonyms.json").write_text(
+        json.dumps({t: {"name": n, "synonyms": []} for t, n in names.items()})
+    )
 
 
 def _write_search_db(path: Path) -> None:

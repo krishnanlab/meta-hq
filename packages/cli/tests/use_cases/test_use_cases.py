@@ -368,6 +368,23 @@ class TestOutputFormats:
         assert set(data[HEART]) == {"GSM101", "GSM102", "GSM103"}
         assert data[HEART]["GSM102"]["series"] == "GSE1"
 
+    def test_label_json_groups_by_label(self, mini_metahq):
+        metahq(
+            "retrieve", "diseases", "--terms", CARDIOMYOPATHY, "--mode", "label",
+            "--metadata", "sample,series", "--fmt", "json", "--output", "cm_json",
+            "--quiet",
+        )  # fmt: skip
+        data = json.loads((mini_metahq / "cm_json" / "result.json").read_text())
+        groups = data[CARDIOMYOPATHY]
+
+        def ids(label):
+            return sorted(k for entry in groups[label] for k in entry)
+
+        assert ids("positive") == ["GSM101", "GSM103"]
+        assert ids("negative") == ["GSM301", "GSM302", "GSM303"]
+        assert ids("control") == ["GSM102"]
+        assert groups["positive"][0]["GSM101"]["external_links"]["Gemma"]
+
     def test_existing_output_dir_gets_suffix(self, mini_metahq):
         for _ in range(2):
             metahq(
