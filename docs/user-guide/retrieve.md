@@ -9,6 +9,10 @@ There is a command for each retrievable attribute:
 - [`metahq retrieve sex`](#sex)
 - [`metahq retrieve age`](#age)
 
+For what annotate and label modes return, see [How MetaHQ works](../concepts/overview.md#annotations-versus-labels).
+For the columns of each output file, see the [data model](../concepts/data-model.md#query-results).
+For worked examples, see [use cases](use-cases.md).
+
 ## Citing annotation sources
 
 The MetaHQ database contains annotations gathered from searchable databases, static project websites, GitHub repositories, data repositories (Zenodo, Figshare), and publication supplementary files.
@@ -35,7 +39,7 @@ All retrieve commands share the following common options:
 
 ### Output Options
 
-- `--output PATH`: Path to the output directory containing the retrieval result and source citation information. Default: `./metahq_result`
+- `--output PATH`: Path to the output directory containing the retrieval result and source citation information. Default: `./metahq_results`. If the directory already exists, a numeric suffix is appended instead of overwriting it.
 - `--fmt TEXT`: Output format (`parquet`, `tsv`, `csv`, or `json`). Default: `parquet`.
     - **Note:** MetaHQ is optimized for tabular exports. Wile JSON exports are supported, we recommend using tabular exports for large queries, particularly parquet.
 - `--metadata TEXT`: Metadata level to include (`sample`, `series`, etc.). Default: `default` (matches `--level`)
