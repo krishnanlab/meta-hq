@@ -8,6 +8,7 @@ Last updated: 2026-04-01 by Parker Hicks
 """
 
 from datetime import datetime
+from pathlib import Path
 
 import click
 from metahq_core.util.progress import get_console
@@ -24,8 +25,28 @@ from metahq_cli.util.common_args import (
 )
 from metahq_cli.util.helpers import set_verbosity
 
-AGE_GROUP_OPT = click.Choice(supported("age_groups") + ["all"])
+AGE_GROUPS = supported("age_groups")
 NOW = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def validate_age_terms(ctx, param, value: str) -> str:
+    """Click callback for `retrieve age --terms`.
+
+    Accepts `all`, a single age group, a comma-separated list of age groups
+    (e.g. `fetus,adult`), or a path to a text file of age groups. A plain
+    `click.Choice` only accepts one value, which rejected the documented
+    comma-separated form.
+    """
+    if value == "all" or Path(value).is_file():
+        return value
+
+    bad = [term for term in value.split(",") if term.strip() not in AGE_GROUPS]
+    if bad:
+        raise click.BadParameter(
+            f"{', '.join(bad)} not in supported age groups: "
+            f"{', '.join(AGE_GROUPS + ['all'])}."
+        )
+    return ",".join(term.strip() for term in value.split(","))
 
 
 def check_direct(mode: str, direct: bool, verbose: bool, logger) -> str:
@@ -68,7 +89,8 @@ def retrieve_commands():
 @retrieve_commands.command("age")
 @click.option(
     "--terms",
-    type=AGE_GROUP_OPT,
+    type=str,
+    callback=validate_age_terms,
     default="all",
     help="Age groups to choose. Can combine like 'fetus,adult'.",
 )
