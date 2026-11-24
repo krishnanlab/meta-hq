@@ -59,7 +59,7 @@ def retrieval_args(command):
         help=(
             "License filter for annotation sources. "
             "'permissive' includes only CC0/CC BY sources; "
-            "'nc' adds non-commercial sources; "
+            "'nc' includes only non-commercial (CC BY-NC or academic-only) sources; "
             "'any' includes all sources (default)."
         ),
     )
