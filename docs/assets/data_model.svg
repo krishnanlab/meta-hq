@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="730" viewBox="0 0 1180 730" role="img" aria-label="MetaHQ data package data model">
+<title>MetaHQ data package data model</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9aa5b1"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="30" y="40" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="bold" fill="#1f2933" text-anchor="start" xml:space="preserve">Inside a MetaHQ data package</text>
+<text x="30" y="64" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">One record per sample (GSM) or series (GSE); everything else is a lookup table joined on an ID.</text>
+<rect x="420" y="100" width="340" height="400" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="434" y="124" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">annotations/combined__level-sample.bson</text>
+<text x="436" y="150" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">&quot;GSM1656436&quot;: {</text>
+<text x="436" y="169" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  &quot;organism&quot;: &quot;homo sapiens&quot;,</text>
+<text x="436" y="188" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  &quot;accession_ids&quot;: {</text>
+<text x="436" y="207" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">    &quot;sample&quot;: &quot;GSM1656436&quot;,</text>
+<text x="436" y="226" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">    &quot;series&quot;: &quot;GSE67812&quot;,</text>
+<text x="436" y="245" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">    &quot;platform&quot;: &quot;GPL11154&quot;,</text>
+<text x="436" y="264" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">    &quot;srx&quot;: &quot;SRX993404&quot;, &quot;srs&quot;: ..,</text>
+<text x="436" y="283" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">    &quot;srp&quot;: &quot;SRP057118&quot; },</text>
+<text x="436" y="302" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  &quot;tissue&quot;: {</text>
+<text x="436" y="321" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">    &quot;DiSignAtlas&quot;: {</text>
+<text x="436" y="340" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">      &quot;id&quot;: &quot;UBERON:0002084&quot;,</text>
+<text x="436" y="359" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">      &quot;ecode&quot;: &quot;expert-curated&quot; },</text>
+<text x="436" y="378" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">    &quot;Gu_2023&quot;: { ... } },</text>
+<text x="436" y="397" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  &quot;disease&quot;: { &quot;&lt;source&gt;&quot;: {..} },</text>
+<text x="436" y="416" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  &quot;sex&quot;:     { &quot;&lt;source&gt;&quot;: {&quot;id&quot;: &quot;M&quot;} },</text>
+<text x="436" y="435" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  &quot;age&quot;:     { &quot;&lt;source&gt;&quot;: {&quot;id&quot;: &quot;adult&quot;} }</text>
+<text x="436" y="454" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">}</text>
+<text x="434" y="486" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">combined__level-series.bson: same shape, keyed by GSE</text>
+<rect x="30" y="100" width="330" height="106" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="42" y="122" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">metadata/technologies.parquet</text>
+<text x="48" y="142" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">id (GPL)</text>
+<text x="48" y="160" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">name</text>
+<text x="48" y="178" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">technology  rnaseq | microarray</text>
+<text x="42" y="196" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">join on accession_ids.platform</text>
+<rect x="30" y="226" width="330" height="124" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="42" y="248" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">metadata/metadata__level-sample.parquet</text>
+<text x="48" y="268" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">sample</text>
+<text x="48" y="286" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">title, description</text>
+<text x="48" y="304" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">source_name_ch1/2</text>
+<text x="48" y="322" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">characteristics_ch1/2</text>
+<text x="42" y="340" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">join on accession_ids.sample</text>
+<rect x="30" y="370" width="330" height="106" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="42" y="392" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">metadata/metadata__level-series.parquet</text>
+<text x="48" y="412" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">series</text>
+<text x="48" y="430" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">title, summary, overall_design</text>
+<text x="48" y="448" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">sample_id, description</text>
+<text x="42" y="466" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">join on accession_ids.series</text>
+<rect x="30" y="496" width="330" height="106" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="42" y="518" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">metadata/external_links.parquet</text>
+<text x="48" y="538" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">series</text>
+<text x="48" y="556" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">Gemma, BGee, DiSignAtlas</text>
+<text x="48" y="574" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  {browse_url, records[id,url]}</text>
+<text x="42" y="592" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">join on accession_ids.series</text>
+<rect x="30" y="622" width="330" height="88" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="42" y="644" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">metadata/refinebio_map.parquet</text>
+<text x="48" y="664" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">gsm, gse</text>
+<text x="48" y="682" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">refinebio_sample, refinebio_experiment</text>
+<text x="42" y="700" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">join on sample / series</text>
+<rect x="820" y="100" width="330" height="142" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="832" y="122" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">ontology/&lt;onto&gt;/relations.parquet</text>
+<text x="838" y="142" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">terms x terms Int8 matrix</text>
+<text x="838" y="160" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">row r, col c = 1 if r is an</text>
+<text x="838" y="178" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">ancestor of c (or r == c)</text>
+<text x="838" y="196" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">columns sorted by term ID</text>
+<text x="838" y="214" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">&lt;onto&gt; = uberon_ext | mondo</text>
+<text x="832" y="232" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">join on tissue / disease id</text>
+<rect x="820" y="258" width="330" height="70" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="832" y="280" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">ontology/&lt;onto&gt;/id_map.parquet</text>
+<text x="838" y="300" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">id, name</text>
+<text x="832" y="318" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">join on tissue / disease id</text>
+<rect x="820" y="356" width="330" height="124" rx="8" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="832" y="378" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#52606d" text-anchor="start" xml:space="preserve">ontology/ontology_search.duckdb</text>
+<text x="838" y="398" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">ontology_search_docs</text>
+<text x="838" y="416" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  term_id, name, ontology, type</text>
+<text x="838" y="434" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">ontology_synonyms</text>
+<text x="838" y="452" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  term_id, synonym, scope</text>
+<text x="832" y="470" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">used by metahq search</text>
+<rect x="820" y="504" width="330" height="106" rx="8" fill="#fdf0dc" stroke="#b7791f" stroke-width="1.5"/>
+<text x="832" y="526" font-family="Menlo, Consolas, monospace" font-size="12" font-weight="bold" fill="#b7791f" text-anchor="start" xml:space="preserve">metahq_core.sources (code)</text>
+<text x="838" y="546" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">source -&gt; citation, license</text>
+<text x="838" y="564" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  permissive: CC0 / CC BY</text>
+<text x="838" y="582" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#1f2933" text-anchor="start" xml:space="preserve">  nc: CC BY-NC / academic</text>
+<text x="832" y="600" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#52606d" text-anchor="start" font-style="italic" xml:space="preserve">join on source name</text>
+<line x1="418" y1="300" x2="366" y2="300" stroke="#9aa5b1" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="762" y1="300" x2="814" y2="300" stroke="#9aa5b1" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="420" y="560" width="247.6" height="78" rx="6" fill="#ffffff" stroke="#9aa5b1" stroke-width="1"/>
+<text x="432" y="580" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#1f2933" text-anchor="start" xml:space="preserve">Legend</text>
+<rect x="432" y="585" width="22" height="14" rx="3" fill="#eceff3" stroke="#52606d" stroke-width="1.5"/>
+<text x="462" y="596" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">file in the data package</text>
+<rect x="432" y="607" width="22" height="14" rx="3" fill="#fdf0dc" stroke="#b7791f" stroke-width="1.5"/>
+<text x="462" y="618" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">defined in metahq-core code</text>
+<text x="420" y="680" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">Pipe-delimited values (&#x27;GSE1|GSE2&#x27;, &#x27;UBERON:1|UBERON:2&#x27;)</text>
+<text x="420" y="697" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#52606d" text-anchor="start" xml:space="preserve">hold several IDs.</text>
+</svg>
