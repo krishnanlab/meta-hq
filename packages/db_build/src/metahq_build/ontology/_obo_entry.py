@@ -44,6 +44,7 @@ class OboEntry:
     xrefs: list[XRef] = field(default_factory=list)
     is_a: list[str] = field(default_factory=list)
     part_of: list[str] = field(default_factory=list)
+    is_obsolete: bool = False
     property_values: dict[str, list[str]] = field(default_factory=dict)
 
     @classmethod
@@ -55,6 +56,10 @@ class OboEntry:
         is_a = []
         part_of = []
         property_values = {}
+
+        # entries are NOT obsolete by default
+        # overridden if `is_obsolete` present in the entry def
+        is_obsolete = False
 
         for line in text.strip().splitlines():
             line = line.strip()
@@ -123,6 +128,9 @@ class OboEntry:
                     if m and not _is_gci_axiom(m.group(2)):
                         part_of.append(m.group(1))
 
+            elif key == "is_obsolete":
+                is_obsolete = True
+
         if not id_ or not name:
             warnings.warn("Initializing OboEntry without a name or id.", RuntimeWarning)
             return cls(
@@ -134,6 +142,7 @@ class OboEntry:
                 xrefs=xrefs,
                 is_a=is_a,
                 part_of=part_of,
+                is_obsolete=is_obsolete,
                 property_values=property_values,
             )
 
@@ -146,6 +155,7 @@ class OboEntry:
             xrefs=xrefs,
             is_a=is_a,
             part_of=part_of,
+            is_obsolete=is_obsolete,
             property_values=property_values,
         )
 

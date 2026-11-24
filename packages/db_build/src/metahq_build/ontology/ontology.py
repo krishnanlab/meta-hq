@@ -257,7 +257,9 @@ class Ontology:
 
         return mapping
 
-    def read(self, file: Path | str, reader: str = "obo") -> None:
+    def read(
+        self, file: Path | str, reader: str = "obo", keep_obsolete: bool = False
+    ) -> None:
         """
         Loads and reads an ontology file.
 
@@ -285,7 +287,7 @@ class Ontology:
             if reader == "obo":
                 _reader = self.obo_reader
                 loaded = _reader(file)
-                self.entries = self.get_entries(loaded)
+                self.entries = self.get_entries(loaded, keep_obsolete=keep_obsolete)
 
             else:
                 raise ValueError(
@@ -338,15 +340,18 @@ class Ontology:
         self._entries = val
 
     @staticmethod
-    def get_entries(obo_text: str) -> list[OboEntry]:
+    def get_entries(obo_text: str, keep_obsolete: bool = False) -> list[OboEntry]:
         """Returns a list of entries from entries combined by \n\n"""
         entries = [
             OboEntry.from_text(entry)
             for entry in obo_text.split("\n\n")
-            if (entry.startswith("[Term]")) and ("is_obsolete: true" not in entry)
+            if (entry.startswith("[Term]"))
         ]
 
-        return entries
+        if keep_obsolete:
+            return entries
+
+        return [entry for entry in entries if not entry.is_obsolete]
 
     @staticmethod
     def obo_reader(obo: Path | str) -> str:
@@ -379,20 +384,20 @@ class Ontology:
         return _id
 
     @classmethod
-    def from_obo(cls, obo: Path | str):
+    def from_obo(cls, obo: Path | str, **kwargs):
         """Create Ontology class from an obo file."""
         parser = cls()
-        parser.read(obo, reader="obo")
+        parser.read(obo, reader="obo", **kwargs)
         return parser
 
 
-def get_id_map(obo_file: Path) -> pl.DataFrame:
+def get_id_map(obo_file: Path, **kwargs) -> pl.DataFrame:
     """Return a term ID to name mapping."""
-    onto = Ontology.from_obo(obo_file)
+    onto = Ontology.from_obo(obo_file, **kwargs)
     return onto.id_map(struct="polars")
 
 
-def get_xref(obo_file: Path, to: str, **kwargs):
+def get_xref(obo_file: Path, to: str, keep_obsolete: bool = False, **kwargs):
     """Return a XRefMappings object with cross-references to ontology 'to'."""
-    onto = Ontology.from_obo(obo_file)
+    onto = Ontology.from_obo(obo_file, keep_obsolete=keep_obsolete)
     return onto.xref(to, **kwargs)
